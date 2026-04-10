@@ -50,10 +50,18 @@ def test_new_app(
         "class_name": "MyApplication",
         "app_name": "myapplication",
     }
+
+    # Create a mock GUI bootstrap that allows us to track that post_generate was invoked
+    # on the *instance* of the bootstrap.
+    bootstrap_post_generate = mock.MagicMock()
+
+    class CustomGuiBootstrap(BaseGuiBootstrap):
+        def post_generate(self, base_path):
+            bootstrap_post_generate(base_path=base_path)
+            return super().post_generate(base_path)
+
     new_command.build_app_context = mock.MagicMock(return_value=app_context)
-    new_command.select_bootstrap = mock.MagicMock(
-        return_value=("Toga", {"Toga": BaseGuiBootstrap})
-    )
+    new_command.select_bootstrap = mock.MagicMock(return_value=CustomGuiBootstrap)
     new_command.build_gui_context = mock.MagicMock(
         return_value={
             "app_source": "main()",
@@ -100,6 +108,11 @@ def test_new_app(
         default_config={"replay_dir": str(tmp_path / "data/templates/.replay")},
     )
 
+    # post_generate was invoked on the bootstrap *instance*.
+    bootstrap_post_generate.assert_called_once_with(
+        base_path=tmp_path / "base" / "myapplication"
+    )
+
 
 def test_new_app_missing_template(monkeypatch, new_command, tmp_path):
     """If a versioned branch doesn't exist, an error is raised."""
@@ -110,9 +123,7 @@ def test_new_app_missing_template(monkeypatch, new_command, tmp_path):
         "app_name": "myapplication",
     }
     new_command.build_app_context = mock.MagicMock(return_value=app_context)
-    new_command.select_bootstrap = mock.MagicMock(
-        return_value=("Toga", {"Toga": BaseGuiBootstrap})
-    )
+    new_command.select_bootstrap = mock.MagicMock(return_value=BaseGuiBootstrap)
     new_command.build_gui_context = mock.MagicMock(
         return_value={
             "app_source": "main()",
@@ -181,9 +192,7 @@ def test_new_app_dev(monkeypatch, new_command, tmp_path, briefcase_version):
         "app_name": "myapplication",
     }
     new_command.build_app_context = mock.MagicMock(return_value=app_context)
-    new_command.select_bootstrap = mock.MagicMock(
-        return_value=("Toga", {"Toga": BaseGuiBootstrap})
-    )
+    new_command.select_bootstrap = mock.MagicMock(return_value=BaseGuiBootstrap)
     new_command.build_gui_context = mock.MagicMock(
         return_value={
             "app_source": "main()",
@@ -278,9 +287,7 @@ def test_new_app_with_template(monkeypatch, new_command, tmp_path):
         "app_name": "myapplication",
     }
     new_command.build_app_context = mock.MagicMock(return_value=app_context)
-    new_command.select_bootstrap = mock.MagicMock(
-        return_value=("Toga", {"Toga": BaseGuiBootstrap})
-    )
+    new_command.select_bootstrap = mock.MagicMock(return_value=BaseGuiBootstrap)
     new_command.build_gui_context = mock.MagicMock(
         return_value={
             "app_source": "main()",
@@ -338,9 +345,7 @@ def test_new_app_with_invalid_template(monkeypatch, new_command, tmp_path):
         "app_name": "myapplication",
     }
     new_command.build_app_context = mock.MagicMock(return_value=app_context)
-    new_command.select_bootstrap = mock.MagicMock(
-        return_value=("Toga", {"Toga": BaseGuiBootstrap})
-    )
+    new_command.select_bootstrap = mock.MagicMock(return_value=BaseGuiBootstrap)
     new_command.build_gui_context = mock.MagicMock(
         return_value={
             "app_source": "main()",
@@ -409,9 +414,7 @@ def test_new_app_with_invalid_template_branch(monkeypatch, new_command, tmp_path
     }
     new_command.build_app_context = mock.MagicMock(return_value=app_context)
 
-    new_command.select_bootstrap = mock.MagicMock(
-        return_value=("Toga", {"Toga": BaseGuiBootstrap})
-    )
+    new_command.select_bootstrap = mock.MagicMock(return_value=BaseGuiBootstrap)
     new_command.build_gui_context = mock.MagicMock(
         return_value={
             "app_source": "main()",
@@ -479,9 +482,7 @@ def test_new_app_with_branch(monkeypatch, new_command, tmp_path):
         "app_name": "myapplication",
     }
     new_command.build_app_context = mock.MagicMock(return_value=app_context)
-    new_command.select_bootstrap = mock.MagicMock(
-        return_value=("Toga", {"Toga": BaseGuiBootstrap})
-    )
+    new_command.select_bootstrap = mock.MagicMock(return_value=BaseGuiBootstrap)
     new_command.build_gui_context = mock.MagicMock(
         return_value={
             "app_source": "main()",
@@ -544,9 +545,7 @@ def test_new_app_unused_project_overrides(
         "app_name": "myapplication",
     }
     new_command.build_app_context = mock.MagicMock(return_value=app_context)
-    new_command.select_bootstrap = mock.MagicMock(
-        return_value=("Toga", {"Toga": BaseGuiBootstrap})
-    )
+    new_command.select_bootstrap = mock.MagicMock(return_value=BaseGuiBootstrap)
     new_command.build_gui_context = mock.MagicMock(
         return_value={
             "app_source": "main()",
@@ -615,9 +614,7 @@ def test_abort_if_directory_exists(monkeypatch, new_command, tmp_path):
         "app_name": "myapplication",
     }
     new_command.build_app_context = mock.MagicMock(return_value=app_context)
-    new_command.select_bootstrap = mock.MagicMock(
-        return_value=("Toga", {"Toga": BaseGuiBootstrap})
-    )
+    new_command.select_bootstrap = mock.MagicMock(return_value=BaseGuiBootstrap)
     new_command.build_gui_context = mock.MagicMock(
         return_value={
             "app_source": "main()",

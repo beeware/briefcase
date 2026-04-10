@@ -4,8 +4,7 @@ import re
 import unicodedata
 from collections import OrderedDict
 from email.utils import parseaddr
-from importlib.metadata import entry_points
-from typing import ClassVar
+from importlib import metadata
 
 from briefcase.bootstraps import BaseGuiBootstrap
 from briefcase.config import (
@@ -37,7 +36,7 @@ def get_gui_bootstraps() -> dict[str, type[BaseGuiBootstrap]]:
     """Loads built-in and third-party GUI bootstraps."""
     return {
         entry_point.name: entry_point.load()
-        for entry_point in entry_points(group="briefcase.bootstraps")
+        for entry_point in metadata.entry_points(group="briefcase.bootstraps")
     }
 
 
@@ -75,29 +74,6 @@ class NewCommand(BaseCommand):
     description = "Create a new Briefcase project."
 
     OTHER_FRAMEWORKS = "Other frameworks"
-
-    # Community GUI bootstraps that are known to Briefcase.
-    # A bootstrap is only considered "installed" if it exposes a
-    # `briefcase.bootstraps` entry point.
-    KNOWN_COMMUNITY_BOOTSTRAPS: ClassVar[dict[str, dict[str, object]]] = {
-        "toga-positron": {
-            "entry_point": [
-                "Toga Positron (Django server)",
-                "Toga Positron (Site-specific browser)",
-                "Toga Positron (Static server)",
-            ],
-            "display_name": "Positron",
-            "description": (
-                "A Toga base for apps whose GUI is provided by a web view "
-                "(i.e., Electron-like apps, but for Python)."
-            ),
-        },
-        "pygame-ce": {
-            "entry_point": ["pygame_ce"],
-            "display_name": "Pygame-ce",
-            "description": "Community edition fork of pygame.",
-        },
-    }
 
     def bundle_path(self, app):
         """A placeholder; New command doesn't have a bundle path."""
@@ -467,9 +443,8 @@ class NewCommand(BaseCommand):
     def select_bootstrap(
         self,
         project_overrides: dict[str, str],
-    ) -> tuple[str, dict[str, type[BaseGuiBootstrap]]]:
-        """Ask the GUI framework question and return the selection plus bootstrap
-        registry."""
+    ) -> type[BaseGuiBootstrap]:
+        """Ask the GUI framework question and return the selected bootstrap class."""
         bootstraps = get_gui_bootstraps()
         bootstrap_options = self._gui_bootstrap_choices(bootstraps)
 
@@ -490,10 +465,9 @@ class NewCommand(BaseCommand):
         )
 
         if selected_bootstrap == self.OTHER_FRAMEWORKS:
-            self._show_other_frameworks_menu(bootstraps)
-            return "None", bootstraps
+            selected_bootstrap = self._select_other_bootstrap()
 
-        return selected_bootstrap, bootstraps
+        return bootstraps[selected_bootstrap]
 
     def build_gui_context(
         self,
@@ -545,18 +519,32 @@ class NewCommand(BaseCommand):
 
         return bootstrap_choices
 
-    def _show_other_frameworks_menu(
-        self, bootstraps: dict[str, type[BaseGuiBootstrap]]
-    ) -> None:
-        """Show a submenu of known community bootstraps and display installation
-        instructions."""
-        installed = set(bootstraps.keys())
-
+    def _select_other_bootstrap(self) -> str:
+        """Show a submenu of known community bootstraps."""
+        # Community GUI bootstraps that are known to Briefcase.
         available = {
-            package: plugin
-            for package, plugin in self.KNOWN_COMMUNITY_BOOTSTRAPS.items()
-            if not any(name in installed for name in plugin["entry_point"])
+            "toga-positron": {
+                "display_name": "Toga Positron",
+                "description": (
+                    "A Toga base for apps whose GUI is provided by a web view "
+                    "(i.e., Electron-like apps, but for Python)."
+                ),
+            },
+            "pygame-ce": {
+                "display_name": "Pygame-ce",
+                "description": "Community edition fork of pygame.",
+            },
         }
+
+        # Make the available package names into a concrete list, then try to load
+        # metadata for each one. If metadata exists, the package is installed,
+        # and it is removed from the dictionary of available packages.
+        for package in list(available.keys()):
+            try:
+                metadata.metadata(package)
+                available.pop(package)
+            except metadata.PackageNotFoundError:
+                pass
 
         if not available:
             self.console.warning(
@@ -564,12 +552,12 @@ class NewCommand(BaseCommand):
             )
 
         options = {
-            package: f"{plugin['display_name']} — {plugin['description']}"
+            package: f"{plugin['display_name']}: {plugin['description']}"
             for package, plugin in available.items()
         }
         options["None"] = "No GUI framework"
 
-        chosen = self.console.selection_question(
+        package = self.console.selection_question(
             intro=(
                 "Support for following GUI frameworks can be added by installing "
                 "a plugin that is maintained by the community.\n"
@@ -582,26 +570,23 @@ class NewCommand(BaseCommand):
             options=options,
         )
 
-        if chosen == "None":
-            return
-
-        selected = available[chosen]
-        display_name = selected["display_name"]
-        package = chosen
-
-        self.console.warning(
-            self.console.textwrap(
-                "\n"
-                f"Support for {display_name} is provided by a community plugin.\n"
-                "\n"
-                "To use this plugin, run:\n"
-                "\n"
-                f"    python -m pip install {package}\n\n"
-                f"then re-run `briefcase new` and select {display_name} as your "
-                "GUI framework.\n"
+        if package != "None":
+            display_name = available[package]["display_name"]
+            self.console.warning(
+                self.console.textwrap(
+                    "\n"
+                    f"Support for {display_name} is provided by a community plugin.\n"
+                    "\n"
+                    "To use this plugin, run:\n"
+                    "\n"
+                    f"    python -m pip install {package}\n\n"
+                    f"then re-run `briefcase new` and select {display_name} as your "
+                    "GUI framework.\n"
+                )
             )
-        )
-        raise SystemExit(0)
+            raise SystemExit(0)
+
+        return package
 
     def warn_unused_overrides(self, project_overrides: dict[str, str] | None):
         """Inform user of project configuration overrides that were not used."""
@@ -630,11 +615,11 @@ class NewCommand(BaseCommand):
         # Ensure we always have a dict before popping keys
         project_overrides = project_overrides or {}
 
-        selected_bootstrap, bootstraps = self.select_bootstrap(project_overrides)
+        bootstrap_class = self.select_bootstrap(project_overrides)
         context = self.build_app_context(project_overrides)
 
         # Instantiate the bootstrap and add the bootstrap context.
-        bootstrap = bootstraps[selected_bootstrap](
+        bootstrap = bootstrap_class(
             console=self.console,
             context=context,
         )
