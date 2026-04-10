@@ -79,7 +79,7 @@ class WindowsMixin(_MixinBase):
             return f"{app.formal_name}.exe"
 
     def bundle_package_path(self, app):
-        return self.bundle_path(app) / self.packaging_root
+        return self.bundle_path(app) / self.packaging_root()
 
     def binary_path(self, app):
         return self.package_path(app) / self.package_executable_path(app)
@@ -90,10 +90,7 @@ class WindowsMixin(_MixinBase):
 
     def verify_host(self):
         super().verify_host()
-        # The stub app only supports x86-64 right now, and our VisualStudio and WiX code
-        # is the same (#1887). However, we can package an external x86-64 app on any
-        # build machine.
-        if self.tools.host_arch != "AMD64":
+        if self.tools.host_arch not in ("AMD64", "ARM64"):
             if all(app.external_package_path for app in self.apps.values()):
                 if not self.is_clone:
                     self.console.warning(f"""
@@ -101,11 +98,11 @@ class WindowsMixin(_MixinBase):
 ** WARNING: Possible architecture mismatch                             **
 *************************************************************************
 
-The build machine is {self.tools.host_arch}, but Briefcase on Windows currently only
-supports x86-64 installers.
+The build machine is {self.tools.host_arch}, but Briefcase on Windows only
+supports x86-64 and ARM64 installers.
 
 You are responsible for ensuring that the content of external_package_path
-is compatible with x86-64.
+is compatible with supported platforms.
 
 *************************************************************************
 """)
@@ -127,7 +124,8 @@ Install a 64bit version of Python and run Briefcase again.
 
 class WindowsCreateCommand(CreateCommand):
     def support_package_filename(self, support_revision):
-        return f"python-{self.python_version_tag}.{support_revision}-embed-amd64.zip"
+        arch = self.tools.host_arch.lower()
+        return f"python-{self.python_version_tag}.{support_revision}-embed-{arch}.zip"
 
     def support_package_url(self, support_revision):
         micro = re.match(r"\d+", str(support_revision)).group(0)
@@ -594,7 +592,7 @@ class WindowsPackageCommand(PackageCommand):
                         "-ext",
                         self.tools.wix.ext_path("UI"),
                         "-arch",
-                        "x64",  # Default is x86, regardless of the build machine.
+                        "arm64" if self.tools.host_arch == "ARM64" else "x64",
                         f"{app.app_name}.wxs",
                         "-loc",
                         "unicode.wxl",

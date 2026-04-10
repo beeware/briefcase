@@ -21,7 +21,10 @@ from briefcase.platforms.windows import (
 
 class WindowsVisualStudioMixin(WindowsMixin):
     output_format = "VisualStudio"
-    packaging_root = Path("x64/Release")
+
+    def packaging_root(self):
+        arch = "ARM" if self.tools.host_arch == "ARM64" else "x64"
+        return Path(f"{arch}/Release")
 
     def project_path(self, app):
         return self.bundle_path(app) / f"{app.formal_name}.sln"
