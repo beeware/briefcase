@@ -81,9 +81,12 @@ def test_existing_system_image(mock_tools, android_sdk):
     # Mock the host arch
     mock_tools.host_arch = "AMD64" if platform.system() == "Windows" else "x86_64"
 
-    # Mock the existence of a system image
-    (android_sdk.root_path / "system-images/android-31/default/x86_64").mkdir(
-        parents=True
+    # Mock sdkmanager reporting the system image as installed
+    mock_tools.subprocess.check_output.return_value = (
+        "Installed packages:\n"
+        "  Path                                    | Version | Description                    | Location\n"
+        "  -------                                 | ------- | -------                        | -------\n"
+        "  system-images;android-31;default;x86_64 | 5       | Intel x86_64 Atom System Image | system-images/android-31/default/x86_64\n"
     )
 
     # Verify the system image that we already have
