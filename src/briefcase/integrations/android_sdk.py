@@ -733,6 +733,27 @@ connection.
         except KeyError:
             self.tools.console.debug(f"Device {avd!r} doesn't define a skin.")
 
+    def list_installed_system_images(self) -> set[str]:
+        """Returns a set of installed system image package identifiers.
+
+        e.g., ``{"system-images;android-31;default;x86_64"}``
+        """
+        try:
+            output = self.tools.subprocess.check_output(
+                [self.sdkmanager_path, "--list_installed"],
+                env=self.env,
+            )
+        except subprocess.CalledProcessError as e:
+            raise BriefcaseCommandError(
+                "Unable to invoke the Android SDK manager"
+            ) from e
+
+        return {
+            line.split("|")[0].strip()
+            for line in output.splitlines()
+            if line.strip().startswith("system-images")
+        }
+
     def verify_system_image(self, system_image: str):
         """Verify that the required system image is installed.
 
@@ -766,13 +787,9 @@ connection.
 """
             )
 
-        # Convert the system image into a path where that system image
-        # would be expected, and see if the location exists.
-        system_image_path = self.root_path
-        for part in system_image_parts:
-            system_image_path = system_image_path / part
-
-        if system_image_path.exists():
+        # Use sdkmanager to verify the system image is fully installed,
+        # not just that the directory exists.
+        if system_image in self.list_installed_system_images():
             # Found the system image.
             return
 
