@@ -65,6 +65,7 @@ def test_build_app(build_command, first_app_config, tool_debug_mode, tmp_path):
                     "-property:RestorePackagesConfig=true",
                     "-target:First App",
                     "-property:Configuration=Release",
+                    f"-property:Platform={build_command.architecture()}",
                     "-verbosity:detailed" if tool_debug_mode else "-verbosity:normal",
                 ],
                 check=True,

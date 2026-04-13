@@ -28,9 +28,9 @@ def test_unsupported_host_os(create_command, host_os):
         create_command()
 
 
-@pytest.mark.parametrize("host_arch", ["i686", "ARM64", "wonky"])
+@pytest.mark.parametrize("host_arch", ["i686", "wonky"])
 def test_unsupported_arch(create_command, host_arch, first_app_config):
-    """Internal apps can only be developed on x86-64."""
+    """Internal apps can only be developed on x86-64 and ARM64."""
     create_command.tools.host_os = "Windows"
     create_command.tools.host_arch = host_arch
     create_command.apps["first"] = first_app_config
@@ -42,7 +42,7 @@ def test_unsupported_arch(create_command, host_arch, first_app_config):
         create_command.verify_host()
 
 
-@pytest.mark.parametrize("host_arch", ["i686", "ARM64", "wonky"])
+@pytest.mark.parametrize("host_arch", ["i686", "wonky"])
 def test_unsupported_arch_external(create_command, host_arch, first_app_config, capsys):
     """External apps can be built on a different architecture, with a warning."""
     create_command.tools.host_os = "Windows"
