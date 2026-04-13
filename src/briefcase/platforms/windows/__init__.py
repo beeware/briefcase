@@ -88,6 +88,9 @@ class WindowsMixin(_MixinBase):
         suffix = "zip" if app.packaging_format == "zip" else "msi"
         return self.dist_path / f"{app.formal_name}-{app.version}.{suffix}"
 
+    def windows_arch(self):
+        return "ARM64" if self.tools.host_arch == "ARM64" else "x64"
+
     def verify_host(self):
         super().verify_host()
         if self.tools.host_arch not in ("AMD64", "ARM64"):
@@ -592,7 +595,7 @@ class WindowsPackageCommand(PackageCommand):
                         "-ext",
                         self.tools.wix.ext_path("UI"),
                         "-arch",
-                        "arm64" if self.tools.host_arch == "ARM64" else "x64",
+                        app.windows_arch().lower(),
                         f"{app.app_name}.wxs",
                         "-loc",
                         "unicode.wxl",
