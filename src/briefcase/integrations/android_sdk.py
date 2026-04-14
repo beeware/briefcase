@@ -205,13 +205,13 @@ class AndroidSDK(ManagedTool):
         if android_home:
             if android_sdk_root and android_sdk_root != android_home:
                 tools.console.warning_banner(
-                    title="ANDROID_HOME and ANDROID_SDK_ROOT are inconsistent",
-                    message=f"""
+                    "ANDROID_HOME and ANDROID_SDK_ROOT are inconsistent",
+                    f"""
                         The ANDROID_HOME and ANDROID_SDK_ROOT environment variables
                         are set to different paths:
 
-                            ANDROID_HOME:     {android_home}
-                            ANDROID_SDK_ROOT: {android_sdk_root}
+                          ANDROID_HOME:     {android_home}
+                          ANDROID_SDK_ROOT: {android_sdk_root}
 
                         Briefcase will ignore ANDROID_SDK_ROOT and only use the path
                         specified by ANDROID_HOME.
@@ -294,13 +294,12 @@ class AndroidSDK(ManagedTool):
                         f"""
                             The Android SDK specified by {sdk_source_env} at:
 
-                            {sdk_root_env}
+                              {sdk_root_env}
 
-                            does not contain Command-Line Tools
-                            version {cls.SDK_MANAGER_VER}.
-                            Briefcase requires this version to be installed to use
-                            an external Android SDK.
-                            Use Android Studio's SDK Manager to install it.
+                            does not contain Command-Line Tools version
+                            {cls.SDK_MANAGER_VER}. Briefcase requires this version to be
+                            installed to use an external Android SDK. Use Android
+                            Studio's SDK Manager to install it.
 
                             Briefcase will proceed using its own SDK instance.
                         """,
@@ -312,15 +311,15 @@ class AndroidSDK(ManagedTool):
                         The location pointed to by the {sdk_source_env} environment
                         variable:
 
-                        {sdk_root_env}
+                          {sdk_root_env}
 
-                        doesn't appear to contain an Android SDK with
-                        the Command-line Tools installed.
+                        doesn't appear to contain an Android SDK with the Command-line
+                        Tools installed.
 
-                        If {sdk_source_env} is an Android SDK, ensure it is
-                        the root directory of the Android SDK instance such that
+                        If {sdk_source_env} is an Android SDK, ensure it is the root
+                        directory of the Android SDK instance such that:
 
-                        ${sdk_source_env}{os.sep}{sdk.sdkmanager_path.relative_to(sdk.root_path)}
+                            ${sdk_source_env}{os.sep}{sdk.sdkmanager_path.relative_to(sdk.root_path)}
 
                         is a valid filepath.
 
@@ -498,8 +497,8 @@ its output for errors.
             )
         except (OSError, subprocess.CalledProcessError) as e:
             self.tools.console.debug(str(e))
-            self.tools.console.warning_banner(
-                "", f"Failed to install cmdline-tools;{self.SDK_MANAGER_VER}"
+            self.tools.console.warning(
+                f"Failed to install cmdline-tools;{self.SDK_MANAGER_VER}"
             )
             return False
         return True
@@ -721,8 +720,7 @@ connection.
             self.tools.console.warning_banner(
                 "Unexpected emulator ABI",
                 f"""
-                    The system image {system_image!r}
-                    does not match the architecture of
+                    The system image {system_image!r} does not match the architecture of
                     this computer ({self.emulator_abi}).
 
                     Briefcase will proceed assuming the emulator is correctly
@@ -1286,15 +1284,15 @@ Review the emulator output above for:
 
 Ensure your Android SDK is up-to-date by running:
 
-    $ briefcase upgrade {AndroidSDK.name}
+  $ briefcase upgrade {AndroidSDK.name}
 
 To review Google's general troubleshooting steps for the emulator, visit:
 
-    https://developer.android.com/studio/run/emulator-troubleshooting
+  https://developer.android.com/studio/run/emulator-troubleshooting
 
 You can also start the emulator manually by running:
 
-    $ {emulator_command}
+  $ {emulator_command}
 """
 
         failed_startup_error_msg = f"{{prologue}}\n{general_error_msg}"

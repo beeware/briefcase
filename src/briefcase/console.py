@@ -251,64 +251,68 @@ class Console:
         return self._log_impl.export_text()
 
     @staticmethod
-    def _dedent_and_wrap(text, wrap_width, is_title=False):
-        """Dedent text, split text into paragraphs and wrap each paragraph to lines of
-        the specified width."""
+    def _dedent_and_wrap(text, wrap_width, border=0):
+        """Dedent text, split text into paragraphs and wrap to a width.
 
+        If a border is specified, that border width will be preserved on the left *and
+        right* of the text. The right hand side won't be printed, but it will be
+        accommodated in any line wrapping.
+
+        Text that is already indented relative to the rest of the text will have that
+        indentation preserved.
+
+        If text is indented, it will *not* undergo line breaks on spaces and hyphens, on
+        the assumption that it will be an environment variable or command line.
+        """
         # Dedent and remove common leading empty lines
         text = textwrap.dedent(text).strip("\n")
-
-        # Add a warning prefix for title
-        if is_title:
-            text = f"WARNING: {text.strip()}"
 
         # Split text into text lines
         input_lines = text.split("\n")
 
-        # create paragraphs from lines
+        # Create paragraphs from lines. Use "None" for a paragraph break.
+        # Preserve any line that starts with spaces as-is. Any other line
+        # is accumulated into the last paragraph
         paragraphs = []
         for line in input_lines:
-            # add empty paragraph
             if not line:
+                # Preserve an empty line as a paragraph break
                 paragraphs.append(None)
-                continue
-
-            # calc relative indentation; always zero for title
-            rel_indent = 0 if is_title else len(line) - len(line.lstrip())
-
-            # add new paragraph
-            # if it first, if last empty or have relative indentation
-            if any((not paragraphs, rel_indent)) or not paragraphs[-1]:
-                # add new paragraph
-                paragraphs.append([line.strip(), rel_indent])
-
-            # append line to last paragraph
+            elif line[0] == " ":
+                # If the line starts with indentation, preserve it
+                paragraphs.append(line.rstrip())
+            elif not (paragraphs and paragraphs[-1] and paragraphs[-1][0] != " "):
+                # This is either the first paragraph, or the current last paragraph is
+                # either a paragraph break, or indented literal paragraph. This means
+                # the current line is the start of a new paragraph.
+                paragraphs.append(line.strip())
             else:
-                paragraphs[-1][0] += f" {line.strip()}"
+                # Accumulate onto the most recent paragraph.
+                paragraphs[-1] = f"{paragraphs[-1]} {line.strip()}"
 
         # Wrap each paragraph to lines
         output_lines = []
         for p in paragraphs:
-            # If the paragraph is not empty, wrap it to the specified width
             if p:
-                output_lines.extend(
-                    # add indent to each line in wrapping
-                    f"{' ' * p[-1]}{line}"
-                    for line in
-                    # wrapping paragraph to width minus rel indent
-                    textwrap.wrap(p[0], width=wrap_width - p[1])
-                )
-
-            # Otherwise, add an empty line
+                if p[0] == " ":
+                    # Preserve an indented line as a literal
+                    output_lines.append(f"{' ' * border}{p}")
+                else:
+                    # Break the paragraph into lines.
+                    output_lines.extend(
+                        f"{' ' * border}{line}"
+                        for line in textwrap.wrap(p, width=wrap_width - (border * 2))
+                    )
             else:
+                # Insert a paragraph break.
                 output_lines.append("")
-        # Return the list of lines
+
         return output_lines
 
     def warning_banner(
         self,
-        title: str,
-        message: str,
+        title: str | None = None,
+        message: str | None = None,
         width: int = 80,
     ) -> str:
         """The title or message can be provided as a single or as multiline string. Any
@@ -324,52 +328,24 @@ class Console:
         :param width: The total width of the box in characters. Defaults to 80.
         :return: The formatted message enclosed in a bordered box.
         """
+        BORDER_LINE = "*" * width
+        lines_array = ["", BORDER_LINE]
 
-        # character to use for the box border
-        border_char = "*"
-
-        # If message and title are both empty rase ValueError
-        if not any((message, title)):
-            raise ValueError("Message or title must be provided")
-        # If width is not an integer, raise TypeError
-        if not isinstance(width, int):
-            raise TypeError("Width must be an integer")
-
-        # Create border line
-        border_line = border_char * width
-        # create lines array with opening line of the box
-        lines_array = [border_line]
-
-        # if title exists, format title in the box
         if title:
-            # title must be a string
-            if not isinstance(title, str):
-                raise TypeError("Title must be a string")
+            # Remove 6 from the width to allow for "** " and " **" wrappers
+            title_lines = self._dedent_and_wrap(f"WARNING: {title}", width - 6)
 
-            # get title wrapped to lines
-            title_lines = self._dedent_and_wrap(title, width - 6, True)
-
-            # center each line of the title and add to the box
+            # Center each line of the title and add to the box
             for line in title_lines:
-                line = line.center(width - 4)
-                lines_array.append(f"{border_char * 2}{line}{border_char * 2}")
+                line = line.center(width - 6)
+                lines_array.append(f"** {line} **")
 
-            # closing line of title in the box
-            lines_array.append(border_line)
+            lines_array.append(BORDER_LINE)
 
-        # If message is not empty, add it to the box
         if message:
-            # message must be a string
-            if not isinstance(message, str):
-                raise TypeError("Message must be a string")
-            # get message wrapped to lines
-            msg_lines = self._dedent_and_wrap(message, width)
+            msg_lines = self._dedent_and_wrap(message, width, border=2)
 
-            # add message lines to the box
-            lines_array.extend(msg_lines)
-
-            # closing line of message
-            lines_array.append(border_line)
+            lines_array.extend(["", *msg_lines, "", BORDER_LINE, ""])
 
         # merge lines into a single string and send warning to console
         self.warning("\n".join(lines_array))
