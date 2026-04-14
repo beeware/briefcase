@@ -22,6 +22,7 @@ from briefcase.platforms.windows import (
 class WindowsVisualStudioMixin(WindowsMixin):
     output_format = "VisualStudio"
 
+    @property
     def packaging_root(self):
         return Path(f"{self.vscode_platform}/Release")
 

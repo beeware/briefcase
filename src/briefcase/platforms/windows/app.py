@@ -25,6 +25,7 @@ class WindowsAppMixin(WindowsMixin):
     output_format = "app"
     supports_external_packaging = True
 
+    @property
     def packaging_root(self):
         return Path("src")
 

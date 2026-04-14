@@ -79,7 +79,7 @@ class WindowsMixin(_MixinBase):
             return f"{app.formal_name}.exe"
 
     def bundle_package_path(self, app):
-        return self.bundle_path(app) / self.packaging_root()
+        return self.bundle_path(app) / self.packaging_root
 
     def binary_path(self, app):
         return self.package_path(app) / self.package_executable_path(app)
