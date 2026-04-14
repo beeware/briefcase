@@ -1045,15 +1045,18 @@ class macOSPackageMixin(macOSSigningMixin):
         # Submit the app for notarization
         submission_id = self.submit_notarization(app, identity=notarization_identity)
 
-        self.console.warning(f"""
-Briefcase will now wait for Apple to approve the notarization request.
-This can take some time - in some cases, hours.
+        self.console.warning_banner(
+            message=f"""
+                Briefcase will now wait for Apple to approve the notarization request.
+                This can take some time - in some cases, hours.
 
-If notarization is interrupted, you can resume by running:
+                If notarization is interrupted, you can resume by running:
 
-    briefcase package macOS {self.output_format} {format_args} {identity_args} --resume {submission_id}
+                    briefcase package macOS {self.output_format} {format_args}
+                {identity_args} --resume {submission_id}
 
-""")  # noqa: E501
+            """,
+        )
 
         self.finalize_notarization(
             app,
@@ -1095,22 +1098,24 @@ You can store these credentials by invoking:
 
 """)
 
-                    self.console.warning("""
-The notarization process uses credentials stored on your system Keychain.
-You need to do this once for each signing certificate you use.
+                    self.console.warning_banner(
+                        message="""
+            The notarization process uses credentials stored on your system Keychain.
+            You need to do this once for each signing certificate you use.
 
-The credentials are authenticated and stored using your Apple ID, using
-an app-specific Apple ID password. To generate an app-specific Apple ID
-password:
+            The credentials are authenticated and stored using your Apple ID, using
+            an app-specific Apple ID password. To generate an app-specific Apple ID
+            password:
 
-  1. Sign into https://appleid.apple.com;
-  2. In the 'Sign-in and Security' section, click 'App-Specific Passwords';
-  3. Click on the '+' icon. You will need to provide an identifying name
-     for the password. You can pick any name that makes sense to you - the
-     name is only there so you can identify passwords. 'Briefcase' would be
-     one possible name.
-  4. Record the password somewhere safe.
-""")
+            1. Sign into https://appleid.apple.com;
+            2. In the 'Sign-in and Security' section, click 'App-Specific Passwords';
+            3. Click on the '+' icon. You will need to provide an identifying name
+            for the password. You can pick any name that makes sense to you - the
+            name is only there so you can identify passwords. 'Briefcase' would be
+            one possible name.
+            4. Record the password somewhere safe.
+                        """,
+                    )
                     try:
                         self.tools.subprocess.run(
                             [
@@ -1388,23 +1393,19 @@ password:
                 raise BriefcaseCommandError(
                     "Can't notarize an app with an ad-hoc signing identity"
                 )
-            self.console.warning("""
-*************************************************************************
-** WARNING: Signing with an ad-hoc identity                            **
-*************************************************************************
+            self.console.warning_banner(
+                "Signing with an ad-hoc identity",
+                """
+                    This app is being signed with an ad-hoc identity. The resulting
+                    app will run on this computer, but will not run on anyone else's
+                    computer.
 
-    This app is being signed with an ad-hoc identity. The resulting
-    app will run on this computer, but will not run on anyone else's
-    computer.
-
-    To generate an app that can be distributed to others, you must
-    obtain an application distribution certificate from Apple, and
-    select the developer identity associated with that certificate
-    when running 'briefcase package'.
-
-*************************************************************************
-
-""")
+                    To generate an app that can be distributed to others, you must
+                    obtain an application distribution certificate from Apple, and
+                    select the developer identity associated with that certificate
+                    when running 'briefcase package'.
+                """,
+            )
             self.console.info("Signing app with ad-hoc identity...")
         else:
             # If we're signing, and notarization isn't explicitly disabled,
@@ -1630,9 +1631,11 @@ password:
             try:
                 icon_filename = self.base_path / f"{app.installer_icon}.icns"
                 if not icon_filename.exists():
-                    self.console.warning(
-                        f"Can't find {app.installer_icon}.icns "
-                        "to use as DMG installer icon"
+                    self.console.warning_banner(
+                        message=f"""
+                            Can't find {app.installer_icon}.icns
+                            to use as DMG installer icon
+                        """,
                     )
                     raise AttributeError()
             except AttributeError:
@@ -1640,9 +1643,11 @@ password:
                 if app.icon:
                     icon_filename = self.base_path / f"{app.icon}.icns"
                     if not icon_filename.exists():
-                        self.console.warning(
-                            f"Can't find {app.icon}.icns "
-                            "to use as fallback DMG installer icon"
+                        self.console.warning_banner(
+                            message=f"""
+                                Can't find {app.icon}.icns
+                                to use as fallback DMG installer icon
+                            """,
                         )
                         icon_filename = None
                 else:
@@ -1657,9 +1662,11 @@ password:
                 if image_filename.exists():
                     dmg_settings["background"] = os.fsdecode(image_filename)
                 else:
-                    self.console.warning(
-                        f"Can't find {app.installer_background}.png "
-                        "to use as DMG background"
+                    self.console.warning_banner(
+                        message=f"""
+                            Can't find {app.installer_background}.png
+                            to use as DMG background
+                        """,
                     )
             except AttributeError:
                 # No installer background image provided
