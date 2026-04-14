@@ -94,6 +94,17 @@ class WindowsMixin(_MixinBase):
 
     def verify_host(self):
         super().verify_host()
+        if (
+            self.tools.host_arch == "ARM64"
+            and "AMD64" in self.tools.platform.python_compiler()
+        ):
+            raise UnsupportedHostError(
+                "The Python interpreter that is being used to run Briefcase has been "
+                "compiled for x86_64, and is running in emulation mode on ARM64"
+                "hardware. You must use a Python interpreter that has been "
+                "compiled for ARM64."
+            )
+
         if self.tools.host_arch not in ("AMD64", "ARM64"):
             if all(app.external_package_path for app in self.apps.values()):
                 if not self.is_clone:

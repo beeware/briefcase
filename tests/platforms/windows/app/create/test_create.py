@@ -1,4 +1,6 @@
+import platform
 import sys
+from unittest.mock import MagicMock
 
 import pytest
 from packaging.version import Version
@@ -80,6 +82,30 @@ def test_unsupported_32bit_python(create_command):
         match="Windows applications cannot be built using a 32bit version of Python",
     ):
         create_command()
+
+
+def test_verify_windows_cpu_arch(create_command):
+    """Running through x86_64 emulation on Windows ARM64 will raise an error."""
+
+    # Create a Mock object for the platform module
+    create_command.tools.platform = MagicMock(spec_set=platform)
+
+    # Simulate that Mock platform is running on Windows ARM64 with an x86_64 Python interpreter
+    create_command.tools.host_arch = "ARM64"
+    create_command.tools.platform.python_compiler = MagicMock(
+        return_value="MSV v.1950 64 bit (AMD64)"
+    )
+
+    with pytest.raises(
+        UnsupportedHostError,
+        match=(
+            r"The Python interpreter that is being used to run Briefcase has been "
+            r"compiled for x86_64, and is running in emulation mode on ARM64"
+            r"hardware. You must use a Python interpreter that has been "
+            r"compiled for ARM64."
+        ),
+    ):
+        create_command.verify_host()
 
 
 def test_context(create_command, first_app_config):
