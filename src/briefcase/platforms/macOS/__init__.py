@@ -1052,10 +1052,9 @@ class macOSPackageMixin(macOSSigningMixin):
 
                 If notarization is interrupted, you can resume by running:
 
-                    briefcase package macOS {self.output_format} {format_args}
-                {identity_args} --resume {submission_id}
+                    briefcase package macOS {self.output_format} {format_args} {identity_args} --resume {submission_id}
 
-            """,
+            """,  # noqa: E501
         )
 
         self.finalize_notarization(
