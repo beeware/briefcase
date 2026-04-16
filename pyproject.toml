@@ -97,7 +97,7 @@ dependencies = [
     "psutil >= 5.9, < 8.0",
     "python-dateutil >= 2.9.0.post0",  # transitive dependency (beeware/briefcase#1428)
     "httpx >= 0.20, < 1.0",
-    "rich >= 12.6, < 15.0",
+    "rich >= 12.6, < 16.0",
     "tenacity >= 8.0, < 10.0",
     "tomli >= 2.0, < 3.0; python_version <= '3.10'",
     "tomli_w >= 1.0, < 2.0",
@@ -119,7 +119,7 @@ towncrier = [
 ]
 
 tox-uv = [
-    "tox-uv == 1.34.0",
+    "tox-uv == 1.35.1",
 ]
 
 ty = [
@@ -136,7 +136,7 @@ test = [
     "coverage[toml] == 7.13.5",
     "coverage-conditional-plugin == 0.9.0",
     "httpx-retries == 0.4.6",
-    "pytest == 9.0.2",
+    "pytest == 9.0.3",
     "pytest-xdist == 3.8.0",
     {include-group = "setuptools-scm"},
 ]

@@ -204,27 +204,22 @@ class AndroidSDK(ManagedTool):
 
         if android_home:
             if android_sdk_root and android_sdk_root != android_home:
-                tools.console.warning(
+                tools.console.warning_banner(
+                    "ANDROID_HOME and ANDROID_SDK_ROOT are inconsistent",
                     f"""
-*************************************************************************
-** WARNING: ANDROID_HOME and ANDROID_SDK_ROOT are inconsistent         **
-*************************************************************************
+                        The ANDROID_HOME and ANDROID_SDK_ROOT environment variables
+                        are set to different paths:
 
-    The ANDROID_HOME and ANDROID_SDK_ROOT environment variables are set
-    to different paths:
+                          ANDROID_HOME:     {android_home}
+                          ANDROID_SDK_ROOT: {android_sdk_root}
 
-        ANDROID_HOME:     {android_home}
-        ANDROID_SDK_ROOT: {android_sdk_root}
+                        Briefcase will ignore ANDROID_SDK_ROOT and only use the path
+                        specified by ANDROID_HOME.
 
-    Briefcase will ignore ANDROID_SDK_ROOT and only use the path
-    specified by ANDROID_HOME.
-
-    You should update your environment configuration to either not set
-    ANDROID_SDK_ROOT, or set both environment variables to the same
-    path.
-
-*************************************************************************
-"""
+                        You should update your environment configuration to either
+                        not set ANDROID_SDK_ROOT, or set both environment variables
+                        to the samepath.
+                    """,
                 )
             sdk_root = android_home
             sdk_source = "ANDROID_HOME"
@@ -274,23 +269,19 @@ class AndroidSDK(ManagedTool):
 
             if sdk.exists():
                 if sdk_source_env == "ANDROID_SDK_ROOT":
-                    tools.console.warning(
+                    tools.console.warning_banner(
+                        "Using Android SDK from ANDROID_SDK_ROOT",
                         """
-*************************************************************************
-** WARNING: Using Android SDK from ANDROID_SDK_ROOT                    **
-*************************************************************************
+                            Briefcase is using the Android SDK specified by
+                            the ANDROID_SDK_ROOT environment variable.
 
-    Briefcase is using the Android SDK specified by the ANDROID_SDK_ROOT
-    environment variable.
+                            Android has deprecated ANDROID_SDK_ROOT in favor of the
+                            ANDROID_HOME environment variable.
 
-    Android has deprecated ANDROID_SDK_ROOT in favor of the
-    ANDROID_HOME environment variable.
-
-    Update your environment configuration to set ANDROID_HOME instead of
-    ANDROID_SDK_ROOT to ensure future compatibility.
-
-*************************************************************************
-"""
+                            Update your environment configuration to set
+                            ANDROID_HOME instead of ANDROID_SDK_ROOT to ensure
+                            future compatibility.
+                        """,
                     )
             elif sdk.cmdline_tools_path.parent.exists():
                 # a cmdline-tools directory exists,
@@ -298,50 +289,42 @@ class AndroidSDK(ManagedTool):
                 # Try to install the required version using the 'latest' version.
                 if not sdk.install_cmdline_tools():
                     sdk = None
-                    tools.console.warning(
+                    tools.console.warning_banner(
+                        "Incompatible Command-Line Tools Version",
                         f"""
-*************************************************************************
-** WARNING: Incompatible Command-Line Tools Version                    **
-*************************************************************************
+                            The Android SDK specified by {sdk_source_env} at:
 
-    The Android SDK specified by {sdk_source_env} at:
+                              {sdk_root_env}
 
-    {sdk_root_env}
+                            does not contain Command-Line Tools version
+                            {cls.SDK_MANAGER_VER}. Briefcase requires this version to be
+                            installed to use an external Android SDK. Use Android
+                            Studio's SDK Manager to install it.
 
-    does not contain Command-Line Tools version {cls.SDK_MANAGER_VER}. Briefcase
-    requires this version to be installed to use an external Android SDK.
-    Use Android Studio's SDK Manager to install it.
-
-    Briefcase will proceed using its own SDK instance.
-
-*************************************************************************
-"""
+                            Briefcase will proceed using its own SDK instance.
+                        """,
                     )
             else:
-                tools.console.warning(
+                tools.console.warning_banner(
+                    f"{sdk_source_env} does not point to an Android SDK",
                     f"""
-*************************************************************************
-** {f"WARNING: {sdk_source_env} does not point to an Android SDK":67} **
-*************************************************************************
+                        The location pointed to by the {sdk_source_env} environment
+                        variable:
 
-    The location pointed to by the {sdk_source_env} environment
-    variable:
+                          {sdk_root_env}
 
-    {sdk_root_env}
+                        doesn't appear to contain an Android SDK with the Command-line
+                        Tools installed.
 
-    doesn't appear to contain an Android SDK with the Command-line Tools installed.
+                        If {sdk_source_env} is an Android SDK, ensure it is the root
+                        directory of the Android SDK instance such that:
 
-    If {sdk_source_env} is an Android SDK, ensure it is the root directory
-    of the Android SDK instance such that
+                            ${sdk_source_env}{os.sep}{sdk.sdkmanager_path.relative_to(sdk.root_path)}
 
-    ${sdk_source_env}{os.sep}{sdk.sdkmanager_path.relative_to(sdk.root_path)}
+                        is a valid filepath.
 
-    is a valid filepath.
-
-    Briefcase will proceed using its own SDK instance.
-
-*************************************************************************
-"""
+                        Briefcase will proceed using its own SDK instance.
+                    """,
                 )
                 sdk = None
 
@@ -534,24 +517,19 @@ its output for errors.
             not self.cmdline_tools_path.parent.exists()
             and (self.root_path / "tools").exists()
         ):
-            self.tools.console.warning(
+            self.tools.console.warning_banner(
+                "Upgrading Android SDK tools",
                 f"""
-*************************************************************************
-** WARNING: Upgrading Android SDK tools                                **
-*************************************************************************
+                    Briefcase needs to replace the older Android SDK Tools with the
+                    newer Android SDK Command-Line Tools. This will involve some large
+                    downloads, as well as re-accepting the licenses for the Android
+                    SDKs.
 
-    Briefcase needs to replace the older Android SDK Tools with the
-    newer Android SDK Command-Line Tools. This will involve some large
-    downloads, as well as re-accepting the licenses for the Android
-    SDKs.
-
-    Any emulators created with the older Android SDK Tools will not be
-    compatible with the new tools. You will need to create new
-    emulators. Old emulators can be removed by deleting the files
-    in {self.avd_path} matching the emulator name.
-
-*************************************************************************
-"""
+                    Any emulators created with the older Android SDK Tools will not be
+                    compatible with the new tools. You will need to create new
+                    emulators. Old emulators can be removed by deleting the files
+                    in {self.avd_path} matching the emulator name.
+                """,
             )
             self.tools.shutil.rmtree(self.root_path)
 
@@ -687,21 +665,16 @@ connection.
             # Convert the path into a system image name, and verify it.
             self.verify_system_image(";".join(system_image_path.parts))
         except KeyError:
-            self.tools.console.warning(
+            self.tools.console.warning_banner(
+                "Unable to determine AVD system image",
                 f"""
-*************************************************************************
-** WARNING: Unable to determine AVD system image                       **
-*************************************************************************
+                    Briefcase was unable to determine the system image of the Android
+                    emulator AVD {avd!r} from it's configuration file.
 
-    Briefcase was unable to determine the system image of the Android
-    emulator AVD {avd!r} from it's configuration file.
-
-    Briefcase will proceed assuming the emulator is correctly
-    configured. If you experience any problems running the emulator,
-    this may be the cause of the problem.
-
-*************************************************************************
-"""
+                    Briefcase will proceed assuming the emulator is correctly
+                    configured. If you experience any problems running the emulator,
+                    this may be the cause of the problem.
+                """,
             )
 
         try:
@@ -710,21 +683,16 @@ connection.
             if skin_path == Path("_no_skin"):
                 self.tools.console.debug("Emulator does not use a skin.")
             elif skin_path != Path("skins") / skin:
-                self.tools.console.warning(
+                self.tools.console.warning_banner(
+                    "Unrecognized device skin",
                     f"""
-*************************************************************************
-** WARNING: Unrecognized device skin                                   **
-*************************************************************************
+                        Briefcase does not recognize the skin {skin!r} used by the
+                        Android emulator AVD {avd!r}.
 
-    Briefcase does not recognize the skin {skin!r} used by the
-    Android emulator AVD {avd!r}.
-
-    Briefcase will proceed assuming the emulator is correctly
-    configured. If you experience any problems running the emulator,
-    this may be the cause of the problem.
-
-*************************************************************************
-"""
+                        Briefcase will proceed assuming the emulator is correctly
+                        configured. If you experience any problems running the emulator,
+                        this may be the cause of the problem.
+                    """,
                 )
             else:
                 # Convert the path into a system image name, and verify it.
@@ -732,6 +700,27 @@ connection.
 
         except KeyError:
             self.tools.console.debug(f"Device {avd!r} doesn't define a skin.")
+
+    def list_installed_system_images(self) -> set[str]:
+        """Returns a set of installed system image package identifiers.
+
+        e.g., ``{"system-images;android-31;default;x86_64"}``
+        """
+        try:
+            output = self.tools.subprocess.check_output(
+                [self.sdkmanager_path, "--list_installed"],
+                env=self.env,
+            )
+        except subprocess.CalledProcessError as e:
+            raise BriefcaseCommandError(
+                "Unable to invoke the Android SDK manager"
+            ) from e
+
+        return {
+            line.split("|")[0].strip()
+            for line in output.splitlines()
+            if line.strip().startswith("system-images")
+        }
 
     def verify_system_image(self, system_image: str):
         """Verify that the required system image is installed.
@@ -749,30 +738,21 @@ connection.
             )
 
         if system_image_parts[-1] != self.emulator_abi:
-            self.tools.console.warning(
+            self.tools.console.warning_banner(
+                "Unexpected emulator ABI",
                 f"""
-*************************************************************************
-** WARNING: Unexpected emulator ABI                                    **
-*************************************************************************
+                    The system image {system_image!r} does not match the architecture of
+                    this computer ({self.emulator_abi}).
 
-    The system image {system_image!r}
-    does not match the architecture of this computer ({self.emulator_abi}).
-
-    Briefcase will proceed assuming the emulator is correctly
-    configured. If you experience any problems running the emulator,
-    this may be the cause of the problem.
-
-*************************************************************************
-"""
+                    Briefcase will proceed assuming the emulator is correctly
+                    configured. If you experience any problems running the emulator,
+                    this may be the cause of the problem.
+                """,
             )
 
-        # Convert the system image into a path where that system image
-        # would be expected, and see if the location exists.
-        system_image_path = self.root_path
-        for part in system_image_parts:
-            system_image_path = system_image_path / part
-
-        if system_image_path.exists():
+        # Use sdkmanager to verify the system image is fully installed,
+        # not just that the directory exists.
+        if system_image in self.list_installed_system_images():
             # Found the system image.
             return
 
@@ -1327,15 +1307,15 @@ Review the emulator output above for:
 
 Ensure your Android SDK is up-to-date by running:
 
-    $ briefcase upgrade {AndroidSDK.name}
+  $ briefcase upgrade {AndroidSDK.name}
 
 To review Google's general troubleshooting steps for the emulator, visit:
 
-    https://developer.android.com/studio/run/emulator-troubleshooting
+  https://developer.android.com/studio/run/emulator-troubleshooting
 
 You can also start the emulator manually by running:
 
-    $ {emulator_command}
+  $ {emulator_command}
 """
 
         failed_startup_error_msg = f"{{prologue}}\n{general_error_msg}"
