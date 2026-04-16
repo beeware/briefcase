@@ -195,7 +195,7 @@ class ToolCache(Mapping):
         self.base_path = Path(base_path)
         self.home_path = Path(os.path.expanduser(home_path or Path.home()))
 
-        self.host_arch = self.platform.machine()
+        self.host_arch = self._get_host_arch()
         self.host_os = self.platform.system()
         # Python is 32bit if its pointers can only address with 32 bits or fewer
         self.is_32bit_python = self.sys.maxsize <= 2**32
@@ -207,6 +207,36 @@ class ToolCache(Mapping):
                 home_path=self.home_path,
             )
         )
+
+    def _get_host_arch(self) -> str:
+        arch = self.platform.machine()
+        # On Windows with Python < 3.12, ``platform.machine()`` returns the
+        # emulated architecture (e.g. "AMD64") when an x86-64 Python interpreter
+        # is running under ARM64.  ``IsWow64Process2()`` exposes the
+        # native machine type.
+        if (
+            arch == "AMD64"
+            and self.platform.system() == "Windows"
+            and self.sys.version_info < (3, 12)
+            and self.sys.getwindowsversion().build >= 16299  # Windows 10 1709
+        ):
+            import ctypes
+            from ctypes import wintypes
+
+            IMAGE_FILE_MACHINE_ARM64 = 0xAA64
+            kernel32 = ctypes.windll.kernel32
+            process_machine = ctypes.c_ushort(0)
+            native_machine = ctypes.c_ushort(0)
+            if (
+                kernel32.IsWow64Process2(
+                    wintypes.HANDLE(kernel32.GetCurrentProcess()),
+                    ctypes.byref(process_machine),
+                    ctypes.byref(native_machine),
+                )
+                and native_machine.value == IMAGE_FILE_MACHINE_ARM64
+            ):
+                return "ARM64"
+        return arch
 
     @cached_property
     def system_encoding(self) -> str:
