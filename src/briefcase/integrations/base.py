@@ -195,8 +195,8 @@ class ToolCache(Mapping):
         self.base_path = Path(base_path)
         self.home_path = Path(os.path.expanduser(home_path or Path.home()))
 
-        self.host_arch = self._get_host_arch()
         self.host_os = self.platform.system()
+        self.host_arch = self._get_host_arch()
         # Python is 32bit if its pointers can only address with 32 bits or fewer
         self.is_32bit_python = self.sys.maxsize <= 2**32
 
@@ -216,7 +216,7 @@ class ToolCache(Mapping):
         # native machine type.
         if (
             arch == "AMD64"
-            and self.platform.system() == "Windows"
+            and self.host_os == "Windows"
             and self.sys.version_info < (3, 12)
             and self.sys.getwindowsversion().build >= 16299  # Windows 10 1709
         ):
