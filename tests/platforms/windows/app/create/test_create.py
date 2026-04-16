@@ -101,7 +101,7 @@ def test_verify_windows_cpu_arch(create_command):
         UnsupportedHostError,
         match=(
             r"The Python interpreter that is being used to run Briefcase has been "
-            r"compiled for x86_64, and is running in emulation mode on ARM64"
+            r"compiled for x86_64, and is running in emulation mode on ARM64 "
             r"hardware. You must use a Python interpreter that has been "
             r"compiled for ARM64."
         ),

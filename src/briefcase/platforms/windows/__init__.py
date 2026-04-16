@@ -100,7 +100,7 @@ class WindowsMixin(_MixinBase):
         ):
             raise UnsupportedHostError(
                 "The Python interpreter that is being used to run Briefcase has been "
-                "compiled for x86_64, and is running in emulation mode on ARM64"
+                "compiled for x86_64, and is running in emulation mode on ARM64 "
                 "hardware. You must use a Python interpreter that has been "
                 "compiled for ARM64."
             )
