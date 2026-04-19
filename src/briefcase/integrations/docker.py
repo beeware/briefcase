@@ -8,6 +8,7 @@ import sys
 from collections.abc import Iterable, Mapping
 from functools import cache
 from pathlib import Path, PosixPath, PurePosixPath
+from typing import Any
 
 from packaging.version import InvalidVersion, Version
 
@@ -428,7 +429,7 @@ Delete this file and run Briefcase again.
         cwd: str | os.PathLike | None = None,
         add_hosts: Iterable[tuple[str, str]] | None = None,
         **subprocess_kwargs,
-    ) -> dict[str, ...]:  # pragma: no-cover-if-is-windows
+    ) -> dict[str, Any]:  # pragma: no-cover-if-is-windows
         """Convert arguments and environment into a Docker-compatible form.
 
         Converts an argument and environment specification into a form that can be used
@@ -522,8 +523,8 @@ Delete this file and run Briefcase again.
 
     @contextlib.contextmanager
     def x11_passthrough(
-        self, subprocess_kwargs: dict[str, ...]
-    ) -> dict[str, ...]:  # pragma: no-cover-if-is-windows
+        self, subprocess_kwargs: dict[str, Any]
+    ) -> dict[str, Any]:  # pragma: no-cover-if-is-windows
         """Manager to expose the host's X11 server to a container.
 
         This allows Docker containers to use the host's X11 server with the
@@ -945,7 +946,7 @@ class DockerAppContext(Tool):
                     ) from e
 
     @contextlib.contextmanager
-    def run_app_context(self, subprocess_kwargs: dict[str, ...]) -> dict[str, ...]:
+    def run_app_context(self, subprocess_kwargs: dict[str, Any]) -> dict[str, Any]:
         """Manager to run a Briefcase project app in a container.
 
         :returns: context manager to wrap the call to Popen/run/check_output()
@@ -979,7 +980,7 @@ class DockerAppContext(Tool):
 
     def _dockerize_args(
         self, args: SubprocessArgsT, **kwargs
-    ) -> dict[str, ...]:  # pragma: no-cover-if-is-windows
+    ) -> dict[str, Any]:  # pragma: no-cover-if-is-windows
         """App-specific wrapper for Docker.dockerize_args().
 
         Uses the app's dedicated Docker image to run the container.

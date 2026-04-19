@@ -194,7 +194,7 @@ class BaseCommand(ABC):
             self.validate_locale()
 
         self.global_config = None
-        self._briefcase_toml: dict[AppConfig, dict[str, ...]] = {}
+        self._briefcase_toml: dict[AppConfig, dict[str, Any]] = {}
 
     @property
     def console(self):
@@ -504,7 +504,7 @@ a custom location for Briefcase's tools.
         else:
             return self.bundle_package_executable_path(app)
 
-    def briefcase_toml(self, app: FinalizedAppConfig) -> dict[str, ...]:
+    def briefcase_toml(self, app: FinalizedAppConfig) -> dict[str, Any]:
         """Load the ``briefcase.toml`` file provided by the app template.
 
         :param app: The config object for the app
