@@ -129,8 +129,8 @@ class CreateCommand(BaseCommand):
             else ""
         )
         return (
-            f"{stub_type}-Stub-{self.python_version_tag}-b{support_revision}"
-            f"{win_suffix}.zip"
+            f"{stub_type}-Stub-{self.python_version_tag}{win_suffix}"
+            f"-b{support_revision}.zip"
         )
 
     def stub_binary_url(self, support_revision: str, is_console_app: bool) -> str:
