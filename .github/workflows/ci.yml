@@ -235,7 +235,7 @@ jobs:
       fail-fast: false
       matrix:
         framework: [ "toga", "pyside6", "pygame", "console" ]
-        runner-os: [ "macos-15-intel", "macos-latest", "ubuntu-24.04", "ubuntu-24.04-arm", "windows-latest" ]
+        runner-os: [ "macos-15-intel", "macos-latest", "ubuntu-24.04", "ubuntu-24.04-arm", "windows-latest", "windows-11-arm"]
 
   verify-apps:
     name: Build app
@@ -250,4 +250,11 @@ jobs:
       fail-fast: false
       matrix:
         framework: [ "toga", "pyside6", "pygame", "console" ]
-        runner-os: [ "macos-15-intel", "macos-15", "ubuntu-24.04", "ubuntu-24.04-arm", "windows-latest" ]
+        runner-os: [ "macos-15-intel", "macos-15", "ubuntu-24.04", "ubuntu-24.04-arm", "windows-latest", "windows-11-arm" ]
+        exclude:
+          # Toga apps won't run on Windows ARM64 until toga#2782 is resolved
+          - framework: "toga"
+            runner-os: "windows-11-arm"
+          # Pygame hasn't published Windows ARM64 wheels
+          - framework: "pygame"
+            runner-os: "windows-11-arm"

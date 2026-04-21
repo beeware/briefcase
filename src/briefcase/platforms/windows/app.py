@@ -23,8 +23,11 @@ from briefcase.platforms.windows import (
 
 class WindowsAppMixin(WindowsMixin):
     output_format = "app"
-    packaging_root = Path("src")
     supports_external_packaging = True
+
+    @property
+    def packaging_root(self):
+        return Path("src")
 
     def project_path(self, app):
         return self.bundle_path(app)

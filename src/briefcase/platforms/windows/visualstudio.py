@@ -21,7 +21,10 @@ from briefcase.platforms.windows import (
 
 class WindowsVisualStudioMixin(WindowsMixin):
     output_format = "VisualStudio"
-    packaging_root = Path("x64/Release")
+
+    @property
+    def packaging_root(self):
+        return Path(f"{self.vscode_platform}/Release")
 
     def project_path(self, app):
         return self.bundle_path(app) / f"{app.formal_name}.sln"
@@ -65,6 +68,7 @@ class WindowsVisualStudioBuildCommand(WindowsVisualStudioMixin, BuildCommand):
                         "-property:RestorePackagesConfig=true",
                         f"-target:{app.formal_name}",
                         "-property:Configuration=Release",
+                        f"-property:Platform={self.vscode_platform}",
                         (
                             "-verbosity:detailed"
                             if self.console.is_deep_debug

@@ -153,7 +153,7 @@
 <td></td>
 <td></td>
 <td colspan="2">{{ ci_tested }}</td>
-<td colspan="2"></td>
+<td colspan="2">{{ ci_tested }}</td>
 <td></td>
 <td></td>
 <td></td>
@@ -165,7 +165,7 @@
 <td></td>
 <td></td>
 <td colspan="2">{{ ci_tested }}</td>
-<td colspan="2"></td>
+<td colspan="2">{{ ci_tested }}</td>
 <td></td>
 <td></td>
 <td></td>
