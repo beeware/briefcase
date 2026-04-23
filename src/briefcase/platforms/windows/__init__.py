@@ -606,6 +606,8 @@ class WindowsPackageCommand(PackageCommand):
                         "build",
                         "-ext",
                         self.tools.wix.ext_path("UI"),
+                        "-ext",
+                        self.tools.wix.ext_path("Netfx"),
                         "-arch",
                         self.vscode_platform.lower(),
                         f"{app.app_name}.wxs",

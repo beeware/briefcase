@@ -9,7 +9,7 @@ from briefcase.integrations.subprocess import Subprocess
 from briefcase.integrations.wix import WiX
 from briefcase.platforms.windows.visualstudio import WindowsVisualStudioPackageCommand
 
-from ....integrations.wix.conftest import WIX_EXE_PATH, WIX_UI_PATH
+from ....integrations.wix.conftest import WIX_EXE_PATH, WIX_NETFX_PATH, WIX_UI_PATH
 
 
 @pytest.fixture
@@ -37,6 +37,8 @@ def test_package_msi(package_command, first_app_config, tmp_path):
                 "build",
                 "-ext",
                 tmp_path / "wix" / WIX_UI_PATH,
+                "-ext",
+                tmp_path / "wix" / WIX_NETFX_PATH,
                 "-arch",
                 "x64",
                 "first-app.wxs",
