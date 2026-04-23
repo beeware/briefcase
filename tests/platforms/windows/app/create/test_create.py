@@ -115,6 +115,7 @@ def test_context(create_command, first_app_config):
         "binary_path",
         "guid",
         "install_scope",
+        "installer_images",
         "package_path",
         "version_triple",
     ]
@@ -167,6 +168,34 @@ def test_explicit_guid(create_command, first_app_config, tmp_path):
 
     # Explicitly provided GUID is used.
     assert context["guid"] == "e822176f-b755-589f-849c-6c6600f7efb1"
+
+
+def test_no_installer_images(create_command, first_app_config, tmp_path):
+    """If no installer images are specified, blank values are used."""
+    first_app_config.installer_background = "path/to/background"
+    first_app_config.installer_banner = "path/to/banner"
+
+    context = create_command.output_format_template_context(first_app_config)
+
+    # Installer images have been converted to a full path
+    assert context["installer_images"] == {
+        "background": "",
+        "banner": "",
+    }
+
+
+def test_installer_images(create_command, first_app_config, tmp_path):
+    """If installer images are specified, they are converted and used."""
+    first_app_config.installer_background = "../path/to/background"
+    first_app_config.installer_banner = "path/to/banner"
+
+    context = create_command.output_format_template_context(first_app_config)
+
+    # Installer images have been converted to a full path
+    assert context["installer_images"] == {
+        "background": str(tmp_path / "path/to/background.bmp"),
+        "banner": str(tmp_path / "base_path/path/to/banner.bmp"),
+    }
 
 
 @pytest.mark.parametrize(

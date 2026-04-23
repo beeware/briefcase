@@ -204,12 +204,29 @@ class WindowsCreateCommand(CreateCommand):
             # system_installer not defined in config; default to asking the user
             install_scope = "perUserOrMachine"
 
+        installer_images = {}
+        try:
+            installer_images["background"] = str(
+                (self.base_path / app.installer_background)
+                .with_suffix(".bmp")
+                .resolve()
+            )
+        except AttributeError:
+            installer_images["background"] = ""
+        try:
+            installer_images["banner"] = str(
+                (self.base_path / app.installer_banner).with_suffix(".bmp").resolve()
+            )
+        except AttributeError:
+            installer_images["banner"] = ""
+
         return {
             "version_triple": version_triple,
             "guid": str(guid),
             "install_scope": install_scope,
             "package_path": str(self.package_path(app)),
             "binary_path": self.package_executable_path(app),
+            "installer_images": installer_images,
         }
 
     def _cleanup_app_support_package(self, support_path):
