@@ -74,7 +74,7 @@ Briefcase uses the [WiX Toolset](https://www.firegiant.com/wixtoolset/) to build
 
 ## Icon format
 
-Windows apps installers use multi-format `.ico` icons; these icons should contain images in the following sizes:
+Windows apps use multi-format `.ico` icons; these icons should contain images in the following sizes:
 
 - 16px
 - 32px
@@ -82,7 +82,13 @@ Windows apps installers use multi-format `.ico` icons; these icons should contai
 - 64px
 - 256px
 
-Windows Apps do not support splash screens or installer images.
+This icon will also be used for the entry in the Windows launcher menu, if required.
+
+If provided, the `installer_background` should be a 493x312px BMP image. It will be shown on the first page of an MSI installer.
+
+If provided, the `installer_banner` should be a 493x58px BMP image. It will be shown at the top of every page of an MSI installer *except* the first page.
+
+Windows apps do not support splash screens or custom installer icons.
 
 ## Additional options
 
