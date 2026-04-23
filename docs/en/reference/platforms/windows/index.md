@@ -123,10 +123,36 @@ The digest algorithm to request the Timestamp Authority server uses for the time
 
 The following options can be added to the `tool.briefcase.app.<appname>.windows` section of your `pyproject.toml` file.
 
+#### `dotnet_version`  { #dotnet-version }
+
+The minimum .NET runtime version required by the application, as a version string (e.g., `"10.0.0"`). This is used by MSI installers to verify that the required runtime is installed before installing the app. If this value is not set, no .NET runtime check is performed.
+
+#### `dotnet_runtime_type`
+
+The type of .NET runtime required. Defaults to `"Desktop"` for GUI apps, and `"Core"` for console apps. Valid values are:
+
+* `"Core"` - The base .NET runtime (`Microsoft.NETCore.App`).
+* `"Desktop"` -The .NET Windows Desktop runtime (`Microsoft.WindowsDesktop.App`), which includes WPF and Windows Forms support.
+* `"AspNet"` - The ASP.NET Core runtime (`Microsoft.AspNetCore.App`).
+
+This value will be ignored unless [`dotnet_version`][dotnet-version] is set.
+
+#### `dotnet_rollforward`
+
+The version roll-forward policy used when checking for compatible runtimes. Defaults to `"LatestMinor"`. This maps directly to .NET's [roll-forward behavior](https://learn.microsoft.com/en-us/dotnet/core/versions/selection#control-roll-forward-behavior). Valid values are:
+
+* `"Minor"` - Roll forward to the lowest higher minor version, if the requested minor version is missing.
+* `"Major"` - Roll forward to the lowest higher major version, and lowest minor version, if the requested major version is missing.
+* `"LatestPatch"` - Roll forward to the highest patch version. This disables minor version roll forward.
+* `"LatestMinor"` - Roll forward to the highest minor version, even if the requested minor version is present.
+* `"LatestMajor"` - Roll forward to the highest major and highest minor version, even if the requested major is present.
+* `"Disable"` - Do not roll forward. Only bind to the specified version. This policy is not recommended for general use because it disables the ability to roll forward to the latest patches.
+
+This value will be ignored unless [`dotnet_version`][dotnet-version] is set.
+
 ### `installer_path`
 
-The name of a directory in the package bundle that can be used to store post-install and
-pre-uninstall scripts. Defaults to `_installer`.
+The name of a directory in the package bundle that can be used to store post-install and pre-uninstall scripts. Defaults to `_installer`.
 
 ### `post_install_script`
 
