@@ -5,7 +5,7 @@ import pytest
 
 from briefcase.commands import OpenCommand
 from briefcase.commands.base import full_options
-from briefcase.config import AppConfig
+from briefcase.config import DraftAppConfig
 from briefcase.integrations.subprocess import Subprocess
 
 from ...utils import create_file
@@ -51,8 +51,8 @@ class DummyOpenCommand(OpenCommand):
         super().verify_tools()
         self.actions.append(("verify-tools",))
 
-    def finalize_app_config(self, app):
-        app = super().finalize_app_config(app=app)
+    def finalize_app_config(self, app, **kwargs):
+        app = super().finalize_app_config(app=app, **kwargs)
         self.actions.append(("finalize-app-config", app.app_name))
         return app
 
@@ -82,7 +82,7 @@ def open_command(dummy_console, tmp_path):
         console=dummy_console,
         base_path=tmp_path / "base_path",
         apps={
-            "first": AppConfig(
+            "first": DraftAppConfig(
                 app_name="first",
                 bundle="com.example",
                 version="0.0.1",
@@ -90,7 +90,7 @@ def open_command(dummy_console, tmp_path):
                 sources=["src/first"],
                 license={"file": "LICENSE"},
             ),
-            "second": AppConfig(
+            "second": DraftAppConfig(
                 app_name="second",
                 bundle="com.example",
                 version="0.0.2",

@@ -8,10 +8,11 @@ import sys
 from collections.abc import Iterable, Mapping
 from functools import cache
 from pathlib import Path, PosixPath, PurePosixPath
+from typing import Any
 
 from packaging.version import InvalidVersion, Version
 
-from briefcase.config import AppConfig
+from briefcase.config import FinalizedAppConfig
 from briefcase.exceptions import BriefcaseCommandError
 from briefcase.integrations.base import Tool, ToolCache
 from briefcase.integrations.subprocess import SubprocessArgsT
@@ -428,7 +429,7 @@ Delete this file and run Briefcase again.
         cwd: str | os.PathLike | None = None,
         add_hosts: Iterable[tuple[str, str]] | None = None,
         **subprocess_kwargs,
-    ) -> dict[str, ...]:  # pragma: no-cover-if-is-windows
+    ) -> dict[str, Any]:  # pragma: no-cover-if-is-windows
         """Convert arguments and environment into a Docker-compatible form.
 
         Converts an argument and environment specification into a form that can be used
@@ -522,8 +523,8 @@ Delete this file and run Briefcase again.
 
     @contextlib.contextmanager
     def x11_passthrough(
-        self, subprocess_kwargs: dict[str, ...]
-    ) -> dict[str, ...]:  # pragma: no-cover-if-is-windows
+        self, subprocess_kwargs: dict[str, Any]
+    ) -> dict[str, Any]:  # pragma: no-cover-if-is-windows
         """Manager to expose the host's X11 server to a container.
 
         This allows Docker containers to use the host's X11 server with the
@@ -822,9 +823,9 @@ class DockerAppContext(Tool):
     name = "docker_app_context"
     full_name = "Docker"
 
-    def __init__(self, tools: ToolCache, app: AppConfig):
+    def __init__(self, tools: ToolCache, app: FinalizedAppConfig):
         super().__init__(tools=tools)
-        self.app: AppConfig = app
+        self.app: FinalizedAppConfig = app
         self.app_base_path: Path
         self.host_bundle_path: Path
         self.host_data_path: Path
@@ -840,7 +841,7 @@ class DockerAppContext(Tool):
     def verify_install(
         cls,
         tools: ToolCache,
-        app: AppConfig,
+        app: FinalizedAppConfig,
         image_tag: str,
         dockerfile_path: Path,
         app_base_path: Path,
@@ -945,7 +946,7 @@ class DockerAppContext(Tool):
                     ) from e
 
     @contextlib.contextmanager
-    def run_app_context(self, subprocess_kwargs: dict[str, ...]) -> dict[str, ...]:
+    def run_app_context(self, subprocess_kwargs: dict[str, Any]) -> dict[str, Any]:
         """Manager to run a Briefcase project app in a container.
 
         :returns: context manager to wrap the call to Popen/run/check_output()
@@ -979,7 +980,7 @@ class DockerAppContext(Tool):
 
     def _dockerize_args(
         self, args: SubprocessArgsT, **kwargs
-    ) -> dict[str, ...]:  # pragma: no-cover-if-is-windows
+    ) -> dict[str, Any]:  # pragma: no-cover-if-is-windows
         """App-specific wrapper for Docker.dockerize_args().
 
         Uses the app's dedicated Docker image to run the container.

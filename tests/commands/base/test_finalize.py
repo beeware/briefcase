@@ -1,6 +1,6 @@
 import pytest
 
-from briefcase.config import AppConfig
+from briefcase.config import DraftAppConfig, FinalizedAppConfig
 from briefcase.exceptions import BriefcaseConfigError
 
 from .conftest import DummyCommand
@@ -8,7 +8,7 @@ from .conftest import DummyCommand
 
 @pytest.fixture
 def first_app():
-    return AppConfig(
+    return DraftAppConfig(
         app_name="first",
         bundle="com.example",
         version="0.0.1",
@@ -19,7 +19,7 @@ def first_app():
 
 @pytest.fixture
 def second_app():
-    return AppConfig(
+    return DraftAppConfig(
         app_name="second",
         bundle="com.example",
         version="0.0.2",
@@ -57,8 +57,8 @@ def test_finalize_all(base_command, first_app, second_app):
     ]
 
     # Apps are no longer in draft mode
-    assert not hasattr(first_app, "__draft__")
-    assert not hasattr(second_app, "__draft__")
+    assert isinstance(result["first"], FinalizedAppConfig)
+    assert isinstance(result["second"], FinalizedAppConfig)
 
     # Returned dict maps app names to the finalized apps
     assert result == {"first": first_app, "second": second_app}
@@ -79,8 +79,8 @@ def test_finalize_single(base_command, first_app, second_app):
     ]
 
     # First app is no longer in draft mode; second is
-    assert not hasattr(first_app, "__draft__")
-    assert hasattr(second_app, "__draft__")
+    assert isinstance(result["first"], FinalizedAppConfig)
+    assert not isinstance(second_app, FinalizedAppConfig)
 
     # Returned dict contains only the finalized app
     assert result == {"first": first_app}
@@ -112,9 +112,9 @@ def test_finalize_all_repeat(base_command, first_app, second_app):
         ("verify-tools",),
     ]
 
-    # Apps are no longer in draft mode
-    assert not hasattr(first_app, "__draft__")
-    assert not hasattr(second_app, "__draft__")
+    # Returned apps are FinalizedAppConfig instances
+    assert isinstance(result1["first"], FinalizedAppConfig)
+    assert isinstance(result1["second"], FinalizedAppConfig)
 
     # Both calls return the same apps
     assert result1 == {"first": first_app, "second": second_app}
@@ -130,7 +130,7 @@ def test_finalize_single_repeat(base_command, first_app, second_app):
     # all finalize; create will finalize the app config, each command will
     # have it's own tools verified.
     result1 = base_command.finalize(apps=[first_app])
-    result2 = base_command.finalize(apps=[first_app])
+    result2 = base_command.finalize(apps=[base_command.apps["first"]])
 
     # The right sequence of things will be done
     assert base_command.actions == [
@@ -146,9 +146,9 @@ def test_finalize_single_repeat(base_command, first_app, second_app):
         ("verify-tools",),
     ]
 
-    # First app is no longer in draft mode; second is
-    assert not hasattr(first_app, "__draft__")
-    assert hasattr(second_app, "__draft__")
+    # First app is finalized; second is not
+    assert isinstance(result1["first"], FinalizedAppConfig)
+    assert not isinstance(second_app, FinalizedAppConfig)
 
     # Both calls return the same single app
     assert result1 == {"first": first_app}
@@ -191,3 +191,8 @@ def test_binary_path_internal_app(base_command, first_app):
         ),
     ):
         base_command.finalize(apps=[first_app])
+
+
+def test_app_config_eq_non_app(first_app):
+    """AppConfig compared to a non-AppConfig returns NotImplemented."""
+    assert first_app != "not an app"

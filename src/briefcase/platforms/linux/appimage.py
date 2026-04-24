@@ -13,7 +13,7 @@ from briefcase.commands import (
     RunCommand,
     UpdateCommand,
 )
-from briefcase.config import AppConfig
+from briefcase.config import DraftAppConfig, FinalizedAppConfig
 from briefcase.exceptions import (
     BriefcaseCommandError,
     BriefcaseConfigError,
@@ -92,7 +92,7 @@ class LinuxAppImagePassiveMixin(LinuxMixin):
         self.use_docker = command.use_docker
         self.extra_docker_build_args = command.extra_docker_build_args
 
-    def finalize_app_config(self, app: AppConfig) -> AppConfig:
+    def finalize_app_config(self, app: DraftAppConfig, **kwargs) -> FinalizedAppConfig:
         """If we're *not* using Docker, warn the user about portability."""
         if not self.use_docker:
             self.console.warning("""\
@@ -122,7 +122,7 @@ class LinuxAppImagePassiveMixin(LinuxMixin):
 
 *************************************************************************
 """)
-        return app
+        return super().finalize_app_config(app, **kwargs)
 
 
 class LinuxAppImageMostlyPassiveMixin(LinuxAppImagePassiveMixin):
@@ -141,7 +141,7 @@ class LinuxAppImageMostlyPassiveMixin(LinuxAppImagePassiveMixin):
         if self.use_docker:
             Docker.verify(tools=self.tools)
 
-    def verify_app_tools(self, app: AppConfig):
+    def verify_app_tools(self, app: FinalizedAppConfig):
         """Verify App environment is prepared and available.
 
         When Docker is used, create or update a Docker image for the App. Without
@@ -183,7 +183,7 @@ class LinuxAppImageCreateCommand(
 ):
     description = "Create and populate a Linux AppImage."
 
-    def output_format_template_context(self, app: AppConfig):
+    def output_format_template_context(self, app: FinalizedAppConfig):
         context = super().output_format_template_context(app)
 
         try:
@@ -256,7 +256,11 @@ class LinuxAppImageOpenCommand(LinuxAppImageMostlyPassiveMixin, DockerOpenComman
 class LinuxAppImageBuildCommand(LinuxAppImageMixin, BuildCommand):
     description = "Build a Linux AppImage."
 
-    def build_app(self, app: AppConfig, **kwargs):  # pragma: no-cover-if-is-windows
+    def build_app(
+        self,
+        app: FinalizedAppConfig,
+        **kwargs,
+    ):  # pragma: no-cover-if-is-windows
         """Build an application.
 
         :param app: The application to build
@@ -365,7 +369,7 @@ class LinuxAppImageRunCommand(LinuxAppImagePassiveMixin, RunCommand):
 
     def run_app(
         self,
-        app: AppConfig,
+        app: FinalizedAppConfig,
         passthrough: list[str],
         **kwargs,
     ):
@@ -415,7 +419,7 @@ class LinuxAppImageDevCommand(LinuxAppImageMixin, DevCommand):
 class LinuxAppImagePackageCommand(LinuxAppImageMixin, PackageCommand):
     description = "Package a Linux AppImage."
 
-    def package_app(self, app: AppConfig, **kwargs):
+    def package_app(self, app: FinalizedAppConfig, **kwargs):
         """Package an AppImage.
 
         :param app: The application to package

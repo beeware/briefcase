@@ -1,6 +1,6 @@
 import pytest
 
-from briefcase.config import AppConfig
+from briefcase.config import DraftAppConfig
 from briefcase.debuggers.base import (
     BaseDebugger,
     DebuggerConnectionMode,
@@ -12,7 +12,7 @@ from ..utils import create_file
 @pytest.fixture
 def first_app_config(tmp_path):
     create_file(tmp_path / "base_path" / "LICENSE", "The Actual First App License")
-    return AppConfig(
+    return DraftAppConfig(
         app_name="first-app",
         project_name="First Project",
         formal_name="First App",
@@ -32,7 +32,7 @@ def first_app_config(tmp_path):
 
 @pytest.fixture
 def uppercase_app_config():
-    return AppConfig(
+    return DraftAppConfig(
         app_name="First-App",
         project_name="First Project",
         formal_name="First App",
@@ -46,7 +46,7 @@ def uppercase_app_config():
 
 @pytest.fixture
 def underscore_app_config():
-    return AppConfig(
+    return DraftAppConfig(
         app_name="first_app",
         project_name="First Project",
         formal_name="First App",

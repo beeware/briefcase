@@ -1,9 +1,5 @@
 from collections.abc import Collection
-from unittest.mock import MagicMock
 
-import pytest
-
-import briefcase.commands.new
 from briefcase.bootstraps import (
     ConsoleBootstrap,
     EmptyBootstrap,
@@ -11,16 +7,6 @@ from briefcase.bootstraps import (
     PySide6GuiBootstrap,
     TogaGuiBootstrap,
 )
-
-
-@pytest.fixture
-def mock_builtin_bootstraps():
-    return {
-        "Toga": TogaGuiBootstrap,
-        "Console": ConsoleBootstrap,
-        "PySide6": PySide6GuiBootstrap,
-        "Pygame": PygameGuiBootstrap,
-    }
 
 
 def test_toga_bootstrap(new_command):
@@ -425,8 +411,8 @@ test_requires = [
 """,
         "pyproject_table_macOS": """\
 universal_build = true
-# As of Pyside 6.8, PySide enforces a macOS 12 minimum on wheels.
-min_os_version = "12.0"
+# Pyside 6.10 (required for Python 3.14 support) enforces a macOS 13 minimum.
+min_os_version = "13.0"
 requires = [
     "std-nslog~=1.0.3",
 ]
@@ -756,12 +742,8 @@ requires = [
     }
 
 
-def test_custom_bootstrap(
-    new_command,
-    mock_builtin_bootstraps,
-    monkeypatch,
-):
-    """A context is create for a custom bootstrap."""
+def test_custom_bootstrap(new_command):
+    """A context is created for a custom bootstrap."""
 
     class GuiBootstrap:
         fields: Collection[str] = ["requires", "platform"]
@@ -781,17 +763,6 @@ def test_custom_bootstrap(
 
         def platform(self):
             return "bsd"
-
-    monkeypatch.setattr(
-        briefcase.commands.new,
-        "get_gui_bootstraps",
-        MagicMock(
-            return_value={
-                **mock_builtin_bootstraps,
-                "Custom GUI": GuiBootstrap,
-            },
-        ),
-    )
 
     context = new_command.build_gui_context(
         GuiBootstrap(

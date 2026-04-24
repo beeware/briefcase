@@ -9,7 +9,7 @@ from typing import TYPE_CHECKING
 from zipfile import ZIP_DEFLATED, ZipFile
 
 from briefcase.commands import CreateCommand, PackageCommand, RunCommand
-from briefcase.config import AppConfig
+from briefcase.config import FinalizedAppConfig
 from briefcase.exceptions import (
     BriefcaseCommandError,
     BriefcaseConfigError,
@@ -88,12 +88,24 @@ class WindowsMixin(_MixinBase):
         suffix = "zip" if app.packaging_format == "zip" else "msi"
         return self.dist_path / f"{app.formal_name}-{app.version}.{suffix}"
 
+    @property
+    def vscode_platform(self):
+        return "ARM64" if self.tools.host_arch == "ARM64" else "x64"
+
     def verify_host(self):
         super().verify_host()
-        # The stub app only supports x86-64 right now, and our VisualStudio and WiX code
-        # is the same (#1887). However, we can package an external x86-64 app on any
-        # build machine.
-        if self.tools.host_arch != "AMD64":
+        if (
+            self.tools.host_arch == "ARM64"
+            and "AMD64" in self.tools.platform.python_compiler()
+        ):
+            raise UnsupportedHostError(
+                "The Python interpreter that is being used to run Briefcase has been "
+                "compiled for x86_64, and is running in emulation mode on ARM64 "
+                "hardware. You must use a Python interpreter that has been "
+                "compiled for ARM64."
+            )
+
+        if self.tools.host_arch not in ("AMD64", "ARM64"):
             if all(app.external_package_path for app in self.apps.values()):
                 if not self.is_clone:
                     self.console.warning(f"""
@@ -101,11 +113,11 @@ class WindowsMixin(_MixinBase):
 ** WARNING: Possible architecture mismatch                             **
 *************************************************************************
 
-The build machine is {self.tools.host_arch}, but Briefcase on Windows currently only
-supports x86-64 installers.
+The build machine is {self.tools.host_arch}, but Briefcase on Windows only
+supports x86-64 and ARM64 installers.
 
 You are responsible for ensuring that the content of external_package_path
-is compatible with x86-64.
+is compatible with supported platforms.
 
 *************************************************************************
 """)
@@ -127,7 +139,8 @@ Install a 64bit version of Python and run Briefcase again.
 
 class WindowsCreateCommand(CreateCommand):
     def support_package_filename(self, support_revision):
-        return f"python-{self.python_version_tag}.{support_revision}-embed-amd64.zip"
+        arch = self.tools.host_arch.lower()
+        return f"python-{self.python_version_tag}.{support_revision}-embed-{arch}.zip"
 
     def support_package_url(self, support_revision):
         micro = re.match(r"\d+", str(support_revision)).group(0)
@@ -137,7 +150,7 @@ class WindowsCreateCommand(CreateCommand):
             f"{self.support_package_filename(support_revision)}"
         )
 
-    def extras_path(self, app: AppConfig) -> Path:
+    def extras_path(self, app: FinalizedAppConfig) -> Path:
         """Obtain the path for extra installer content.
 
         Extra installer content is content that needs to be inserted into the installer,
@@ -156,7 +169,7 @@ class WindowsCreateCommand(CreateCommand):
 
         return self.bundle_path(app) / extras_path
 
-    def output_format_template_context(self, app: AppConfig):
+    def output_format_template_context(self, app: FinalizedAppConfig):
         """Additional template context required by the output format.
 
         :param app: The config object for the app
@@ -220,7 +233,7 @@ class WindowsCreateCommand(CreateCommand):
 *************************************************************************
 """)
 
-    def install_license(self, app: AppConfig):
+    def install_license(self, app: FinalizedAppConfig):
         """Install the license for the project as a single RTF document.
 
         The following cases are handled:
@@ -278,7 +291,7 @@ files that Briefcase can convert and merge automatically.
         ]
         installed_license.write_text(txt_to_rtf(texts), encoding="utf-8")
 
-    def install_app_resources(self, app: AppConfig):
+    def install_app_resources(self, app: FinalizedAppConfig):
         """Install Windows-specific app resources.
 
         This includes any post-install or pre-uninstall scripts, plus converting the
@@ -342,7 +355,7 @@ class WindowsRunCommand(RunCommand):
 
     def run_app(
         self,
-        app: AppConfig,
+        app: FinalizedAppConfig,
         passthrough: list[str],
         **kwargs,
     ):
@@ -463,7 +476,7 @@ class WindowsPackageCommand(PackageCommand):
 
     def sign_file(
         self,
-        app: AppConfig,
+        app: FinalizedAppConfig,
         filepath: Path,
         identity: str,
         file_digest: str,
@@ -513,7 +526,7 @@ class WindowsPackageCommand(PackageCommand):
 
     def package_app(
         self,
-        app: AppConfig,
+        app: FinalizedAppConfig,
         identity: str | None = None,
         adhoc_sign: bool = False,
         file_digest: str | None = None,
@@ -594,7 +607,7 @@ class WindowsPackageCommand(PackageCommand):
                         "-ext",
                         self.tools.wix.ext_path("UI"),
                         "-arch",
-                        "x64",  # Default is x86, regardless of the build machine.
+                        self.vscode_platform.lower(),
                         f"{app.app_name}.wxs",
                         "-loc",
                         "unicode.wxl",

@@ -3,11 +3,15 @@ from __future__ import annotations
 import copy
 import keyword
 import re
+import subprocess
 import sys
 import unicodedata
+from email.utils import getaddresses
 from pathlib import Path
 from urllib.parse import urlparse
 
+from build import BuildBackendException
+from build.util import project_wheel_metadata
 from packaging.licenses import InvalidLicenseExpression, canonicalize_license_expression
 from packaging.version import InvalidVersion, Version
 
@@ -19,7 +23,7 @@ else:  # pragma: no-cover-if-gte-py311
 from briefcase.debuggers.base import BaseDebugger
 from briefcase.platforms import get_output_formats, get_platforms
 
-from .constants import RESERVED_WORDS
+from .constants import MIME_TYPE_REGISTRIES, RESERVED_WORDS
 from .exceptions import BriefcaseConfigError, InvalidVersionError
 
 # PEP 508 restricts the naming of modules. The PEP defines a regex that uses
@@ -105,7 +109,7 @@ def validate_url(candidate):
     return True
 
 
-def validate_document_type_config(document_type_id, document_type):
+def validate_document_type_config(app_name, document_type_id, document_type):
     try:
         if not (
             isinstance(document_type["extension"], str)
@@ -153,6 +157,29 @@ def validate_document_type_config(document_type_id, document_type):
             f"The URL associated with document type {document_type_id!r} "
             f"is invalid: {e}"
         ) from None
+
+    try:
+        mime_type = document_type["mime_type"]
+        if not isinstance(mime_type, str):
+            raise BriefcaseConfigError(
+                f"The MIME type associated with document type "
+                f"{document_type_id!r} is not a string."
+            )
+        try:
+            registry, _ = mime_type.split("/")
+            if registry not in MIME_TYPE_REGISTRIES:
+                raise BriefcaseConfigError(
+                    f"The MIME type {mime_type!r} for document type "
+                    f"{document_type_id!r} uses an invalid registry {registry!r}."
+                )
+        except ValueError:
+            raise BriefcaseConfigError(
+                f"The MIME type {mime_type!r} for document type "
+                f"{document_type_id!r} is not in 'type/subtype' format."
+            ) from None
+    except KeyError:
+        # mime_type is optional; if it's not provided, use a default.
+        document_type["mime_type"] = f"application/x-{app_name}-{document_type_id}"
 
     if sys.platform == "darwin":  # pragma: no-cover-if-not-macos
         from briefcase.platforms.macOS.utils import is_uti_core_type, mime_type_to_uti
@@ -388,7 +415,7 @@ class GlobalConfig(BaseConfig):
                 self.version = version
             else:
                 self.version = Version(version)
-        except InvalidVersion:
+        except (InvalidVersion, TypeError):
             raise InvalidVersionError(
                 f"Version number ({self.version}) is not valid."
             ) from None
@@ -398,143 +425,60 @@ class GlobalConfig(BaseConfig):
 
 
 class AppConfig(BaseConfig):
-    def __init__(
-        self,
-        app_name,
-        version,
-        bundle,
-        description,
-        license=None,
-        license_files=None,
-        sources=None,
-        formal_name=None,
-        url=None,
-        author=None,
-        author_email=None,
-        requires=None,
-        icon=None,
-        document_type=None,
-        install_option=None,
-        uninstall_option=None,
-        permission=None,
-        template=None,
-        template_branch=None,
-        test_sources=None,
-        test_requires=None,
-        supported=True,
-        long_description=None,
-        console_app=False,
-        requirement_installer_args: list[str] | None = None,
-        external_package_path: str | None = None,
-        external_package_executable_path: str | None = None,
-        install_launcher: bool | None = None,
-        **kwargs,
-    ):
-        super().__init__(**kwargs)
+    """Base class for app configuration.
 
-        # All app configs are created in unfinalized draft form.
-        self.__draft__ = True
+    Not instantiated directly. Use ``DraftAppConfig`` for parsed project
+    configuration (pre-finalization) and ``FinalizedAppConfig`` for
+    finalized configuration (post-finalization).
 
-        self.app_name = app_name
-        self.version = version
-        self.bundle = bundle.lower()
-        # Description can only be a single line. Ignore everything else.
-        self.description = description.split("\n")[0]
-        self.sources = sources
-        self.formal_name = app_name if formal_name is None else formal_name
-        self.url = url
-        self.author = author
-        self.author_email = author_email
-        self.requires = requires
-        self.icon = icon
-        self.document_types = {} if document_type is None else document_type
-        self.permission = {} if permission is None else permission
-        self.template = template
-        self.template_branch = template_branch
-        self.test_sources = test_sources
-        self.test_requires = test_requires
-        self.supported = supported
-        self.long_description = long_description
-        self.license = license
-        self.license_files = [] if license_files is None else license_files
-        self.console_app = console_app
-        self.requirement_installer_args = (
-            [] if requirement_installer_args is None else requirement_installer_args
-        )
-        self.external_package_path = external_package_path
-        self.external_package_executable_path = external_package_executable_path
-        self.install_launcher = (
-            install_launcher if (install_launcher is not None) else (not console_app)
-        )
+    Provides shared properties (``module_name``, ``bundle_name``, etc.)
+    and identity (``__eq__``/``__hash__`` based on ``app_name``).
+    """
 
-        self.test_mode: bool = False
+    app_name: str
+    version: Version
+    bundle: str
+    description: str
+    sources: list[str] | None
+    formal_name: str
+    url: str | None
+    author: str | None
+    author_email: str | None
+    requires: list[str] | None
+    icon: str | None
+    document_types: dict
+    permission: dict
+    template: str | None
+    template_branch: str | None
+    test_sources: list[str] | None
+    test_requires: list[str] | None
+    supported: bool
+    long_description: str | None
+    license: dict | None
+    license_files: list[str]
+    console_app: bool
+    requirement_installer_args: list[str]
+    external_package_path: str | None
+    external_package_executable_path: str | None
+    install_launcher: bool
+    install_options: dict
+    uninstall_options: dict
 
-        self.debugger: BaseDebugger | None = None
-        self.debugger_host: str | None = None  # only for run command
-        self.debugger_port: int | None = None  # only for run command
-
-        if not is_valid_app_name(self.app_name):
-            raise BriefcaseConfigError(
-                f"{self.app_name!r} is not a valid app name."
-                f"\n\n"
-                "App names must not be reserved keywords such as 'and', 'for' and "
-                "'while'. They must also be PEP508 compliant (i.e., they can only "
-                "include letters, numbers, '-' and '_'; must start with a letter; "
-                "and cannot end with '-' or '_')."
-            )
-
-        if not is_valid_bundle_identifier(self.bundle):
-            raise BriefcaseConfigError(
-                f"{self.bundle!r} is not a valid bundle identifier."
-                f"\n\n"
-                "The bundle should be a reversed domain name. It must contain at least "
-                "2 dot-separated sections; each section may only include letters, "
-                "numbers, and hyphens; and each section may not contain any reserved "
-                "words (like 'switch', or 'while')."
-            )
-
-        for document_type_id, document_type in self.document_types.items():
-            validate_document_type_config(document_type_id, document_type)
-
-        self.install_options = validate_install_options_config(
-            install_option, "install"
-        )
-        self.uninstall_options = validate_install_options_config(
-            uninstall_option,
-            "uininstall",
-            install=self.install_options,
-        )
-
-        # Version number is compliant with PEP440 (and related updates):
-        try:
-            # If input is already a version object (can happen by copying), use as-is
-            if isinstance(version, Version):
-                self.version = version
-            else:
-                self.version = Version(version)
-        except InvalidVersion:
-            raise InvalidVersionError(
-                f"Version number for {self.app_name!r} ({self.version}) is not valid."
-            ) from None
-
-        if self.sources:
-            # Sources list doesn't include any duplicates
-            source_modules = {source.rsplit("/", 1)[-1] for source in self.sources}
-            if len(self.sources) != len(source_modules):
-                raise BriefcaseConfigError(
-                    f"The `sources` list for {self.app_name!r} contains duplicated "
-                    "package names."
-                )
-
-            # There is, at least, a source for the app module
-            if self.module_name not in source_modules:
-                raise BriefcaseConfigError(
-                    f"The `sources` list for {self.app_name!r} does not include a "
-                    f"package named {self.module_name!r}."
-                )
+    test_mode: bool
+    debugger: BaseDebugger | None
+    debugger_host: str | None
+    debugger_port: int | None
 
     def __repr__(self):
-        return f"<{self.bundle_identifier} v{self.version} AppConfig>"
+        return f"<{self.bundle_identifier} v{self.version} {type(self).__name__}>"
+
+    def __eq__(self, other):
+        if isinstance(other, AppConfig):
+            return self.app_name == other.app_name
+        return NotImplemented
+
+    def __hash__(self):
+        return hash(self.app_name)
 
     @property
     def module_name(self):
@@ -615,6 +559,163 @@ class AppConfig(BaseConfig):
             return f"tests.{self.module_name}"
         else:
             return self.module_name
+
+
+class DraftAppConfig(AppConfig):
+    """An AppConfig as parsed from ``pyproject.toml``, before finalization."""
+
+    def __init__(
+        self,
+        app_name: str,
+        version: str | Version,
+        bundle: str,
+        description: str,
+        license: dict | None = None,
+        license_files: list[str] | None = None,
+        sources: list[str] | None = None,
+        formal_name: str | None = None,
+        url: str | None = None,
+        author: str | None = None,
+        author_email: str | None = None,
+        requires: list[str] | None = None,
+        icon: str | None = None,
+        document_type: dict | None = None,
+        install_option: dict | None = None,
+        uninstall_option: dict | None = None,
+        permission: dict | None = None,
+        template: str | None = None,
+        template_branch: str | None = None,
+        test_sources: list[str] | None = None,
+        test_requires: list[str] | None = None,
+        supported: bool = True,
+        long_description: str | None = None,
+        console_app: bool = False,
+        requirement_installer_args: list[str] | None = None,
+        external_package_path: str | None = None,
+        external_package_executable_path: str | None = None,
+        install_launcher: bool | None = None,
+        **kwargs,
+    ):
+        super().__init__(**kwargs)
+
+        self.app_name = app_name
+        self.version = version
+        self.bundle = bundle.lower()
+        # Description can only be a single line. Ignore everything else.
+        self.description = description.split("\n")[0]
+        self.sources = sources
+        self.formal_name = app_name if formal_name is None else formal_name
+        self.url = url
+        self.author = author
+        self.author_email = author_email
+        self.requires = requires
+        self.icon = icon
+        self.document_types = {} if document_type is None else document_type
+        self.permission = {} if permission is None else permission
+        self.template = template
+        self.template_branch = template_branch
+        self.test_sources = test_sources
+        self.test_requires = test_requires
+        self.supported = supported
+        self.long_description = long_description
+        self.license = license
+        self.license_files = [] if license_files is None else license_files
+        self.console_app = console_app
+        self.requirement_installer_args = (
+            [] if requirement_installer_args is None else requirement_installer_args
+        )
+        self.external_package_path = external_package_path
+        self.external_package_executable_path = external_package_executable_path
+        self.install_launcher = (
+            install_launcher if (install_launcher is not None) else (not console_app)
+        )
+
+        self.test_mode: bool = False
+
+        self.debugger: BaseDebugger | None = None
+        self.debugger_host: str | None = None
+        self.debugger_port: int | None = None
+
+        if not is_valid_app_name(self.app_name):
+            raise BriefcaseConfigError(
+                f"{self.app_name!r} is not a valid app name."
+                f"\n\n"
+                "App names must not be reserved keywords such as 'and', 'for' and "
+                "'while'. They must also be PEP508 compliant (i.e., they can only "
+                "include letters, numbers, '-' and '_'; must start with a letter; "
+                "and cannot end with '-' or '_')."
+            )
+
+        if not is_valid_bundle_identifier(self.bundle):
+            raise BriefcaseConfigError(
+                f"{self.bundle!r} is not a valid bundle identifier."
+                f"\n\n"
+                "The bundle should be a reversed domain name. It must contain at least "
+                "2 dot-separated sections; each section may only include letters, "
+                "numbers, and hyphens; and each section may not contain any reserved "
+                "words (like 'switch', or 'while')."
+            )
+
+        for document_type_id, document_type in self.document_types.items():
+            validate_document_type_config(
+                self.app_name,
+                document_type_id,
+                document_type,
+            )
+
+        self.install_options = validate_install_options_config(
+            install_option, "install"
+        )
+        self.uninstall_options = validate_install_options_config(
+            uninstall_option,
+            "uininstall",
+            install=self.install_options,
+        )
+
+        # Version number is compliant with PEP440 (and related updates):
+        try:
+            # If input is already a version object (can happen by copying), use as-is
+            if isinstance(version, Version):
+                self.version = version
+            else:
+                self.version = Version(version)
+        except (InvalidVersion, TypeError):
+            raise InvalidVersionError(
+                f"Version number for {self.app_name!r} ({self.version}) is not valid."
+            ) from None
+
+        if self.sources:
+            # Sources list doesn't include any duplicates
+            source_modules = {source.rsplit("/", 1)[-1] for source in self.sources}
+            if len(self.sources) != len(source_modules):
+                raise BriefcaseConfigError(
+                    f"The `sources` list for {self.app_name!r} contains duplicated "
+                    "package names."
+                )
+
+            # There is, at least, a source for the app module
+            if self.module_name not in source_modules:
+                raise BriefcaseConfigError(
+                    f"The `sources` list for {self.app_name!r} does not include a "
+                    f"package named {self.module_name!r}."
+                )
+
+
+class FinalizedAppConfig(AppConfig):
+    """An AppConfig that has been through platform finalization.
+
+    Constructed by ``finalize_app_config()``; holds runtime attributes
+    (``test_mode``, ``debugger``, etc.) that are not part of the parsed
+    project configuration.
+    """
+
+    def __init__(
+        self,
+        app: AppConfig,
+        **kwargs,
+    ):
+        self.__dict__.update(app.__dict__)
+        self.__dict__.update(**kwargs)
 
 
 def merge_config(config, data):
@@ -1106,6 +1207,58 @@ Update your configuration to provide a valid PEP 639 configuration:
         )
 
 
+def _core_metadata_to_pep621(pep621_key, metadata):
+    """Retrieve PEP621 metadata values from a Core metadata message."""
+
+    match pep621_key:
+        case "authors" | "maintainers":
+            addresses = metadata.get_all(f"{pep621_key.rstrip('s')}-email")
+            return [
+                {"name": name, "email": email}
+                for name, email in getaddresses(addresses)
+            ]
+        case "dependencies":
+            return metadata.get_all("requires-dist")
+        case "description":
+            return metadata["summary"]
+        case "license":
+            return metadata["license-expression"]
+        case "urls":
+            urls = [url.partition(",") for url in metadata.get_all("project-url")]
+            return {name.strip(): url.strip() for name, _, url in urls}
+        case _:
+            # Let metadata's automatic normalization deal with selecting the right key
+            return metadata[pep621_key]
+
+
+def resolve_dynamic_pep621_config(base_path, dynamic, console):
+    """Resolve dynamic PEP621 metadata using the project's configured build backend."""
+
+    try:
+        with console.wait_bar("Evaluating dynamic project metadata..."):
+            metadata = project_wheel_metadata(base_path, isolated=True)
+        # Provide fields declared as dynamic with corresponding metadata value
+        return {field: _core_metadata_to_pep621(field, metadata) for field in dynamic}
+    except subprocess.CalledProcessError as e:
+        raise BriefcaseConfigError(
+            "Briefcase was unable to run the PEP 517 build interface for your "
+            "project.\n"
+            "Ensure that the `[build-system]` configuration in your pyproject.toml "
+            "is correct.\n"
+            "\n"
+            "Running `python -m build` may be helpful in diagnosing this problem."
+        ) from e
+    except BuildBackendException as e:
+        raise BriefcaseConfigError(
+            "Briefcase was unable to resolve dynamic PEP 621 metadata for your "
+            "project.\n"
+            "Ensure that the `[build-system]` configuration in your pyproject.toml "
+            "is correct.\n"
+            "\n"
+            "Running `python -m build` may be helpful in diagnosing this problem."
+        ) from e
+
+
 def merge_pep621_config(global_config, pep621_config):
     """Merge a PEP621 configuration into a Briefcase configuration."""
 
@@ -1208,7 +1361,12 @@ def parse_config(config_file: Path, platform, output_format, console):
 
     # Merge the PEP621 configuration (if it exists)
     try:
-        merge_pep621_config(global_config, pyproject["project"])
+        pep621_config = pyproject["project"]
+        if dynamic := pep621_config.pop("dynamic", []):
+            pep621_config.update(
+                resolve_dynamic_pep621_config(base_path, dynamic, console)
+            )
+        merge_pep621_config(global_config, pep621_config)
     except KeyError:
         pass
 

@@ -2,7 +2,7 @@ from __future__ import annotations
 
 import argparse
 
-from briefcase.config import AppConfig
+from briefcase.config import AppConfig, FinalizedAppConfig
 from briefcase.exceptions import BriefcaseCommandError
 
 from .base import full_options
@@ -30,7 +30,7 @@ class UpdateCommand(CreateCommand):
 
     def update_app(
         self,
-        app: AppConfig,
+        app: FinalizedAppConfig,
         update_requirements: bool,
         update_resources: bool,
         update_support: bool,

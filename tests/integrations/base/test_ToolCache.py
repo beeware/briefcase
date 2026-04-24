@@ -109,6 +109,72 @@ def test_host_arch_and_os(simple_tools):
     assert simple_tools.host_os == platform.system()
 
 
+def test_get_host_arch_windows_arm64(dummy_console, monkeypatch, tmp_path):
+    """ARM64 is detected on Windows with a pre-3.12 Python x86_64 interpreter."""
+    mock_ctypes = MagicMock()
+    mock_ctypes.c_ushort.return_value.value = 0xAA64  # IMAGE_FILE_MACHINE_ARM64
+
+    mock_platform = MagicMock()
+    mock_platform.machine.return_value = "AMD64"
+    mock_platform.system.return_value = "Windows"
+
+    mock_sys = MagicMock()
+    mock_sys.version_info = (3, 11, 0)
+    mock_sys.getwindowsversion.return_value.build = 16299
+    mock_sys.maxsize = 2**64
+
+    monkeypatch.setattr(ToolCache, "platform", mock_platform)
+    monkeypatch.setattr(ToolCache, "sys", mock_sys)
+    monkeypatch.setitem(sys.modules, "ctypes", mock_ctypes)
+
+    tools = ToolCache(console=dummy_console, base_path=tmp_path)
+
+    assert tools.host_arch == "ARM64"
+
+
+def test_get_host_arch_windows_not_arm64(dummy_console, monkeypatch, tmp_path):
+    """AMD64 is returned when IsWow64Process2 reports the native machine is not
+    ARM64."""
+    mock_ctypes = MagicMock()
+    mock_ctypes.windll.kernel32.IsWow64Process2.return_value = 0
+
+    mock_platform = MagicMock()
+    mock_platform.machine.return_value = "AMD64"
+    mock_platform.system.return_value = "Windows"
+
+    mock_sys = MagicMock()
+    mock_sys.version_info = (3, 11, 0)
+    mock_sys.getwindowsversion.return_value.build = 16299
+    mock_sys.maxsize = 2**64
+
+    monkeypatch.setattr(ToolCache, "platform", mock_platform)
+    monkeypatch.setattr(ToolCache, "sys", mock_sys)
+    monkeypatch.setitem(sys.modules, "ctypes", mock_ctypes)
+
+    tools = ToolCache(console=dummy_console, base_path=tmp_path)
+
+    assert tools.host_arch == "AMD64"
+
+
+def test_get_host_arch_windows_python312(dummy_console, monkeypatch, tmp_path):
+    """On Python 3.12+, IsWow64Process2 is not called; platform.machine() is used
+    directly."""
+    mock_platform = MagicMock()
+    mock_platform.machine.return_value = "AMD64"
+    mock_platform.system.return_value = "Windows"
+
+    mock_sys = MagicMock()
+    mock_sys.version_info = (3, 12, 0)
+    mock_sys.maxsize = 2**64
+
+    monkeypatch.setattr(ToolCache, "platform", mock_platform)
+    monkeypatch.setattr(ToolCache, "sys", mock_sys)
+
+    tools = ToolCache(console=dummy_console, base_path=tmp_path)
+
+    assert tools.host_arch == "AMD64"
+
+
 def test_base_path_is_path(dummy_console, simple_tools):
     """Base path is always a Path."""
     # The BaseCommand tests have much more extensive tests for this path.

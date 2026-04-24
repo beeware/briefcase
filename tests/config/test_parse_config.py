@@ -1,8 +1,12 @@
+import subprocess
+from email.message import Message
 from unittest.mock import Mock
 
 import pytest
+from build import BuildBackendException
 
 from briefcase.config import parse_config
+from briefcase.console import Console
 from briefcase.exceptions import BriefcaseConfigError
 from tests.utils import create_file
 
@@ -1402,4 +1406,209 @@ def test_no_license_key(tmp_path):
             platform="macOS",
             output_format="Xcode",
             console=Mock(),
+        )
+
+
+def test_pep621_empty_dynamic(monkeypatch, tmp_path):
+    "A configuration with an empty dynamic property list can be handled."
+    config_file = create_file(
+        tmp_path / "pyproject.toml",
+        """
+        [project]
+        dynamic = []
+        name = "awesome"
+        version = "1.2.3"
+        license = "EUPL-1.2"
+
+        [tool.briefcase]
+        bundle = "com.example"
+
+        [tool.briefcase.app.awesome]
+        formal_name = "Awesome Application"
+        long_description = "The application is very awesome"
+        """,
+    )
+
+    wheel_metadata = Mock()
+    monkeypatch.setattr("briefcase.config.project_wheel_metadata", wheel_metadata)
+
+    # Parse config
+    _, apps = parse_config(
+        config_file,
+        platform="linux",
+        output_format="app",
+        console=Mock(),
+    )
+
+    # Wheel metadata was *not* evaluated
+    wheel_metadata.assert_not_called()
+
+    # Final metadata is as expected
+    awesome = apps["awesome"]
+    assert awesome == {
+        "app_name": "awesome",
+        "bundle": "com.example",
+        "version": "1.2.3",
+        "license": "EUPL-1.2",
+        "license_files": [],
+        "formal_name": "Awesome Application",
+        "long_description": "The application is very awesome",
+    }
+
+
+def test_pep621_dynamic(monkeypatch, tmp_path):
+    "A project with dynamic metadata uses the PEP 517 build-system interface."
+    config_file = create_file(
+        tmp_path / "pyproject.toml",
+        """
+        [build-system]
+        requires = ["hatchling"]
+        build-backend = "hatchling.build"
+
+        [project]
+        dynamic = [
+            "authors",
+            "dependencies",
+            "description",
+            "license",
+            "urls",
+            "version"
+        ]
+        name = "awesome"
+
+        [tool.hatch.metadata.hooks.custom]
+
+        [tool.briefcase]
+        bundle = "com.example"
+
+        [tool.briefcase.app.awesome]
+        formal_name = "Awesome Application"
+        """,
+    )
+
+    metadata = Message()
+    metadata["Metadata-Version"] = "2.4"
+    metadata["Name"] = "awesome"
+    metadata["Version"] = "1.2.3"
+    metadata["Summary"] = "The application is very awesome"
+    metadata["Project-URL"] = "Docs, https://example.com/docs"
+    metadata["Project-URL"] = "Homepage, https://example.com/"
+    metadata["Author-email"] = "Kim Park <kim@example.com>, John Doe <john@example.org>"
+    metadata["License-Expression"] = "GPL-3.0"
+    metadata["Requires-Dist"] = "toga>=0.5.3"
+
+    wheel_metadata = Mock(return_value=metadata)
+    monkeypatch.setattr("briefcase.config.project_wheel_metadata", wheel_metadata)
+
+    # Parse config
+    _, apps = parse_config(
+        config_file,
+        platform="linux",
+        output_format="app",
+        console=Console(),
+    )
+
+    # Wheel metadata was evaluated
+    wheel_metadata.assert_called_once_with(tmp_path, isolated=True)
+
+    # Final app properties are as expected
+    awesome = apps["awesome"]
+    assert awesome == {
+        "app_name": "awesome",
+        "author": "Kim Park",
+        "author_email": "kim@example.com",
+        "bundle": "com.example",
+        "description": "The application is very awesome",
+        "formal_name": "Awesome Application",
+        "license": "GPL-3.0",
+        "license_files": [],
+        "requires": ["toga>=0.5.3"],
+        "url": "https://example.com/",
+        "version": "1.2.3",
+    }
+
+
+def test_pep621_dynamic_error(monkeypatch, tmp_path):
+    "An error processing dynamic PEP 621 metadata is raised to the user."
+    config_file = create_file(
+        tmp_path / "pyproject.toml",
+        """
+        [build-system]
+        requires = ["pdm-backend"]
+        build-backend = "not_installed.backend"
+
+        [project]
+        dynamic = ["license"]
+        name = "awesome"
+        description = "The application is very awesome"
+
+        [tool.pdm.version]
+        source = "call"
+        getter = "awesome:version"
+
+        [tool.briefcase]
+        bundle = "com.example"
+
+        [tool.briefcase.app.awesome]
+        formal_name = "Awesome Application"
+        """,
+    )
+
+    monkeypatch.setattr(
+        "briefcase.config.project_wheel_metadata",
+        Mock(side_effect=BuildBackendException(ValueError())),
+    )
+
+    with pytest.raises(
+        BriefcaseConfigError,
+        match=r"unable to resolve dynamic PEP 621 metadata for your project",
+    ):
+        parse_config(
+            config_file,
+            platform="linux",
+            output_format="app",
+            console=Console(),
+        )
+
+
+def test_pep621_backend_error(monkeypatch, tmp_path):
+    "An error running the build backend is raised to the user."
+    config_file = create_file(
+        tmp_path / "pyproject.toml",
+        """
+        [build-system]
+        requires = ["no-such-backend"]
+        build-backend = "not_installed.backend"
+
+        [project]
+        dynamic = ["license"]
+        name = "awesome"
+        description = "The application is very awesome"
+
+        [tool.pdm.version]
+        source = "call"
+        getter = "awesome:version"
+
+        [tool.briefcase]
+        bundle = "com.example"
+
+        [tool.briefcase.app.awesome]
+        formal_name = "Awesome Application"
+        """,
+    )
+
+    monkeypatch.setattr(
+        "briefcase.config.project_wheel_metadata",
+        Mock(side_effect=subprocess.CalledProcessError("python -m build", 1)),
+    )
+
+    with pytest.raises(
+        BriefcaseConfigError,
+        match=r"unable to run the PEP 517 build interface for your project",
+    ):
+        parse_config(
+            config_file,
+            platform="linux",
+            output_format="app",
+            console=Console(),
         )

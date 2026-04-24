@@ -16,7 +16,7 @@ from typing import TYPE_CHECKING, TypeVar
 import httpx
 from cookiecutter.main import cookiecutter
 
-from briefcase.config import AppConfig
+from briefcase.config import AppConfig, FinalizedAppConfig
 from briefcase.console import Console
 from briefcase.exceptions import (
     MissingToolError,
@@ -71,7 +71,7 @@ class Tool(ABC):
     def verify(
         cls: type[ToolT],
         tools: ToolCache,
-        app: AppConfig | None = None,
+        app: FinalizedAppConfig | None = None,
         **kwargs,
     ) -> ToolT:
         """Confirm the tool is available and usable on the host platform."""
@@ -107,7 +107,7 @@ class ManagedTool(Tool):
     def verify(
         cls: type[ManagedToolT],
         tools: ToolCache,
-        app: AppConfig | None = None,
+        app: FinalizedAppConfig | None = None,
         install: bool = True,
         **kwargs,
     ) -> ManagedToolT:
@@ -195,8 +195,8 @@ class ToolCache(Mapping):
         self.base_path = Path(base_path)
         self.home_path = Path(os.path.expanduser(home_path or Path.home()))
 
-        self.host_arch = self.platform.machine()
         self.host_os = self.platform.system()
+        self.host_arch = self._get_host_arch()
         # Python is 32bit if its pointers can only address with 32 bits or fewer
         self.is_32bit_python = self.sys.maxsize <= 2**32
 
@@ -207,6 +207,36 @@ class ToolCache(Mapping):
                 home_path=self.home_path,
             )
         )
+
+    def _get_host_arch(self) -> str:
+        arch = self.platform.machine()
+        # On Windows with Python < 3.12, ``platform.machine()`` returns the
+        # emulated architecture (e.g. "AMD64") when an x86-64 Python interpreter
+        # is running under ARM64.  ``IsWow64Process2()`` exposes the
+        # native machine type.
+        if (
+            arch == "AMD64"
+            and self.host_os == "Windows"
+            and self.sys.version_info < (3, 12)
+            and self.sys.getwindowsversion().build >= 16299  # Windows 10 1709
+        ):
+            import ctypes
+            from ctypes import wintypes
+
+            IMAGE_FILE_MACHINE_ARM64 = 0xAA64
+            kernel32 = ctypes.windll.kernel32
+            process_machine = ctypes.c_ushort(0)
+            native_machine = ctypes.c_ushort(0)
+            if (
+                kernel32.IsWow64Process2(
+                    wintypes.HANDLE(kernel32.GetCurrentProcess()),
+                    ctypes.byref(process_machine),
+                    ctypes.byref(native_machine),
+                )
+                and native_machine.value == IMAGE_FILE_MACHINE_ARM64
+            ):
+                return "ARM64"
+        return arch
 
     @cached_property
     def system_encoding(self) -> str:
@@ -231,7 +261,7 @@ class ToolCache(Mapping):
 
         return encoding.upper()
 
-    def __getitem__(self, app: AppConfig) -> ToolCache:
+    def __getitem__(self, app: FinalizedAppConfig) -> ToolCache:
         return self.app_tools[app]
 
     def __iter__(self):

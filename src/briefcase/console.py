@@ -250,6 +250,106 @@ class Console:
         """Export the text of the entire log; the log is also cleared."""
         return self._log_impl.export_text()
 
+    @staticmethod
+    def _dedent_and_wrap(text, wrap_width, border=0):
+        """Dedent text, split text into paragraphs and wrap to a width.
+
+        If a border is specified, that border width will be preserved on the left *and
+        right* of the text. The right hand side won't be printed, but it will be
+        accommodated in any line wrapping.
+
+        Text that is already indented relative to the rest of the text will have that
+        indentation preserved.
+
+        If text is indented, it will *not* undergo line breaks on spaces and hyphens, on
+        the assumption that it will be an environment variable or command line.
+        """
+        # Dedent and remove common leading empty lines
+        text = textwrap.dedent(text).strip("\n")
+
+        # Split text into text lines
+        input_lines = text.split("\n")
+
+        # Create paragraphs from lines. Use "None" for a paragraph break.
+        # Preserve any line that starts with spaces as-is. Any other line
+        # is accumulated into the last paragraph
+        paragraphs = []
+        for line in input_lines:
+            if not line:
+                # Preserve an empty line as a paragraph break
+                paragraphs.append(None)
+            elif line[0] == " ":
+                # If the line starts with indentation, preserve it
+                paragraphs.append(line.rstrip())
+            elif not (paragraphs and paragraphs[-1] and paragraphs[-1][0] != " "):
+                # This is either the first paragraph, or the current last paragraph is
+                # either a paragraph break, or indented literal paragraph. This means
+                # the current line is the start of a new paragraph.
+                paragraphs.append(line.strip())
+            else:
+                # Accumulate onto the most recent paragraph.
+                paragraphs[-1] = f"{paragraphs[-1]} {line.strip()}"
+
+        # Wrap each paragraph to lines
+        output_lines = []
+        for p in paragraphs:
+            if p:
+                if p[0] == " ":
+                    # Preserve an indented line as a literal
+                    output_lines.append(f"{' ' * border}{p}")
+                else:
+                    # Break the paragraph into lines.
+                    output_lines.extend(
+                        f"{' ' * border}{line}"
+                        for line in textwrap.wrap(p, width=wrap_width - (border * 2))
+                    )
+            else:
+                # Insert a paragraph break.
+                output_lines.append("")
+
+        return output_lines
+
+    def warning_banner(
+        self,
+        title: str | None = None,
+        message: str | None = None,
+        width: int = 80,
+    ) -> str:
+        """The title or message can be provided as a single or as multiline string. Any
+        common leading whitespace from each line will be removed.
+
+        To separate text into paragraphs you can use:
+        - blank line;
+        - relative indentation.
+        Lines with zero relative indentation will be merged to upper paragraph.
+
+        :param title: The title of the box. If provided, appears centered at the top.
+        :param message: The message to format inside the box.
+        :param width: The total width of the box in characters. Defaults to 80.
+        :return: The formatted message enclosed in a bordered box.
+        """
+        BORDER_LINE = "*" * width
+        lines_array = ["", BORDER_LINE]
+
+        if title:
+            # Remove 6 from the width to allow for "** " and " **" wrappers
+            title_lines = self._dedent_and_wrap(f"WARNING: {title}", width - 6)
+
+            # Center each line of the title and add to the box
+            for line in title_lines:
+                line = line.center(width - 6)
+                lines_array.append(f"** {line} **")
+
+            lines_array.append(BORDER_LINE)
+
+        if message:
+            msg_lines = self._dedent_and_wrap(message, width, border=2)
+
+            lines_array.extend(["", *msg_lines, "", BORDER_LINE, ""])
+
+        # merge lines into a single string and send warning to console
+        self.warning("\n".join(lines_array))
+
     #################################################################
     # Logging controls
     #################################################################

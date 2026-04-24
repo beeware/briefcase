@@ -9,7 +9,7 @@ from typing import TYPE_CHECKING
 
 from briefcase.commands.create import _is_local_path
 from briefcase.commands.open import OpenCommand
-from briefcase.config import AppConfig
+from briefcase.config import FinalizedAppConfig
 from briefcase.exceptions import BriefcaseCommandError, ParseError
 
 if TYPE_CHECKING:
@@ -142,7 +142,7 @@ class LocalRequirementsMixin(_MixinBase):  # pragma: no-cover-if-is-windows
 
     def _install_app_requirements(
         self,
-        app: AppConfig,
+        app: FinalizedAppConfig,
         requires: list[str],
         app_packages_path: Path,
         **kwargs,
@@ -246,7 +246,7 @@ class DockerOpenCommand(OpenCommand):  # pragma: no-cover-if-is-windows
     # if Docker is being used. Relies on the final command to provide
     # verification that Docker is available, and verify the app context.
 
-    def _open_app(self, app: AppConfig):
+    def _open_app(self, app: FinalizedAppConfig):
         # If we're using Docker, open an interactive shell in the container.
         # Rely on the default CMD statement in the image's Dockerfile to
         # define a default shell.

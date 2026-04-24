@@ -3,15 +3,15 @@ import sys
 import pytest
 from packaging.version import Version
 
-from briefcase.config import AppConfig
+from briefcase.config import DraftAppConfig
 from briefcase.exceptions import BriefcaseConfigError
 
-from .test_GlobalConfig import VALID_VERSIONS
+from .test_GlobalConfig import INVALID_VERSIONS, VALID_VERSIONS
 
 
 def test_minimal_AppConfig():
     """A simple config can be defined."""
-    config = AppConfig(
+    config = DraftAppConfig(
         app_name="myapp",
         version="1.2.3",
         bundle="org.beeware",
@@ -49,12 +49,12 @@ def test_minimal_AppConfig():
     assert config.PYTHONPATH() == ["src", "somewhere/else", ""]
 
     # The object has a meaningful REPL
-    assert repr(config) == "<org.beeware.myapp v1.2.3 AppConfig>"
+    assert repr(config) == "<org.beeware.myapp v1.2.3 DraftAppConfig>"
 
 
 def test_minimal_external_AppConfig():
     """A simple config for an external app can be defined."""
-    config = AppConfig(
+    config = DraftAppConfig(
         app_name="myapp",
         version="1.2.3",
         bundle="org.beeware",
@@ -93,12 +93,12 @@ def test_minimal_external_AppConfig():
     assert config.PYTHONPATH() == []
 
     # The object has a meaningful REPL
-    assert repr(config) == "<org.beeware.myapp v1.2.3 AppConfig>"
+    assert repr(config) == "<org.beeware.myapp v1.2.3 DraftAppConfig>"
 
 
 def test_extra_attrs():
     """A config can contain attributes in addition to those required."""
-    config = AppConfig(
+    config = DraftAppConfig(
         app_name="myapp",
         formal_name="My App!",
         version="1.2.3",
@@ -192,7 +192,7 @@ def test_extra_attrs():
 )
 def test_valid_app_name(name):
     try:
-        AppConfig(
+        DraftAppConfig(
             app_name=name,
             version="1.2.3",
             bundle="org.beeware",
@@ -220,7 +220,7 @@ def test_valid_app_name(name):
 )
 def test_invalid_app_name(name):
     with pytest.raises(BriefcaseConfigError, match=r"is not a valid app name\."):
-        AppConfig(
+        DraftAppConfig(
             app_name=name,
             version="1.2.3",
             bundle="org.beeware",
@@ -242,7 +242,7 @@ def test_invalid_app_name(name):
 )
 def test_valid_bundle(bundle):
     try:
-        AppConfig(
+        DraftAppConfig(
             app_name="myapp",
             version="1.2.3",
             bundle=bundle,
@@ -269,7 +269,7 @@ def test_invalid_bundle_identifier(bundle):
     with pytest.raises(
         BriefcaseConfigError, match=r"is not a valid bundle identifier\."
     ):
-        AppConfig(
+        DraftAppConfig(
             app_name="myapp",
             version="1.2.3",
             bundle=bundle,
@@ -282,7 +282,7 @@ def test_invalid_bundle_identifier(bundle):
 
 @pytest.mark.parametrize(("input", "expected"), VALID_VERSIONS)
 def test_valid_app_version(input, expected):
-    config = AppConfig(
+    config = DraftAppConfig(
         app_name="myapp",
         version=input,
         bundle="org.beeware",
@@ -298,14 +298,15 @@ def test_valid_app_version(input, expected):
     assert str(config.version) == expected
 
 
-def test_invalid_app_version():
+@pytest.mark.parametrize("input", INVALID_VERSIONS)
+def test_invalid_app_version(input):
     with pytest.raises(
         BriefcaseConfigError,
-        match=r"Version number for 'myapp' \(foobar\) is not valid\.",
+        match=rf"Version number for 'myapp' \({input}\) is not valid\.",
     ):
-        AppConfig(
+        DraftAppConfig(
             app_name="myapp",
-            version="foobar",
+            version=input,
             bundle="org.beeware",
             description="A simple app",
             sources=["src/invalid"],
@@ -322,7 +323,7 @@ def test_invalid_app_version():
     ],
 )
 def test_module_name(name, module_name):
-    config = AppConfig(
+    config = DraftAppConfig(
         app_name=name,
         version="1.2.3",
         bundle="org.beeware",
@@ -343,7 +344,7 @@ def test_module_name(name, module_name):
     ],
 )
 def test_package_name(bundle, package_name):
-    config = AppConfig(
+    config = DraftAppConfig(
         app_name="myapp",
         version="1.2.3",
         bundle=bundle,
@@ -364,7 +365,7 @@ def test_package_name(bundle, package_name):
     ],
 )
 def test_dist_info_name(app_name, dist_info_name):
-    config = AppConfig(
+    config = DraftAppConfig(
         app_name=app_name,
         version="1.2.3",
         bundle="com.example",
@@ -385,7 +386,7 @@ def test_dist_info_name(app_name, dist_info_name):
     ],
 )
 def test_bundle_name(app_name, bundle_name):
-    config = AppConfig(
+    config = DraftAppConfig(
         app_name=app_name,
         version="1.2.3",
         bundle="com.example",
@@ -408,7 +409,7 @@ def test_bundle_name(app_name, bundle_name):
 def test_bundle_identifier(app_name, bundle_name):
     bundle = "com.example"
 
-    config = AppConfig(
+    config = DraftAppConfig(
         app_name=app_name,
         version="1.2.3",
         bundle=bundle,
@@ -434,7 +435,7 @@ def test_duplicated_source(sources):
     with pytest.raises(
         BriefcaseConfigError, match=r"contains duplicated package names\."
     ):
-        AppConfig(
+        DraftAppConfig(
             app_name="dupe",
             version="1.2.3",
             bundle="org.beeware",
@@ -449,7 +450,7 @@ def test_no_source_for_app():
     with pytest.raises(
         BriefcaseConfigError, match=r" does not include a package named 'my_app'\."
     ):
-        AppConfig(
+        DraftAppConfig(
             app_name="my-app",
             version="1.2.3",
             bundle="org.beeware",
@@ -473,7 +474,7 @@ def test_no_source_for_app():
     ],
 )
 def test_install_launcher(install_launcher, console_app, expected):
-    config = AppConfig(
+    config = DraftAppConfig(
         app_name="my-app",
         version="1.2.3",
         bundle="org.beeware",
@@ -495,7 +496,7 @@ def test_non_unique_uninstall_options():
             r"The name 'first' is already used as an install option."
         ),
     ):
-        AppConfig(
+        DraftAppConfig(
             app_name="myapp",
             version="1.2.3",
             bundle="org.beeware",
@@ -530,7 +531,7 @@ def test_non_unique_uninstall_options():
 
 def test_capitalization():
     """Capitalization is prohibited and normalized out in some properties."""
-    config = AppConfig(
+    config = DraftAppConfig(
         app_name="MyApp",
         version="1.2.3",
         bundle="Org.Beeware",
@@ -551,4 +552,4 @@ def test_capitalization():
     assert config.class_name == "MyApp"
 
     # The object has a meaningful REPL
-    assert repr(config) == "<org.beeware.myapp v1.2.3 AppConfig>"
+    assert repr(config) == "<org.beeware.myapp v1.2.3 DraftAppConfig>"
