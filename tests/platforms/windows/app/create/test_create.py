@@ -172,9 +172,6 @@ def test_explicit_guid(create_command, first_app_config, tmp_path):
 
 def test_no_installer_images(create_command, first_app_config, tmp_path):
     """If no installer images are specified, blank values are used."""
-    first_app_config.installer_background = "path/to/background"
-    first_app_config.installer_banner = "path/to/banner"
-
     context = create_command.output_format_template_context(first_app_config)
 
     # Installer images have been converted to a full path
