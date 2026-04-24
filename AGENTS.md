@@ -1,5 +1,10 @@
 # Briefcase — Agent Development Guide
 
+<!-- SPECKIT START -->
+For additional context about technologies to be used, project structure,
+shell commands, and other important information, read the current plan
+<!-- SPECKIT END -->
+
 Briefcase converts Python projects into standalone native applications for macOS, Windows, Linux, iOS, Android, and Web. This guide provides the context AI coding agents need to contribute effectively.
 
 ## Quick Reference

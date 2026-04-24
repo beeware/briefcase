@@ -44,7 +44,14 @@ __pycache__/
 tests/apps/verify-*/
 logs/
 
-# AI tooling
+# AI tooling (SpecKit v0.8.0)
 .opencode/
 .specify/scripts
 .specify/templates
+.specify/extensions.yml
+.specify/extensions
+.specify/init-options.json
+.specify/integration.json
+.specify/integrations
+.specify/workflows
+.specify/workflow.yml
