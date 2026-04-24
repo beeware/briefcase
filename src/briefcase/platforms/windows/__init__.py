@@ -207,15 +207,13 @@ class WindowsCreateCommand(CreateCommand):
         installer_images = {}
         try:
             installer_images["background"] = str(
-                (self.base_path / app.installer_background)
-                .with_suffix(".bmp")
-                .resolve()
+                (self.base_path / app.installer_background).with_suffix(".bmp")
             )
         except AttributeError:
             installer_images["background"] = ""
         try:
             installer_images["banner"] = str(
-                (self.base_path / app.installer_banner).with_suffix(".bmp").resolve()
+                (self.base_path / app.installer_banner).with_suffix(".bmp")
             )
         except AttributeError:
             installer_images["banner"] = ""
