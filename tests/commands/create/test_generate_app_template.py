@@ -566,7 +566,7 @@ def test_cached_template(monkeypatch, create_command, myapp, full_context, tmp_p
 
     # The origin of the repo was fetched
     mock_repo.remote.assert_called_once_with(name="origin")
-    mock_remote.fetch.assert_called_once_with()
+    mock_remote.fetch.assert_called_once_with(progress=mock.ANY)
 
     # The remote head was checked out.
     mock_remote_head.checkout.assert_called_once_with()
@@ -619,14 +619,14 @@ def test_cached_template_offline(
 
     # An attempt to fetch the repo origin was made
     mock_repo.remote.assert_called_once_with(name="origin")
-    mock_remote.fetch.assert_called_once_with()
+    mock_remote.fetch.assert_called_once_with(progress=mock.ANY)
+
+    # The remote head was checked out.
+    mock_remote_head.checkout.assert_called_once_with()
 
     # A warning was raised to the user about the fetch problem
     output = capsys.readouterr().out
     assert "** WARNING: Unable to update template" in output
-
-    # The remote head was checked out.
-    mock_remote_head.checkout.assert_called_once_with()
 
     # Cookiecutter was invoked with the path to the *cached* template name
     create_command.tools.cookiecutter.assert_called_once_with(

@@ -45,6 +45,7 @@ def test_new_repo_template(base_command, mock_git):
         to_path=base_command.data_path / "templates" / "special-template",
         filter=["blob:none"],
         no_checkout=True,
+        progress=mock.ANY,
     )
 
 
@@ -122,6 +123,7 @@ def test_new_repo_invalid_template_url(base_command, mock_git):
         to_path=base_command.data_path / "templates" / "special-template",
         filter=["blob:none"],
         no_checkout=True,
+        progress=mock.ANY,
     )
 
     # The template directory should be cleaned up
@@ -233,7 +235,7 @@ def test_existing_repo_template(base_command, mock_git):
     mock_remote.set_url.assert_called_once_with(
         new_url="https://example.com/magic/special-template.git",
     )
-    mock_remote.fetch.assert_called_once_with()
+    mock_remote.fetch.assert_called_once_with(progress=mock.ANY)
 
     # The right branch was accessed
     mock_remote.refs.__getitem__.assert_called_once_with("special")
@@ -279,6 +281,7 @@ def test_existing_repo_template_corrupted(base_command, mock_git):
         to_path=base_command.data_path / "templates" / "special-template",
         filter=["blob:none"],
         no_checkout=True,
+        progress=mock.ANY,
     )
 
     # The old template content has been deleted
@@ -320,7 +323,7 @@ def test_existing_repo_template_with_different_url(base_command, mock_git):
     mock_remote.set_url.assert_called_once_with(
         new_url="https://example.com/magic/special-template.git",
     )
-    mock_remote.fetch.assert_called_once_with()
+    mock_remote.fetch.assert_called_once_with(progress=mock.ANY)
 
     # The right branch was accessed
     mock_remote.refs.__getitem__.assert_called_once_with("special")
@@ -368,7 +371,7 @@ def test_offline_repo_template(base_command, mock_git, capsys):
     mock_remote.set_url.assert_called_once_with(
         new_url="https://example.com/magic/special-template.git",
     )
-    mock_remote.fetch.assert_called_once_with()
+    mock_remote.fetch.assert_called_once_with(progress=mock.ANY)
 
     # The right branch was accessed
     mock_remote.refs.__getitem__.assert_called_once_with("special")
@@ -418,7 +421,7 @@ def test_cached_missing_branch_template(base_command, mock_git):
     mock_remote.set_url.assert_called_once_with(
         new_url="https://example.com/magic/special-template.git",
     )
-    mock_remote.fetch.assert_called_once_with()
+    mock_remote.fetch.assert_called_once_with(progress=mock.ANY)
 
     # An attempt to access the branch was made
     mock_remote.refs.__getitem__.assert_called_once_with("invalid")

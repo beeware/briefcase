@@ -49,6 +49,7 @@ from briefcase.exceptions import (
     UnsupportedHostError,
     UnsupportedPythonVersion,
 )
+from briefcase.git import GitProgress
 from briefcase.integrations.base import ToolCache
 from briefcase.integrations.file import File
 from briefcase.integrations.subprocess import Subprocess
@@ -1178,12 +1179,17 @@ Did you run Briefcase in a project directory that contains {filename.name!r}?"""
                 try:
                     self.console.info(f"Cloning template {template!r}...")
                     cached_template.mkdir(exist_ok=True, parents=True)
-                    repo = self.tools.git.Repo.clone_from(
-                        url=template,
-                        to_path=cached_template,
-                        filter=["blob:none"],
-                        no_checkout=True,
-                    )
+                    git_progress = GitProgress()
+                    try:
+                        repo = self.tools.git.Repo.clone_from(
+                            url=template,
+                            to_path=cached_template,
+                            filter=["blob:none"],
+                            no_checkout=True,
+                            progress=git_progress,
+                        )
+                    finally:
+                        git_progress.close()
                 except KeyboardInterrupt:
                     # The user has aborted the initial clone. Git is fairly resilient to
                     # being interrupted, but if the *initial* clone fails, it's very
@@ -1228,7 +1234,11 @@ Did you run Briefcase in a project directory that contains {filename.name!r}?"""
                 remote.set_url(new_url=template)
                 try:
                     # Attempt to update the repository
-                    remote.fetch()
+                    git_progress = GitProgress()
+                    try:
+                        remote.fetch(progress=git_progress)
+                    finally:
+                        git_progress.close()
                 except self.tools.git.exc.GitCommandError as e:
                     # We are offline, or otherwise unable to contact the origin git
                     # repo. It's OK to continue; but capture the error in the log and
