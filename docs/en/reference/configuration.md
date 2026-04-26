@@ -224,7 +224,7 @@ The application name as it should be displayed to humans. This name may contain 
 
 A path, relative to the directory where the `pyproject.toml` file is located, to an image to use as the icon for the application. The path should *exclude* the extension; Briefcase will append a platform appropriate extension when configuring the application. For example, an icon specification of `icon = "resources/icon"` will use `resources/icon.icns` on macOS, and `resources/icon.ico` on Windows.
 
-Some platforms require multiple icons, at different sizes; these will be handled by appending the required size to the provided icon name. For example, iOS requires multiple icon sizes (ranging from 20px to 1024px); Briefcase will look for `resources/icon-20.png`, `resources/icon-1024.png`, and so on. The sizes that are required are determined by the platform template.
+Some platforms require multiple icons, at different sizes; these will be handled by appending the required size to the provided icon name. For example, iOS requires multiple icon sizes (ranging from 20px to 1024px); Briefcase will look for `resources/icon-20.png`, `resources/icon-1024.png`, and so on. The sizes that are required are determined by the platform template. See the documentation for each platform for the required icon sizes.
 
 #### `install_launcher`
 
@@ -234,11 +234,15 @@ This setting is only used on Windows.
 
 #### `installer_icon`
 
-A path, relative to the directory where the `pyproject.toml` file is located, to an image to use as the icon for the installer. As with [`icon`][], the path should *exclude* the extension, and a platform-appropriate extension will be appended when the application is built.
+A path, relative to the directory where the `pyproject.toml` file is located, to an image to use as the icon for the installer. As with [`icon`][], the path should *exclude* the extension, and a platform-appropriate extension will be appended when the application is built. See the documentation for each platform for how the installer image will be used, and the required icon sizes.
 
 #### `installer_background`
 
-A path, relative to the directory where the `pyproject.toml` file is located, to an image to use as the background for the installer. The path should *exclude* the extension, and a platform-appropriate extension will be appended when the application is built.
+A path, relative to the directory where the `pyproject.toml` file is located, to an image to use as the background for the installer. The path should *exclude* the extension, and a platform-appropriate extension will be appended when the application is built. See the documentation for each platform for how the installer image will be used, and the required image size.
+
+#### `installer_banner`
+
+A path, relative to the directory where the `pyproject.toml` file is located, to an image to use as a banner for installer dialogs. The path should *exclude* the extension, and a platform-appropriate extension will be appended when the application is built. See the documentation for each platform for how the installer image will be used, and the required image size.
 
 #### `long_description`
 
