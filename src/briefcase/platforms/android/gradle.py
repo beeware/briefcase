@@ -637,26 +637,141 @@ class GradleRunCommand(GradleMixin, RunCommand):
 class GradlePackageCommand(GradleMixin, PackageCommand):
     description = "Create a release artefact from an Android Gradle project."
 
-    def package_app(self, app: FinalizedAppConfig, **kwargs):
+    ADHOC_SIGN_HELP = "Create an unsigned release artefact"
+    KEYSTORE_HELP = "The path to a .jks keystore file to use for signing"
+
+    def add_options(self, parser):
+        super().add_options(parser)
+
+        parser.add_argument(
+            "--key-alias",
+            dest="key_alias",
+            help="The alias of the signing key in the keystore",
+            required=False,
+        )
+        parser.add_argument(
+            "--keystore-password",
+            dest="keystore_password",
+            help="The password for the keystore",
+            required=False,
+        )
+        parser.add_argument(
+            "--key-password",
+            dest="key_password",
+            help=(
+                "The password for the signing key "
+                "(defaults to the keystore password if not specified)"
+            ),
+            required=False,
+        )
+
+    def package_app(
+        self,
+        app: FinalizedAppConfig,
+        adhoc_sign: bool = False,
+        keystore: str | None = None,
+        key_alias: str | None = None,
+        keystore_password: str | None = None,
+        key_password: str | None = None,
+        **kwargs,
+    ):
         """Package the app for distribution.
 
         This involves building the release app bundle.
 
         :param app: The application to build
+        :param adhoc_sign: If True, produce an unsigned artefact
+        :param keystore: Path to a keystore file
+        :param key_alias: The alias of the signing key in the keystore
+        :param keystore_password: The keystore password
+        :param key_password: The key password (defaults to keystore_password)
         """
         self.console.info(
             "Building Android App Bundle and APK in release mode...",
             prefix=app.app_name,
         )
-        with self.console.wait_bar("Bundling..."):
-            build_type, build_artefact_path = {
-                "aab": ("bundleRelease", "bundle/release/app-release.aab"),
-                "apk": ("assembleRelease", "apk/release/app-release-unsigned.apk"),
-                "debug-apk": ("assembleDebug", "apk/debug/app-debug.apk"),
-            }[app.packaging_format]
 
+        build_type, build_artefact_path = {
+            "aab": ("bundleRelease", "bundle/release/app-release.aab"),
+            "apk": (
+                "assembleRelease",
+                (
+                    "apk/release/app-release.apk"
+                    if keystore or not adhoc_sign
+                    else "apk/release/app-release-unsigned.apk"
+                ),
+            ),
+            "debug-apk": ("assembleDebug", "apk/debug/app-debug.apk"),
+        }[app.packaging_format]
+
+        gradle_args = [build_type]
+
+        extra_gradle = getattr(app, "build_gradle_extra_content", "") or ""
+        if "signingConfig" in extra_gradle:
+            if any(
+                [
+                    keystore is not None,
+                    key_alias is not None,
+                    keystore_password is not None,
+                    key_password is not None,
+                ]
+            ):
+                raise BriefcaseCommandError(
+                    "Cannot use signing options when build_gradle_extra_content "
+                    "already configures signing.\n\n"
+                    "Remove the signingConfig block from build_gradle_extra_content "
+                    "and use command-line options instead, or remove the signing "
+                    "options to let the existing Gradle signing configuration be used."
+                )
+            if not adhoc_sign:
+                self.console.warning("""
+Signing is configured via build_gradle_extra_content in pyproject.toml.
+Briefcase will use that signing configuration.
+
+For better security, consider removing the signing block from
+build_gradle_extra_content and using briefcase's built-in signing instead:
+
+    $ briefcase package android --keystore /path/to/keystore.p12
+
+""")
+                adhoc_sign = True
+
+        if not adhoc_sign:
+            # If the app is being built as a debug APK, and no signing
+            # credentials have been provided, default to using the Android
+            # SDK's default debug signing key.
+            if app.packaging_format == "debug-apk" and not any(
+                [keystore, key_alias, keystore_password, key_password]
+            ):
+                signing_config = None
+            else:
+                signing_config = self.tools.android_sdk.signing.select_keystore(
+                    app,
+                    base_path=self.base_path,
+                    keystore=keystore,
+                    key_alias=key_alias,
+                    keystore_password=keystore_password,
+                    key_password=key_password,
+                )
+        else:
+            signing_config = None
+
+        if signing_config:
+            # These properties are the way in which Android Studio passes signing
+            # settings to Gradle when building from the GUI. While they are not
+            # officially documented, they have been stable for a long time.
+            # See https://developer.android.com/build/building-cmdline#sign_cmdline
+            # for more information.
+            gradle_args += [
+                f"-Pandroid.injected.signing.store.file={signing_config.keystore_path!s}",
+                f"-Pandroid.injected.signing.store.password={signing_config.store_password}",
+                f"-Pandroid.injected.signing.key.alias={signing_config.key_alias}",
+                f"-Pandroid.injected.signing.key.password={signing_config.key_password}",
+            ]
+
+        with self.console.wait_bar("Bundling..."):
             try:
-                self.run_gradle(app, [build_type])
+                self.run_gradle(app, gradle_args)
             except subprocess.CalledProcessError as e:
                 raise BriefcaseCommandError("Error while building project.") from e
 

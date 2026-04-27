@@ -7,6 +7,7 @@ amongst
 APIs
 ABIs
 APK
+APKs
 appimage
 AppImage
 AppImages
@@ -128,6 +129,7 @@ OSX
 passthrough
 Passthrough
 pbb
+PKCS
 PDB
 PFX
 phablet
@@ -192,6 +194,7 @@ SSL
 stylesheet
 subdirectories
 subdirectory
+subfolder
 subfolders
 submodule
 subprocess
