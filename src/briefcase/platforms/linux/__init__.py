@@ -120,7 +120,7 @@ class LinuxMixin(_MixinBase):
         id_like = freedesktop_info.get("ID_LIKE", "").split()
         if vendor == DEBIAN or DEBIAN in id_like or "ubuntu" in id_like:
             vendor_base = DEBIAN
-        elif vendor == RHEL or vendor == "fedora" or RHEL in id_like:
+        elif vendor == RHEL or vendor == "fedora" or RHEL in id_like or "fedora" in id_like:
             vendor_base = RHEL
         elif vendor == ARCH or vendor == "cachyos" or ARCH in id_like:
             vendor_base = ARCH
