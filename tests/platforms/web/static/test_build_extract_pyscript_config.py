@@ -88,7 +88,6 @@ def test_extract_pyscript_config_no_config(build_command, tmp_path):
 
 def test_extract_pyscript_config_multiple_config(build_command, tmp_path):
     """Multiple config.toml supplied by wheels fails."""
-
     # Mock wheels that both contain config.toml
     file_set_1 = {
         "dependency/deploy/config.toml": """
@@ -125,7 +124,6 @@ version = "2024.10.1"
 
 def test_extract_pyscript_config_no_implementation(build_command, tmp_path, capsys):
     """An app with no "implementation" value defaults to pyscript with a warning."""
-
     # Mock a wheel with the needed files
     files = {"dependency/deploy/config.toml": ""}
 
@@ -150,7 +148,6 @@ def test_extract_pyscript_config_implementation_warning(
     capsys,
 ):
     """Briefcase raises a warning if "implementation" value is not pyscript."""
-
     files = {
         "dependency/deploy/config.toml": """
 implementation = "something-else"
@@ -177,7 +174,6 @@ implementation = "something-else"
 
 def test_extract_pyscript_config_no_pyscript_toml(build_command, tmp_path, capsys):
     """If no pyscript.toml is supplied by a wheel, function returns a basic config."""
-
     # Create wheel with no pyscript.toml
     files = {
         "dependency/deploy/config.toml": """
@@ -201,7 +197,6 @@ implementation = "pyscript"
 
 def test_extract_pyscript_config_invalid_wheel_pyscript_toml(build_command, tmp_path):
     """A wheel with an invalid pyscript.toml raises an error."""
-
     # Mock a wheel with files
     files = {
         "dependency/deploy/config.toml": """
@@ -210,9 +205,7 @@ implementation = "pyscript"
 [pyscript]
 version = "2024.10.1"
 """,
-        "dependency/deploy/pyscript.toml": """
-This is not valid toml.
-""",
+        "dependency/deploy/pyscript.toml": """This is not valid toml.""",
     }
 
     wheel_path = _mock_wheel(tmp_path=tmp_path, wheel_name="dependency", files=files)

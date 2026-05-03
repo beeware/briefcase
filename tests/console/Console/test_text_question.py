@@ -112,7 +112,6 @@ def test_input_with_default(console):
 
 def test_input_disabled(disabled_console):
     """If input is disabled, the default is returned."""
-
     value = disabled_console.text_question(
         intro="Some introduction",
         description="My variable",

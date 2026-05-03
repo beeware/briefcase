@@ -415,7 +415,6 @@ def test_user_provided_sdk_with_latest_cmdline_tools(
 def test_consistent_invalid_user_provided_sdk(mock_tools, tmp_path, capsys):
     """If the user's environment specifies an invalid Android SDK in both ANDROID_HOME
     and ANDROID_SDK_ROOT, they are ignored."""
-
     # Create `sdkmanager` and the license file
     # for the *briefcase* managed version of the SDK.
     android_sdk_root_path = tmp_path / "tools/android_sdk"
@@ -450,7 +449,6 @@ def test_consistent_invalid_user_provided_sdk(mock_tools, tmp_path, capsys):
 def test_inconsistent_invalid_user_provided_sdk(mock_tools, tmp_path, capsys):
     """If the user's environment specifies an invalid Android SDK in both ANDROID_HOME
     and ANDROID_SDK_ROOT...and they are both different, they are ignored."""
-
     # Create `sdkmanager` and the license file
     # for the *briefcase* managed version of the SDK.
     android_sdk_root_path = tmp_path / "tools/android_sdk"
@@ -679,7 +677,6 @@ def test_download_sdk_legacy_install(mock_tools, tmp_path):
 
 def test_no_install(mock_tools, tmp_path):
     """If an SDK is not available, and install is not requested, an error is raised."""
-
     # Call `verify()`
     with pytest.raises(MissingToolError):
         AndroidSDK.verify(mock_tools, install=False)

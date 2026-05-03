@@ -89,7 +89,6 @@ def test_log_level(
 
 def test_info_logging(console, capsys):
     """The info level logging only includes info logs."""
-
     console.info("info")
     console.verbose("verbose")
     console.debug("debug")

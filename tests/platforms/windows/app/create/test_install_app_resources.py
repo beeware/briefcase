@@ -18,7 +18,6 @@ def test_minimal_app_resources(create_command, first_app_templated, tmp_path):
 
 def test_post_install_script(create_command, first_app_templated, tmp_path):
     """A post_install script can be provided as extra resources."""
-
     # Create a post-install script
     first_app_templated.post_install_script = "scripts/post_install.bat"
     create_file(tmp_path / "base_path/scripts/post_install.bat", "echo Hello world")
@@ -58,7 +57,6 @@ def test_missing_post_install_script(create_command, first_app_templated):
 
 def test_pre_uninstall_script(create_command, first_app_templated, tmp_path):
     """A pre_uninstall script can be provided as extra resources."""
-
     # Create a post-install script
     first_app_templated.pre_uninstall_script = "scripts/pre_uninstall.bat"
     create_file(tmp_path / "base_path/scripts/pre_uninstall.bat", "echo Hello world")

@@ -31,7 +31,6 @@ def test_update_app(update_command, first_app, tmp_path):
 
 def test_update_non_existing_app(update_command, tmp_path):
     """If the app hasn't been generated yet, it won't be created."""
-
     update_command.update_app(
         update_command.apps["first"],
         update_requirements=False,

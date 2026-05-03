@@ -90,7 +90,6 @@ def test_validate_document_missing_description(valid_document):
 )
 def test_validate_document_invalid_description(invalid_description, valid_document):
     """Invalid description values raise an error when validating document types."""
-
     valid_document["description"] = invalid_description
     # Failure raises an exception
     with pytest.raises(
@@ -102,7 +101,6 @@ def test_validate_document_invalid_description(invalid_description, valid_docume
 
 def test_validate_document_missing_url(valid_document):
     """If a document type is missing a URL, an exception is raised."""
-
     del valid_document["url"]
     # Failure raises an exception
     with pytest.raises(
@@ -122,7 +120,6 @@ def test_validate_document_missing_url(valid_document):
 )
 def test_validate_document_invalid_url(invalid_url, valid_document):
     """Invalid URL values raise an error when validating document types."""
-
     valid_document["url"] = invalid_url
     # Failure raises an exception
     with pytest.raises(
@@ -134,7 +131,6 @@ def test_validate_document_invalid_url(invalid_url, valid_document):
 
 def test_validate_document_missing_extension(valid_document):
     """If a document type is missing an extension, an exception is raised."""
-
     del valid_document["extension"]
     # Failure raises an exception
     with pytest.raises(

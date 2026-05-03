@@ -130,11 +130,14 @@ is compatible with supported platforms.
         # 64bit Python is required to ensure 64bit wheels are installed/created
         # for the app
         if self.tools.is_32bit_python:
-            raise UnsupportedHostError("""\
-Windows applications cannot be built using a 32bit version of Python.
+            raise UnsupportedHostError(
+                r"""\ Windows applications cannot be built using a
+                                       32bit version of Python.
 
-Install a 64bit version of Python and run Briefcase again.
-""")
+                                       Install a 64bit version of Python and run
+                                       Briefcase again.
+                                       """
+            )
 
 
 class WindowsCreateCommand(CreateCommand):
@@ -231,22 +234,24 @@ class WindowsCreateCommand(CreateCommand):
         # On Windows, the support path is co-mingled with app content.
         # This means updating the support package is imperfect.
         # Warn the user that there could be problems.
-        self.console.warning("""
-*************************************************************************
-** WARNING: Support package update may be imperfect                    **
-*************************************************************************
+        self.console.warning(
+            """********************************************************
+                             ***************** ** WARNING: Support package update may be
+                             imperfect                    ** ***************************
+                             **********************************************
 
-    Support packages in Windows apps are overlaid with app content,
-    so it isn't possible to remove all old support files before
-    installing new ones.
+                                 Support packages in Windows apps are overlaid with app content,
+                                 so it isn't possible to remove all old support files before
+                                 installing new ones.
 
-    Briefcase will unpack the new support package without cleaning up
-    existing support package content. This *should* work; however,
-    ensure a reproducible release artefacts, it is advisable to
-    perform a clean app build before release.
+                                 Briefcase will unpack the new support package without cleaning up
+                                 existing support package content. This *should* work; however,
+                                 ensure a reproducible release artefacts, it is advisable to
+                                 perform a clean app build before release.
 
-*************************************************************************
-""")
+                             *************************************************************************
+                             """
+        )
 
     def install_license(self, app: FinalizedAppConfig):
         """Install the license for the project as a single RTF document.
@@ -269,12 +274,15 @@ class WindowsCreateCommand(CreateCommand):
         ]
 
         if len(app.license_files) == 0:
-            raise BriefcaseCommandError("""\
-Your project does not include any license files.
+            raise BriefcaseCommandError(
+                r"""\ Your project does not include any license
+                                        files.
 
-Ensure your `pyproject.toml` is in PEP 639 format and specifies at least
-one file in the `license-files` setting.
-""")
+                                        Ensure your `pyproject.toml` is in PEP 639
+                                        format and specifies at least one file in the
+                                        `license-files` setting.
+                                        """
+            )
         elif len(app.license_files) == 1:
             license_file = self.base_path / app.license_files[0]
             if license_file.suffix == ".rtf":
@@ -501,7 +509,6 @@ class WindowsPackageCommand(PackageCommand):
         timestamp_digest: str,
     ):
         """Sign a file."""
-
         if not re.fullmatch(r"^[0-9a-f]{40}$", identity, flags=re.IGNORECASE):
             raise BriefcaseCommandError(
                 f"Codesigning identify {identity!r} must be a "
@@ -567,24 +574,26 @@ class WindowsPackageCommand(PackageCommand):
         :param timestamp_url: Timestamp authority server to use in code signing.
         :param timestamp_digest: Hashing algorithm to request from the timestamp server.
         """
-
         if adhoc_sign:
             sign_app = False
         elif identity:
             sign_app = True
         else:
             sign_app = False
-            self.console.warning("""
-*************************************************************************
-** WARNING: No signing identity provided                               **
-*************************************************************************
+            self.console.warning(
+                """****************************************************
+                                 ********************* ** WARNING: No signing identity
+                                 provided                               ** *************
+                                 *******************************************************
+                                 *****
 
-    Briefcase will not sign the app. To provide a signing identity,
-    use the `--identity` option; or, to explicitly disable signing,
-    use `--adhoc-sign`.
+                                     Briefcase will not sign the app. To provide a signing identity,
+                                     use the `--identity` option; or, to explicitly disable signing,
+                                     use `--adhoc-sign`.
 
-*************************************************************************
-""")
+                                 *************************************************************************
+                                 """
+            )
 
         if sign_app:
             self.console.info("Signing App...", prefix=app.app_name)
@@ -641,7 +650,6 @@ class WindowsPackageCommand(PackageCommand):
 
     def _package_zip(self, app):
         """Package the app as simple zip file."""
-
         self.console.info("Building zip file...", prefix=app.app_name)
         with self.console.wait_bar("Packing..."):
             source = self.package_path(app)

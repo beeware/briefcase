@@ -237,9 +237,9 @@ def validate_install_options_config(config, opt_type, **others):
     :param config: The table form of options
     :param opt_type: The label of the option type being parsed ("install" or
         "uninstall")
-    :param others: A dictionary of other parsed option types. The keys are
-        the option types, and the values are the dictionary of parse options. Options
-        in `config` must be unique against these keys.
+    :param others: A dictionary of other parsed option types. The keys are the option
+        types, and the values are the dictionary of parse options. Options in `config`
+        must be unique against these keys.
     """
     options = {}
     known_names = set()
@@ -331,7 +331,6 @@ def is_valid_bundle_identifier(bundle):
 
 def parse_boolean(value: str) -> bool:
     """Takes a string value and attempts to convert to a boolean value."""
-
     truth_vals = {"true", "t", "yes", "y", "1", "on"}
     false_vals = {"false", "f", "no", "n", "0", "off"}
 
@@ -356,8 +355,8 @@ class BaseConfig:
     def update(self, data):
         """Add fields and values from data to BaseConfig instance.
 
-        Any existing fields named in data will be overwritten. To merge
-        data with existing configs, use the `merge_config` function.
+        Any existing fields named in data will be overwritten. To merge data with
+        existing configs, use the `merge_config` function.
 
         :param data: The new configuration data dictionary.
         """
@@ -427,12 +426,12 @@ class GlobalConfig(BaseConfig):
 class AppConfig(BaseConfig):
     """Base class for app configuration.
 
-    Not instantiated directly. Use ``DraftAppConfig`` for parsed project
-    configuration (pre-finalization) and ``FinalizedAppConfig`` for
-    finalized configuration (post-finalization).
+    Not instantiated directly. Use ``DraftAppConfig`` for parsed project configuration
+    (pre-finalization) and ``FinalizedAppConfig`` for finalized configuration (post-
+    finalization).
 
-    Provides shared properties (``module_name``, ``bundle_name``, etc.)
-    and identity (``__eq__``/``__hash__`` based on ``app_name``).
+    Provides shared properties (``module_name``, ``bundle_name``, etc.) and identity
+    (``__eq__``/``__hash__`` based on ``app_name``).
     """
 
     app_name: str
@@ -552,8 +551,8 @@ class AppConfig(BaseConfig):
     def main_module(self):
         """The path to the main module for the app.
 
-        In normal operation, this is ``app.module_name``; however,
-        in test mode, it is prefixed with ``tests.``.
+        In normal operation, this is ``app.module_name``; however, in test mode, it is
+        prefixed with ``tests.``.
         """
         if self.test_mode:
             return f"tests.{self.module_name}"
@@ -704,9 +703,8 @@ class DraftAppConfig(AppConfig):
 class FinalizedAppConfig(AppConfig):
     """An AppConfig that has been through platform finalization.
 
-    Constructed by ``finalize_app_config()``; holds runtime attributes
-    (``test_mode``, ``debugger``, etc.) that are not part of the parsed
-    project configuration.
+    Constructed by ``finalize_app_config()``; holds runtime attributes (``test_mode``,
+    ``debugger``, etc.) that are not part of the parsed project configuration.
     """
 
     def __init__(
@@ -799,8 +797,8 @@ def _write_temp_license(base_path: Path, app_name: str, text: str) -> str | None
     """Write a temporary license file based on license text if needed.
 
     If the license text is more than one line, write a temporary file into the build
-    folder, and return that path. If the license text is a single line, no file
-    will be written, and `None` will be returned.
+    folder, and return that path. If the license text is a single line, no file will be
+    written, and `None` will be returned.
 
     :param base_path: The project base directory (parent of `pyproject.toml`), used to
         read license files and write temporary license text files.
@@ -829,8 +827,8 @@ def _normalize_pep639_license_config(
 
     :param config: The fully-merged config dict (mutated in place).
     :param app_name: The app name.
-    :param base_path: The project base directory (parent of `pyproject.toml`), used
-        to read license files and write temporary license text files.
+    :param base_path: The project base directory (parent of `pyproject.toml`), used to
+        read license files and write temporary license text files.
     :param console: The Briefcase `Console` object used for warning output.
     """
     raw_license = config["license"]
@@ -923,16 +921,19 @@ def _normalize_pep621_license_text_config(
     tmp_license_file = _write_temp_license(base_path, app_name, license_text)
     if tmp_license_file:
         license_files = [tmp_license_file]
-        warning.append("""
-    The contents of `license.text` will be used as the contents of the
-    license file. This may not be correct, and should be verified.
-""")
+        warning.append("""The contents of `license.text` will be used as the contents of
+                       the license file.
+
+                       This may not be correct, and should be verified.
+                       """)
     else:
         license_files = []
-        warning.append("""
-    Your project will not have a value for `license-files`. This will
-    cause problems packaging for some platforms.
-""")
+        warning.append(
+            """Your project will not have a value for `license-files`.
+
+                       This will cause problems packaging for some platforms.
+                       """
+        )
 
     warning.append(f"""
     Update your configuration to put the full license text in a file and use
@@ -965,8 +966,8 @@ def _normalize_pep621_license_file_config(
 
     :param config: The fully-merged config dict (mutated in place).
     :param app_name: The app name.
-    :param base_path: The project base directory (parent of `pyproject.toml`), used
-        to read license files and write temporary license text files.
+    :param base_path: The project base directory (parent of `pyproject.toml`), used to
+        read license files and write temporary license text files.
     :param console: The Briefcase `Console` object used for warning output.
     """
     license_file = config["license"]["file"]
@@ -1002,10 +1003,13 @@ def _normalize_pep621_license_file_config(
         # Can't identify SPDX for license
         license = "<SPDX expression>"
         spdx_id = "LicenseRef-UnknownLicense"
-        warning.append("""
-    A license SPDX expression could not be identified from the license file.
-    The license has been set to 'LicenseRef-UnknownLicense'
-    """)
+        warning.append(
+            """A license SPDX expression could not be identified from the
+                       license file.
+
+                       The license has been set to 'LicenseRef-UnknownLicense'
+                       """
+        )
 
     warning.append(f"""
     Update your configuration to use PEP 639 format:
@@ -1082,16 +1086,21 @@ def _normalize_pre_pep621_license_config(
     tmp_license_file = _write_temp_license(base_path, app_name, license_text)
     if tmp_license_file:
         license_files = [tmp_license_file]
-        warning.append("""
-    The contents of `license` will be used as the contents of the license
-    file. This may not be correct, and should be verified.
-""")
+        warning.append(
+            """The contents of `license` will be used as the contents of the
+                       license file.
+
+                       This may not be correct, and should be verified.
+                       """
+        )
     else:
         license_files = []
-        warning.append("""
-    Your project will not have a value for `license-files`. This will
-    cause problems packaging for some platforms.
-""")
+        warning.append(
+            """Your project will not have a value for `license-files`.
+
+                       This will cause problems packaging for some platforms.
+                       """
+        )
 
     warning.append(f"""
     Update your configuration to put the full license text in a file and use
@@ -1209,7 +1218,6 @@ Update your configuration to provide a valid PEP 639 configuration:
 
 def _core_metadata_to_pep621(pep621_key, metadata):
     """Retrieve PEP621 metadata values from a Core metadata message."""
-
     match pep621_key:
         case "authors" | "maintainers":
             addresses = metadata.get_all(f"{pep621_key.rstrip('s')}-email")
@@ -1233,7 +1241,6 @@ def _core_metadata_to_pep621(pep621_key, metadata):
 
 def resolve_dynamic_pep621_config(base_path, dynamic, console):
     """Resolve dynamic PEP621 metadata using the project's configured build backend."""
-
     try:
         with console.wait_bar("Evaluating dynamic project metadata..."):
             metadata = project_wheel_metadata(base_path, isolated=True)
@@ -1261,7 +1268,6 @@ def resolve_dynamic_pep621_config(base_path, dynamic, console):
 
 def merge_pep621_config(global_config, pep621_config):
     """Merge a PEP621 configuration into a Briefcase configuration."""
-
     if requires_python := pep621_config.get("requires-python"):
         global_config["requires_python"] = requires_python
 

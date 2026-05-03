@@ -34,7 +34,6 @@ def test_effective_format(
     actual_format,
 ):
     """The packaging format varies depending on the app type."""
-
     first_app_with_binaries.packaging_format = packaging_format
     first_app_with_binaries.console_app = is_console_app
     package_command.verify_app(first_app_with_binaries)
@@ -49,7 +48,6 @@ def test_console_invalid_formats(
     packaging_format,
 ):
     """Some packaging formats are not valid for console apps."""
-
     first_app_with_binaries.packaging_format = packaging_format
     first_app_with_binaries.console_app = True
     with pytest.raises(
@@ -368,7 +366,6 @@ def test_adhoc_sign(
 
 def test_notarize_adhoc_signed(package_command, first_app_with_binaries):
     """A macOS App cannot be notarized if ad-hoc signing is requested."""
-
     # Package the app without code signing. Use the base command's interface to ensure
     # the full cleanup process is tested.
     with pytest.raises(
@@ -396,7 +393,6 @@ def test_notarize_adhoc_signed_via_prompt(
     adhoc_identity,
 ):
     """Notarization is rejected if the user selects the adhoc identity."""
-
     package_command.select_identity.return_value = adhoc_identity
 
     # Package the app without code signing. Use the base command's interface to ensure the full
@@ -488,7 +484,6 @@ def test_sign_failure(
     tmp_path,
 ):
     """If the signing process can't be completed, an error is raised."""
-
     # Select a codesigning identity
     package_command.select_identity.return_value = sekrit_identity
 

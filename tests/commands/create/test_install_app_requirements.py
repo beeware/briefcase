@@ -40,8 +40,8 @@ def mock_now(monkeypatch):
 def create_installation_artefacts(app_packages_path, packages):
     """Utility method for generating a function that will mock installation artefacts.
 
-    Creates a function that when invoked, creates a dummy ``__init__.py``
-    and ``__main__.py`` for each package named in ``packages``.
+    Creates a function that when invoked, creates a dummy ``__init__.py`` and
+    ``__main__.py`` for each package named in ``packages``.
 
     :param app_packages_path: The pathlib object where app packages will be installed
     :param packages: A list of package names to mock.

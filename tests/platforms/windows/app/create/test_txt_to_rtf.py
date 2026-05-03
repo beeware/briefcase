@@ -17,11 +17,9 @@ RTF_SEPARATOR = "\\par\\line\\brdrb\\brdrs\\brdrw10\\brsp20\\par\\line"
             id="empty-doc",
         ),
         pytest.param(
-            """\
-            Hello World.
+            r"""\ Hello World.
 
-            This is a 2 paragraph document
-            with a multi-line paragraph.
+            This is a 2 paragraph document with a multi-line paragraph.
             """,
             """\
             {\\rtf1\\ansi\\deff0 {\\fonttbl {\\f0 Courier;}}
@@ -60,20 +58,14 @@ RTF_SEPARATOR = "\\par\\line\\brdrb\\brdrs\\brdrw10\\brsp20\\par\\line"
         ),
         pytest.param(
             ["Hello World."],
-            """\
-            {\\rtf1\\ansi\\deff0 {\\fonttbl {\\f0 Courier;}}
-            Hello World.\x20
-            }""",
+            """\\ {\\rtf1\\ansi\\deff0 {\\fonttbl {\\f0 Courier;}} Hello World.\x20 }""",
             id="single-element-list",
         ),
         pytest.param(
             ["Apache License text", "MIT License text"],
-            """\
-            {\\rtf1\\ansi\\deff0 {\\fonttbl {\\f0 Courier;}}
-            Apache License text\x20
-            \\par\\line\\brdrb\\brdrs\\brdrw10\\brsp20\\par\\line
-            MIT License text\x20
-            }""",
+            """\\ {\\rtf1\\ansi\\deff0 {\\fonttbl {\\f0 Courier;}} Apache License
+            text\x20 \\par\\line\\brdrb\\brdrs\\brdrw10\\brsp20\\par\\line MIT License
+            text\x20 }""",
             id="multi-element-list",
         ),
     ],

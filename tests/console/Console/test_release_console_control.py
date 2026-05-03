@@ -3,7 +3,6 @@ from unittest.mock import Mock
 
 def test_console_is_controlled(console):
     """Console control is released and then restored."""
-
     console.is_console_controlled = True
 
     with console.release_console_control():

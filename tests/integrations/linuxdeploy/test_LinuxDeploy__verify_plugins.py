@@ -20,7 +20,6 @@ from .utils import (
 
 def test_no_plugins(linuxdeploy, mock_tools, tmp_path):
     """If there are no plugins, verify is a no-op."""
-
     plugins = linuxdeploy.verify_plugins([], bundle_path=tmp_path / "bundle")
 
     mock_tools.file.download.assert_not_called()
@@ -30,7 +29,6 @@ def test_no_plugins(linuxdeploy, mock_tools, tmp_path):
 
 def test_gtk_plugin(linuxdeploy, mock_tools, tmp_path):
     """The GTK plugin can be verified."""
-
     # Mock a successful download
     mock_tools.file.download.side_effect = side_effect_create_mock_tool(
         tmp_path / "tools/linuxdeploy_plugins/gtk/linuxdeploy-plugin-gtk.sh"
@@ -50,7 +48,6 @@ def test_gtk_plugin(linuxdeploy, mock_tools, tmp_path):
 
 def test_qt_plugin(linuxdeploy, mock_tools, tmp_path):
     """The Qt plugin can be verified."""
-
     # Mock a successful download
     mock_tools.file.download.side_effect = side_effect_create_mock_appimage(
         tmp_path
@@ -77,7 +74,6 @@ def test_qt_plugin(linuxdeploy, mock_tools, tmp_path):
 
 def test_custom_url_plugin(linuxdeploy, mock_tools, tmp_path):
     """A Custom URL plugin can be verified."""
-
     # Mock a successful download
     mock_tools.file.download.side_effect = side_effect_create_mock_appimage(
         tmp_path
@@ -113,7 +109,6 @@ def test_custom_url_plugin(linuxdeploy, mock_tools, tmp_path):
 )
 def test_custom_local_file_plugin(linuxdeploy, mock_tools, tmp_path):
     """A Custom local file plugin can be verified."""
-
     # Create a local file
     plugin_path = tmp_path / "path/to/linuxdeploy-plugin-sometool-i386.AppImage"
     create_mock_appimage(plugin_path)
