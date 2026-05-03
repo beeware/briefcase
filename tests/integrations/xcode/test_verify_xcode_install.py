@@ -22,7 +22,6 @@ def test_verify_xcode_install(mock_tools):
 
 def test_reverify_xcode_install(mock_tools):
     """A second call to verify is a no-op."""
-
     xcode = mock.MagicMock()
     mock_tools.xcode = xcode
 

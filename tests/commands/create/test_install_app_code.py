@@ -796,7 +796,6 @@ def test_dist_info_with_missing_optional_fields(
     app_requirements_path_index,
 ):
     """Dist-info is created correctly when optional app fields are set to None."""
-
     myapp.url = None
     myapp.author = None
     myapp.author_email = None

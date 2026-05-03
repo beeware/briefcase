@@ -36,8 +36,7 @@ def cookiecutter_cache_path(template):
 
     This will return a valid path, regardless of whether `template`
 
-    :param template: The template to use. This can be a filesystem path or
-        a URL.
+    :param template: The template to use. This can be a filesystem path or a URL.
     :returns: The path that cookiecutter would use for the given template name.
     """
     template = template.rstrip("/")
@@ -191,8 +190,8 @@ class CreateCommand(BaseCommand):
         """Extract the known cross-platform permission definitions from the app's
         permissions definitions.
 
-        After calling this method, the ``permissions`` declaration for the app will
-        only contain keys that are *not* cross-platform keys.
+        After calling this method, the ``permissions`` declaration for the app will only
+        contain keys that are *not* cross-platform keys.
 
         :param app: The config object for the app
         :returns: A dictionary of known cross-platform permission definitions.
@@ -548,7 +547,6 @@ class CreateCommand(BaseCommand):
             additional requirement installer argumentss should be written if the
             template supports it.
         """
-
         with self.console.wait_bar("Writing requirements file..."):
             with requirements_path.open("w", encoding="utf-8") as f:
                 # Add timestamp so build systems (such as Gradle) detect a change

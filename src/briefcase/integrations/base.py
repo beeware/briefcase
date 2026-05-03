@@ -243,8 +243,8 @@ class ToolCache(Mapping):
         """The character encoding for the system's locale.
 
         This locale API tries to determine the system's default encoding and generally
-        works on typically configured systems; although, there are potential pitfalls
-        in certain situations...so, this is best-effort.
+        works on typically configured systems; although, there are potential pitfalls in
+        certain situations...so, this is best-effort.
 
         This API is used over getpreferredencoding() to avoid respecting Python's UTF-8
         mode; the system may not be using UTF-8 even if Python is configured to use it.

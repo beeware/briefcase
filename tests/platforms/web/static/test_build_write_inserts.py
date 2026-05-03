@@ -32,7 +32,6 @@ def write_target_file(base_path, rel_filename, content):
 
 def test_write_insert_warn_if_slot_missing(build_command, app_config, monkeypatch):
     """Warn if insert slot markers are missing from the file."""
-
     # File without insert markers
     file_text = "<html>No markers here</html>"
     target = write_target_file(app_config._path, "index.html", file_text)
@@ -52,7 +51,6 @@ def test_write_insert_warn_if_slot_missing(build_command, app_config, monkeypatc
 
 def test_write_insert_warn_if_file_missing(build_command, app_config, monkeypatch):
     """Warn if the target file does not exist."""
-
     # Capture warnings
     warnings = []
     monkeypatch.setattr(build_command.console, "warning", warnings.append)
@@ -67,16 +65,10 @@ def test_write_insert_warn_if_file_missing(build_command, app_config, monkeypatc
 
 def test_write_insert_is_idempotent(build_command, app_config):
     """Inserts should be idempotent when run multiple times."""
-
     # File with placeholder slot
     file_text = dedent(
-        """\
-        <html>
-        <!--@@ header:start @@-->
-        PLACEHOLDER
-        <!--@@ header:end @@-->
-        </html>
-        """
+        r"""\ <html> <!--@@ header:start @@--> PLACEHOLDER <!--@@ header:end @@-->
+        </html>"""
     )
     target = write_target_file(app_config._path, "index.html", file_text)
 
@@ -95,16 +87,10 @@ def test_write_insert_is_idempotent(build_command, app_config):
 
 def test_write_insert_slot_name_regex_escaped(build_command, app_config):
     """Slots containing regex chars should be escaped and matched literally."""
-
     # File with marker containing regex chars
     file_text = dedent(
-        """\
-        <html>
-        <!--@@ head[er]:start @@-->
-        PLACEHOLDER
-        <!--@@ head[er]:end @@-->
-        </html>
-        """
+        r"""\ <html> <!--@@ head[er]:start @@--> PLACEHOLDER <!--@@ head[er]:end @@-->
+        </html>"""
     )
     target = write_target_file(app_config._path, "index.html", file_text)
 
@@ -119,7 +105,6 @@ def test_write_insert_slot_name_regex_escaped(build_command, app_config):
 
 def test_write_insert_css_packages_sorted(build_command, app_config):
     """Multiple CSS contributions should be inserted in sorted order."""
-
     # File with CSS marker slot
     file_text = "/*@@ css:start @@*/\nold\n/*@@ css:end @@*/\n"
     target = write_target_file(app_config._path, "static/css/briefcase.css", file_text)
@@ -139,7 +124,6 @@ def test_write_insert_css_packages_sorted(build_command, app_config):
 
 def test_write_insert_replaces_all_matches(build_command, app_config):
     """All matching slots should be replaced, not just the first occurrence."""
-
     # File with two identical slots
     file_text = (
         "<!--@@ h:start @@-->X<!--@@ h:end @@-->\n"
@@ -161,9 +145,9 @@ def test_write_insert_replaces_all_matches(build_command, app_config):
 
 def test_write_insert_handles_html_and_css_markers(build_command, app_config):
     """HTML and CSS marker styles should both be processed in one file."""
-
     # File containing both HTML and CSS markers
-    file_text = dedent("""\
+    file_text = dedent(
+        """\
         <html>
           <!--@@ assets:start @@-->
           OLD_HTML
@@ -174,7 +158,8 @@ def test_write_insert_handles_html_and_css_markers(build_command, app_config):
           /*@@ assets:end @@*/
           </style>
         </html>
-    """)
+    """
+    )
     target = write_target_file(app_config._path, "index.html", file_text)
 
     # Insert HTML and CSS contributions
@@ -194,7 +179,6 @@ def test_write_insert_handles_html_and_css_markers(build_command, app_config):
 
 def test_write_insert_preserves_multiline_indent(build_command, app_config):
     """Inserted multiline content should preserve indentation of markers."""
-
     # File with indented marker slot
     file_text = "    <!--@@ header:start @@-->\n    X\n    <!--@@ header:end @@-->\n"
     target = write_target_file(app_config._path, "index.html", file_text)
@@ -211,7 +195,6 @@ def test_write_insert_preserves_multiline_indent(build_command, app_config):
 
 def test_write_insert_ignores_empty_contributions(build_command, app_config):
     """Empty insert contributions should be ignored (no banner written)."""
-
     # File with CSS marker slot
     file_text = "/*@@ css:start @@*/\nX\n/*@@ css:end @@*/\n"
     target = write_target_file(app_config._path, "static/css/briefcase.css", file_text)

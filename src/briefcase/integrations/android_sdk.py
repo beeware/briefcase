@@ -271,16 +271,14 @@ class AndroidSDK(ManagedTool):
                 if sdk_source_env == "ANDROID_SDK_ROOT":
                     tools.console.warning_banner(
                         "Using Android SDK from ANDROID_SDK_ROOT",
-                        """
-                            Briefcase is using the Android SDK specified by
-                            the ANDROID_SDK_ROOT environment variable.
+                        """Briefcase is using the Android SDK specified by the
+                        ANDROID_SDK_ROOT environment variable.
 
-                            Android has deprecated ANDROID_SDK_ROOT in favor of the
-                            ANDROID_HOME environment variable.
+                        Android has deprecated ANDROID_SDK_ROOT in favor of the
+                        ANDROID_HOME environment variable.
 
-                            Update your environment configuration to set
-                            ANDROID_HOME instead of ANDROID_SDK_ROOT to ensure
-                            future compatibility.
+                        Update your environment configuration to set ANDROID_HOME
+                        instead of ANDROID_SDK_ROOT to ensure future compatibility.
                         """,
                     )
             elif sdk.cmdline_tools_path.parent.exists():
@@ -576,12 +574,9 @@ its output for errors.
         license_path = self.root_path / "licenses/android-sdk-license"
         if license_path.exists():
             return
-
         self.tools.console.info(
-            """
-The Android tools provided by Google have license terms that you must accept
-before you may use those tools.
-"""
+            """The Android tools provided by Google have license terms that you must
+            accept before you may use those tools."""
         )
         try:
             # Using subprocess.run() with no I/O redirection so the user sees
@@ -604,11 +599,11 @@ its output for errors.
 
         if not license_path.exists():
             raise BriefcaseCommandError(
-                """\
-You did not accept the Android SDK licenses. Please re-run the briefcase command
-and accept the Android SDK license when prompted. You may need an Internet
-connection.
-"""
+                r"""\ You did not accept the Android SDK licenses.
+
+                Please re-run the briefcase command and accept the Android SDK license
+                when prompted. You may need an Internet connection.
+                """
             )
 
     def verify_emulator(self):
@@ -1027,10 +1022,10 @@ connection.
                 choice = next(iter(choices))
             else:
                 raise BriefcaseCommandError(
-                    """\
-Input has been disabled; can't select a device to target.
-Use the -d/--device option to explicitly specify the device to use.
-"""
+                    r"""\ Input has been disabled; can't select a device to target.
+
+                    Use the -d/--device option to explicitly specify the device to use.
+                    """
                 ) from e
 
         # Process the user's choice
@@ -1387,10 +1382,11 @@ You can also start the emulator manually by running:
                     prefix=self.name,
                 )
                 self.tools.console.info(
+                    """If the emulator opened after pressing CTRL+C, then leave the
+                    emulator open and run Briefcase again.
+
+                    The running emulator can then be selected from the list.
                     """
-If the emulator opened after pressing CTRL+C, then leave the emulator open and
-run Briefcase again. The running emulator can then be selected from the list.
-"""
                 )
                 self.tools.console.info(general_error_msg)
 
@@ -1415,8 +1411,8 @@ class ADB:
     def avd_name(self) -> str | None:
         """Get the AVD name for the device.
 
-        :returns: The AVD name for the device; or ``None`` if the device isn't
-            an emulator
+        :returns: The AVD name for the device; or ``None`` if the device isn't an
+            emulator
         """
         try:
             output = self.run("emu", "avd", "name", quiet=1)
@@ -1447,17 +1443,18 @@ class ADB:
             ) from e
 
     def run(self, *arguments: SubprocessArgT, quiet: int = 0) -> str:
-        """Run a command on a device using Android debug bridge, `adb`. The device name
-        is mandatory to ensure clarity in the case of multiple attached devices.
+        """Run a command on a device using Android debug bridge, `adb`.
+
+        The device name is mandatory to ensure clarity in the case of multiple attached
+        devices.
 
         :param arguments: List of strings to pass to `adb` as arguments.
-        :param quiet: Should the invocation of this command be silent, and
-            *not* appear in the logs? This should almost always be 0;
-            however, for some calls (most notably, calls that are called
-            frequently to evaluate the status of another process), logging can
-            be turned off so that log output isn't corrupted by thousands of
-            polling calls.
-        :returns: `adb` output on success; raises an exception on failure.
+        :param quiet: Should the invocation of this command be silent, and *not* appear
+            in the logs? This should almost always be 0; however, for some calls (most
+            notably, calls that are called frequently to evaluate the status of another
+            process), logging can be turned off so that log output isn't corrupted by
+            thousands of polling calls.
+        :returns:`adb` output on success; raises an exception on failure.
         """
         # The ADB integration operates on the basis of running commands before
         # checking that they are valid, then parsing output to notice errors.
@@ -1485,7 +1482,7 @@ class ADB:
         """Install an APK file on an Android device.
 
         :param apk_path: The path of the Android APK file to install.
-        :returns: `None` on success; raises an exception on failure.
+        :returns:`None` on success; raises an exception on failure.
         """
         try:
             self.run("install", "-r", apk_path)
@@ -1498,7 +1495,7 @@ class ADB:
         """Force-stop an app, specified as a package name.
 
         :param package: The name of the Android package, e.g., com.username.myapp.
-        :returns: `None` on success; raises an exception on failure.
+        :returns:`None` on success; raises an exception on failure.
         """
         # In my testing, `force-stop` exits with status code 0 (success) so long
         # as you pass a package name, even if the package does not exist, or the
@@ -1514,9 +1511,9 @@ class ADB:
         """Revoke a runtime permission for an app, specified as a package name.
 
         :param package: The name of the Android package, e.g., com.username.myapp.
-        :param permission: The name of the Android permission to revoke,
-            e.g., android.permission.BLUETOOTH_SCAN.
-        :returns: `None` on success; raises an exception on failure.
+        :param permission: The name of the Android permission to revoke, e.g.,
+            android.permission.BLUETOOTH_SCAN.
+        :returns:`None` on success; raises an exception on failure.
         """
         try:
             self.run("shell", "pm", "revoke", package, permission)
@@ -1531,15 +1528,15 @@ class ADB:
     ):
         """Start an app, specified as a package name & activity name.
 
-        If you have an APK file, and you are not sure of the package or activity
-        name, you can find it using `aapt dump badging filename.apk` and looking
-        for "package" and "launchable-activity" in the output.
+        If you have an APK file, and you are not sure of the package or activity name,
+        you can find it using `aapt dump badging filename.apk` and looking for "package"
+        and "launchable-activity" in the output.
 
         :param package: The name of the Android package, e.g., com.username.myapp.
         :param activity: The activity of the APK to start.
         :param passthrough: Arguments to pass to the app.
         :param env: Environment variables to pass to the app.
-        :returns: `None` on success; raises an exception on failure.
+        :returns:`None` on success; raises an exception on failure.
         """
         try:
             # `am start` also accepts string array extras, but we pass the arguments as
@@ -1737,8 +1734,7 @@ Activity class not found while starting app.
 
         :param package: The package ID for the application (e.g.,
             ``org.beeware.tutorial``)
-        :returns: The PID of the given app as a string, or None if it isn't
-        running.
+        :returns: The PID of the given app as a string, or None if it isn't running.
         """
         # The pidof command is available since API level 24. The level 23 emulator image
         # also includes it, but it doesn't work correctly (it returns all processes).

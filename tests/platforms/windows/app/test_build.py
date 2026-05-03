@@ -335,7 +335,6 @@ def test_build_app_error_remove_signature(
 
 def test_build_app_failure(build_command, first_app_templated):
     """If the stub binary cannot be updated, an error is raised."""
-
     build_command.tools.subprocess.run.side_effect = subprocess.CalledProcessError(
         returncode=1,
         cmd="rcedit-x64.exe",
@@ -356,7 +355,6 @@ def test_build_app_with_support_package_update(
     capsys,
 ):
     """If a support package update is performed, the user is warned."""
-
     # To trigger the app package update logic, we need to invoke the full build
     # command, and fake being on a verified Windows install with a generated
     # app.

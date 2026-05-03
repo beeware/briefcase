@@ -277,12 +277,12 @@ class LinuxSystemMixin(LinuxMixin):
         Provides` definition (although there may be multiple versions of that single
         package name), and doesn't have any `Provides` definitions. (e.g., `make`
         reverse-provides `make-guile`; but actually provides `make`, so it's not a
-        virtual package; `mail-transport-agent` returns multiple *different*
-        reverse-provides, so it can't be devirtualized).
+        virtual package; `mail-transport-agent` returns multiple *different* reverse-
+        provides, so it can't be devirtualized).
 
         :param package: The possibly virtualized package name
-        :returns: The devirtualized package name, or `None` if the package isn't
-            a virtual package
+        :returns: The devirtualized package name, or `None` if the package isn't a
+            virtual package
         """
         devirtualized = None
         try:
@@ -321,11 +321,11 @@ class LinuxSystemMixin(LinuxMixin):
         requirements.
 
         :param app: The app being built.
-        :returns: A triple containing (0) The list of package names that must
-            be installed at a bare minimum; (1) the arguments for the command
-            used to verify the existence of a package on a system, and (2)
-            the command used to install packages. All three values are `None`
-            if the system cannot be identified.
+        :returns: A triple containing (0) The list of package names that must be
+            installed at a bare minimum; (1) the arguments for the command used to
+            verify the existence of a package on a system, and (2) the command used to
+            install packages. All three values are `None` if the system cannot be
+            identified.
         """
         if app.target_vendor_base == DEBIAN:
             base_system_packages = [
@@ -394,18 +394,19 @@ class LinuxSystemMixin(LinuxMixin):
         ) = self._system_requirement_tools(app)
 
         if not (system_verify and self.tools.shutil.which(system_verify[0])):
-            self.console.warning("""
-*************************************************************************
-** WARNING: Can't verify system packages                               **
-*************************************************************************
+            self.console.warning("""****************************************************
+                                 ********************* ** WARNING: Can't verify system
+                                 packages                               ** *************
+                                 *******************************************************
+                                 *****
 
-    Briefcase doesn't know how to verify the installation of system
-    packages on your Linux distribution. If you have any problems
-    building this app, ensure that the packages listed in the app's
-    `system_requires` setting have been installed.
+                                     Briefcase doesn't know how to verify the installation of system
+                                     packages on your Linux distribution. If you have any problems
+                                     building this app, ensure that the packages listed in the app's
+                                     `system_requires` setting have been installed.
 
-*************************************************************************
-""")
+                                 *************************************************************************
+                                 """)
             return
 
         # Run a check for each package listed in the app's system_requires,
@@ -533,17 +534,24 @@ class LinuxSystemDockerMixin(LinuxSystemMixin):
                 and self.tools.docker.is_user_mapped
                 and self.tools.host_os != "Darwin"
             ):
-                raise BriefcaseCommandError("""\
-Briefcase cannot use this Docker installation to target Arch Linux since the
-tools to build packages for Arch cannot be run as root.
+                raise BriefcaseCommandError(
+                    r"""\ Briefcase cannot use this Docker
+                                            installation to target Arch Linux since the
+                                            tools to build packages for Arch cannot be
+                                            run as root.
 
-The Docker available to Briefcase requires the use of the root user in
-containers to maintain accurate file permissions of the build artefacts.
+                                            The Docker available to Briefcase requires
+                                            the use of the root user in containers to
+                                            maintain accurate file permissions of the
+                                            build artefacts.
 
-This most likely means you're using Docker Desktop or rootless Docker.
+                                            This most likely means you're using Docker
+                                            Desktop or rootless Docker.
 
-Install Docker Engine and try again or run Briefcase on an Arch host system.
-""")
+                                            Install Docker Engine and try again or run
+                                            Briefcase on an Arch host system.
+                                            """
+                )
         else:
             super()._finalize_target_image(app)
 
@@ -639,14 +647,14 @@ Install Docker Engine and try again or run Briefcase on an Arch host system.
         """Verify that the version of Python being used to build the app in Docker is
         compatible with the version being used to run Briefcase.
 
-        Will raise an exception if the Python version is fundamentally
-        incompatible (i.e., if Briefcase doesn't support it); any other version
-        discrepancy will log a warning, but continue.
+        Will raise an exception if the Python version is fundamentally incompatible
+        (i.e., if Briefcase doesn't support it); any other version discrepancy will log
+        a warning, but continue.
 
         Requires that the app tools have been verified.
 
-        As a side effect of verifying Python, the `python_version_tag` will be
-        updated to reflect the *actual* python version, not just a generic "3".
+        As a side effect of verifying Python, the `python_version_tag` will be updated
+        to reflect the *actual* python version, not just a generic "3".
 
         :param app: The application being built
         """
@@ -867,24 +875,33 @@ class LinuxSystemBuildCommand(LinuxSystemDockerMixin, BuildCommand):
                     f"\n{separator}\n".join(parts), encoding="utf-8"
                 )
         else:
-            raise BriefcaseCommandError("""\
-Your project does not include any license files.
+            raise BriefcaseCommandError(
+                r"""\ Your project does not include any license
+                                        files.
 
-Ensure your `pyproject.toml` is in PEP 639 format and specifies at least
-one file in the `license-files` setting.
- """)
+                                        Ensure your `pyproject.toml` is in PEP 639
+                                        format and specifies at least one file in the
+                                        `license-files` setting.
+                                        """
+            )
 
         with self.console.wait_bar("Installing changelog..."):
             changelog = find_changelog_filename(self.base_path)
 
             if changelog is None:
-                raise BriefcaseCommandError("""\
-Your project does not contain a changelog file with a known file name. You
-must provide a changelog file in the same directory as your `pyproject.toml`,
-with a known changelog file name (one of 'CHANGELOG', 'HISTORY', 'NEWS' or
-'RELEASES'; the file may have an extension of '.md', '.rst', or '.txt', or have
-no extension).
-""")
+                raise BriefcaseCommandError(
+                    r"""\ Your project does not contain a
+                                            changelog file with a known file name.
+
+                                            You must provide a changelog file in the
+                                            same directory as your `pyproject.toml`,
+                                            with a known changelog file name (one of
+                                            'CHANGELOG', 'HISTORY', 'NEWS' or
+                                            'RELEASES'; the file may have an extension
+                                            of '.md', '.rst', or '.txt', or have no
+                                            extension).
+                                            """
+                )
 
             changelog_source = self.base_path / changelog
 
@@ -1294,13 +1311,19 @@ class LinuxSystemPackageCommand(LinuxSystemDockerMixin, PackageCommand):
             changelog = find_changelog_filename(self.base_path)
 
             if changelog is None:
-                raise BriefcaseCommandError("""\
-Your project does not contain a changelog file with a known file name. You
-must provide a changelog file in the same directory as your `pyproject.toml`,
-with a known changelog file name (one of 'CHANGELOG', 'HISTORY', 'NEWS' or
-'RELEASES'; the file may have an extension of '.md', '.rst', or '.txt', or have
-no extension).
-""")
+                raise BriefcaseCommandError(
+                    r"""\ Your project does not contain a
+                                            changelog file with a known file name.
+
+                                            You must provide a changelog file in the
+                                            same directory as your `pyproject.toml`,
+                                            with a known changelog file name (one of
+                                            'CHANGELOG', 'HISTORY', 'NEWS' or
+                                            'RELEASES'; the file may have an extension
+                                            of '.md', '.rst', or '.txt', or have no
+                                            extension).
+                                            """
+                )
 
             # Write the changelog content
             f.write((self.base_path / changelog).read_text(encoding="utf-8"))

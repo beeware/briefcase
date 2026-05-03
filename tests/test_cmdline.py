@@ -398,7 +398,6 @@ def test_bare_command(macOS_console):
 @pytest.mark.skipif(sys.platform != "linux", reason="requires Linux")
 def test_linux_default(console):
     """``briefcase create`` returns the linux create system command on Linux."""
-
     cmd, options, _overrides = do_cmdline_parse("create", console)
 
     assert isinstance(cmd, LinuxSystemCreateCommand)
@@ -412,7 +411,6 @@ def test_linux_default(console):
 @pytest.mark.skipif(sys.platform != "darwin", reason="requires macOS")
 def test_macOS_default(console):
     """``briefcase create`` returns the macOS create command on Linux."""
-
     cmd, options, overrides = do_cmdline_parse("create", console)
 
     assert isinstance(cmd, macOSAppCreateCommand)
@@ -427,7 +425,6 @@ def test_macOS_default(console):
 @pytest.mark.skipif(sys.platform != "win32", reason="requires Windows")
 def test_windows_default(console):
     """``briefcase create`` returns the Windows create app command on Windows."""
-
     cmd, options, overrides = do_cmdline_parse("create", console)
 
     assert isinstance(cmd, WindowsAppCreateCommand)
@@ -648,7 +645,6 @@ def test_unknown_command_options(capsys, macOS_console):
 )
 def test_dev_command_unsupported_platform(cmdline, console):
     """Unsupported platforms should raise an UnsupportedCommandError."""
-
     with pytest.raises(UnsupportedCommandError) as e:
         do_cmdline_parse(cmdline, console)
 

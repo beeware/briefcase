@@ -49,7 +49,6 @@ def test_unsupported_os(mock_tools, first_app_config, verify_kwargs):
 @pytest.mark.usefixtures("mock_docker")
 def test_success(mock_tools, first_app_config, verify_kwargs, sub_stream_kw):
     """Docker app context is successfully created and prepared."""
-
     DockerAppContext.verify(mock_tools, first_app_config, **verify_kwargs)
 
     assert isinstance(mock_tools[first_app_config].app_context, DockerAppContext)

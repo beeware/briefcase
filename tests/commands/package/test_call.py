@@ -247,7 +247,6 @@ def test_adhoc_sign_args_package_two_app(
 ):
     """If there are multiple apps,and an --adhoc argument, package signs all apps using
     ad-hoc identity."""
-
     package_command.apps = {
         # Add the first app
         "first": first_app,

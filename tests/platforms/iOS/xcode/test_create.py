@@ -237,7 +237,6 @@ def test_legacy_support_format(
 
 def test_min_os_version(create_command, first_app_generated, tmp_path):
     """If a minimum iOS version is specified, it is used for wheel installs."""
-
     # Hard code the current architecture for testing. We only install simulator
     # requirements for the current platform.
     create_command.tools.host_arch = "wonky"

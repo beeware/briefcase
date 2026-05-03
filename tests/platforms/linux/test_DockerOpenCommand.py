@@ -42,7 +42,6 @@ def open_command(dummy_console, tmp_path):
 )
 def test_open_docker(open_command, first_app_config, tmp_path, monkeypatch):
     """Open starts a docker session by default."""
-
     # Enable docker
     open_command.use_docker = True
     open_command.extra_docker_build_args = []
