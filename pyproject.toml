@@ -299,8 +299,7 @@ known-third-party = ["build"]
 
 [tool.ruff.lint.per-file-ignores]
 # E501: line too long, to be fixed in future changes
-"tests/integrations/*" = ["E501"]
-"tests/platforms/*" = ["E501"]
+# "tests/integrations/*" = ["E501"]
 
 [tool.rumdl]
 flavor = "mkdocs"
