@@ -44,7 +44,8 @@ from briefcase.platforms.android.gradle import android_log_clean_filter
             ("Python app launched & stored in Android Activity class", True),
         ),
         (
-            "\x1b[32mI/python.stdout: Python app launched & stored in Android Activity class\x1b[0m",
+            "\x1b[32mI/python.stdout: Python app launched & "
+        "stored in Android Activity class\x1b[0m",
             ("Python app launched & stored in Android Activity class", True),
         ),
         (
