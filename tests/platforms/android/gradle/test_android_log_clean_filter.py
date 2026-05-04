@@ -69,7 +69,7 @@ from briefcase.platforms.android.gradle import android_log_clean_filter
             ("test_case (tests.foobar.test_other.TestOtherMethods)", True),
         ),
         (
-           "\x1b[32mI/python.stderr: test_case "
+        "\x1b[32mI/python.stderr: test_case "
         "(tests.foobar.test_other.TestOtherMethods)\x1b[0m",
             ("test_case (tests.foobar.test_other.TestOtherMethods)", True),
         ),
