@@ -45,6 +45,7 @@ cookiecutter
 Cookiecutter
 cryptographic
 CTRL
+CVE
 customizations
 datetime
 DBus
@@ -225,6 +226,7 @@ UTI
 UTIs
 UTTypeConformsTo
 vendored
+Ventura
 verbing
 visionOS
 VM

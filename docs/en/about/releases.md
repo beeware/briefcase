@@ -2,6 +2,42 @@
 
 <!-- towncrier release notes start -->
 
+## 0.4.2 (2026-05-06)
+
+### Features
+
+* Dynamic PEP 621 metadata in `pyproject.toml` will now be resolved by invoking the PEP 517 `[build-system]` interface. ([#474](https://github.com/beeware/briefcase/issues/474))
+* Briefcase can now build Windows apps and installers for ARM64 devices. ([#1887](https://github.com/beeware/briefcase/issues/1887))
+* License metadata in ``pyproject.toml`` is now parsed and validated using PEP 639 format (i.e., `license = "<SPDX expression>"` and `license-files = [...]`). ([#2146](https://github.com/beeware/briefcase/issues/2146))
+* The new project wizard now provides more detailed information about community bootstraps that are available. ([#2342](https://github.com/beeware/briefcase/issues/2342))
+* Error messages for macOS and iOS wheel compatibility now include the Python version. ([#2658](https://github.com/beeware/briefcase/issues/2658))
+* Android apps can now specify the ABIs that they target. ([#2723](https://github.com/beeware/briefcase/issues/2723))
+* The Briefcase repository now has an `AGENTS.md` file and [Spec Kit](https://github.github.com/spec-kit/) constitution to provide assistance for Generative AI tools. ([#2733](https://github.com/beeware/briefcase/issues/2733))
+* MIME type definitions on document types are now validated as part of the validation of a configuration. ([#2738](https://github.com/beeware/briefcase/issues/2738))
+* Windows MSI installers can now customize the background image used on the first page of the installer, and the banner image used on all subsequent pages of the installer. ([#2782](https://github.com/beeware/briefcase/issues/2782))
+* It is now possible to create a "skinless" Android emulator by specifying a device type, but no skin, as part of a device specification. ([#2788](https://github.com/beeware/briefcase/issues/2788))
+* Windows MSI installers can now verify the availability of .NET runtimes as a pre-condition for installation. ([#2804](https://github.com/beeware/briefcase/issues/2804))
+* When an app fails to run or returns an error, the status code is now reported in the console. ([#2806](https://github.com/beeware/briefcase/issues/2806))
+
+### Bugfixes
+
+* (CVE-2026-33430) When a Windows MSI is installed for All Users, the installation folder no longer inherits the permissions of the parent folder. The fix for this issue has been backported to the templates for Briefcase v0.4.1, v0.4.0 and v0.3.26. ([#2759](https://github.com/beeware/briefcase/issues/2759))
+* Briefcase has been made more resilient to permission errors when renaming recently created directories on Windows. ([#1780](https://github.com/beeware/briefcase/issues/1780))
+* Android system image verification now uses ``sdkmanager --list_installed`` to confirm the image is fully installed, rather than only checking if the directory exists. If the image is not installed, it will be downloaded automatically. ([#1895](https://github.com/beeware/briefcase/issues/1895))
+* MSI pre/post install scripts now run with elevated privileges when installed for "All Users". ([#2722](https://github.com/beeware/briefcase/issues/2722))
+* Briefcase will now prevent the user from using an x86_64 Python interpreter on an Apple Silicon machine. ([#2736](https://github.com/beeware/briefcase/issues/2736))
+* On macOS, any wheel that doesn't contain a tag ending `-any` will now be identified as binary content that requires a merge. Previously, the `Root-Is-Purelib` wheel metadata was used to determine if a package was "pure"; this flag has proven to be unreliable under some circumstances. ([#2753](https://github.com/beeware/briefcase/issues/2753))
+* Version number validation has been improved. Dynamic version number specifications (e.g., `{attr: ...}`) that have been historically permitted by tools like `setuptools` are now rejected with a more helpful error message. ([#2765](https://github.com/beeware/briefcase/issues/2765))
+
+### Backward Incompatible Changes
+
+* Apps now require a valid PEP 639 license configuration. Apps in legacy formats — PEP 621 ``license.file``, ``license.text``, and bare free-text strings — are automatically coerced to PEP 639 format on a best-effort basis, with warnings raised about any automated conversion that has occurred. Apps with no license definition can still be built, but a placeholder license file and a `LicenseRef-UnknownLicense` license expression will be used. ([#2146](https://github.com/beeware/briefcase/issues/2146))
+* New PySide6 apps now default PySide 6.10. This adds support for Python 3.14, but also enforces a minimum supported macOS version of 13.0 (Ventura). ([#2658](https://github.com/beeware/briefcase/issues/2658))
+
+### Misc
+
+* [#2563](https://github.com/beeware/briefcase/issues/2563), [#2734](https://github.com/beeware/briefcase/issues/2734), [#2739](https://github.com/beeware/briefcase/issues/2739), [#2741](https://github.com/beeware/briefcase/issues/2741), [#2742](https://github.com/beeware/briefcase/issues/2742), [#2743](https://github.com/beeware/briefcase/issues/2743), [#2744](https://github.com/beeware/briefcase/issues/2744), [#2746](https://github.com/beeware/briefcase/issues/2746), [#2747](https://github.com/beeware/briefcase/issues/2747), [#2748](https://github.com/beeware/briefcase/issues/2748), [#2749](https://github.com/beeware/briefcase/issues/2749), [#2750](https://github.com/beeware/briefcase/issues/2750), [#2756](https://github.com/beeware/briefcase/issues/2756), [#2757](https://github.com/beeware/briefcase/issues/2757), [#2761](https://github.com/beeware/briefcase/issues/2761), [#2762](https://github.com/beeware/briefcase/issues/2762), [#2763](https://github.com/beeware/briefcase/issues/2763), [#2764](https://github.com/beeware/briefcase/issues/2764), [#2766](https://github.com/beeware/briefcase/issues/2766), [#2770](https://github.com/beeware/briefcase/issues/2770), [#2771](https://github.com/beeware/briefcase/issues/2771), [#2773](https://github.com/beeware/briefcase/issues/2773), [#2775](https://github.com/beeware/briefcase/issues/2775), [#2776](https://github.com/beeware/briefcase/issues/2776), [#2777](https://github.com/beeware/briefcase/issues/2777), [#2778](https://github.com/beeware/briefcase/issues/2778), [#2779](https://github.com/beeware/briefcase/issues/2779), [#2784](https://github.com/beeware/briefcase/issues/2784), [#2785](https://github.com/beeware/briefcase/issues/2785), [#2786](https://github.com/beeware/briefcase/issues/2786), [#2787](https://github.com/beeware/briefcase/issues/2787), [#2790](https://github.com/beeware/briefcase/issues/2790), [#2791](https://github.com/beeware/briefcase/issues/2791), [#2792](https://github.com/beeware/briefcase/issues/2792), [#2793](https://github.com/beeware/briefcase/issues/2793), [#2794](https://github.com/beeware/briefcase/issues/2794), [#2795](https://github.com/beeware/briefcase/issues/2795), [#2800](https://github.com/beeware/briefcase/issues/2800), [#2801](https://github.com/beeware/briefcase/issues/2801), [#2802](https://github.com/beeware/briefcase/issues/2802), [#2807](https://github.com/beeware/briefcase/issues/2807), [#2812](https://github.com/beeware/briefcase/issues/2812), [#2813](https://github.com/beeware/briefcase/issues/2813), [#2814](https://github.com/beeware/briefcase/issues/2814), [#2816](https://github.com/beeware/briefcase/issues/2816), [#2819](https://github.com/beeware/briefcase/issues/2819)
+
 ## 0.4.1 (2026-03-09)
 
 ### Bugfixes
