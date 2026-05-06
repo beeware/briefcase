@@ -8,7 +8,7 @@
 
 * Dynamic PEP 621 metadata in `pyproject.toml` will now be resolved by invoking the PEP 517 `[build-system]` interface. ([#474](https://github.com/beeware/briefcase/issues/474))
 * Briefcase can now build Windows apps and installers for ARM64 devices. ([#1887](https://github.com/beeware/briefcase/issues/1887))
-* License metadata in ``pyproject.toml`` is now parsed and validated using PEP 639 format (i.e., `license = "<SPDX expression>"` and `license-files = [...]`). ([#2146](https://github.com/beeware/briefcase/issues/2146))
+* License metadata in `pyproject.toml` is now parsed and validated using PEP 639 format (i.e., `license = "<SPDX expression>"` and `license-files = [...]`). ([#2146](https://github.com/beeware/briefcase/issues/2146))
 * The new project wizard now provides more detailed information about community bootstraps that are available. ([#2342](https://github.com/beeware/briefcase/issues/2342))
 * Error messages for macOS and iOS wheel compatibility now include the Python version. ([#2658](https://github.com/beeware/briefcase/issues/2658))
 * Android apps can now specify the ABIs that they target. ([#2723](https://github.com/beeware/briefcase/issues/2723))
@@ -23,7 +23,7 @@
 
 * (CVE-2026-33430) When a Windows MSI is installed for All Users, the installation folder no longer inherits the permissions of the parent folder. The fix for this issue has been backported to the templates for Briefcase v0.4.1, v0.4.0 and v0.3.26. ([#2759](https://github.com/beeware/briefcase/issues/2759))
 * Briefcase has been made more resilient to permission errors when renaming recently created directories on Windows. ([#1780](https://github.com/beeware/briefcase/issues/1780))
-* Android system image verification now uses ``sdkmanager --list_installed`` to confirm the image is fully installed, rather than only checking if the directory exists. If the image is not installed, it will be downloaded automatically. ([#1895](https://github.com/beeware/briefcase/issues/1895))
+* Android system image verification now uses `sdkmanager --list_installed` to confirm the image is fully installed, rather than only checking if the directory exists. If the image is not installed, it will be downloaded automatically. ([#1895](https://github.com/beeware/briefcase/issues/1895))
 * MSI pre/post install scripts now run with elevated privileges when installed for "All Users". ([#2722](https://github.com/beeware/briefcase/issues/2722))
 * Briefcase will now prevent the user from using an x86_64 Python interpreter on an Apple Silicon machine. ([#2736](https://github.com/beeware/briefcase/issues/2736))
 * On macOS, any wheel that doesn't contain a tag ending `-any` will now be identified as binary content that requires a merge. Previously, the `Root-Is-Purelib` wheel metadata was used to determine if a package was "pure"; this flag has proven to be unreliable under some circumstances. ([#2753](https://github.com/beeware/briefcase/issues/2753))
@@ -31,7 +31,7 @@
 
 ### Backward Incompatible Changes
 
-* Apps now require a valid PEP 639 license configuration. Apps in legacy formats — PEP 621 ``license.file``, ``license.text``, and bare free-text strings — are automatically coerced to PEP 639 format on a best-effort basis, with warnings raised about any automated conversion that has occurred. Apps with no license definition can still be built, but a placeholder license file and a `LicenseRef-UnknownLicense` license expression will be used. ([#2146](https://github.com/beeware/briefcase/issues/2146))
+* Apps now require a valid PEP 639 license configuration. Apps in legacy formats — PEP 621 `license.file`, `license.text`, and bare free-text strings — are automatically coerced to PEP 639 format on a best-effort basis, with warnings raised about any automated conversion that has occurred. Apps with no license definition can still be built, but a placeholder license file and a `LicenseRef-UnknownLicense` license expression will be used. ([#2146](https://github.com/beeware/briefcase/issues/2146))
 * New PySide6 apps now default PySide 6.10. This adds support for Python 3.14, but also enforces a minimum supported macOS version of 13.0 (Ventura). ([#2658](https://github.com/beeware/briefcase/issues/2658))
 
 ### Misc
