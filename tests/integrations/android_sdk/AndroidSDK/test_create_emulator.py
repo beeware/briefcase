@@ -24,6 +24,13 @@ def android_sdk(android_sdk) -> AndroidSDK:
             "idleEmulator",
         ]
     )
+    # Mock available system images
+    android_sdk.list_available_system_images = MagicMock(
+        return_value=[
+            "system-images;android-31;default;x86_64",
+            "system-images;android-34;default;x86_64",
+        ]
+    )
     return android_sdk
 
 
@@ -59,6 +66,7 @@ def test_create_emulator(
         "invalid name",  # A name with a space
         "annoying!",  # a name with non-alpha characters
         "new-emulator",  # A valid name!
+        "",  # default system image selection (last in list)
     ]
 
     # Mock the initial output of an AVD config file.
@@ -81,7 +89,7 @@ def test_create_emulator(
         avd="new-emulator",
         device_type="pixel",
         skin="pixel_7_pro",
-        system_image=f"system-images;android-31;default;{emulator_abi}",
+        system_image="system-images;android-34;default;x86_64",
     )
 
 
@@ -90,8 +98,11 @@ def test_default_name(mock_tools, android_sdk, tmp_path):
     # This test doesn't validate most of the test process;
     # it only checks that the emulator is created with the default name.
 
-    # User provides no input; default name will be used
-    mock_tools.console.values = [""]
+    # User provides no input; default name and system image will be used
+    mock_tools.console.values = [
+        "",
+        "",
+    ]
 
     # Mock the internal emulator creation method
     android_sdk._create_emulator = MagicMock()
@@ -116,7 +127,11 @@ def test_default_name_with_collisions(mock_tools, android_sdk, tmp_path):
             "beePhone",
         ]
     )
-    mock_tools.console.values = [""]
+    # Default emulator name and default system image selection.
+    mock_tools.console.values = [
+        "",
+        "",
+    ]
 
     # Mock the internal emulator creation method
     android_sdk._create_emulator = MagicMock()
