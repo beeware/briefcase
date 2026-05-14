@@ -650,10 +650,10 @@ class DraftAppConfig(AppConfig):
             raise BriefcaseConfigError(
                 f"{self.bundle_identifier!r} is not a valid bundle identifier."
                 f"\n\n"
-                "The bundle id should be a reversed domain name. It must contain at least "
-                "2 dot-separated sections; each section may only include letters, "
-                "numbers, and hyphens; and each section may not contain any reserved "
-                "words (like 'switch', or 'while')."
+                "The bundle id should be a reversed domain name. It must contain at "
+                "least 2 dot-separated sections; each section may only include "
+                "letters, numbers, and hyphens; and each section may not contain any "
+                "reserved words (like 'switch', or 'while')."
             )
 
         for document_type_id, document_type in self.document_types.items():
