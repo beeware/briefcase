@@ -232,31 +232,35 @@ def test_invalid_app_name(name):
 
 
 @pytest.mark.parametrize(
-    "bundle",
+    ("bundle", "app_name", "bundle_identifier"),
     [
-        "is",
-        "home",
-        "com.example",
-        "com.example.more",
-        "com.example42.more",
-        "com.example-42.more",
+        ("is", "myapp", "is.myapp"),
+        ("home", "myapp", "home.myapp"),
+        ("home", "my-app", "home.my-app"),
+        ("home", "my_app", "home.my-app"),
+        ("com.example", "myapp", "com.example.myapp"),
+        ("com.example", "my-app", "com.example.my-app"),
+        ("com.example", "my_app", "com.example.my-app"),
+        ("com.example.more", "myapp", "com.example.more.myapp"),
+        ("com.example42.more", "myapp", "com.example42.more.myapp"),
+        ("com.example-42.more", "myapp", "com.example-42.more.myapp"),
     ],
 )
-def test_valid_bundle(bundle):
+def test_valid_bundle(bundle, app_name, bundle_identifier):
     try:
         config = DraftAppConfig(
-            app_name="myapp",
+            app_name=app_name,
             version="1.2.3",
             bundle=bundle,
             description="A simple app",
-            sources=["src/myapp"],
+            sources=[f"src/{app_name.replace('-', '_')}"],
             license="MIT",
             license_files=["LICENSE"],
         )
     except BriefcaseConfigError:
-        pytest.fail(f"{bundle} should be valid")
+        pytest.fail(f"{bundle_identifier} should be valid")
 
-    assert config.bundle_identifier == f"{bundle}.myapp"
+    assert config.bundle_identifier == bundle_identifier
 
 
 @pytest.mark.parametrize(
