@@ -234,6 +234,8 @@ def test_invalid_app_name(name):
 @pytest.mark.parametrize(
     "bundle",
     [
+        "is",
+        "home",
         "com.example",
         "com.example.more",
         "com.example42.more",
@@ -242,7 +244,7 @@ def test_invalid_app_name(name):
 )
 def test_valid_bundle(bundle):
     try:
-        DraftAppConfig(
+        config = DraftAppConfig(
             app_name="myapp",
             version="1.2.3",
             bundle=bundle,
@@ -254,12 +256,13 @@ def test_valid_bundle(bundle):
     except BriefcaseConfigError:
         pytest.fail(f"{bundle} should be valid")
 
+    assert config.bundle_identifier == f"{bundle}.myapp"
+
 
 @pytest.mark.parametrize(
     "bundle",
     [
         "not a bundle!",  # Free text.
-        "home",  # Only one section.
         "com.hello_world",  # underscore
         "com.hello,world",  # comma
         "com.hello world!",  # exclamation point
