@@ -646,14 +646,15 @@ class DraftAppConfig(AppConfig):
                 "and cannot end with '-' or '_')."
             )
 
-        if not is_valid_bundle_identifier(self.bundle):
+        if not is_valid_bundle_identifier(self.bundle_identifier):
             raise BriefcaseConfigError(
-                f"{self.bundle!r} is not a valid bundle identifier."
-                f"\n\n"
-                "The bundle should be a reversed domain name. It must contain at least "
-                "2 dot-separated sections; each section may only include letters, "
-                "numbers, and hyphens; and each section may not contain any reserved "
-                "words (like 'switch', or 'while')."
+                f"{self.bundle!r} is not a valid bundle identifier.\n"
+                "\n"
+                "When the bundle is combined with an app name, it should form a "
+                "reversed domain name. The combined bundle identifier must "
+                "contain at least 2 dot-separated sections; each section may "
+                "only include letters, numbers, and hyphens; and each section "
+                "may not contain any reserved words (like 'switch', or 'while')."
             )
 
         for document_type_id, document_type in self.document_types.items():
