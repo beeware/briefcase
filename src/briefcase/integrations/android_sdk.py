@@ -10,7 +10,7 @@ import time
 from datetime import datetime
 from pathlib import Path
 
-from briefcase.config import PEP508_NAME_RE
+from briefcase.config import PEP508_NAME_RE, FinalizedAppConfig
 from briefcase.exceptions import (
     BriefcaseCommandError,
     IncompatibleToolError,
@@ -23,6 +23,7 @@ from briefcase.integrations.java import JDK
 from briefcase.integrations.subprocess import SubprocessArgT
 
 DEVICE_NOT_FOUND = re.compile(r"^error: device '[^']*' not found")
+ANDROID_MIN_OS_VERSION = 26
 
 
 def create_avd_validator(emulators):
@@ -701,6 +702,49 @@ connection.
         except KeyError:
             self.tools.console.debug(f"Device {avd!r} doesn't define a skin.")
 
+    def list_available_system_images(
+        self, min_version: int = ANDROID_MIN_OS_VERSION
+    ) -> list[str]:
+        """Returns a sorted list of system image package identifiers available for the
+        current architecture and minimum Android version.
+
+        :param min_version: The minimum Android version to include. Defaults to
+        ``ANDROID_MIN_OS_VERSION``.
+        e.g., ``["system-images;android-31;default;x86_64",   "system-
+        images;android-34;default;x86_64",   "system-
+        images;android-34;google_apis;x86_64"]``
+        """
+
+        try:
+            output = self.tools.subprocess.check_output(
+                [self.sdkmanager_path, "--list"],
+                env=self.env,
+            )
+        except subprocess.CalledProcessError as e:
+            raise BriefcaseCommandError(
+                "Unable to invoke the Android SDK manager"
+            ) from e
+
+        images = []
+        for line in output.splitlines():
+            package = line.split("|")[0].strip()
+            if not package.startswith("system-images"):
+                continue
+            parts = package.split(";")
+            if len(parts) != 4:
+                continue
+            if parts[3] != self.emulator_abi:
+                continue
+            # parts[1] is e.g. "android-31"; extract the version number
+            try:
+                version = int(parts[1].split("-")[1])
+            except (IndexError, ValueError):
+                continue
+            if version < min_version:
+                continue
+            images.append(package)
+        return sorted(set(images))
+
     def list_installed_system_images(self) -> set[str]:
         """Returns a set of installed system image package identifiers.
 
@@ -1080,9 +1124,10 @@ In future, you can specify this device by running:
 
         return device, name, avd
 
-    def create_emulator(self) -> str:
+    def create_emulator(self, app: FinalizedAppConfig) -> str:
         """Create a new Android emulator.
 
+        :param app: The config object for the app.
         :returns: The AVD of the newly created emulator.
         """
         # Get the list of existing emulators
@@ -1113,8 +1158,27 @@ a default name '{default_avd}'.
         device_type = self.DEFAULT_DEVICE_TYPE
         skin = self.DEFAULT_DEVICE_SKIN
 
-        # TODO: Provide a list of options for system images.
-        system_image = self.DEFAULT_SYSTEM_IMAGE
+        # Get available images, raise an error if not found.
+        available_images = self.list_available_system_images(
+            min_version=getattr(app, "min_os_version", ANDROID_MIN_OS_VERSION)
+        )
+        if not available_images:
+            raise BriefcaseCommandError(
+                f"""\
+No Android system images are available for your architecture ({self.emulator_abi}).
+
+This may be caused by a network connectivity issue or an unsupported
+architecture. Check your network connection and re-run `briefcase run android`.
+"""
+            )
+
+        # Provide a list of options for system images.
+        system_image = self.tools.console.selection_question(
+            intro="Select the system image to use for the emulator:",
+            description="System image",
+            options=available_images,
+            default=available_images[-1],
+        )
 
         self._create_emulator(
             avd=avd,
