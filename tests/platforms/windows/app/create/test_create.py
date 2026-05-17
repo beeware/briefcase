@@ -86,7 +86,6 @@ def test_unsupported_32bit_python(create_command):
 
 def test_verify_windows_cpu_arch(create_command):
     """Running through x86_64 emulation on Windows ARM64 will raise an error."""
-
     # Create a Mock object for the platform module
     create_command.tools.platform = MagicMock(spec_set=platform)
 

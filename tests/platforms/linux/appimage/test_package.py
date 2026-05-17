@@ -23,7 +23,6 @@ def package_command(dummy_console, tmp_path, first_app_config):
 
 def test_package_app(package_command, first_app_config, tmp_path):
     """An AppImage can be packaged."""
-
     # Create the app binary
     create_file(
         tmp_path

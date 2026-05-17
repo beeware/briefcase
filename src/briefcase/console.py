@@ -315,8 +315,9 @@ class Console:
         message: str | None = None,
         width: int = 80,
     ) -> str:
-        """The title or message can be provided as a single or as multiline string. Any
-        common leading whitespace from each line will be removed.
+        """The title or message can be provided as a single or as multiline string.
+
+        Any common leading whitespace from each line will be removed.
 
         To separate text into paragraphs you can use:
         - blank line;
@@ -486,10 +487,10 @@ class Console:
 
         When a third party tool written in Python uses the stdlib logging for their
         logging, it may provide an abstraction to enable the logging in the console or
-        may require a handler to be added externally. Either way, the default handler
-        to write to the console, i.e. logging.StreamHandler, will bypass Rich logging
-        and therefore not be included in the logfile. To avoid this issue, this will
-        add a handler that specifically writes to the console through Rich.
+        may require a handler to be added externally. Either way, the default handler to
+        write to the console, i.e. logging.StreamHandler, will bypass Rich logging and
+        therefore not be included in the logfile. To avoid this issue, this will add a
+        handler that specifically writes to the console through Rich.
 
         :param logger_name: Name of the logger the third party tool uses. Typically,
             this is the package name or path to a submodule for the package. Since
@@ -703,17 +704,16 @@ class Console:
         """Activates the Wait Bar as a context manager.
 
         If the Wait Bar is already active, then its message is updated for the new
-        context. Once the new context is complete, the previous Wait Bar message
-        is restored.
+        context. Once the new context is complete, the previous Wait Bar message is
+        restored.
 
         :param message: text explaining what is being awaited; should end in '...'
         :param done_message: text appended to the message after exiting
-        :param transient: if True, remove bar and message from screen after exiting;
-            if False (default), the message will remain on the screen without pulsing
-            bar.
+        :param transient: if True, remove bar and message from screen after exiting; if
+            False (default), the message will remain on the screen without pulsing bar.
         :param markup: whether to interpret Rich styling markup in the message; if True,
             the message must already be escaped; defaults False.
-        :returns:  Keep-alive spinner to notify user Briefcase is still waiting
+        :returns: Keep-alive spinner to notify user Briefcase is still waiting
         """
         is_wait_bar_disabled = not self.is_interactive
         show_outcome_message = message and (is_wait_bar_disabled or not transient)
@@ -1102,7 +1102,6 @@ class Console:
             attempt to parse into bool
         :returns: The user's chosen answer or none if closed without input
         """
-
         self.divider(title=description)
 
         if override_value is not None:

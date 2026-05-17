@@ -52,7 +52,6 @@ def android_sdk(android_sdk, tmp_path) -> AndroidSDK:
 
 def test_explicit_device(mock_tools, android_sdk):
     """If the user explicitly names a physical device, it is returned."""
-
     # Select device with an explicit device ID
     device, name, avd = android_sdk.select_target_device("KABCDABCDA1513")
 
@@ -68,7 +67,6 @@ def test_explicit_device(mock_tools, android_sdk):
 def test_explicit_unauthorized_device(mock_tools, android_sdk):
     """If the user explicitly names an unauthorized physical device, an error is
     raised."""
-
     # Select unauthorized device with an explicit device ID
     with pytest.raises(AndroidDeviceNotAuthorized):
         android_sdk.select_target_device("041234567892009a")
@@ -79,7 +77,6 @@ def test_explicit_unauthorized_device(mock_tools, android_sdk):
 
 def test_explicit_running_emulator_by_id(mock_tools, android_sdk):
     """If the user explicitly names a running emulator by device ID, it is selected."""
-
     # Select emulator with an explicit device ID
     device, name, avd = android_sdk.select_target_device("emulator-5554")
 
@@ -94,7 +91,6 @@ def test_explicit_running_emulator_by_id(mock_tools, android_sdk):
 
 def test_explicit_running_emulator_by_avd(mock_tools, android_sdk):
     """If the user explicitly names a running emulator by AVD, it is selected."""
-
     # Select emulator with an explicit device ID
     device, name, avd = android_sdk.select_target_device("@runningEmulator")
 
@@ -109,7 +105,6 @@ def test_explicit_running_emulator_by_avd(mock_tools, android_sdk):
 
 def test_explicit_idle_emulator(mock_tools, android_sdk):
     """If the user explicitly names an idle emulator by AVD, it is selected."""
-
     # Select emulator with an explicit device ID
     device, name, avd = android_sdk.select_target_device("@idleEmulator")
 
@@ -124,7 +119,6 @@ def test_explicit_idle_emulator(mock_tools, android_sdk):
 
 def test_explicit_invalid_device(mock_tools, android_sdk):
     """If the user explicitly names a non-existet device, an error is raised."""
-
     # Select emulator with an invalid device ID
     with pytest.raises(InvalidDeviceError):
         _device, _name, _avd = android_sdk.select_target_device("deadbeefcafe")
@@ -135,7 +129,6 @@ def test_explicit_invalid_device(mock_tools, android_sdk):
 
 def test_explicit_invalid_avd(mock_tools, android_sdk):
     """If the user explicitly names a non-existent device, an error is raised."""
-
     # Select emulator with an invalid AVD
     with pytest.raises(InvalidDeviceError):
         _device, _name, _avd = android_sdk.select_target_device("@invalidEmulator")

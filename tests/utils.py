@@ -51,14 +51,13 @@ def default_rich_prompt(prompt: str) -> str:
 def create_file(filepath, content, mode="w", chmod=None):
     """A test utility to create a file with known content.
 
-    Ensures that the directory for the file exists, and writes a file with
-    specific content.
+    Ensures that the directory for the file exists, and writes a file with specific
+    content.
 
     :param filepath: The path for the file to create
     :param content: A string containing the content to write.
-    :param mode: The mode to open the file. This is `w` by default;
-        use `wb` and provide content as a bitstring if you need to
-        write a binary file.
+    :param mode: The mode to open the file. This is `w` by default; use `wb` and provide
+        content as a bitstring if you need to write a binary file.
     :param chmod: file permissions to apply
     :returns: The path to the file that was created.
     """
@@ -257,8 +256,8 @@ def installed_package_content(
     :param tag: The installation tag for the package. Defaults to a pure python wheel.
     :param extra_content: Optional. A list of tuples of ``(path, content)`` that will be
         added to the wheel.
-    :param pure: Is the package explicitly pure? If None, defaults to
-        the tag as an indicator of purity.
+    :param pure: Is the package explicitly pure? If None, defaults to the tag as an
+        indicator of purity.
     """
     return (
         [
@@ -284,11 +283,11 @@ def create_installed_package(
     :param package: The name of the package in the wheel. Defaults to ``dummy``
     :param version: The version number of the package. Defaults to ``1.2.3``
     :param tag: The installation tag for the package. Defaults to a pure python wheel.
-    :param extra_content: Optional. A list of tuples of ``(path, content)`` or
-        ``(path, content, chmod)`` that will be added to the wheel. If ``chmod`` is
-        not specified, default filesystem permissions will be used.
-    :param pure: Is the package explicitly pure? If None, defaults to
-        the tag as an indicator of purity.
+    :param extra_content: Optional. A list of tuples of ``(path, content)`` or ``(path,
+        content, chmod)`` that will be added to the wheel. If ``chmod`` is not
+        specified, default filesystem permissions will be used.
+    :param pure: Is the package explicitly pure? If None, defaults to the tag as an
+        indicator of purity.
     """
     for entry in installed_package_content(
         package=package,
@@ -319,9 +318,9 @@ def create_wheel(
     :param package: The name of the package in the wheel. Defaults to ``dummy``
     :param version: The version number of the package. Defaults to ``1.2.3``
     :param tag: The installation tag for the package. Defaults to a pure python wheel.
-    :param extra_content: Optional. A list of tuples of ``(path, content)`` or
-        ``(path, content, chmod)`` that will be added to the wheel. If ``chmod`` is
-        not specified, default filesystem permissions will be used.
+    :param extra_content: Optional. A list of tuples of ``(path, content)`` or ``(path,
+        content, chmod)`` that will be added to the wheel. If ``chmod`` is not
+        specified, default filesystem permissions will be used.
     """
     wheel_filename = path / f"{package}-{version}-{tag}.whl"
 

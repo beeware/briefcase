@@ -208,7 +208,6 @@ def test_support_package_url_with_invalid_custom_support_package_url(
     app_requirements_path_index,
 ):
     """Invalid URL for a custom support package raises MissingNetworkResourceError."""
-
     # Provide an custom support URL
     url = "https://example.com/custom/support.zip"
     myapp.support_package = url

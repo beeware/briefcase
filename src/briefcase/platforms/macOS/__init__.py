@@ -152,9 +152,10 @@ class macOSMixin(_MixinBase):
         """
         if self.is_icloud_synced(self.binary_path(app)):
             msg = [
-                """\
-Your project is in a folder that is synchronized with iCloud. This interferes
-with the operation of macOS code signing."""
+                r"""\ Your project is in a folder that is synchronized with iCloud.
+
+                This interferes with the operation of macOS code signing.
+                """
             ]
             if cleanup:
                 self.tools.shutil.rmtree(self.bundle_path(app))
@@ -993,9 +994,10 @@ class macOSPackageMixin(macOSSigningMixin):
         Although the archive format is ".zip", we can't use standard Zip tools, as they
         don't preserve UTF-8 encoding on all resources. Instead, we need to use `ditto`,
         which is provided as part of macOS developer tooling. See
-        https://forums.developer.apple.com/forums/thread/116831 and
-        https://developer.apple.com/library/archive/technotes/tn2206/_index.html for
-        more details.
+        https://forums.developer.apple.com/forums/thread/116831
+        and
+        https://developer.apple.com/library/archive/technotes/tn2206/_index.html
+        for        more details.
 
         :param app_filename: The filename of the app to archive
         :param archive_filename: The filename of the archive to produce
@@ -1094,23 +1096,24 @@ You can store these credentials by invoking:
     $ xcrun notarytool store-credentials --team-id {identity.team_id} {identity.profile}
 
 """)
+                    self.console.warning(
+                        """The notarization process uses credentials
+                                         stored on your system Keychain. You need to do
+                                         this once for each signing certificate you use.
 
-                    self.console.warning("""
-The notarization process uses credentials stored on your system Keychain.
-You need to do this once for each signing certificate you use.
+                                         The credentials are authenticated and stored using your Apple ID, using
+                                         an app-specific Apple ID password. To generate an app-specific Apple ID
+                                         password:
 
-The credentials are authenticated and stored using your Apple ID, using
-an app-specific Apple ID password. To generate an app-specific Apple ID
-password:
-
-  1. Sign into https://appleid.apple.com;
-  2. In the 'Sign-in and Security' section, click 'App-Specific Passwords';
-  3. Click on the '+' icon. You will need to provide an identifying name
-     for the password. You can pick any name that makes sense to you - the
-     name is only there so you can identify passwords. 'Briefcase' would be
-     one possible name.
-  4. Record the password somewhere safe.
-""")
+                                           1. Sign into https://appleid.apple.com;
+                                           2. In the 'Sign-in and Security' section, click 'App-Specific Passwords';
+                                           3. Click on the '+' icon. You will need to provide an identifying name
+                                              for the password. You can pick any name that makes sense to you - the
+                                              name is only there so you can identify passwords. 'Briefcase' would be
+                                              one possible name.
+                                           4. Record the password somewhere safe.
+                                         """
+                    )
                     try:
                         self.tools.subprocess.run(
                             [
@@ -1388,23 +1391,25 @@ password:
                 raise BriefcaseCommandError(
                     "Can't notarize an app with an ad-hoc signing identity"
                 )
-            self.console.warning("""
-*************************************************************************
-** WARNING: Signing with an ad-hoc identity                            **
-*************************************************************************
+            self.console.warning(
+                """****************************************************
+                                 ********************* ** WARNING: Signing with an ad-
+                                 hoc identity                            ** ************
+                                 *******************************************************
+                                 ******
 
-    This app is being signed with an ad-hoc identity. The resulting
-    app will run on this computer, but will not run on anyone else's
-    computer.
+                                     This app is being signed with an ad-hoc identity. The resulting
+                                     app will run on this computer, but will not run on anyone else's
+                                     computer.
 
-    To generate an app that can be distributed to others, you must
-    obtain an application distribution certificate from Apple, and
-    select the developer identity associated with that certificate
-    when running 'briefcase package'.
+                                     To generate an app that can be distributed to others, you must
+                                     obtain an application distribution certificate from Apple, and
+                                     select the developer identity associated with that certificate
+                                     when running 'briefcase package'.
 
-*************************************************************************
-
-""")
+                                 *************************************************************************
+                                 """
+            )
             self.console.info("Signing app with ad-hoc identity...")
         else:
             # If we're signing, and notarization isn't explicitly disabled,

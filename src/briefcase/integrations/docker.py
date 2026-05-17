@@ -558,11 +558,12 @@ Delete this file and run Briefcase again.
                 self._x11_write_xauth_file(DISPLAY, xauth_file_path, proxy_display_num)
             except XauthDatabaseCreationFailure:
                 self.tools.console.warning(
-                    """\
-An X11 authentication database could not be created for the display.
+                    r"""\ An X11 authentication database could not be created for the
+                    display.
 
-Briefcase will proceed, but if access to the display is rejected, this may be why.
-"""
+                    Briefcase will proceed, but if access to the display is rejected,
+                    this may be why.
+                    """
                 )
             else:
                 # Add the xauth database to the container
@@ -615,8 +616,8 @@ Briefcase will proceed, but if access to the display is rejected, this may be wh
         The proxy is bound to 0.0.0.0 and as such will be reachable on all network
         interfaces defined for the host. Ideally, the proxy would only need to bind to
         the network bridge defined by Docker, usually `docker0`, but Docker Desktop is
-        not able to use a shared network interface bridge as Docker Engine does since
-        it runs containers inside a Linux VM. Instead, it attaches the host's primary
+        not able to use a shared network interface bridge as Docker Engine does since it
+        runs containers inside a Linux VM. Instead, it attaches the host's primary
         network interface as a device on a virtual network interface bridge created by
         the VM. Because of this, the proxy must be exposed to the network at large to
         also be exposed within the container.

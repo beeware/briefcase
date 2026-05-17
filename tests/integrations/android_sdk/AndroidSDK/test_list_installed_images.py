@@ -7,7 +7,6 @@ from briefcase.exceptions import BriefcaseCommandError
 
 def test_list_installed_system_images(mock_tools, android_sdk):
     """Returns a set of installed system image package identifiers."""
-
     mock_tools.subprocess.check_output.return_value = (
         "Installed packages:\n"
         "  Path                                    | Version | Description                    | Location\n"

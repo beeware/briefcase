@@ -12,7 +12,6 @@ from briefcase.console import LogLevel
 @pytest.mark.usefixtures("mock_docker_app_context")
 def test_simple_call(mock_tools, my_app, tmp_path, sub_kw, capsys):
     """A simple call will be invoked."""
-
     process = mock_tools[my_app].app_context.Popen(["hello", "world"])
 
     assert process is mock_tools._popen_process

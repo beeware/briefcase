@@ -40,8 +40,8 @@ class VisualStudio(Tool):
     def install_metadata(self) -> dict[str, str | int | bool] | None:
         """Metadata about the Visual Studio install.
 
-        Will be ``None`` if MSBuild the path to MSBuild has been provided
-        explicitly, or is on the path.
+        Will be ``None`` if MSBuild the path to MSBuild has been provided explicitly, or
+        is on the path.
 
         Otherwise, a dictionary containing the install details from VSWhere.
         """

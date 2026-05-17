@@ -69,7 +69,6 @@ entitlements_path="Entitlements.plist"
     # Create some folders that need to exist.
     (app_path / "Contents/Resources/app_packages").mkdir(parents=True)
     (app_path / "Contents/Frameworks").mkdir(parents=True)
-
     # Create an installer Distribution.xml
     create_file(
         tmp_path / "base_path/build/first-app/macos/app/installer/Distribution.xml",

@@ -29,7 +29,6 @@ def test_valid_python_version(
     minor_version, today, is_valid, base_command, monkeypatch
 ):
     """A warning is produced if the Python version is past its EOL."""
-
     version_info = _create_version_info(3, minor_version)
     sys_mock = mock.MagicMock(wraps=sys)
     sys_mock.version_info = version_info

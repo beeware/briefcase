@@ -22,7 +22,6 @@ class VenvContext:
 
         :returns: The ``/bin`` (``\\Scripts`` on Windows) directory of the venv.
         """
-
         return self.venv_path / ("Scripts" if os.name == "nt" else "bin")
 
     @property
@@ -101,7 +100,6 @@ class VenvContext:
             environment variables
         :returns: environment mapping for the venv with overrides applied.
         """
-
         if overrides:
             env = overrides.copy()
         else:
@@ -299,8 +297,9 @@ class VirtualEnvironment(Tool):
         isolated: bool = True,
         recreate: bool = False,
     ) -> VenvEnvironment | NoOpEnvironment:
-        """Return a environment context for the requested isolation settings. Creates
-        either a virtual environment context or a no-op context.
+        """Return a environment context for the requested isolation settings.
+
+        Creates either a virtual environment context or a no-op context.
 
         :param tools: The tools instance
         :param venv_path: Path for the virtual environment

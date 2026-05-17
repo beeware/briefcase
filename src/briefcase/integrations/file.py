@@ -169,8 +169,9 @@ class File(Tool):
         )
 
     def download(self, url: str, download_path: Path, role: str | None = None) -> Path:
-        """Download a given URL, caching it. If it has already been downloaded, return
-        the value that has been cached.
+        """Download a given URL, caching it.
+
+        If it has already been downloaded, return the value that has been cached.
 
         This is a utility method used to obtain assets used by the installation process.
         The cached filename will be the filename portion of the URL, appended to the
@@ -285,12 +286,12 @@ class File(Tool):
     def _fetch_and_write_content(self, response: httpx.Response, filename: Path):
         """Write the content from the httpx Response to file.
 
-        The data is initially written in to a temporary file in the Briefcase
-        cache. This avoids partially downloaded files masquerading as complete
-        downloads in later Briefcase runs. The temporary file is only moved
-        to ``filename`` if the download is successful; otherwise, it is deleted.
+        The data is initially written in to a temporary file in the Briefcase cache.
+        This avoids partially downloaded files masquerading as complete downloads in
+        later Briefcase runs. The temporary file is only moved to ``filename`` if the
+        download is successful; otherwise, it is deleted.
 
-        :param response: ``httpx.Response``
+        :param response:``httpx.Response``
         :param filename: full filesystem path to save data
         """
         # `temp_file` is used in the `finally` block, so make sure it's assigned

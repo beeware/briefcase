@@ -12,7 +12,6 @@ from .conftest import CREATE_NEW_PROCESS_GROUP, CREATE_NO_WINDOW
 @pytest.mark.parametrize("platform", ["Linux", "Darwin", "Windows"])
 def test_call(mock_sub, capsys, platform, sub_kw):
     """A simple call will be invoked."""
-
     mock_sub.tools.host_os = platform
     mock_sub.Popen(["hello", "world"])
 
@@ -22,7 +21,6 @@ def test_call(mock_sub, capsys, platform, sub_kw):
 
 def test_call_with_arg(mock_sub, capsys, sub_kw):
     """Any extra keyword arguments are passed through as-is."""
-
     mock_sub.Popen(["hello", "world"], extra_kw="extra")
 
     mock_sub._subprocess.Popen.assert_called_with(
@@ -35,7 +33,6 @@ def test_call_with_arg(mock_sub, capsys, sub_kw):
 
 def test_call_with_path_arg(mock_sub, capsys, tmp_path, sub_kw):
     """Path-based arguments are converted to strings and passed in as-is."""
-
     mock_sub.Popen(["hello", tmp_path / "location"], cwd=tmp_path / "cwd")
 
     mock_sub._subprocess.Popen.assert_called_with(
@@ -73,7 +70,6 @@ def test_call_with_start_new_session(
     sub_kw,
 ):
     """start_new_session is passed thru on Linux and macOS but converted for Windows."""
-
     mock_sub.tools.host_os = platform
     mock_sub.Popen(["hello", "world"], start_new_session=start_new_session)
 
@@ -108,7 +104,6 @@ def test_call_windows_with_start_new_session_and_creationflags(
 ):
     """Creationflags used to simulate start_new_session=True should be merged with any
     existing flags."""
-
     mock_sub.tools.host_os = "Windows"
 
     # use commented test below when merging creationflags is allowed
@@ -183,6 +178,5 @@ def test_debug_call_with_env(mock_sub, capsys, tmp_path, sub_kw):
 def test_text_eq_true_default_overriding(mock_sub, in_kwargs, kwargs):
     """If text or universal_newlines is explicitly provided, those should override
     text=true default and universal_newlines should be converted to text."""
-
     mock_sub.Popen(["hello", "world"], **in_kwargs)
     mock_sub._subprocess.Popen.assert_called_with(["hello", "world"], **kwargs)

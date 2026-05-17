@@ -208,6 +208,7 @@ def test_packages_installed(build_command, first_app_config, capsys):
 
 def test_missing_virtual_packages(build_command, first_app_config, capsys):
     """If there are missing virtual system packages, an error is raised."""
+
     # Mock the system requirement tools; there's a base requirement of packages called
     # "compiler" and "compiler++", plus 3 packages provided by an installation alias
     # "alias". These packages are verified using "check <pkg>", and installed using
@@ -266,6 +267,7 @@ def test_missing_virtual_packages(build_command, first_app_config, capsys):
 
 def test_virtual_packages_installed(build_command, first_app_config, capsys):
     """If all required packages are installed, no error is raised."""
+
     # Mock the system requirement tools; there's a base requirement of
     # a packaged called "compiler", verified using "check <pkg>", and
     # installed using "system <pkg>", and `devirtualize` is used as

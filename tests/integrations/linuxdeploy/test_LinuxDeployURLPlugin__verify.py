@@ -52,7 +52,6 @@ def test_verify(mock_tools, tmp_path):
 
 def test_download_failure(mock_tools, tmp_path):
     """A failure downloading a custom URL plugin raises an error."""
-
     # Mock a successful download
     mock_tools.file.download.side_effect = NetworkFailure("mock")
 
@@ -75,7 +74,6 @@ def test_download_failure(mock_tools, tmp_path):
 def test_invalid_plugin_name(mock_tools, tmp_path):
     """If the URL filename doesn't match the pattern of a linuxdeploy plugin, an error
     is raised."""
-
     with pytest.raises(BriefcaseCommandError):
         LinuxDeployURLPlugin.verify(
             mock_tools,

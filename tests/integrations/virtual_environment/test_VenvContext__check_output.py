@@ -43,7 +43,6 @@ def test_check_output_environment_handling(
 
 def test_check_output_kwargs_env_extraction(venv_context, mock_subprocess_setup):
     """check_output extracts env from kwargs without modifying the original kwargs."""
-
     mocks = mock_subprocess_setup
 
     original_kwargs = {

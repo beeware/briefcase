@@ -53,7 +53,6 @@ metadata_resource_path="res/briefcase.xml"
 extract_packages_path = "app/extract-packages.txt"
 """,
     )
-
     create_file(
         tmp_path
         / "base_path"

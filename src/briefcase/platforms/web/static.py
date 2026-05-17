@@ -772,9 +772,9 @@ class StaticWebDevCommand(StaticWebMixin, DevCommand):
     def venv_name(self) -> str:
         """Returns the name of the virtual environment directory.
 
-        The web environment uses a different venv because a web deployment has
-        different requirements to a desktop deployment. The name is the same as the
-        desktop deployment, but with `.web` appended.
+        The web environment uses a different venv because a web deployment has different
+        requirements to a desktop deployment. The name is the same as the desktop
+        deployment, but with `.web` appended.
 
         :returns: Name for virtual environment directory
         """

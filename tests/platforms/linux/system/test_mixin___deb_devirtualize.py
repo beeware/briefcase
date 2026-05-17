@@ -154,7 +154,6 @@ def build_command(dummy_console, tmp_path, first_app):
 )
 def test_deb_devirtualize(build_command, cache_output, original, expected):
     """Debian requirements can be verified."""
-
     # Mock the effect of checking requirements that are all present
     build_command.tools.subprocess.check_output.return_value = cache_output
 
@@ -169,7 +168,6 @@ def test_deb_devirtualize(build_command, cache_output, original, expected):
 
 def test_deb_devirtualize_fail(build_command):
     """If Debian devirtualiztaio fails, an error is raised."""
-
     # Mock the effect of apt-cache failing
     build_command.tools.subprocess.check_output.side_effect = (
         subprocess.CalledProcessError(cmd="apt-cache", returncode=1)

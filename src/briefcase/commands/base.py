@@ -79,8 +79,8 @@ def full_options(state, options):
 
     :param state: The current command state. Can be ``None``.
     :param options: The base options.
-    :returns: A dictionary containing all of ``options``, with any values
-        provided in ``state`` overriding the base ``options`` values.
+    :returns: A dictionary containing all of ``options``, with any values provided in
+        ``state`` overriding the base ``options`` values.
     """
     if state is not None:
         full = options.copy()
@@ -446,7 +446,6 @@ a custom location for Briefcase's tools.
 
         :param app: The app config
         """
-
         if sys.platform == "win32":  # pragma: no-cover-if-not-windows
             suffix = self.binary_executable_path(app).suffix
         else:  # pragma: no-cover-if-is-windows
@@ -691,8 +690,8 @@ a custom location for Briefcase's tools.
         configuration, and performs any other app-specific platform configuration and
         verification that is required as a result of command-line arguments.
 
-        Platform overrides should call ``super().finalize_app_config(app, **kwargs)``
-        to construct the ``FinalizedAppConfig``.
+        Platform overrides should call ``super().finalize_app_config(app, **kwargs)`` to
+        construct the ``FinalizedAppConfig``.
 
         :param app: The app configuration to finalize.
         :param kwargs: Runtime attributes forwarded to the FinalizedAppConfig
@@ -812,7 +811,6 @@ a custom location for Briefcase's tools.
 
         :param app: app configuration
         """
-
         # Skip this check if the template isn't rolled out
         # or if the command doesn't support templates
         try:
@@ -841,7 +839,6 @@ any compatibility problems, and then add the compatibility declaration.
     def verify_required_python(self, app: FinalizedAppConfig):
         """Verify that the running version of Python meets the project's
         specifications."""
-
         requires_python = getattr(self.global_config, "requires_python", None)
         if not requires_python:
             return
@@ -1149,8 +1146,8 @@ Did you run Briefcase in a project directory that contains {filename.name!r}?"""
 
         :param template: The template URL or path.
         :param branch: The template branch to use. Default: ``master``
-        :return: The path to the cached template. This may be the originally
-            provided path if the template was a file path.
+        :return: The path to the cached template. This may be the originally provided
+            path if the template was a file path.
         """
         if is_repo_url(template):
             # The app template is a repository URL.
@@ -1235,17 +1232,17 @@ Did you run Briefcase in a project directory that contains {filename.name!r}?"""
                     # warn the user that the template may be stale.
                     self.console.debug(str(e))
                     self.console.warning(
+                        """*************************************************************
+                        ************ ** WARNING: Unable to update template
+                        ** *************************************************************
+                        ************
+
+                            Briefcase is unable the update the application template. This
+                            may be because your computer is currently offline. Briefcase will
+                            use existing template without updating.
+
+                        *************************************************************************
                         """
-*************************************************************************
-** WARNING: Unable to update template                                  **
-*************************************************************************
-
-    Briefcase is unable the update the application template. This
-    may be because your computer is currently offline. Briefcase will
-    use existing template without updating.
-
-*************************************************************************
-"""
                     )
 
                 try:

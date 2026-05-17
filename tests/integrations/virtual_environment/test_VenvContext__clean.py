@@ -22,7 +22,6 @@ def test_clean(mock_tools, venv_path):
 
 def test_clean_non_existent(mock_tools, venv_path):
     """It's possible to clean a venv that doesn't exist."""
-
     context = VenvContext(mock_tools, venv_path)
 
     # venv doesn't exist before clean

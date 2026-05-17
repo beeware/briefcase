@@ -102,7 +102,6 @@ class DevCommand(RunAppMixin, BaseCommand):
         :param venv: The context object used to run commands inside the virtual
             environment.
         """
-
         requires = app.requires or []
         if app.test_requires:
             requires.extend(app.test_requires)
@@ -214,7 +213,6 @@ class DevCommand(RunAppMixin, BaseCommand):
 
         :param app: The config object for the app
         """
-
         env = {
             "PYTHONPATH": os.pathsep.join(
                 os.fsdecode(Path.cwd() / path) for path in app.PYTHONPATH()
@@ -237,10 +235,9 @@ class DevCommand(RunAppMixin, BaseCommand):
     def venv_name(self) -> str:
         """Returns the name of the virtual environment directory.
 
-        The environment name is platform and Python version specific, so
-        that multiple OSes and Python versions can share a `.briefcase`
-        folder. The name is based on the extension module filename that the
-        platform uses (e.g., cpython-313-darwin).
+        The environment name is platform and Python version specific, so that multiple
+        OSes and Python versions can share a `.briefcase` folder. The name is based on
+        the extension module filename that the platform uses (e.g., cpython-313-darwin).
 
         :returns: Name for virtual environment directory
         """

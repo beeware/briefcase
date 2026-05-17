@@ -25,25 +25,25 @@ TEST_MESSAGE = """
             TEST_TITLE,
             TEST_MESSAGE,
             80,
-            """
-********************************************************************************
-**        WARNING: ANDROID_HOME and ANDROID_SDK_ROOT are inconsistent         **
-********************************************************************************
+            """*************************************************************************
+            ******* **        WARNING: ANDROID_HOME and ANDROID_SDK_ROOT are
+            inconsistent         ** ****************************************************
+            ****************************
 
-  The ANDROID_HOME and ANDROID_SDK_ROOT environment variables are set to
-  different paths:
+              The ANDROID_HOME and ANDROID_SDK_ROOT environment variables are set to
+              different paths:
 
-    ANDROID_HOME:     /briefcase/tests/console/Console/test_warning_banner.py
-    ANDROID_SDK_ROOT: /home/anton/briefcase/tests/console/Console/test_warning_banner.py
+                ANDROID_HOME:     /briefcase/tests/console/Console/test_warning_banner.py
+                ANDROID_SDK_ROOT: /home/anton/briefcase/tests/console/Console/test_warning_banner.py
 
-  Briefcase will ignore ANDROID_SDK_ROOT and only use the path specified by
-  ANDROID_HOME.
+              Briefcase will ignore ANDROID_SDK_ROOT and only use the path specified by
+              ANDROID_HOME.
 
-  You should update your environment configuration to either not set
-  ANDROID_SDK_ROOT, or set both environment variables to the same path.
+              You should update your environment configuration to either not set
+              ANDROID_SDK_ROOT, or set both environment variables to the same path.
 
-********************************************************************************
-""",
+            ********************************************************************************
+            """,
             id="80-char",
         ),
         # Wrap to 60 chars
@@ -51,27 +51,26 @@ TEST_MESSAGE = """
             TEST_TITLE,
             TEST_MESSAGE,
             60,
-            """
-************************************************************
-**     WARNING: ANDROID_HOME and ANDROID_SDK_ROOT are     **
-**                      inconsistent                      **
-************************************************************
+            """************************************************************ **
+            WARNING: ANDROID_HOME and ANDROID_SDK_ROOT are     ** **
+            inconsistent                      **
+            ************************************************************
 
-  The ANDROID_HOME and ANDROID_SDK_ROOT environment
-  variables are set to different paths:
+              The ANDROID_HOME and ANDROID_SDK_ROOT environment
+              variables are set to different paths:
 
-    ANDROID_HOME:     /briefcase/tests/console/Console/test_warning_banner.py
-    ANDROID_SDK_ROOT: /home/anton/briefcase/tests/console/Console/test_warning_banner.py
+                ANDROID_HOME:     /briefcase/tests/console/Console/test_warning_banner.py
+                ANDROID_SDK_ROOT: /home/anton/briefcase/tests/console/Console/test_warning_banner.py
 
-  Briefcase will ignore ANDROID_SDK_ROOT and only use the
-  path specified by ANDROID_HOME.
+              Briefcase will ignore ANDROID_SDK_ROOT and only use the
+              path specified by ANDROID_HOME.
 
-  You should update your environment configuration to
-  either not set ANDROID_SDK_ROOT, or set both environment
-  variables to the same path.
+              You should update your environment configuration to
+              either not set ANDROID_SDK_ROOT, or set both environment
+              variables to the same path.
 
-************************************************************
-""",
+            ************************************************************
+            """,
             id="60-char",
         ),
         # Wrap to 120 chars
@@ -79,23 +78,24 @@ TEST_MESSAGE = """
             TEST_TITLE,
             TEST_MESSAGE,
             120,
-            """
-************************************************************************************************************************
-**                            WARNING: ANDROID_HOME and ANDROID_SDK_ROOT are inconsistent                             **
-************************************************************************************************************************
+            """*************************************************************************
+            *********************************************** **
+            WARNING: ANDROID_HOME and ANDROID_SDK_ROOT are inconsistent
+            ** *************************************************************************
+            ***********************************************
 
-  The ANDROID_HOME and ANDROID_SDK_ROOT environment variables are set to different paths:
+              The ANDROID_HOME and ANDROID_SDK_ROOT environment variables are set to different paths:
 
-    ANDROID_HOME:     /briefcase/tests/console/Console/test_warning_banner.py
-    ANDROID_SDK_ROOT: /home/anton/briefcase/tests/console/Console/test_warning_banner.py
+                ANDROID_HOME:     /briefcase/tests/console/Console/test_warning_banner.py
+                ANDROID_SDK_ROOT: /home/anton/briefcase/tests/console/Console/test_warning_banner.py
 
-  Briefcase will ignore ANDROID_SDK_ROOT and only use the path specified by ANDROID_HOME.
+              Briefcase will ignore ANDROID_SDK_ROOT and only use the path specified by ANDROID_HOME.
 
-  You should update your environment configuration to either not set ANDROID_SDK_ROOT, or set both environment
-  variables to the same path.
+              You should update your environment configuration to either not set ANDROID_SDK_ROOT, or set both environment
+              variables to the same path.
 
-************************************************************************************************************************
-""",  # noqa: E501
+            ************************************************************************************************************************
+            """,  # noqa: E501
             id="120-char",
         ),
         # Default width (80) without title
@@ -103,34 +103,33 @@ TEST_MESSAGE = """
             None,
             TEST_MESSAGE,
             80,
-            """
-********************************************************************************
+            """*************************************************************************
+            *******
 
-  The ANDROID_HOME and ANDROID_SDK_ROOT environment variables are set to
-  different paths:
+              The ANDROID_HOME and ANDROID_SDK_ROOT environment variables are set to
+              different paths:
 
-    ANDROID_HOME:     /briefcase/tests/console/Console/test_warning_banner.py
-    ANDROID_SDK_ROOT: /home/anton/briefcase/tests/console/Console/test_warning_banner.py
+                ANDROID_HOME:     /briefcase/tests/console/Console/test_warning_banner.py
+                ANDROID_SDK_ROOT: /home/anton/briefcase/tests/console/Console/test_warning_banner.py
 
-  Briefcase will ignore ANDROID_SDK_ROOT and only use the path specified by
-  ANDROID_HOME.
+              Briefcase will ignore ANDROID_SDK_ROOT and only use the path specified by
+              ANDROID_HOME.
 
-  You should update your environment configuration to either not set
-  ANDROID_SDK_ROOT, or set both environment variables to the same path.
+              You should update your environment configuration to either not set
+              ANDROID_SDK_ROOT, or set both environment variables to the same path.
 
-********************************************************************************
-""",
+            ********************************************************************************
+            """,
             id="no-title",
         ),
         pytest.param(
             TEST_TITLE,
             None,
             80,
-            """
-********************************************************************************
-**        WARNING: ANDROID_HOME and ANDROID_SDK_ROOT are inconsistent         **
-********************************************************************************
-""",
+            """*************************************************************************
+            ******* **        WARNING: ANDROID_HOME and ANDROID_SDK_ROOT are
+            inconsistent         ** ****************************************************
+            ****************************""",
             id="title-only",
         ),
         # Message and title lengths equal to box width
@@ -138,38 +137,32 @@ TEST_MESSAGE = """
             "Length of ............. width",
             "Length of message is equal to box width.",
             44,
-            """
-********************************************
-** WARNING: Length of ............. width **
-********************************************
+            """******************************************** ** WARNING: Length of
+            ............. width ** ********************************************
 
-  Length of message is equal to box width.
+            Length of message is equal to box width.
 
-********************************************
-""",
+            ********************************************
+            """,
             id="exact-width",
         ),
         pytest.param(
             "Length+ of ............. width",
             "Length+ of message is equal to box width.",
             44,
-            """
-********************************************
-**   WARNING: Length+ of .............    **
-**                 width                  **
-********************************************
+            """******************************************** **   WARNING: Length+ of
+            .............    ** **                 width                  **
+            ********************************************
 
-  Length+ of message is equal to box
-  width.
+            Length+ of message is equal to box width.
 
-********************************************
-""",
+            ********************************************
+            """,
             id="1-char-wrap",
         ),
         pytest.param(
             None,
-            """
-              Start text with literal
+            """Start text with literal.
 
             More text
 
@@ -182,7 +175,6 @@ TEST_MESSAGE = """
               A single literal.
 
             Text following a literal, followed by a blank line.
-
             """,
             40,
             """
@@ -211,7 +203,6 @@ TEST_MESSAGE = """
 )
 def test_warning_banner(console, title, message, width, expected, capsys):
     """Test warning_banner with various inputs."""
-
     # call the function
     console.warning_banner(title=title, message=message, width=width)
     # capture console output

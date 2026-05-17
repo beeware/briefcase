@@ -28,11 +28,7 @@ def test_no_briefcase_section(tmp_path):
     """If the config file doesn't contain a briefcase tool section, raise an error."""
     config_file = create_file(
         tmp_path / "pyproject.toml",
-        """
-        [tool.section]
-        name="value"
-        number=42
-        """,
+        """[tool.section] name="value" number=42.""",
     )
 
     with pytest.raises(BriefcaseConfigError, match=r"No tool\.briefcase section"):
@@ -48,11 +44,7 @@ def test_no_apps(tmp_path):
     """If the config file doesn't contain at least one briefcase app, raise an error."""
     config_file = create_file(
         tmp_path / "pyproject.toml",
-        """
-        [tool.briefcase]
-        name="value"
-        number=42
-        """,
+        """[tool.briefcase] name="value" number=42.""",
     )
 
     with pytest.raises(BriefcaseConfigError, match="No Briefcase apps defined"):
@@ -111,14 +103,9 @@ def test_multiple_minimal_apps(tmp_path):
     """The configuration can contain multiple apps without an explicit tool header."""
     config_file = create_file(
         tmp_path / "pyproject.toml",
-        """
-        [tool.briefcase.app.first]
-        number=37
-        license="MIT"
+        """[tool.briefcase.app.first] number=37 license="MIT".
 
-        [tool.briefcase.app.second]
-        number=42
-        license="BSD-3-Clause"
+        [tool.briefcase.app.second] number=42 license="BSD-3-Clause"
         """,
     )
 
@@ -1390,8 +1377,7 @@ def test_no_license_key(tmp_path):
     """An app without a license key gets dummy values and a warning."""
     config_file = create_file(
         tmp_path / "pyproject.toml",
-        """
-        [tool.briefcase]
+        """[tool.briefcase]
 
         [tool.briefcase.app.my_app]
         """,

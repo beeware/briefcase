@@ -16,7 +16,6 @@ def build_command(dummy_console, tmp_path):
 
 def test_process_wheel(build_command, tmp_path):
     """A wheel can be processed to have CSS content extracted."""
-
     # Create a wheel with some content
     wheel_filename = create_wheel(
         tmp_path,
@@ -66,7 +65,6 @@ def test_process_wheel(build_command, tmp_path):
 
 def test_process_wheel_no_content(build_command, tmp_path):
     """A wheel with no resources can be processed."""
-
     # Create a wheel with some content, but nothing static to be collected
     wheel_filename = create_wheel(
         tmp_path,

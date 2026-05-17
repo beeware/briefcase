@@ -86,19 +86,19 @@ class JDK(ManagedTool):
     def verify_install(cls, tools: ToolCache, install: bool = True, **kwargs) -> JDK:
         """Verify that a Java JDK exists.
 
-        If ``JAVA_HOME`` is set, try that version. If it is a JRE, or its *not*
-        a Java JDK, download one.
+        If ``JAVA_HOME`` is set, try that version. If it is a JRE, or its *not* a Java
+        JDK, download one.
 
-        On macOS, also try invoking /usr/libexec/java_home. If that location
-        points to a Java JDK, use it.
+        On macOS, also try invoking /usr/libexec/java_home. If that location points to a
+        Java JDK, use it.
 
-        Otherwise, download a JDK from OpenJDK and unpack it into the
-        briefcase data directory.
+        Otherwise, download a JDK from OpenJDK and unpack it into the briefcase data
+        directory.
 
         :param tools: ToolCache of available tools
         :param install: Should the tool be installed if it is not found?
-        :returns: A valid Java JDK wrapper. If a JDK is not available, and was
-            not installed, raises MissingToolError.
+        :returns: A valid Java JDK wrapper. If a JDK is not available, and was not
+            installed, raises MissingToolError.
         """
         # short circuit since already verified and available
         if hasattr(tools, "java"):

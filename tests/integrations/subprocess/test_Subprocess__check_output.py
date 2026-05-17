@@ -76,7 +76,6 @@ def test_call(
 
 def test_call_with_arg(mock_sub, capsys, sub_check_output_kw):
     """Any extra keyword arguments are passed through as-is."""
-
     mock_sub.check_output(["hello", "world"], extra_kw="extra")
 
     mock_sub._subprocess.check_output.assert_called_with(
@@ -89,7 +88,6 @@ def test_call_with_arg(mock_sub, capsys, sub_check_output_kw):
 
 def test_call_with_path_arg(mock_sub, capsys, tmp_path, sub_check_output_kw):
     """Path-based arguments are converted to strings and passed in as-is."""
-
     mock_sub.check_output(["hello", tmp_path / "location"], cwd=tmp_path / "cwd")
 
     mock_sub._subprocess.check_output.assert_called_with(
@@ -172,7 +170,6 @@ def test_call_with_start_new_session(
     sub_check_output_kw,
 ):
     """start_new_session is passed thru on Linux and macOS but converted for Windows."""
-
     mock_sub.tools.host_os = platform
     mock_sub.check_output(["hello", "world"], start_new_session=start_new_session)
 
@@ -209,7 +206,6 @@ def test_call_windows_with_start_new_session_and_creationflags(
 ):
     """Creationflags used to simulate start_new_session=True should be merged with any
     existing flags."""
-
     mock_sub.tools.host_os = "Windows"
 
     # use commented test below when merging creationflags is allowed

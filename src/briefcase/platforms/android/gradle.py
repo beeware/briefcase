@@ -39,10 +39,9 @@ else:
 def safe_formal_name(name):
     """Converts the name into a safe name on Android.
 
-    Certain characters (``/\\:<>"?*|``) can't be used as app names
-    on Android; ``!`` causes problems with Android build tooling.
-    Also ensure that trailing, leading, and consecutive whitespace
-    caused by removing punctuation is collapsed.
+    Certain characters (``/\\:<>"?*|``) can't be used as app names on Android; ``!``
+    causes problems with Android build tooling. Also ensure that trailing, leading, and
+    consecutive whitespace caused by removing punctuation is collapsed.
 
     :param name: The candidate name
     :returns: The safe version of the name.
@@ -61,14 +60,13 @@ ANDROID_LOG_PREFIX_REGEX = re.compile(
 def android_log_clean_filter(line):
     """Filter an ADB log to extract the Python-generated message content.
 
-    Any system or stub messages are ignored; all logging prefixes are stripped.
-    Python code is identified as coming from the ``python.stdout``
+    Any system or stub messages are ignored; all logging prefixes are stripped. Python
+    code is identified as coming from the ``python.stdout``
 
     :param line: The raw line from the system log
-    :returns: A tuple, containing (a) the log line, stripped of any system
-        logging context, and (b) a boolean indicating if the message should be
-        included for analysis purposes (i.e., it's Python content, not a system
-        message).
+    :returns: A tuple, containing (a) the log line, stripped of any system logging
+        context, and (b) a boolean indicating if the message should be included for
+        analysis purposes (i.e., it's Python content, not a system message).
     """
     match = ANDROID_LOG_PREFIX_REGEX.match(line)
     if match:
@@ -194,7 +192,8 @@ class GradleCreateCommand(GradleMixin, CreateCommand):
         try:
             dependencies = app.build_gradle_dependencies
         except AttributeError:
-            self.console.warning("""
+            self.console.warning(
+                """
 *************************************************************************
 ** WARNING: App does not define build_gradle_dependencies              **
 *************************************************************************
@@ -218,7 +217,8 @@ class GradleCreateCommand(GradleMixin, CreateCommand):
 
 *************************************************************************
 
-""")
+"""
+            )
             dependencies = [
                 "androidx.appcompat:appcompat:1.0.2",
                 "androidx.constraintlayout:constraintlayout:1.1.3",
@@ -473,12 +473,12 @@ class GradleRunCommand(GradleMixin, RunCommand):
 
         :param app: The config object for the app
         :param passthrough: The list of arguments to pass to the app
-        :param device_or_avd: The device to target. If ``None``, the user will
-            be asked to re-run the command selecting a specific device.
+        :param device_or_avd: The device to target. If ``None``, the user will be asked
+            to re-run the command selecting a specific device.
         :param extra_emulator_args: Any additional arguments to pass to the emulator.
         :param shutdown_on_exit: Should the emulator be shut down on exit?
-        :param revoke_permissions: A list of permissions to revoke before launching
-            the app.
+        :param revoke_permissions: A list of permissions to revoke before launching the
+            app.
         :param forward_ports: A list of ports to forward for the app.
         :param reverse_ports: A list of ports to reversed for the app.
         """

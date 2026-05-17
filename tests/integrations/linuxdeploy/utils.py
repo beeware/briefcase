@@ -16,7 +16,6 @@ def create_mock_appimage(appimage_path: Path, mock_appimage_kind: str = "origina
         creates a corrupted mock appimage.
     :returns: The bytes to be patched of the created AppImage.
     """
-
     bytes_to_be_patched = None
 
     appimage_headers = {

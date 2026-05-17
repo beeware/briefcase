@@ -14,8 +14,8 @@ if TYPE_CHECKING:
 class PublishCommandAPI(Protocol):
     """Stable API surface exposed to publication channel plugins.
 
-    This defines the minimal set of attributes and methods that a plugin
-    can rely on from the ``command`` parameter passed to ``publish_app()``.
+    This defines the minimal set of attributes and methods that a plugin can rely on
+    from the ``command`` parameter passed to ``publish_app()``.
     """
 
     console: Console

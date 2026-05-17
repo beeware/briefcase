@@ -606,7 +606,6 @@ def test_resume_notarize_artefact_missing(
     sekrit_identity,
 ):
     """If the distribution artefact doesn't exist, notarization cannot be resumed."""
-
     # Attempting to resume notarization when there's no pre-existing artefact raises an
     # error.
     with pytest.raises(

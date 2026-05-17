@@ -148,16 +148,16 @@ class RunAppMixin:
         :param app: The app to be launched
         :param popen: The Popen object for the stream we are monitoring; this Popen
             process will be closed after log streaming completes.
-        :param clean_filter: The log cleaning filter to use; see ``LogFilter``
-            for details.
+        :param clean_filter: The log cleaning filter to use; see ``LogFilter`` for
+            details.
         :param clean_output: Should the cleaned output be presented to the user?
-        :param stop_func: (Optional) A function that will be invoked to determine
-            if the log stream should be terminated.
-        :param log_stream: Is this a log stream, rather than a literal app stream?
-            On some platforms (especially mobile), we monitor a log stream,
-            rather that the output of the app itself. If this case, the cleanup
-            process is different, as the reported exit status of the popen object
-            is of the log, not the app itself.
+        :param stop_func: (Optional) A function that will be invoked to determine if the
+            log stream should be terminated.
+        :param log_stream: Is this a log stream, rather than a literal app stream? On
+            some platforms (especially mobile), we monitor a log stream, rather that the
+            output of the app itself. If this case, the cleanup process is different, as
+            the reported exit status of the popen object is of the log, not the app
+            itself.
         """
         try:
             exit_filter = LogFilter.test_filter(

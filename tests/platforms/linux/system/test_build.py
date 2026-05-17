@@ -132,7 +132,6 @@ def test_no_license_files(build_command, first_app, tmp_path):
 
 def test_specified_license_file_is_copied(build_command, first_app, tmp_path):
     """The specified license file is copied if a license file is specified."""
-
     # Build the app
     build_command.build_app(first_app)
 

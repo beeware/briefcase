@@ -15,10 +15,10 @@ def macOS_log_clean_filter(line):
     Any system or stub messages are ignored; all logging prefixes are stripped.
 
     :param line: The raw line from the system log
-    :returns: A tuple, containing (a) the log line, stripped of any system
-        logging context, and (b) a boolean indicating if the message should be
-        included for analysis purposes (i.e., it's Python content, not a system
-        message). Returns a single ``None`` if the line should be dumped.
+    :returns: A tuple, containing (a) the log line, stripped of any system logging
+        context, and (b) a boolean indicating if the message should be included for
+        analysis purposes (i.e., it's Python content, not a system message). Returns a
+        single ``None`` if the line should be dumped.
     """
     if line.startswith(
         (

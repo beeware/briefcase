@@ -67,14 +67,16 @@ def get_process_id_by_command(
     command: str = "",
     console: Console | None = None,
 ) -> int | None:
-    """Find a Process ID (PID) a by its command. If multiple processes are found, then
-    the most recently created process ID is returned.
+    """Find a Process ID (PID) a by its command.
+
+    If multiple processes are found, then the most recently created process ID is
+    returned.
 
     :param command_list: list of a command's fully qualified path and its arguments.
-    :param command: a partial or complete fully-qualified filepath to a command.
-        This is primarily intended for use on macOS where the `open` command
-        takes a filepath to a directory for an application; therefore, the actual
-        running process will be running a command within that directory.
+    :param command: a partial or complete fully-qualified filepath to a command. This is
+        primarily intended for use on macOS where the `open` command takes a filepath to
+        a directory for an application; therefore, the actual running process will be
+        running a command within that directory.
     :param console: optional console to show messages about process matching to users
     :returns: PID if found else None
     """
@@ -163,8 +165,8 @@ class PopenOutputStreamer(threading.Thread):
         :param console: console for printing to console
         :param capture_output: Retain process output in ``output_queue`` via a
             ``queue.Queue`` instead of printing to console
-        :param filter_func: a callable that will be invoked on every line of output
-            that is streamed; see ``Subprocess.stream_output`` for details
+        :param filter_func: a callable that will be invoked on every line of output that
+            is streamed; see ``Subprocess.stream_output`` for details
         """
         super().__init__(name=f"{label} output streamer", daemon=True)
 
@@ -296,6 +298,7 @@ class Subprocess(Tool):
 
     def prepare(self):
         """Perform any environment preparation required to execute processes."""
+
         # This is a no-op; the native subprocess environment is ready-to-use.
 
     @contextlib.contextmanager
@@ -310,11 +313,11 @@ class Subprocess(Tool):
     def full_env(self, overrides: dict[str, str | None] | None) -> dict[str, str]:
         """Generate the full environment in which the command will run.
 
-        If an env var in `overrides` is set to `None`, then that env var
-        will be altogether absent in the returned environment.
+        If an env var in `overrides` is set to `None`, then that env var will be
+        altogether absent in the returned environment.
 
-        :param overrides: The environment passed to the subprocess call;
-            can be `None` if there are no explicit environment changes.
+        :param overrides: The environment passed to the subprocess call; can be `None`
+            if there are no explicit environment changes.
         """
         env = self.tools.os.environ.copy()
         if overrides:
@@ -536,7 +539,6 @@ class Subprocess(Tool):
         :raises ValueError: if a filter function is provided when in non-streaming mode.
         :returns: ``CompletedProcess`` for invoked process
         """
-
         # Stream the output unless the caller explicitly disables it. When a
         # caller sets stream_output=False, then ensure_console_is_safe() will
         # disable any dynamic console elements while the command runs.
@@ -740,8 +742,9 @@ class Subprocess(Tool):
         stop_func: Callable[[], bool] = lambda: False,
         filter_func: Callable[[str], Iterator[str]] | None = None,
     ):
-        """Stream the output of a Popen process until the process exits. If the user
-        sends CTRL+C, the process will be terminated.
+        """Stream the output of a Popen process until the process exits.
+
+        If the user sends CTRL+C, the process will be terminated.
 
         This is useful for starting a process via Popen such as tailing a log file, then
         initiating a non-blocking process that populates that log, and finally streaming
@@ -861,8 +864,8 @@ class Subprocess(Tool):
     def _log_environment(self, overrides: dict[str, str] | None):
         """Log the environment variables overrides prior to command execution.
 
-        :param overrides: The explicit environment passed to the subprocess call;
-            can be `None` if there are no explicit environment changes.
+        :param overrides: The explicit environment passed to the subprocess call; can be
+            `None` if there are no explicit environment changes.
         """
         if overrides:
             self._log("Environment Overrides:")

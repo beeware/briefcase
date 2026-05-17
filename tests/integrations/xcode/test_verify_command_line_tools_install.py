@@ -19,7 +19,6 @@ def test_verify_command_line_tools_install(mock_tools):
 
 def test_reverify_command_line_tools_install(mock_tools):
     """A second call to verify is a no-op."""
-
     xcode_cli = mock.MagicMock()
     mock_tools.xcode_cli = xcode_cli
 

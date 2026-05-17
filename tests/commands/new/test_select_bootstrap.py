@@ -171,7 +171,6 @@ def test_other_frameworks_all_installed(new_command, capsys, monkeypatch):
 
 def test_question_sequence_with_overrides(new_command, monkeypatch):
     """The answer to the bootstrap question can be overridden."""
-
     bootstrap_class = new_command.select_bootstrap(
         project_overrides={"bootstrap": "Toga"}
     )
@@ -181,7 +180,6 @@ def test_question_sequence_with_overrides(new_command, monkeypatch):
 
 def test_question_sequence_with_bad_bootstrap_override(new_command, monkeypatch):
     """A bad override for the bootstrap uses user input instead."""
-
     # Simulate user selecting Toga from the menu after bad override.
     new_command.console.values = [
         "1",  # Toga
@@ -196,7 +194,6 @@ def test_question_sequence_with_bad_bootstrap_override(new_command, monkeypatch)
 
 def test_question_sequence_with_no_user_input(new_command):
     """If no user input is provided, all user inputs are taken as default."""
-
     new_command.console.input_enabled = False
 
     bootstrap_class = new_command.select_bootstrap(project_overrides={})

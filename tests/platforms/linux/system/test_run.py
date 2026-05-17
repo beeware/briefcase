@@ -232,7 +232,6 @@ def test_supported_host_os_docker(
 
 def test_run_gui_app(run_command, first_app, sub_kw, tmp_path):
     """A bootstrap binary for a GUI app can be started."""
-
     # Set up tool cache
     run_command.verify_app_tools(app=first_app)
 
@@ -316,7 +315,6 @@ def test_run_gui_app_passthrough(run_command, first_app, sub_kw, tmp_path):
 
 def test_run_gui_app_failed(run_command, first_app, sub_kw, tmp_path):
     """If there's a problem starting the GUI app, an exception is raised."""
-
     # Set up tool cache
     run_command.verify_app_tools(app=first_app)
 
@@ -498,7 +496,6 @@ def test_run_app_docker(run_command, first_app, sub_kw, tmp_path, monkeypatch):
 @pytest.mark.skipif(sys.platform == "win32", reason="Windows paths can't be dockerized")
 def test_run_app_failed_docker(run_command, first_app, sub_kw, tmp_path, monkeypatch):
     """If there's a problem starting the app in Docker, an exception is raised."""
-
     # Trigger to run in Docker
     run_command.target_image = first_app.target_image = "best/distro"
 

@@ -49,7 +49,6 @@ def test_output_debug(mock_sub, streaming_process, sleep_zero, capsys):
 def test_keyboard_interrupt(mock_sub, streaming_process, capsys):
     """KeyboardInterrupt is suppressed if user sends CTRL+C and all output is
     printed."""
-
     send_ctrl_c = mock.MagicMock()
     send_ctrl_c.side_effect = [False, KeyboardInterrupt]
 
@@ -108,7 +107,6 @@ def test_stop_func(mock_sub, streaming_process, stop_func_ret_val, sleep_zero, c
 def test_stuck_streamer(mock_sub, streaming_process, sleep_zero, monkeypatch, capsys):
     """Following a KeyboardInterrupt, output streaming returns even if the output
     streamer becomes stuck."""
-
     # Mock time.time() to return times that monotonically increase by 1s
     # every time it is invoked. This allows us to simulate the progress of
     # time much faster than the actual calls to time.sleep() would.

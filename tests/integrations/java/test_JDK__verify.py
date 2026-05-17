@@ -203,7 +203,6 @@ def test_macos_provided_overrides_tool_java_home(mock_tools, capsys):
 
 def test_valid_provided_java_home(mock_tools, capsys):
     """If a valid JAVA_HOME is provided, it is used."""
-
     # Setup explicit JAVA_HOME
     mock_tools.os.environ = {"JAVA_HOME": "/path/to/java"}
 
