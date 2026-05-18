@@ -504,7 +504,7 @@ def test_successful_jdk_download(
     # Console output contains a warning about the bad JDK location
     output = capsys.readouterr()
     assert output.err == ""
-    assert "** WARNING: JAVA_HOME does not point to a Java 17 JDK" in output.out
+    assert "WARNING: JAVA_HOME does not point to a Java 17 JDK" in output.out
 
     # Download was invoked
     mock_tools.file.download.assert_called_with(
