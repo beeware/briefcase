@@ -148,7 +148,10 @@ def test_docker_failure(mock_tools, user_mapping_run_calls, capsys):
 
     # console output
     output = capsys.readouterr()
-    assert "** WARNING: Unable to determine if Docker is installed" in output.out
+    assert (
+        "**            WARNING: Unable to determine if Docker is installed"
+        in output.out
+    )
     assert output.err == ""
 
 
@@ -185,7 +188,10 @@ def test_docker_unknown_version(mock_tools, user_mapping_run_calls, capsys):
 
     # console output
     output = capsys.readouterr()
-    assert "** WARNING: Unable to determine the version of Docker" in output.out
+    assert (
+        "**             WARNING: Unable to determine the version of Docker"
+        in output.out
+    )
     assert output.err == ""
 
 
