@@ -19,7 +19,7 @@ else:  # pragma: no-cover-if-gte-py311
     import tomli as tomllib
 
 from briefcase.bootstraps import EmptyBootstrap
-from briefcase.config import make_class_name, validate_url
+from briefcase.config import APP_NAME_SPEC, make_class_name, validate_url
 from briefcase.exceptions import BriefcaseCommandError
 
 
@@ -108,31 +108,40 @@ class ConvertCommand(NewCommand):
         """
         intro = (
             "We need a name that can serve as a machine-readable Python package name "
-            "for your application. This name must be PEP508-compliant - that means the "
-            "name may only contain letters, numbers, hyphens and underscores; it can't "
-            "contain spaces or punctuation, and it can't start with a hyphen or "
-            "underscore."
+            f"for your application. {APP_NAME_SPEC}"
         )
 
         default = "hello-world"
-        if (
-            "name" in self.pep621_data
-            and is_valid_app_name(self.pep621_data["name"])
-            and override_value is None
-        ):
-            app_name = canonicalize_name(self.pep621_data["name"])
+
+        project_name = self.pep621_data.get("name")
+        if project_name and is_valid_app_name(project_name) and override_value is None:
+            # Project name is usable as-is (e.g., "foobar", "foo-bar")
             self.console.divider(title="App name")
             self.console.prompt()
             self.console.prompt(
-                f"Using value from PEP621 formatted pyproject.toml {app_name!r}"
+                f"Using value from PEP621 formatted pyproject.toml {project_name!r}"
             )
-            return app_name
-
-        if is_valid_app_name(self.base_path.name):  # Directory name is normalised
-            default = canonicalize_name(self.base_path.name)
+            return project_name
+        elif project_name and is_valid_app_name(
+            canonicalized_name := canonicalize_name(project_name)
+        ):
+            # Canonicalized project name is valid
+            # (e.g., "test.name" -> "test-name", "test-app_name" -> "test-app-name")
+            intro += (
+                "\n\nBased on the project name from your PEP621 formatted "
+                f"pyproject.toml, we suggest an app name of '{canonicalized_name}', "
+                "but you can use another name if you want."
+            )
+            default = canonicalized_name
+        elif is_valid_app_name(
+            canonicalized_name := canonicalize_name(self.base_path.name)
+        ):
+            # Canonicalized project name isn't valid
+            # Fall back to canonicalized directory name
+            default = canonicalized_name
             intro += (
                 "\n\n"
-                f"Based on your PEP508 formatted directory name, we suggest an "
+                f"Based on your canonicalized directory name, we suggest an "
                 f"app name of '{default}', but you can use another name if you want."
             )
 

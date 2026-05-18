@@ -33,10 +33,18 @@ from .exceptions import BriefcaseConfigError, InvalidVersionError
 # https://github.com/pypa/packaging/blob/24.0/src/packaging/_tokenizer.py#L80
 PEP508_NAME_RE = re.compile(r"^([a-zA-Z0-9]|[a-zA-Z0-9][a-zA-Z0-9._-]*[a-zA-Z0-9])$")
 
+APP_NAME_SPEC = (
+    "App names must not be reserved keywords such as 'and', 'for' and "
+    "'while'. They must also be valid Python identifiers when hyphens "
+    "are replaced by underscores, and PEP508 compliant (i.e., they can "
+    "only include letters, numbers, '-' and '_'; must start with a letter; "
+    "and cannot end with '-' or '_')."
+)
+
 
 def is_valid_pep508_name(app_name):
     """Determine if the name is valid by PEP508 rules."""
-    return PEP508_NAME_RE.match(app_name)
+    return PEP508_NAME_RE.fullmatch(app_name)
 
 
 def is_reserved_keyword(app_name):
@@ -44,8 +52,17 @@ def is_reserved_keyword(app_name):
     return keyword.iskeyword(app_name.lower()) or app_name.lower() in RESERVED_WORDS
 
 
+def get_module_name(app_name: str) -> str:
+    return app_name.replace("-", "_")
+
+
 def is_valid_app_name(app_name):
-    return not is_reserved_keyword(app_name) and is_valid_pep508_name(app_name)
+    module_name = get_module_name(app_name)
+    return (
+        not is_reserved_keyword(app_name)
+        and is_valid_pep508_name(module_name)
+        and module_name.isidentifier()
+    )
 
 
 def make_class_name(formal_name):
@@ -487,7 +504,7 @@ class AppConfig(BaseConfig):
         This is derived from the name, but:
         * all `-` have been replaced with `_`.
         """
-        return self.app_name.replace("-", "_")
+        return get_module_name(self.app_name)
 
     @property
     def bundle_name(self):
@@ -638,12 +655,7 @@ class DraftAppConfig(AppConfig):
 
         if not is_valid_app_name(self.app_name):
             raise BriefcaseConfigError(
-                f"{self.app_name!r} is not a valid app name."
-                f"\n\n"
-                "App names must not be reserved keywords such as 'and', 'for' and "
-                "'while'. They must also be PEP508 compliant (i.e., they can only "
-                "include letters, numbers, '-' and '_'; must start with a letter; "
-                "and cannot end with '-' or '_')."
+                f"{self.app_name!r} is not a valid app name.\n\n{APP_NAME_SPEC}"
             )
 
         if not is_valid_bundle_identifier(self.bundle_identifier):
