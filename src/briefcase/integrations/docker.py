@@ -36,48 +36,6 @@ version {docker_version}. Visit:
 
 to download and install an updated version of Docker.
 """
-    UNKNOWN_DOCKER_VERSION_WARNING = """
-*************************************************************************
-** WARNING: Unable to determine the version of Docker                  **
-*************************************************************************
-
-    Briefcase will proceed, assuming everything is OK. If you
-    experience problems, this is almost certainly the cause of those
-    problems.
-
-    Please report this as a bug at:
-
-      https://github.com/beeware/briefcase/issues/new
-
-    In your report, please including the output from running:
-
-      $ docker --version
-
-    from the command prompt.
-
-*************************************************************************
-"""
-    DOCKER_INSTALLATION_STATUS_UNKNOWN_WARNING = """
-*************************************************************************
-** WARNING: Unable to determine if Docker is installed                 **
-*************************************************************************
-
-    Briefcase will proceed, assuming everything is OK. If you
-    experience problems, this is almost certainly the cause of those
-    problems.
-
-    Please report this as a bug at:
-
-      https://github.com/beeware/briefcase/issues/new
-
-    In your report, please including the output from running:
-
-      $ docker --version
-
-    from the command prompt.
-
-*************************************************************************
-"""
     DOCKER_NOT_INSTALLED_ERROR = """\
 Briefcase requires Docker, but it is not installed (or is not on your PATH).
 Visit:
@@ -187,9 +145,43 @@ See https://docs.docker.com/go/buildx/ to install the buildx plugin.
                     )
                 )
         except (InvalidVersion, IndexError):
-            tools.console.warning(cls.UNKNOWN_DOCKER_VERSION_WARNING)
+            tools.console.warning_banner(
+                "Unable to determine the version of Docker",
+                """
+                    Briefcase will proceed, assuming everything is OK. If you
+                    experience problems, this is almost certainly the cause of those
+                    problems.
+
+                    Please report this as a bug at:
+
+                        https://github.com/beeware/briefcase/issues/new
+
+                    In your report, please including the output from running:
+
+                        $ docker --version
+
+                    from the command prompt.
+                """,
+            )
         except subprocess.CalledProcessError:
-            tools.console.warning(cls.DOCKER_INSTALLATION_STATUS_UNKNOWN_WARNING)
+            tools.console.warning_banner(
+                "Unable to determine if Docker is installed",
+                """
+                    Briefcase will proceed, assuming everything is OK. If you
+                    experience problems, this is almost certainly the cause of those
+                    problems.
+
+                    Please report this as a bug at:
+
+                        https://github.com/beeware/briefcase/issues/new
+
+                    In your report, please including the output from running:
+
+                        $ docker --version
+
+                    from the command prompt.
+                """,
+            )
         except OSError as e:
             # Docker executable doesn't exist
             raise BriefcaseCommandError(
