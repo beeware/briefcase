@@ -1229,9 +1229,9 @@ Did you run Briefcase in a project directory that contains {filename.name!r}?"""
                     self.console.warning_banner(
                         "Unable to update template",
                         """
-                            Briefcase is unable the update the application template.
+                            Briefcase is unable to update the application template.
                             This may be because your computer is currently offline.
-                            Briefcase will use existing template without updating.
+                            Briefcase will use the existing template without updating.
 
                         """,
                     )
