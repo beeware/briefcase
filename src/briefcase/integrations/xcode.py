@@ -135,12 +135,9 @@ you can re-run Briefcase.
                     else:
                         # Version number is acceptable
                         return
-
-                tools.console.warning(
+                tools.console.warning_banner(
+                    "Unable to determine the version of Xcode that is installed",
                     """
-*************************************************************************
-** WARNING: Unable to determine the version of Xcode that is installed **
-*************************************************************************
 
     Briefcase will proceed, assuming everything is OK. If you experience
     problems, this is almost certainly the cause of those problems.
@@ -155,8 +152,7 @@ you can re-run Briefcase.
 
     from the command prompt.
 
-*************************************************************************
-"""
+    """,
                 )
 
         except subprocess.CalledProcessError as e:
@@ -265,11 +261,9 @@ to continue, and re-run Briefcase once that installation is complete.
             )
         except subprocess.CalledProcessError as e:
             if e.returncode != 1:
-                tools.console.warning(
+                tools.console.warning_banner(
+                    "Unable to determine if Xcode is installed",
                     """
-*************************************************************************
-** WARNING: Unable to determine if Xcode is installed                  **
-*************************************************************************
 
     Briefcase will proceed, assuming everything is OK. If you experience
     problems, this is almost certainly the cause of those problems.
@@ -284,8 +278,7 @@ to continue, and re-run Briefcase once that installation is complete.
 
     from the command prompt.
 
-*************************************************************************
-"""
+""",
                 )
 
     @classmethod
@@ -343,11 +336,9 @@ You need to accept the Xcode license before Briefcase can package your app.
 """
                         ) from e
                     else:
-                        tools.console.warning(
+                        tools.console.warning_banner(
+                            "Unable to determine if the Xcode license was accepted",
                             """
-*************************************************************************
-** WARNING: Unable to determine if the Xcode license has been accepted **
-*************************************************************************
 
     Briefcase will proceed, assuming everything is OK. If you experience
     problems, this is almost certainly the cause of those problems.
@@ -362,16 +353,13 @@ You need to accept the Xcode license before Briefcase can package your app.
 
     from the command prompt.
 
-*************************************************************************
-"""
+    """,
                         )
             else:
                 tools.subprocess.output_error(e)
-                tools.console.warning(
+                tools.console.warning_banner(
+                    "Unable to determine if the Xcode license has been accepted",
                     """
-*************************************************************************
-** WARNING: Unable to determine if the Xcode license has been accepted **
-*************************************************************************
 
     Briefcase will proceed, assuming everything is OK. If you experience
     problems, this is almost certainly the cause of those problems.
@@ -386,8 +374,7 @@ You need to accept the Xcode license before Briefcase can package your app.
 
     from the command prompt.
 
-*************************************************************************
-"""
+""",
                 )
 
 

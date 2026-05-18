@@ -1388,10 +1388,9 @@ password:
                 raise BriefcaseCommandError(
                     "Can't notarize an app with an ad-hoc signing identity"
                 )
-            self.console.warning("""
-*************************************************************************
-** WARNING: Signing with an ad-hoc identity                            **
-*************************************************************************
+            self.tools.console.warning_banner(
+                "Signing with an ad-hoc identity",
+                """
 
     This app is being signed with an ad-hoc identity. The resulting
     app will run on this computer, but will not run on anyone else's
@@ -1402,9 +1401,8 @@ password:
     select the developer identity associated with that certificate
     when running 'briefcase package'.
 
-*************************************************************************
-
-""")
+    """,
+            )
             self.console.info("Signing app with ad-hoc identity...")
         else:
             # If we're signing, and notarization isn't explicitly disabled,

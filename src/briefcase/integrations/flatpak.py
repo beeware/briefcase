@@ -44,11 +44,9 @@ class Flatpak(Tool):
                 else:
                     raise ValueError(f"Unexpected tool name {parts[0]}") from None
             except (ValueError, IndexError):
-                tools.console.warning(
-                    """\
-*************************************************************************
-** WARNING: Unable to determine the version of Flatpak                 **
-*************************************************************************
+                tools.console.warning_banner(
+                    "Unable to determine the version of Flatpak",
+                    """
 
     Briefcase will proceed, assuming everything is OK. If you
     experience problems, this is almost certainly the cause of those
@@ -64,8 +62,7 @@ class Flatpak(Tool):
 
     from the command prompt.
 
-*************************************************************************
-"""
+""",
                 )
 
         except OSError as e:
@@ -102,11 +99,9 @@ You must install both flatpak and flatpak-builder.
                 else:
                     raise ValueError(f"Unexpected tool name {parts[0]}")
             except (ValueError, IndexError):
-                tools.console.warning(
-                    """\
-*************************************************************************
-** WARNING: Unable to determine the version of flatpak-builder         **
-*************************************************************************
+                tools.console.warning_banner(
+                    "Unable to determine the version of flatpak-builder",
+                    """
 
     Briefcase will proceed, assuming everything is OK. If you
     experience problems, this is almost certainly the cause of those
@@ -122,8 +117,7 @@ You must install both flatpak and flatpak-builder.
 
     from the command prompt.
 
-*************************************************************************
-"""
+""",
                 )
 
         except OSError as e:

@@ -95,23 +95,16 @@ class LinuxAppImagePassiveMixin(LinuxMixin):
     def finalize_app_config(self, app: DraftAppConfig, **kwargs) -> FinalizedAppConfig:
         """If we're *not* using Docker, warn the user about portability."""
         if not self.use_docker:
-            self.console.warning("""\
-*************************************************************************
-** WARNING: Building a Local AppImage!                                 **
-*************************************************************************
-
-    You are building an AppImage outside Docker. The resulting AppImage
-    will work, but will not be as portable as a Docker-based AppImage.
-    Any `manylinux` setting will be ignored.
-
-*************************************************************************
-""")
-
-        self.console.warning("""\
-*************************************************************************
-** WARNING: Use of AppImage is not recommended!                        **
-*************************************************************************
-
+            self.tools.console.warning_banner(
+                "Building a Local AppImage!",
+                """
+                You are building an AppImage outside Docker. The resulting AppImage
+                will work, but will not be as portable as a Docker-based AppImage.
+                Any `manylinux` setting will be ignored.""",
+            )
+        self.tools.console.warning_banner(
+            "Use of AppImage is not recommended!",
+            """
     Briefcase supports AppImage in a best-effort capacity. It has proven
     to be highly unreliable as a distribution platform. AppImages cannot
     use pre-compiled binary wheels, and has significant problems with
@@ -119,9 +112,8 @@ class LinuxAppImagePassiveMixin(LinuxMixin):
 
     Consider using system packages or Flatpak for Linux app
     distribution.
-
-*************************************************************************
-""")
+    """,
+        )
         return super().finalize_app_config(app, **kwargs)
 
 
@@ -225,11 +217,9 @@ class LinuxAppImageCreateCommand(
         # On Windows, the support path is co-mingled with app content.
         # This means updating the support package is imperfect.
         # Warn the user that there could be problems.
-        self.console.warning("""
-*************************************************************************
-** WARNING: Support package update may be imperfect                    **
-*************************************************************************
-
+        self.tools.console.warning_banner(
+            "Support package update may be imperfect",
+            """
     Support packages in Linux AppImages are overlaid with app content,
     so it isn't possible to remove all old support files before
     installing new ones.
@@ -238,9 +228,8 @@ class LinuxAppImageCreateCommand(
     existing support package content. This *should* work; however,
     ensure a reproducible release artefacts, it is advisable to
     perform a clean app build before release.
-
-*************************************************************************
-""")
+    """,
+        )
 
 
 class LinuxAppImageUpdateCommand(LinuxAppImageCreateCommand, UpdateCommand):

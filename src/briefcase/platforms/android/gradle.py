@@ -194,10 +194,9 @@ class GradleCreateCommand(GradleMixin, CreateCommand):
         try:
             dependencies = app.build_gradle_dependencies
         except AttributeError:
-            self.console.warning("""
-*************************************************************************
-** WARNING: App does not define build_gradle_dependencies              **
-*************************************************************************
+            self.tools.console.warning_banner(
+                "App does not define build_gradle_dependencies",
+                """
 
     The Android configuration for this app does not contain a
     `build_gradle_dependencies` definition. Briefcase will use a default
@@ -216,9 +215,8 @@ class GradleCreateCommand(GradleMixin, CreateCommand):
 
     for more information.
 
-*************************************************************************
-
-""")
+""",
+            )
             dependencies = [
                 "androidx.appcompat:appcompat:1.0.2",
                 "androidx.constraintlayout:constraintlayout:1.1.3",
