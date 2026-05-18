@@ -71,6 +71,19 @@ def test_simctl_output_parse_error(mock_tools, simulator):
         get_simulators(mock_tools, "iOS", simulator_location=simulator)
 
 
+def test_simctl_install_progress_before_json(mock_tools, simulator):
+    """Installation progress before simctl JSON output can be ignored."""
+    mock_tools.subprocess.check_output.return_value = (
+        "Install Started\n"
+        "1%.........20.........40.........60.........80.........Install Succeeded\n"
+        f"{simctl_result('no-runtimes')}"
+    )
+
+    simulators = get_simulators(mock_tools, "iOS", simulator_location=simulator)
+
+    assert simulators == {}
+
+
 def test_no_runtimes(mock_tools, simulator):
     """If there are no runtimes available, no simulators will be found."""
     mock_tools.subprocess.check_output.return_value = simctl_result("no-runtimes")

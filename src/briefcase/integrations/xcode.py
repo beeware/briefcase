@@ -8,7 +8,7 @@ from pathlib import Path
 
 from briefcase.exceptions import BriefcaseCommandError, CommandOutputParseError
 from briefcase.integrations.base import Tool, ToolCache
-from briefcase.integrations.subprocess import json_parser
+from briefcase.integrations.subprocess import JsonT, json_parser
 
 
 class DeviceState(enum.Enum):
@@ -16,6 +16,21 @@ class DeviceState(enum.Enum):
     BOOTED = 1
     SHUTTING_DOWN = 10
     UNKNOWN = 99
+
+
+def simctl_json_parser(simctl_output: str) -> JsonT:
+    """Parse JSON output from ``simctl``.
+
+    On first use after installing or updating simulator runtimes, ``simctl`` can prefix
+    its JSON payload with installation progress output.
+
+    :param simctl_output: command output to parse as JSON
+    """
+    json_start = simctl_output.find("{")
+    if json_start > 0:
+        simctl_output = simctl_output[json_start:]
+
+    return json_parser(simctl_output)
 
 
 class Xcode(Tool):
@@ -427,7 +442,7 @@ and install the simulator.
 
     try:
         simctl_data = tools.subprocess.parse_output(
-            json_parser,
+            simctl_json_parser,
             ["xcrun", "simctl", "list", "-j"],
         )
 
@@ -479,7 +494,7 @@ def get_device_state(tools: ToolCache, udid: str) -> str:
     """
     try:
         simctl_data = tools.subprocess.parse_output(
-            json_parser,
+            simctl_json_parser,
             ["xcrun", "simctl", "list", "devices", "-j", udid],
         )
 
