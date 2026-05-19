@@ -222,7 +222,7 @@ def test_installed_unknown_flatpak_version(mock_tools, flatpak_version, capsys):
     )
 
     output = capsys.readouterr()
-    assert "** WARNING: Unable to determine the version of Flatpak" in output.out
+    assert "WARNING: Unable to determine the version of Flatpak" in output.out
     assert output.err == ""
 
 
@@ -257,6 +257,6 @@ def test_installed_unknown_builder_version(mock_tools, builder_version, capsys):
 
     output = capsys.readouterr()
     assert (
-        "** WARNING: Unable to determine the version of flatpak-builder" in output.out
+        "WARNING: Unable to determine the version of flatpak-builder" in output.out
     )
     assert output.err == ""
