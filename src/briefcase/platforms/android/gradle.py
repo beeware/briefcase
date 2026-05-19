@@ -198,24 +198,23 @@ class GradleCreateCommand(GradleMixin, CreateCommand):
                 "App does not define build_gradle_dependencies",
                 """
 
-    The Android configuration for this app does not contain a
-    `build_gradle_dependencies` definition. Briefcase will use a default
-    value of:
+                The Android configuration for this app does not contain a
+                `build_gradle_dependencies` definition. Briefcase will use a default
+                value of:
 
-        build_gradle_dependencies = [
-            "androidx.appcompat:appcompat:1.0.2",
-            "androidx.constraintlayout:constraintlayout:1.1.3",
-            "androidx.swiperefreshlayout:swiperefreshlayout:1.1.0",
-        ]
+                    build_gradle_dependencies = [
+                        "androidx.appcompat:appcompat:1.0.2",
+                        "androidx.constraintlayout:constraintlayout:1.1.3",
+                        "androidx.swiperefreshlayout:swiperefreshlayout:1.1.0",
+                    ]
 
-    You should add this definition to the Android configuration
-    of your project's pyproject.toml file. See:
+                You should add this definition to the Android configuration
+                of your project's pyproject.toml file. See:
 
-        https://briefcase.readthedocs.io/en/stable/reference/platforms/android/gradle.html#build-gradle-dependencies
+                    https://briefcase.readthedocs.io/en/stable/reference/platforms/android/gradle.html#build-gradle-dependencies
 
-    for more information.
-
-""",
+                for more information.
+                """,
             )
             dependencies = [
                 "androidx.appcompat:appcompat:1.0.2",

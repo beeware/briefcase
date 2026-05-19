@@ -48,21 +48,21 @@ class Flatpak(Tool):
                     "Unable to determine the version of Flatpak",
                     """
 
-    Briefcase will proceed, assuming everything is OK. If you
-    experience problems, this is almost certainly the cause of those
-    problems.
+                    Briefcase will proceed, assuming everything is OK.
+                    If you experience problems,
+                    this is almost certainly the cause of those problems.
 
-    Please report this as a bug at:
+                    Please report this as a bug at:
 
-      https://github.com/beeware/briefcase/issues/new
+                    https://github.com/beeware/briefcase/issues/new
 
-    In your report, please including the output from running:
+                    In your report, please including the output from running:
 
-      flatpak --version
+                    flatpak --version
 
-    from the command prompt.
+                    from the command prompt.
 
-""",
+                    """,
                 )
 
         except OSError as e:
@@ -103,21 +103,21 @@ You must install both flatpak and flatpak-builder.
                     "Unable to determine the version of flatpak-builder",
                     """
 
-    Briefcase will proceed, assuming everything is OK. If you
-    experience problems, this is almost certainly the cause of those
-    problems.
+                    Briefcase will proceed, assuming everything is OK.
+                    If you experience problems,
+                    this is almost certainly the cause of those problems.
 
-    Please report this as a bug at:
+                    Please report this as a bug at:
 
-      https://github.com/beeware/briefcase/issues/new
+                    https://github.com/beeware/briefcase/issues/new
 
-    In your report, please including the output from running:
+                    In your report, please including the output from running:
 
-      flatpak-builder --version
+                    flatpak-builder --version
 
-    from the command prompt.
+                    from the command prompt.
 
-""",
+                    """,
                 )
 
         except OSError as e:

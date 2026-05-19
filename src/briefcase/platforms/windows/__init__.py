@@ -111,11 +111,13 @@ class WindowsMixin(_MixinBase):
                     self.tools.console.warning_banner(
                         "Possible architecture mismatch",
                         f"""
-The build machine is {self.tools.host_arch},but Briefcase on Windows only
-supports x86-64 and ARM64 installers.
+                        The build machine is {self.tools.host_arch},
+                        but Briefcase on Windows only
+                        supports x86-64 and ARM64 installers.
 
-You are responsible for ensuring that the content of external_package_path
-is compatible with supported platforms.""",
+                        You are responsible for ensuring that the
+                        content of external_package_path
+                        is compatible with supported platforms.""",
                     )
             else:
                 raise UnsupportedHostError(
