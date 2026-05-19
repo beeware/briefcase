@@ -216,6 +216,7 @@ def test_valid_app_name(name):
         "myApp-",  # end hyphen
         "_myApp",  # initial underscore
         "myApp_",  # end underscore
+        "2myApp",  # leading digit
     ],
 )
 def test_invalid_app_name(name):
