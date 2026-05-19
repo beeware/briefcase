@@ -205,6 +205,19 @@ installation is complete.
 """
                 ) from e
 
+        try:
+        # Check for iOS simulated devices
+        result = subprocess.run(['xcrun', 'simctl', 'list', 'devices'], 
+                                capture_output=True, text=True, check=True)
+        output = result.stdout
+        if re.search(r"== Devices ==\s*$", output):
+            raise BriefcaseCommandError(
+                preamble = """\
+There are no Apple Simulator Control devices installed.  They are usually
+part of the Xcode iOS Component installation.  It can be installed
+from the Xcode GUI, settings -> Components -> iOS.
+"""
+            ) from e
 
 class XcodeCliTools(Tool):
     name = "xcode_cli"
