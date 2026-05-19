@@ -44,28 +44,25 @@ class Flatpak(Tool):
                 else:
                     raise ValueError(f"Unexpected tool name {parts[0]}") from None
             except (ValueError, IndexError):
-                tools.console.warning(
-                    """\
-*************************************************************************
-** WARNING: Unable to determine the version of Flatpak                 **
-*************************************************************************
+                tools.console.warning_banner(
+                    "Unable to determine the version of Flatpak",
+                    """
 
-    Briefcase will proceed, assuming everything is OK. If you
-    experience problems, this is almost certainly the cause of those
-    problems.
+                    Briefcase will proceed, assuming everything is OK.
+                    If you experience problems,
+                    this is almost certainly the cause of those problems.
 
-    Please report this as a bug at:
+                    Please report this as a bug at:
 
-      https://github.com/beeware/briefcase/issues/new
+                    https://github.com/beeware/briefcase/issues/new
 
-    In your report, please including the output from running:
+                    In your report, please including the output from running:
 
-      flatpak --version
+                    flatpak --version
 
-    from the command prompt.
+                    from the command prompt.
 
-*************************************************************************
-"""
+                    """,
                 )
 
         except OSError as e:
@@ -102,28 +99,25 @@ You must install both flatpak and flatpak-builder.
                 else:
                     raise ValueError(f"Unexpected tool name {parts[0]}")
             except (ValueError, IndexError):
-                tools.console.warning(
-                    """\
-*************************************************************************
-** WARNING: Unable to determine the version of flatpak-builder         **
-*************************************************************************
+                tools.console.warning_banner(
+                    "Unable to determine the version of flatpak-builder",
+                    """
 
-    Briefcase will proceed, assuming everything is OK. If you
-    experience problems, this is almost certainly the cause of those
-    problems.
+                    Briefcase will proceed, assuming everything is OK.
+                    If you experience problems,
+                    this is almost certainly the cause of those problems.
 
-    Please report this as a bug at:
+                    Please report this as a bug at:
 
-      https://github.com/beeware/briefcase/issues/new
+                    https://github.com/beeware/briefcase/issues/new
 
-    In your report, please including the output from running:
+                    In your report, please including the output from running:
 
-      flatpak-builder --version
+                    flatpak-builder --version
 
-    from the command prompt.
+                    from the command prompt.
 
-*************************************************************************
-"""
+                    """,
                 )
 
         except OSError as e:

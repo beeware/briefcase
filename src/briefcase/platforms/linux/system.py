@@ -394,18 +394,16 @@ class LinuxSystemMixin(LinuxMixin):
         ) = self._system_requirement_tools(app)
 
         if not (system_verify and self.tools.shutil.which(system_verify[0])):
-            self.console.warning("""
-*************************************************************************
-** WARNING: Can't verify system packages                               **
-*************************************************************************
-
-    Briefcase doesn't know how to verify the installation of system
-    packages on your Linux distribution. If you have any problems
-    building this app, ensure that the packages listed in the app's
-    `system_requires` setting have been installed.
-
-*************************************************************************
-""")
+            self.tools.console.warning_banner(
+                "WARNING: Can't verify system packages",
+                """
+                Briefcase doesn't know how to verify the installation
+                of system packages on your Linux distribution.
+                If you have any problems building this app,
+                ensure that the packages listed in the app's
+                `system_requires` setting have been installed.
+                """,
+            )
             return
 
         # Run a check for each package listed in the app's system_requires,
@@ -677,19 +675,18 @@ Install Docker Engine and try again or run Briefcase on an Arch host system.
             self.tools.sys.version_info.major,
             self.tools.sys.version_info.minor,
         ):
-            self.console.warning(f"""
-*************************************************************************
-** WARNING: Python version mismatch!                                   **
-*************************************************************************
+            self.tools.console.warning_banner(
+                "Python version mismatch!",
+                f"""
+                The system python3 provided by {app.target_image}
+                is {app.python_version_tag}.
+                This is not the same as your local system
+                ({self.python_version_tag}).
 
-    The system python3 provided by {app.target_image} is {app.python_version_tag}.
-    This is not the same as your local system ({self.python_version_tag}).
-
-    Ensure you have tested for Python version compatibility before
-    releasing this app.
-
-*************************************************************************
-""")
+                Ensure you have tested for Python version compatibility
+                before releasing this app.
+                """,
+            )
 
     def verify_system_python(self):
         """Verify that the Python being used to run Briefcase is the default system
