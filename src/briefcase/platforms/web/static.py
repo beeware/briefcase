@@ -117,7 +117,9 @@ class StaticWebBuildCommand(StaticWebMixin, BuildCommand):
         try:
             file_text = target_path.read_text(encoding="utf-8")
         except FileNotFoundError:
-            self.console.warning(f"  Target {filename} not found; skipping inserts.")
+            self.console.warning_banner(
+                message=f"Target {filename} not found; skipping inserts."
+            )
             return
 
         # Each insert slot and its package contributions are processed in sorted order
@@ -183,8 +185,8 @@ class StaticWebBuildCommand(StaticWebMixin, BuildCommand):
                     any_match = True
 
             if not any_match:
-                self.console.warning(
-                    f"  Slot '{insert}' markers not found in {filename}; skipping."
+                self.console.warning_banner(
+                    "", f"Slot '{insert}' markers not found in {filename}; skipping."
                 )
 
         # Save modified content
@@ -212,7 +214,8 @@ class StaticWebBuildCommand(StaticWebMixin, BuildCommand):
         body_insert = "body-python"
 
         # PyScript definitions for insertion:
-        head_content = dedent(f"""\
+        head_content = dedent(
+            f"""\
             <script type="module">
                 // Hide the splash screen when the page is ready.
                 import {{ hooks }} from "https://pyscript.net/releases/{pyscript_version}/core.js";
@@ -223,15 +226,18 @@ class StaticWebBuildCommand(StaticWebMixin, BuildCommand):
 
             <link rel="stylesheet" href="https://pyscript.net/releases/{pyscript_version}/core.css">
             <script type="module" src="https://pyscript.net/releases/{pyscript_version}/core.js"></script>
-            """)
-        body_content = dedent(f"""\
+            """
+        )
+        body_content = dedent(
+            f"""\
             <script type="py" async="false" config="pyscript.toml">
                 import runpy
                 result = runpy.run_module(
                     "{app.app_name}", run_name="__main__", alter_sys=True
                 )
             </script>
-            """)
+            """
+        )
 
         pkg_map_head = inserts.setdefault(target, {}).setdefault(head_insert, {})
         pkg_map_head[package_key] = head_content
@@ -257,11 +263,13 @@ class StaticWebBuildCommand(StaticWebMixin, BuildCommand):
         :param inserts: Nested dict of inserts keyed by target - insert - package.
         """
         # Warn on every legacy usage
-        self.console.warning(
-            f"    {Path(wheel.filename).name}: legacy '/static' CSS file {path} "
-            "detected.\n"
-            "     Static file handling has been deprecated; this file should be "
-            "converted into an insert."
+        self.console.warning_banner(
+            message=f"""
+                {Path(wheel.filename).name}: legacy '/static' CSS file {path} detected.
+
+            Static file handling has been deprecated; this file should be
+            converted into an insert.
+            """
         )
 
         css_text = wheel.read(str(path)).decode("utf-8")
@@ -297,15 +305,20 @@ class StaticWebBuildCommand(StaticWebMixin, BuildCommand):
         rel_inside = "/".join(path.parts[3:])
 
         if not rel_inside or rel_inside.endswith("/"):
-            self.console.warning(
-                f"    {path}: skipping; "
-                "not a valid insert file (empty path or directory)."
+            self.console.warning_banner(
+                message=f"""
+                        {path}:
+                    skipping; not a valid insert file (empty path or directory).
+                """
             )
             return
 
         if "~" not in rel_inside:
-            self.console.warning(
-                f"    {path}: skipping; filename must match '<target>~<insert>'."
+            self.console.warning_banner(
+                message=f"""
+                    {path}:
+                skipping; filename must match '<target>~<insert>'.
+                """
             )
             return
 
@@ -409,13 +422,15 @@ class StaticWebBuildCommand(StaticWebMixin, BuildCommand):
                 # Warn if another implementation is found,
                 # but fail safe to using pyscript with a warning.
                 if implementation is None:
-                    self.console.warning(
-                        "No web implementation specified. Defaulting to 'pyscript'."
+                    self.console.warning_banner(
+                        "", "No web implementation specified. Defaulting to 'pyscript'."
                     )
                 elif implementation != "pyscript":
-                    self.console.warning(
-                        "At present, 'pyscript' is the only supported web "
-                        "implementation. This project may not work correctly."
+                    self.console.warning_banner(
+                        message="""
+                            At present, 'pyscript' is the only supported web
+                            implementation. This project may not work correctly.
+                        """
                     )
 
                 # Get pyscript version from config.toml. Use default if not present.
@@ -649,7 +664,9 @@ class StaticWebRunCommand(StaticWebMixin, RunCommand):
 
         # At least for now, there's no easy way to pass arguments to a web app.
         if passthrough:
-            self.console.warning(f"Ignoring passthrough arguments: {passthrough}")
+            self.console.warning_banner(
+                "", f"Ignoring passthrough arguments: {passthrough}"
+            )
 
         httpd = None
         try:
@@ -663,9 +680,11 @@ class StaticWebRunCommand(StaticWebMixin, RunCommand):
                 )
             except OSError as e:
                 if e.errno in (errno.EADDRINUSE, errno.ENOSR):
-                    self.console.warning(
-                        f"Using a system-allocated port since port {port} is already "
-                        "in use. Use -p/--port to manually specify a port."
+                    self.console.warning_banner(
+                        message=f"""
+                            Using a system-allocated port since port {port} is
+                            already in use. Use -p/--port to manually specify a port.
+                        """,
                     )
                     httpd = LocalHTTPServer(
                         self.project_path(app),

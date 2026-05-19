@@ -26,3 +26,6 @@ repos:
       # remove toml extra once Python 3.10 is no longer supported
       additional_dependencies: ['.[toml]']
       args: ["--skip=CODE_OF_CONDUCT.md"]
+
+default_language_version:
+  python: python3.13
