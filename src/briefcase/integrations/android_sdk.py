@@ -735,13 +735,15 @@ connection.
                 continue
             if parts[3] != self.emulator_abi:
                 continue
-            # parts[1] is e.g. "android-31"; extract the version number
+            # parts[1] is e.g. "android-31", "android-36.1", or "android-CANARY";
+            # extract the version identifier and apply the minimum version floor.
+            version_str = parts[1].split("-")[1]
             try:
-                version = int(parts[1].split("-")[1])
-            except (IndexError, ValueError):
-                continue
-            if version < min_version:
-                continue
+                if int(version_str.split(".")[0]) < min_version:
+                    continue
+            except ValueError:
+                # Non-numeric version (e.g. CANARY, CinnamonBun) included.
+                pass
             images.append(package)
         return sorted(set(images))
 
@@ -1195,7 +1197,7 @@ architecture. Check your network connection and re-run `briefcase run android`.
             intro="Select the system image type:",
             description="Image type",
             options=image_types,
-            default=f"android-{version};default",
+            default=image_types[0],
         )
 
         system_image = f"system-images;{image_type};{self.emulator_abi}"

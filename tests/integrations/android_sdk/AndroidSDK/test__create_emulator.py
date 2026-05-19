@@ -318,8 +318,9 @@ def test_default_name(mock_tools, android_sdk, tmp_path):
     # This test doesn't validate most of the test process;
     # it only checks that the emulator is created with the default name.
 
-    # User provides no input; default name and system image will be used.
+    # User provides no input; default name, system image and image type will be used.
     mock_tools.console.values = [
+        "",
         "",
         "",
     ]
@@ -330,8 +331,12 @@ def test_default_name(mock_tools, android_sdk, tmp_path):
     with avd_config_path.open("w", encoding="utf-8") as f:
         f.write("hw.device.name=pixel\n")
 
+    # Create a mock app
+    app = MagicMock()
+    del app.min_os_version  # ensure getattr fallback is used
+
     # Create the emulator
-    avd = android_sdk.create_emulator()
+    avd = android_sdk.create_emulator(app)
 
     # The expected device AVD was created.
     assert avd == "beePhone"
@@ -350,8 +355,9 @@ def test_default_name_with_collisions(mock_tools, android_sdk, tmp_path):
             "beePhone",
         ]
     )
-    # User provides no input; default name and system image will be used.
+    # User provides no input; default name, system image and image type will be used.
     mock_tools.console.values = [
+        "",
         "",
         "",
     ]
@@ -362,8 +368,12 @@ def test_default_name_with_collisions(mock_tools, android_sdk, tmp_path):
     with avd_config_path.open("w", encoding="utf-8") as f:
         f.write("hw.device.name=pixel\n")
 
+    # Create a mock app
+    app = MagicMock()
+    del app.min_os_version  # ensure getattr fallback is used
+
     # Create the emulator
-    avd = android_sdk.create_emulator()
+    avd = android_sdk.create_emulator(app)
 
     # The expected device AVD was created.
     assert avd == "beePhone3"
