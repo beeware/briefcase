@@ -288,7 +288,8 @@ a custom location for Briefcase's tools.
                 f"""
                     Briefcase and the third-party tools it uses only support UTF-8.
 
-                    Detected default system encoding : {self.tools.system_encoding}.
+                    The detected default system encoding is
+                    {self.tools.system_encoding}.
 
                     Briefcase will proceed but some console output could be corrupted
                     and created files or artifacts may contain corrupted text.
@@ -310,15 +311,13 @@ a custom location for Briefcase's tools.
             self.console.warning_banner(
                 "Your Python version is unsupported!",
                 f"""
+                    The version of Python you are using ({platform.python_version()})
+                    is past its end of life. As a result, it is highly likely
+                    your Briefcase version is also out of date.
 
-                The version of Python you are using ({platform.python_version()})
-                is past its end of life. As a result, it is highly likely your Briefcase
-                version is also out of date.
-
-                See https://devguide.python.org/versions/ for details on currently
-                supported Python versions.
-
-            """,
+                    See https://devguide.python.org/versions/ for details on currently
+                    supported Python versions.
+                """,
             )
             return False
 
@@ -1232,7 +1231,6 @@ Did you run Briefcase in a project directory that contains {filename.name!r}?"""
                             Briefcase is unable to update the application template.
                             This may be because your computer is currently offline.
                             Briefcase will use the existing template without updating.
-
                         """,
                     )
 
