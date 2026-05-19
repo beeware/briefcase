@@ -283,23 +283,19 @@ a custom location for Briefcase's tools.
     def validate_locale(self):
         """Validate the system's locale is compatible."""
         if self.tools.host_os == "Linux" and self.tools.system_encoding != "UTF-8":
-            self.console.warning(
+            self.console.warning_banner(
+                "Default system encoding is not supported",
                 f"""
-*************************************************************************
-** WARNING: Default system encoding is not supported                   **
-*************************************************************************
+                    Briefcase and the third-party tools it uses only support UTF-8.
 
-    Briefcase and the third-party tools it uses only support UTF-8.
+                    The detected default system encoding is
+                    {self.tools.system_encoding}.
 
-    The detected default system encoding is {self.tools.system_encoding}.
+                    Briefcase will proceed but some console output could be corrupted
+                    and created files or artifacts may contain corrupted text.
 
-    Briefcase will proceed but some console output could be corrupted and
-    created files or artefacts may contain corrupted text.
-
-    Update your system's encoding to UTF-8 to avoid issues.
-
-*************************************************************************
-"""
+                    Update your system's encoding to UTF-8 to avoid issues.
+                """,
             )
 
     def validate_python_version(self) -> bool:
@@ -312,21 +308,16 @@ a custom location for Briefcase's tools.
         # same yearly cadence, the EOL for Python 3.x is October of 2024 + (x - 8)
         EOL_year = 2024 + (sys.version_info.minor - 8)
         if datetime.today() > datetime(EOL_year, 10, 1):
-            self.console.warning(
+            self.console.warning_banner(
+                "Your Python version is unsupported!",
                 f"""
-*************************************************************************
-** WARNING: Your Python version is unsupported!                        **
-*************************************************************************
+                    The version of Python you are using ({platform.python_version()})
+                    is past its end of life. As a result, it is highly likely
+                    your Briefcase version is also out of date.
 
-    The version of Python you are using ({platform.python_version()}) is past its
-    end of life. As a result, it is highly likely your Briefcase
-    version is also out of date.
-
-    See https://devguide.python.org/versions/ for details on currently
-    supported Python versions.
-
-*************************************************************************
-"""
+                    See https://devguide.python.org/versions/ for details on currently
+                    supported Python versions.
+                """,
             )
             return False
 
@@ -1234,18 +1225,13 @@ Did you run Briefcase in a project directory that contains {filename.name!r}?"""
                     # repo. It's OK to continue; but capture the error in the log and
                     # warn the user that the template may be stale.
                     self.console.debug(str(e))
-                    self.console.warning(
+                    self.console.warning_banner(
+                        "Unable to update template",
                         """
-*************************************************************************
-** WARNING: Unable to update template                                  **
-*************************************************************************
-
-    Briefcase is unable the update the application template. This
-    may be because your computer is currently offline. Briefcase will
-    use existing template without updating.
-
-*************************************************************************
-"""
+                            Briefcase is unable to update the application template.
+                            This may be because your computer is currently offline.
+                            Briefcase will use the existing template without updating.
+                        """,
                     )
 
                 try:
