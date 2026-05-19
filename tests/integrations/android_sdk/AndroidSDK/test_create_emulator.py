@@ -2,6 +2,7 @@ from unittest.mock import MagicMock
 
 import pytest
 
+from briefcase.exceptions import BriefcaseCommandError
 from briefcase.integrations.android_sdk import AndroidSDK
 from briefcase.integrations.base import ToolCache
 
@@ -192,3 +193,19 @@ def test_system_image_selection(mock_tools, android_sdk, tmp_path):
         skin="pixel_7_pro",
         system_image="system-images;android-34;google_apis;x86_64",
     )
+
+
+def test_no_available_system_images(mock_tools, android_sdk, tmp_path):
+    """If no system images are available, an error is raised."""
+    android_sdk.list_available_system_images = MagicMock(return_value=[])
+
+    # User provides a name before the error is raised
+    mock_tools.console.values = [""]  # default emulator name
+
+    # Create a mock app
+    app = MagicMock()
+    del app.min_os_version  # ensure getattr fallback is used
+
+    # No system image detected
+    with pytest.raises(BriefcaseCommandError):
+        android_sdk.create_emulator(app)
