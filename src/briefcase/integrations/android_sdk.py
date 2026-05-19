@@ -1158,27 +1158,47 @@ a default name '{default_avd}'.
         device_type = self.DEFAULT_DEVICE_TYPE
         skin = self.DEFAULT_DEVICE_SKIN
 
-        # Get available images, raise an error if not found.
+        # Get available images, raise an error if none found.
         available_images = self.list_available_system_images(
             min_version=getattr(app, "min_os_version", ANDROID_MIN_OS_VERSION)
         )
         if not available_images:
             raise BriefcaseCommandError(
                 f"""\
-No Android system images are available for your architecture ({self.emulator_abi}).
+No Android system images are available for your architecture
+({self.emulator_abi}).
 
 This may be caused by a network connectivity issue or an unsupported
 architecture. Check your network connection and re-run `briefcase run android`.
 """
             )
 
-        # Provide a list of options for system images.
-        system_image = self.tools.console.selection_question(
-            intro="Select the system image to use for the emulator:",
-            description="System image",
-            options=available_images,
-            default=available_images[-1],
+        # Ask the user to select an Android version.
+        versions = sorted({img.split(";")[1].split("-")[1] for img in available_images})
+        version = self.tools.console.selection_question(
+            intro="Select the Android version for the emulator:",
+            description="Android version",
+            options=versions,
+            default="31",
         )
+
+        # Ask the user to select an image type for the chosen version.
+        image_types = sorted(
+            {
+                f"{img.split(';')[1]};{img.split(';')[2]}"
+                for img in available_images
+                if img.split(";")[1].startswith(f"android-{version}")
+            },
+            key=lambda x: (0 if x.endswith(";default") else 1, x),
+        )
+        image_type = self.tools.console.selection_question(
+            intro="Select the system image type:",
+            description="Image type",
+            options=image_types,
+            default=f"android-{version};default",
+        )
+
+        system_image = f"system-images;{image_type};{self.emulator_abi}"
 
         self._create_emulator(
             avd=avd,
