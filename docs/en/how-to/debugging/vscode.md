@@ -47,16 +47,16 @@ This is currently an **experimental feature** that is only supported on Windows,
 To debug a bundled app, the app must be modified to include a bootstrap that will connect to the VS Code debugger. This is done by passing the `--debug debugpy` option to `briefcase build`:
 
 ```console
-$ briefcase build --debug debugpy
+$ briefcase build -r --debug debugpy
 ```
 
 To build a mobile app, include the platform name in the `build` command - for example:
 
 ```console
-$ briefcase build iOS --debug debugpy
+$ briefcase build iOS -r --debug debugpy
 ```
 
-This will build your app in debug mode and add [debugpy](https://code.visualstudio.com/docs/debugtest/debugging#_debug-console-repl), and a package that automatically starts `debugpy` at the startup of your bundled app.
+The `-r` option ensures that the debugger support package is installed when switching an existing app into debug mode. This will build your app in debug mode and add [debugpy](https://code.visualstudio.com/docs/debugtest/debugging#_debug-console-repl), and a package that automatically starts `debugpy` at the startup of your bundled app.
 
 Then, select "Open Configurations" from the "Run" menu, and add a new debug configuration to your `.vscode/launch.json` file:
 

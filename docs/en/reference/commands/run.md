@@ -113,6 +113,8 @@ This is an **experimental** new feature, that is currently only supported on Win
 
 The selected debugger in `run --debug <debugger>` has to match the selected debugger in `build --debug <debugger>`.
 
+If you have previously run the app in "normal" mode, first rebuild the app with `briefcase build -r --debug <debugger>`, or pass `-r` / `--update-requirements` to `briefcase run --debug <debugger>`, to ensure that the debugger is embedded in your bundled app.
+
 ## `--debugger-host <host>`
 
 Specifies the host of the socket connection for the debugger. This option is only used when the `--debug <debugger>` option is specified. The default value is `localhost`.
