@@ -614,7 +614,9 @@ def test_run_created_emulator(run_command, first_app_config):
     run_command.run_app(first_app_config, passthrough=[])
 
     # A new emulator was created
-    run_command.tools.android_sdk.create_emulator.assert_called_once_with()
+    run_command.tools.android_sdk.create_emulator.assert_called_once_with(
+        first_app_config
+    )
 
     # No attempt was made to verify the AVD (it is pre-verified through
     # the creation process)
@@ -929,7 +931,9 @@ def test_run_test_mode_created_emulator(run_command, first_app_config):
     )
 
     # A new emulator was created
-    run_command.tools.android_sdk.create_emulator.assert_called_once_with()
+    run_command.tools.android_sdk.create_emulator.assert_called_once_with(
+        first_app_config
+    )
 
     # No attempt was made to verify the AVD (it is pre-verified through
     # the creation process)
