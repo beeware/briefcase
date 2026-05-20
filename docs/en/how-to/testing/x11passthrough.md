@@ -4,7 +4,7 @@ Briefcase can use Docker to build apps for Linux distributions other than the di
 
 # X Window System Background
 
-Linux distributions use either the [X Window System](https://www.x.org/) (sometimes called X or X11) or [Wayland](https://wayland.freedesktop.org/) to manage their graphical displays. X11 is the older of the two; Wayland maintains compatibility with the [X11 protocol](https://www.x.org/releases/X11R7.7/doc/xproto/x11protocol.html) for backwards compatibility.
+Linux distributions use either the [X Window System](https://www.x.org/releases/X11R7.7/) (sometimes called X or X11) or [Wayland](https://wayland.freedesktop.org/) to manage their graphical displays. X11 is the older of the two; Wayland maintains compatibility with the [X11 protocol](https://www.x.org/releases/X11R7.7/doc/xproto/x11protocol.html) for backwards compatibility.
 
 The X11 protocol operates in a client/server framework; any application that wishes to display a window or receive user input will send and receive commands with an X server.
 
