@@ -16,19 +16,19 @@ This is currently an **experimental feature** that is only supported on Windows,
 
 To debug a bundled app, add `breakpoint()` somewhere in your code where the debugger should halt.
 
-Your app must then be modified to include a bootstrap that will connect to the VS Code debugger. This is done by passing the `--debug pdb` option to `briefcase build`:
+Your app must then be modified to include a bootstrap that will connect to the debugger. This is done by passing the `--debug pdb` option to `briefcase build`:
 
 ```console
-$ briefcase build --debug pdb
+$ briefcase build -r --debug pdb
 ```
 
 To build a mobile app, include the platform name in the `build` command - for example:
 
 ```console
-$ briefcase build iOS --debug pdb
+$ briefcase build iOS -r --debug pdb
 ```
 
-This will build your app in debug mode, adding [`remote-pdb`](https://pypi.org/project/remote-pdb/), and a package that automatically starts `remote-pdb` on startup of your bundled app.
+The `-r` option ensures that the debugger support package is installed when switching an existing app into debug mode. This will build your app in debug mode, adding [`remote-pdb`](https://pypi.org/project/remote-pdb/), and a package that automatically starts `remote-pdb` on startup of your bundled app.
 
 You can then run your app in debug mode:
 
