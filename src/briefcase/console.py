@@ -514,17 +514,17 @@ class Console:
         :param label: An identifying label for the thread that has raised the
             stacktrace. Defaults to the main thread.
         """
-        _, exception, _ = sys.exc_info()
-        if exception is None:
+        exc_type, exc_value, exc_trace = sys.exc_info()
+        if exc_value is None:
             return
 
-        if isinstance(exception, BriefcaseError):
-            self.skip_log = exception.skip_logfile
+        if isinstance(exc_value, BriefcaseError):
+            self.skip_log = exc_value.skip_logfile
 
         trace = Traceback.extract(
-            type(exception),
-            exception,
-            exception.__traceback__,
+            exc_type,  # ty:ignore[invalid-argument-type]
+            exc_value,
+            exc_trace,
             show_locals=True,
         )
         self.stacktraces.append((label, trace))
