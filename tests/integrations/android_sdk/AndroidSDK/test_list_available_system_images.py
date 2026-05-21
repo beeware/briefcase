@@ -34,10 +34,11 @@ def test_list_available_system_images_dotted_version(mock_tools, android_sdk):
     """System images with dotted versions (e.g. android-36.1) are included."""
     mock_tools.subprocess.check_output.return_value = (
         "Available Packages:\n"
-        "  Path                                        | Version | Description\n"
-        "  -------                                     | ------- | -------\n"
-        "  system-images;android-36.1;default;x86_64   | 1       | Intel x86_64 Atom System Image\n"
-        "  emulator                                    | 35.4.9  | Android Emulator\n"
+        "  Path                                         | Version | Description\n"
+        "  -------                                      | ------- | -------\n"
+        "  system-images;android-36.1;default;x86_64    | 1       | Intel x86_64 Atom System Image\n"
+        "  system-images;android-36.1;default;arm64-v8a | 1       | ARM64 System Image\n"
+        "  emulator                                     | 35.4.9  | Android Emulator\n"
     )
 
     result = android_sdk.list_available_system_images()
@@ -57,6 +58,7 @@ def test_list_available_system_images_dotted_version_below_minimum(
         "  -------                                     | ------- | -------\n"
         "  system-images;android-25.1;default;x86_64   | 1       | Intel x86_64 Atom System Image\n"
         "  system-images;android-31;default;x86_64     | 5       | Intel x86_64 Atom System Image\n"
+        "  system-images;android-31;default;ARM64-v8a  | 5       | ARM64 System Image\n"
         "  emulator                                    | 35.4.9  | Android Emulator\n"
     )
 
@@ -72,10 +74,11 @@ def test_list_available_system_images_named_version(mock_tools, android_sdk):
     """System images with named versions (e.g. android-CANARY) are included."""
     mock_tools.subprocess.check_output.return_value = (
         "Available Packages:\n"
-        "  Path                                        | Version | Description\n"
-        "  -------                                     | ------- | -------\n"
-        "  system-images;android-CANARY;google_apis;x86_64 | 1   | Google APIs Intel x86_64\n"
-        "  emulator                                    | 35.4.9  | Android Emulator\n"
+        "  Path                                               | Version    | Description\n"
+        "  -------                                            | -------    | -------\n"
+        "  system-images;android-CANARY;google_apis;x86_64    | 1       | Google APIs Intel x86_64\n"
+        "  system-images;android-CANARY;google_apis;arm64-v8a | 1       | Google APIs ARM64\n"
+        "  emulator                                           | 35.4.9  | Android Emulator\n"
     )
 
     result = android_sdk.list_available_system_images()
