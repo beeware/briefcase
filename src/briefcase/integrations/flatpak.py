@@ -47,21 +47,19 @@ class Flatpak(Tool):
                 tools.console.warning_banner(
                     "Unable to determine the version of Flatpak",
                     """
-
                     Briefcase will proceed, assuming everything is OK.
-                    If you experience problems,
-                    this is almost certainly the cause of those problems.
+                    If you experience problems, this is almost certainly the cause of
+                    those problems.
 
                     Please report this as a bug at:
 
-                    https://github.com/beeware/briefcase/issues/new
+                      https://github.com/beeware/briefcase/issues/new
 
                     In your report, please including the output from running:
 
-                    flatpak --version
+                      flatpak --version
 
                     from the command prompt.
-
                     """,
                 )
 
@@ -102,21 +100,19 @@ You must install both flatpak and flatpak-builder.
                 tools.console.warning_banner(
                     "Unable to determine the version of flatpak-builder",
                     """
-
                     Briefcase will proceed, assuming everything is OK.
-                    If you experience problems,
-                    this is almost certainly the cause of those problems.
+                    If you experience problems, this is almost certainly the cause of
+                    those problems.
 
                     Please report this as a bug at:
 
-                    https://github.com/beeware/briefcase/issues/new
+                      https://github.com/beeware/briefcase/issues/new
 
                     In your report, please including the output from running:
 
-                    flatpak-builder --version
+                      flatpak-builder --version
 
                     from the command prompt.
-
                     """,
                 )
 

@@ -197,7 +197,6 @@ class GradleCreateCommand(GradleMixin, CreateCommand):
             self.tools.console.warning_banner(
                 "App does not define build_gradle_dependencies",
                 """
-
                 The Android configuration for this app does not contain a
                 `build_gradle_dependencies` definition. Briefcase will use a default
                 value of:
