@@ -623,7 +623,7 @@ def test_cached_template_offline(
 
     # A warning was raised to the user about the fetch problem
     output = capsys.readouterr().out
-    assert "** WARNING: Unable to update template" in output
+    assert "WARNING: Unable to update template" in output
 
     # The remote head was checked out.
     mock_remote_head.checkout.assert_called_once_with()
