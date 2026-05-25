@@ -111,11 +111,12 @@ class WindowsMixin(_MixinBase):
                     self.tools.console.warning_banner(
                         "Possible architecture mismatch",
                         f"""
-                        The build machine is {self.tools.host_arch}, but Briefcase
-                        on Windows only supports x86-64 and ARM64 installers.
+                            The build machine is {self.tools.host_arch}, but Briefcase
+                            on Windows only supports x86-64 and ARM64 installers.
 
-                        You are responsible for ensuring that the content of
-                        external_package_path is compatible with supported platforms.
+                            You are responsible for ensuring that the content of
+                            external_package_path is compatible with supported
+                            platforms.
                         """,
                     )
             else:
@@ -231,14 +232,14 @@ class WindowsCreateCommand(CreateCommand):
         self.tools.console.warning_banner(
             "Support package update may be imperfect",
             """
-            Support packages in Windows apps are overlaid with app content,
-            so it isn't possible to remove all old support files before
-            installing new ones.
+                Support packages in Windows apps are overlaid with app content,
+                so it isn't possible to remove all old support files before
+                installing new ones.
 
-            Briefcase will unpack the new support package without cleaning up
-            existing support package content. This *should* work; however,
-            ensure a reproducible release artefacts, it is advisable to
-            perform a clean app build before release.
+                Briefcase will unpack the new support package without cleaning up
+                existing support package content. This *should* work; however,
+                ensure a reproducible release artefacts, it is advisable to
+                perform a clean app build before release.
             """,
         )
 
@@ -571,9 +572,9 @@ class WindowsPackageCommand(PackageCommand):
             self.tools.console.warning_banner(
                 "No signing identity provided",
                 """
-                Briefcase will not sign the app. To provide a signing identity,
-                use the `--identity` option; or, to explicitly disable signing,
-                use `--adhoc-sign`.
+                    Briefcase will not sign the app. To provide a signing identity,
+                    use the `--identity` option; or, to explicitly disable signing,
+                    use `--adhoc-sign`.
                 """,
             )
 

@@ -395,12 +395,12 @@ class LinuxSystemMixin(LinuxMixin):
 
         if not (system_verify and self.tools.shutil.which(system_verify[0])):
             self.tools.console.warning_banner(
-                "WARNING: Can't verify system packages",
+                "Can't verify system packages",
                 """
-                Briefcase doesn't know how to verify the installation of system
-                packages on your Linux distribution. If you have any problems
-                building this app, ensure that the packages listed in the app's
-                `system_requires` setting have been installed.
+                    Briefcase doesn't know how to verify the installation of system
+                    packages on your Linux distribution. If you have any problems
+                    building this app, ensure that the packages listed in the app's
+                    `system_requires` setting have been installed.
                 """,
             )
             return
@@ -653,7 +653,7 @@ Install Docker Engine and try again or run Briefcase on an Arch host system.
                 "-c",
                 (
                     "import sys; "
-                    "print(f'{sys.version_info.major}.{sys.version_info.minor}')"
+                    "print(f'{sys.version_info.major}.{sys.version_info.minor}')",
                 ),
             ]
         )
@@ -677,12 +677,12 @@ Install Docker Engine and try again or run Briefcase on an Arch host system.
             self.tools.console.warning_banner(
                 "Python version mismatch!",
                 f"""
-                The system python3 provided by {app.target_image}
-                is {app.python_version_tag}. This is not the same as your local system
-                ({self.python_version_tag}).
+                    The system python3 provided by {app.target_image}
+                    is {app.python_version_tag}. This is not the same as your local
+                    system ({self.python_version_tag}).
 
-                Ensure you have tested for Python version compatibility before
-                releasing this app.
+                    Ensure you have tested for Python version compatibility before
+                    releasing this app.
                 """,
             )
 
@@ -704,7 +704,11 @@ Install Docker Engine and try again or run Briefcase on an Arch host system.
 
         running_version = self.tools.sys.version
         system_version = self.tools.subprocess.check_output(
-            [system_python_bin, "-c", "import sys; print(sys.version)"]
+            [
+                system_python_bin,
+                "-c",
+                "import sys; print(sys.version)",
+            ]
         ).strip()
 
         if system_version != running_version:

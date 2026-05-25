@@ -138,19 +138,19 @@ you can re-run Briefcase.
                 tools.console.warning_banner(
                     "Unable to determine the version of Xcode that is installed",
                     """
-                    Briefcase will proceed, assuming everything is OK.
-                    If you experience problems, this is almost certainly the cause of
-                    those problems.
+                        Briefcase will proceed, assuming everything is OK. If you
+                        experience problems, this is almost certainly the cause of
+                        those problems.
 
-                    Please report this as a bug at:
+                        Please report this as a bug at:
 
-                      https://github.com/beeware/briefcase/issues/new
+                            https://github.com/beeware/briefcase/issues/new
 
-                    In your report, please include the output from running:
+                        In your report, please include the output from running:
 
-                        $ xcodebuild -version
+                            $ xcodebuild -version
 
-                    from the command prompt.
+                        from the command prompt.
                     """,
                 )
 
@@ -263,19 +263,19 @@ to continue, and re-run Briefcase once that installation is complete.
                 tools.console.warning_banner(
                     "Unable to determine if Xcode is installed",
                     """
-                    Briefcase will proceed, assuming everything is OK.
-                    If you experience problems, this is almost certainly the cause of
-                    those problems.
+                        Briefcase will proceed, assuming everything is OK. If you
+                        experience problems, this is almost certainly the cause of
+                        those problems.
 
-                    Please report this as a bug at:
+                        Please report this as a bug at:
 
-                      https://github.com/beeware/briefcase/issues/new
+                            https://github.com/beeware/briefcase/issues/new
 
-                    In your report, please include the output from running:
+                        In your report, please include the output from running:
 
-                        $ xcode-select --install
+                            $ xcode-select --install
 
-                    from the command prompt.
+                        from the command prompt.
                     """,
                 )
 
@@ -337,19 +337,19 @@ You need to accept the Xcode license before Briefcase can package your app.
                         tools.console.warning_banner(
                             "Unable to determine if the Xcode license was accepted",
                             """
-                            Briefcase will proceed, assuming everything is OK.
-                            If you experience problems, this is almost certainly the
-                            cause of those problems.
+                                Briefcase will proceed, assuming everything is OK. If
+                                you  experience problems, this is almost certainly the
+                                cause of those problems.
 
-                            Please report this as a bug at:
+                                Please report this as a bug at:
 
-                              https://github.com/beeware/briefcase/issues/new
+                                    https://github.com/beeware/briefcase/issues/new
 
-                            In your report, please include the output from running:
+                                In your report, please include the output from running:
 
-                                $ sudo xcodebuild -license
+                                    $ sudo xcodebuild -license
 
-                            from the command prompt.
+                                from the command prompt.
                             """,
                         )
             else:
@@ -357,19 +357,19 @@ You need to accept the Xcode license before Briefcase can package your app.
                 tools.console.warning_banner(
                     "Unable to determine if the Xcode license has been accepted",
                     """
-                    Briefcase will proceed, assuming everything is OK.
-                    If you experience problems, this is almost certainly the cause of
-                    those problems.
+                        Briefcase will proceed, assuming everything is OK. If you
+                        experience problems, this is almost certainly the cause of
+                        those problems.
 
-                    Please report this as a bug at:
+                        Please report this as a bug at:
 
-                      https://github.com/beeware/briefcase/issues/new
+                            https://github.com/beeware/briefcase/issues/new
 
-                    In your report, please include the output from running:
+                        In your report, please include the output from running:
 
-                        $ /usr/bin/clang --version
+                            $ /usr/bin/clang --version
 
-                    from the command prompt.
+                        from the command prompt.
                     """,
                 )
 
