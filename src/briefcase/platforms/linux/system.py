@@ -653,7 +653,7 @@ Install Docker Engine and try again or run Briefcase on an Arch host system.
                 "-c",
                 (
                     "import sys; "
-                    "print(f'{sys.version_info.major}.{sys.version_info.minor}')",
+                    "print(f'{sys.version_info.major}.{sys.version_info.minor}')"
                 ),
             ]
         )
