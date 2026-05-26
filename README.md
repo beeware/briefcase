@@ -50,7 +50,7 @@ Briefcase is part of the [BeeWare suite](https://beeware.org). You can talk to t
 - [Discord](https://beeware.org/bee/chat/)
 - The Briefcase [GitHub Discussions forum](https://github.com/beeware/briefcase/discussions)
 
-We foster a welcoming and respectful community as described in our [BeeWare Community Code of Conduct](https://beeware.org/community/behavior/).
+We foster a welcoming and respectful community as described in our [BeeWare Community Code of Conduct](https://beeware.org/community/code-of-conduct/).
 
 ## Contributing
 
