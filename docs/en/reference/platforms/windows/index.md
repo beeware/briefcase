@@ -228,6 +228,8 @@ In addition, the post-install script environment will have a number of variables
 * `INSTALLER_PATH` will be set to the path of the MSI file; and
 * `INSTALLER_UNATTENDED` will be set to 1 if the MSI has been installed in "quiet mode" (i.e., if the `/qn` option has been passed to `msiexec`).
 
+The post-uninstall script will have the `INSTALLER_UNATTENDED` variable set.
+
 If a user uninstalls software by clicking "uninstall" through the Windows "Remove software" interface, the uninstall options will not be displayed to the user. The pre-uninstall script *will* be executed, but the uninstall options will assume their default values. The uninstall GUI is only displayed if the user re-runs the installer manually, or if the user specifies the "Modify" option in the Windows "Remove software" interface. This is a quirk of the Windows uninstall tooling.
 
 ## Platform quirks
