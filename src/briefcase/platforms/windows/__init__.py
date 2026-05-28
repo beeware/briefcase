@@ -243,6 +243,26 @@ class WindowsCreateCommand(CreateCommand):
             """,
         )
 
+    def _install_app_requirements(
+        self,
+        app: FinalizedAppConfig,
+        requires: list[str],
+        app_packages_path: Path,
+        **kwargs,
+    ):
+        support_min_version = 10240  # Windows 10
+        min_version = int(getattr(app, "min_os_version", support_min_version))
+        if min_version < support_min_version:
+            raise BriefcaseCommandError(
+                "Your Windows app specifies a minimum build number of "
+                f"{min_version}, but the support package only supports "
+                f"{support_min_version}"
+            )
+
+        return super()._install_app_requirements(
+            app, requires, app_packages_path, **kwargs
+        )
+
     def install_license(self, app: FinalizedAppConfig):
         """Install the license for the project as a single RTF document.
 
