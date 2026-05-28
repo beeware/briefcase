@@ -50,8 +50,10 @@ logs/
 .specify/templates
 .specify/extensions.yml
 .specify/extensions
+.specify/
 .specify/init-options.json
 .specify/integration.json
 .specify/integrations
 .specify/workflows
 .specify/workflow.yml
+specs

@@ -51,7 +51,7 @@ test_requires = [
 universal_build = true
 requires = [
     "toga-cocoa~=0.5.0",
-    "std-nslog~=1.0.3",
+    "std-nslog~=2.0.0",
 ]
 """
 
@@ -206,7 +206,6 @@ requires = [
         return """\
 requires = [
     "toga-iOS~=0.5.0",
-    "std-nslog~=1.0.3",
 ]
 """
 

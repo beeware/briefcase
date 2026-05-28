@@ -58,9 +58,14 @@ def test_run_gui_app(run_command, first_app_config, sleep_zero, tmp_path, monkey
             "--style",
             "compact",
             "--predicate",
-            f'senderImagePath=="{sender}"'
-            f' OR (processImagePath=="{sender}"'
-            ' AND senderImagePath=="/usr/lib/libffi.dylib")',
+            (
+                f'senderImagePath=="{sender}"'
+                f' OR (processImagePath=="{sender}"'
+                ' AND (senderImagePath=="/usr/lib/libffi.dylib" '
+                '   OR senderImagePath ENDSWITH "/Python" '
+                '   OR senderImagePath ENDSWITH ".abi3.so")'
+                " )"
+            ),
         ],
         stdout=subprocess.PIPE,
         stderr=subprocess.STDOUT,
@@ -121,9 +126,14 @@ def test_run_gui_app_with_passthrough(
             "--style",
             "compact",
             "--predicate",
-            f'senderImagePath=="{sender}"'
-            f' OR (processImagePath=="{sender}"'
-            ' AND senderImagePath=="/usr/lib/libffi.dylib")',
+            (
+                f'senderImagePath=="{sender}"'
+                f' OR (processImagePath=="{sender}"'
+                ' AND (senderImagePath=="/usr/lib/libffi.dylib" '
+                '   OR senderImagePath ENDSWITH "/Python" '
+                '   OR senderImagePath ENDSWITH ".abi3.so")'
+                " )"
+            ),
         ],
         stdout=subprocess.PIPE,
         stderr=subprocess.STDOUT,
@@ -171,9 +181,14 @@ def test_run_gui_app_failed(run_command, first_app_config, sleep_zero, tmp_path)
             "--style",
             "compact",
             "--predicate",
-            f'senderImagePath=="{sender}"'
-            f' OR (processImagePath=="{sender}"'
-            ' AND senderImagePath=="/usr/lib/libffi.dylib")',
+            (
+                f'senderImagePath=="{sender}"'
+                f' OR (processImagePath=="{sender}"'
+                ' AND (senderImagePath=="/usr/lib/libffi.dylib" '
+                '   OR senderImagePath ENDSWITH "/Python" '
+                '   OR senderImagePath ENDSWITH ".abi3.so")'
+                " )"
+            ),
         ],
         stdout=subprocess.PIPE,
         stderr=subprocess.STDOUT,
@@ -218,9 +233,14 @@ def test_run_gui_app_find_pid_failed(
             "--style",
             "compact",
             "--predicate",
-            f'senderImagePath=="{sender}"'
-            f' OR (processImagePath=="{sender}"'
-            ' AND senderImagePath=="/usr/lib/libffi.dylib")',
+            (
+                f'senderImagePath=="{sender}"'
+                f' OR (processImagePath=="{sender}"'
+                ' AND (senderImagePath=="/usr/lib/libffi.dylib" '
+                '   OR senderImagePath ENDSWITH "/Python" '
+                '   OR senderImagePath ENDSWITH ".abi3.so")'
+                " )"
+            ),
         ],
         stdout=subprocess.PIPE,
         stderr=subprocess.STDOUT,
@@ -271,9 +291,14 @@ def test_run_gui_app_test_mode(
             "--style",
             "compact",
             "--predicate",
-            f'senderImagePath=="{sender}"'
-            f' OR (processImagePath=="{sender}"'
-            ' AND senderImagePath=="/usr/lib/libffi.dylib")',
+            (
+                f'senderImagePath=="{sender}"'
+                f' OR (processImagePath=="{sender}"'
+                ' AND (senderImagePath=="/usr/lib/libffi.dylib" '
+                '   OR senderImagePath ENDSWITH "/Python" '
+                '   OR senderImagePath ENDSWITH ".abi3.so")'
+                " )"
+            ),
         ],
         stdout=subprocess.PIPE,
         stderr=subprocess.STDOUT,
@@ -334,9 +359,14 @@ def test_run_gui_app_debugger(
             "--style",
             "compact",
             "--predicate",
-            f'senderImagePath=="{sender}"'
-            f' OR (processImagePath=="{sender}"'
-            ' AND senderImagePath=="/usr/lib/libffi.dylib")',
+            (
+                f'senderImagePath=="{sender}"'
+                f' OR (processImagePath=="{sender}"'
+                ' AND (senderImagePath=="/usr/lib/libffi.dylib" '
+                '   OR senderImagePath ENDSWITH "/Python" '
+                '   OR senderImagePath ENDSWITH ".abi3.so")'
+                " )"
+            ),
         ],
         stdout=subprocess.PIPE,
         stderr=subprocess.STDOUT,

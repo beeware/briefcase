@@ -44,14 +44,34 @@ from briefcase.platforms.macOS.filters import macOS_log_clean_filter
             "2022-11-14 13:21:14.972 Df My App[59972:780a15] ",
             ("", False),
         ),
-        # macOS App log
+        # macOS App log (std-nslog 1.*)
         (
             "2022-11-14 13:21:15.341 Df My App[59972:780a15] (libffi.dylib) Hello World!",
             ("Hello World!", True),
         ),
-        # Empty macOS App log
+        # Empty macOS App log (std-nslog 1.*)
         (
             "2022-11-14 13:21:15.341 Df My App[59972:780a15] (libffi.dylib) ",
+            ("", True),
+        ),
+        # macOS App log (os_log shim)
+        (
+            "2022-11-14 13:21:15.341 Df My App[59972:780a15] (_oslog_shim.abi3.so) Hello World!",
+            ("Hello World!", True),
+        ),
+        # Empty macOS App log (os_log shim)
+        (
+            "2022-11-14 13:21:15.341 Df My App[59972:780a15] (_oslog_shim.abi3.so) ",
+            ("", True),
+        ),
+        # macOS App log (CPython use_system_logger)
+        (
+            "2022-11-14 13:21:15.341 Df My App[59972:780a15] (Python) Hello World!",
+            ("Hello World!", True),
+        ),
+        # Empty macOS App log (CPython use_system_logger)
+        (
+            "2022-11-14 13:21:15.341 Df My App[59972:780a15] (Python) ",
             ("", True),
         ),
         # iOS App log (old style .so libraries)

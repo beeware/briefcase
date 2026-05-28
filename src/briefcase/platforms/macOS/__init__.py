@@ -549,7 +549,10 @@ class macOSRunMixin(_MixinBase):
                 (
                     f'senderImagePath=="{sender}"'
                     f' OR (processImagePath=="{sender}"'
-                    ' AND senderImagePath=="/usr/lib/libffi.dylib")'
+                    ' AND (senderImagePath=="/usr/lib/libffi.dylib" '
+                    '   OR senderImagePath ENDSWITH "/Python" '
+                    '   OR senderImagePath ENDSWITH ".abi3.so")'
+                    " )"
                 ),
             ],
             stdout=subprocess.PIPE,
