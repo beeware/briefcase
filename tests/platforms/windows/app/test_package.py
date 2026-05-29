@@ -11,7 +11,12 @@ from briefcase.integrations.windows_sdk import WindowsSDK
 from briefcase.integrations.wix import WiX
 from briefcase.platforms.windows.app import WindowsAppPackageCommand
 
-from ....integrations.wix.conftest import WIX_EXE_PATH, WIX_NETFX_PATH, WIX_UI_PATH
+from ....integrations.wix.conftest import (
+    WIX_EXE_PATH,
+    WIX_NETFX_PATH,
+    WIX_UI_PATH,
+    WIX_UTIL_PATH,
+)
 from ....utils import create_file
 
 
@@ -225,6 +230,8 @@ def test_package_msi(
                 tmp_path / "wix" / WIX_UI_PATH,
                 "-ext",
                 tmp_path / "wix" / WIX_NETFX_PATH,
+                "-ext",
+                tmp_path / "wix" / WIX_UTIL_PATH,
                 "-arch",
                 "x64",
                 "first-app.wxs",
@@ -360,6 +367,8 @@ def test_package_msi_with_codesigning(
                 tmp_path / "wix" / WIX_UI_PATH,
                 "-ext",
                 tmp_path / "wix" / WIX_NETFX_PATH,
+                "-ext",
+                tmp_path / "wix" / WIX_UTIL_PATH,
                 "-arch",
                 "x64",
                 "first-app.wxs",
@@ -544,6 +553,8 @@ def test_package_msi_failed_compile(package_command, first_app_config, tmp_path)
                 tmp_path / "wix" / WIX_UI_PATH,
                 "-ext",
                 tmp_path / "wix" / WIX_NETFX_PATH,
+                "-ext",
+                tmp_path / "wix" / WIX_UTIL_PATH,
                 "-arch",
                 "x64",
                 "first-app.wxs",
@@ -617,6 +628,8 @@ def test_package_msi_failed_signing_msi(package_command, first_app_config, tmp_p
                 tmp_path / "wix" / WIX_UI_PATH,
                 "-ext",
                 tmp_path / "wix" / WIX_NETFX_PATH,
+                "-ext",
+                tmp_path / "wix" / WIX_UTIL_PATH,
                 "-arch",
                 "x64",
                 "first-app.wxs",

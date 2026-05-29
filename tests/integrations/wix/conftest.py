@@ -19,6 +19,10 @@ WIX_NETFX_PATH = (
     "CFiles64/WixToolset/extensions/WixToolset.Netfx.wixext/5.0.2/wixext5/"
     "WixToolset.Netfx.wixext.dll"
 )
+WIX_UTIL_PATH = (
+    "CFiles64/WixToolset/extensions/WixToolset.Util.wixext/5.0.2/wixext5/"
+    "WixToolset.Util.wixext.dll"
+)
 
 
 @pytest.fixture
