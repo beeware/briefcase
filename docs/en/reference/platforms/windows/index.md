@@ -129,6 +129,11 @@ The digest algorithm to request the Timestamp Authority server uses for the time
 
 The following options can be added to the `tool.briefcase.app.<appname>.windows` section of your `pyproject.toml` file.
 
+#### `min_os_version`
+
+The minimum [Windows build number](https://en.wikipedia.org/wiki/List_of_Microsoft_Windows_versions) that the app will support.
+This is used by MSI installers to block installation on unsupported versions.
+
 #### `dotnet_version`  { #dotnet-version }
 
 The minimum .NET runtime version required by the application, as a version string (e.g., `"10.0.0"`). This is used by MSI installers to verify that the required runtime is installed before installing the app. If this value is not set, no .NET runtime check is performed.
