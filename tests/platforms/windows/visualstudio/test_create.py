@@ -1,5 +1,9 @@
+from unittest.mock import MagicMock
+
 import pytest
 
+from briefcase.exceptions import BriefcaseCommandError
+from briefcase.integrations.subprocess import Subprocess
 from briefcase.platforms.windows.visualstudio import WindowsVisualStudioCreateCommand
 
 # Most tests and fixtures are the same for both "app" and "visualstudio". This file only
@@ -22,3 +26,30 @@ def test_package_path(create_command, first_app_config, tmp_path):
     assert context["package_path"] == str(
         tmp_path / "base_path/build/first-app/windows/visualstudio/x64/Release"
     )
+
+
+@pytest.mark.parametrize(
+    ("min_os_version", "compatible"), [("7601", False), ("10240", True)]
+)
+def test_in_os_version(create_command, first_app_templated, min_os_version, compatible):
+    """If the app defines a min OS version that is incompatible with the support
+    package, an error is raised."""
+    first_app_templated.requires = ["first", "second==1.2.3", "third>=3.2.1"]
+    first_app_templated.min_os_version = min_os_version
+    create_command.tools[first_app_templated].app_context = MagicMock(
+        spec_set=Subprocess
+    )
+
+    if not compatible:
+        with pytest.raises(
+            BriefcaseCommandError,
+            match=(
+                r"Your Windows app specifies a minimum build number of 7601, "
+                r"but the support package only supports 10240"
+            ),
+        ):
+            create_command.install_app_requirements(first_app_templated)
+        create_command.tools[first_app_templated].app_context.run.assert_not_called()
+    else:
+        create_command.install_app_requirements(first_app_templated)
+        create_command.tools[first_app_templated].app_context.run.assert_called()
