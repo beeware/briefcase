@@ -1073,6 +1073,8 @@ class Console:
         self.prompt()
 
         choices = [str(index) for index in range(1, len(ordered) + 1)]
+        if len(ordered) == 1:
+            default = "1"
         index = self.input_selection(
             prompt=f"{description} [{default}]: " if default else f"{description}: ",
             choices=choices,
