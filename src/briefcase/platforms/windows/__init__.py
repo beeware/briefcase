@@ -134,6 +134,18 @@ Windows applications cannot be built using a 32bit version of Python.
 Install a 64bit version of Python and run Briefcase again.
 """)
 
+    def target_windows_build(self, app: FinalizedAppConfig) -> int | None:
+        """The minimum supported Windows build number for the app from
+        ``briefcase.toml``.
+
+        :param app: The config object for the app
+        :return: version or None if one isn't specified
+        """
+        try:
+            return int(self.briefcase_toml(app)["briefcase"]["target_windows_build"])
+        except KeyError:
+            return None
+
 
 class WindowsCreateCommand(CreateCommand):
     def support_package_filename(self, support_revision):
@@ -250,14 +262,15 @@ class WindowsCreateCommand(CreateCommand):
         app_packages_path: Path,
         **kwargs,
     ):
-        support_min_version = 10240  # Windows 10
-        min_version = int(getattr(app, "min_os_version", support_min_version))
-        if min_version < support_min_version:
-            raise BriefcaseCommandError(
-                "Your Windows app specifies a minimum build number of "
-                f"{min_version}, but the support package only supports "
-                f"{support_min_version}"
-            )
+        template_min_version = self.target_windows_build(app)
+        if template_min_version:
+            min_version = getattr(app, "min_os_version", template_min_version)
+            if min_version and int(min_version) < template_min_version:
+                raise BriefcaseCommandError(
+                    "Your Windows app specifies a minimum build number of "
+                    f"{min_version}, but the app template only supports "
+                    f"{template_min_version}"
+                )
 
         return super()._install_app_requirements(
             app, requires, app_packages_path, **kwargs

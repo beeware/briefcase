@@ -29,23 +29,34 @@ def test_package_path(create_command, first_app_config, tmp_path):
 
 
 @pytest.mark.parametrize(
-    ("min_os_version", "compatible"), [("7601", False), ("10240", True)]
+    ("template_version", "app_version", "compatible"),
+    [
+        (10240, "7601", False),
+        (10240, "10240", True),
+        (10240, "17763", True),
+        (None, 10240, True),
+        (10240, None, True),
+        (None, None, True),
+    ],
 )
-def test_in_os_version(create_command, first_app_templated, min_os_version, compatible):
-    """If the app defines a min OS version that is incompatible with the support
-    package, an error is raised."""
+def test_min_os_version(
+    create_command, first_app_templated, template_version, app_version, compatible
+):
+    """If the app defines a min OS version that is incompatible with the app template,
+    an error is raised."""
     first_app_templated.requires = ["first", "second==1.2.3", "third>=3.2.1"]
-    first_app_templated.min_os_version = min_os_version
+    create_command.target_windows_build = MagicMock(return_value=template_version)
+    if app_version:
+        first_app_templated.min_os_version = app_version
     create_command.tools[first_app_templated].app_context = MagicMock(
         spec_set=Subprocess
     )
-
     if not compatible:
         with pytest.raises(
             BriefcaseCommandError,
             match=(
-                r"Your Windows app specifies a minimum build number of 7601, "
-                r"but the support package only supports 10240"
+                f"Your Windows app specifies a minimum build number of {app_version}, "
+                f"but the app template only supports {template_version}"
             ),
         ):
             create_command.install_app_requirements(first_app_templated)
