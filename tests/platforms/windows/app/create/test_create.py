@@ -298,3 +298,14 @@ def test_min_os_version(
     else:
         create_command.install_app_requirements(first_app_templated)
         create_command.tools[first_app_templated].app_context.run.assert_called()
+
+
+def test_target_windows_build(create_command, first_app_templated):
+    "Test that the target Windows build is returned"
+
+    create_command._briefcase_toml[first_app_templated] = {"briefcase": {}}
+    assert create_command.target_windows_build(first_app_templated) is None
+    create_command._briefcase_toml[first_app_templated] = {
+        "briefcase": {"target_windows_build": 10240}
+    }
+    assert create_command.target_windows_build(first_app_templated) == 10240
