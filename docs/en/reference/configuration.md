@@ -48,7 +48,7 @@ The base `[tool.briefcase]` section declares settings that project specific, or 
 
 Configuration options for a specific application.
 
-`<app name>` must adhere to a valid Python distribution name as specified in [PEP508](https://peps.python.org/pep-0508/#names). The app name must also *not* be a reserved word in Python, Java or JavaScript (i.e., app names like `switch` or `pass` would not be valid); and it may not include any of the [filenames prohibited by Windows](https://learn.microsoft.com/en-us/windows/win32/fileio/naming-a-file#naming-conventions) (i.e., `CON`, `PRN`, or `LPT1`).
+`<app name>` (with all of its hyphens replaced with underscores) must be a valid Python identifier, and adhere to a valid Python distribution name as specified in [PEP508](https://peps.python.org/pep-0508/#names). The app name must also *not* be a reserved word in Python, Java or JavaScript (i.e., app names like `switch` or `pass` would not be valid); and it may not include any of the [filenames prohibited by Windows](https://learn.microsoft.com/en-us/windows/win32/fileio/naming-a-file#naming-conventions) (i.e., `CON`, `PRN`, or `LPT1`).
 
 ### `[tool.briefcase.app.<app name>.<platform>]`
 

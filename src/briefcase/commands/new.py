@@ -8,6 +8,8 @@ from importlib import metadata
 
 from briefcase.bootstraps import BaseGuiBootstrap
 from briefcase.config import (
+    APP_NAME_SPEC,
+    get_module_name,
     is_valid_app_name,
     is_valid_bundle_identifier,
     make_class_name,
@@ -170,12 +172,7 @@ class NewCommand(BaseCommand):
         if not is_valid_app_name(candidate):
             raise ValueError(
                 self.console.textwrap(
-                    f"{candidate!r} is not a valid app name.\n"
-                    "\n"
-                    "App names must not be reserved keywords such as 'and', 'for' and "
-                    "'while'. They must also be PEP508 compliant (i.e., they can only "
-                    "include letters, numbers, '-' and '_'; must start with a letter; "
-                    "and cannot end with '-' or '_')."
+                    f"{candidate!r} is not a valid app name.\n\n{APP_NAME_SPEC}"
                 )
             )
 
@@ -190,7 +187,7 @@ class NewCommand(BaseCommand):
         :param app_name: The app name
         :returns: The app's module name.
         """
-        return app_name.replace("-", "_")
+        return get_module_name(app_name)
 
     def validate_bundle(self, candidate):
         """Determine if the bundle identifier is valid.
@@ -312,10 +309,7 @@ class NewCommand(BaseCommand):
                 "Next, we need a name that can serve as a machine-readable Python "
                 "package name for your application.\n"
                 "\n"
-                "This name must be PEP508-compliant - that means the name may only "
-                "contain letters, numbers, hyphens and underscores; it can't contain "
-                "spaces or punctuation, and it can't start with a hyphen or "
-                "underscore.\n"
+                f"{APP_NAME_SPEC}\n"
                 "\n"
                 "Based on your formal name, we suggest an app name of "
                 f"{default_app_name!r}, but you can use another name if you want."
