@@ -40,7 +40,11 @@ def test_package_path(create_command, first_app_config, tmp_path):
     ],
 )
 def test_min_os_version(
-    create_command, first_app_templated, template_version, app_version, compatible
+    create_command,
+    first_app_templated,
+    template_version,
+    app_version,
+    compatible,
 ):
     """If the app defines a min OS version that is incompatible with the app template,
     an error is raised."""

@@ -274,7 +274,11 @@ def test_external(create_command, external_first_app, tmp_path):
     ],
 )
 def test_min_os_version(
-    create_command, first_app_templated, template_version, app_version, compatible
+    create_command,
+    first_app_templated,
+    template_version,
+    app_version,
+    compatible,
 ):
     """If the app defines a min OS version that is incompatible with the app template,
     an error is raised."""
