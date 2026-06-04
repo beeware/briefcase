@@ -262,13 +262,12 @@ class WindowsCreateCommand(CreateCommand):
         app_packages_path: Path,
         **kwargs,
     ):
-        template_min_version = self.target_windows_build(app)
-        if template_min_version:
+        if template_min_version := self.target_windows_build(app):
             min_version = getattr(app, "min_os_version", None)
             if min_version is None:
                 app.min_os_version = template_min_version
                 min_version = template_min_version
-            if min_version and int(min_version) < template_min_version:
+            elif min_version < template_min_version:
                 raise BriefcaseCommandError(
                     "Your Windows app specifies a minimum build number of "
                     f"{min_version}, but the app template only supports "

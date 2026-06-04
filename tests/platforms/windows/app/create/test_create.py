@@ -265,9 +265,9 @@ def test_external(create_command, external_first_app, tmp_path):
 @pytest.mark.parametrize(
     ("template_version", "app_version", "compatible"),
     [
-        (10240, "7601", False),
-        (10240, "10240", True),
-        (10240, "17763", True),
+        (10240, 7601, False),
+        (10240, 10240, True),
+        (10240, 17763, True),
         (None, 10240, True),
         (10240, None, True),
         (None, None, True),
