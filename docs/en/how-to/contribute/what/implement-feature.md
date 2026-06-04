@@ -1,3 +1,3 @@
 # Implementing a new feature
 
-{% extends "contribute/what/implement-feature.md" %}
+{% extends "_shared/contribute/what/implement-feature.md" %}
