@@ -1122,6 +1122,22 @@ any compatibility problems, and then add the compatibility declaration.
                     msg=f"Configuration for '{app_name}'",
                 )
 
+                # Warn if the app description is longer than 80 characters.
+                # Long descriptions can cause MSI shortcut icon corruption
+                # (the description field is limited to 256 chars in Windows
+                # shortcuts, and the description length overflows into the
+                # icon path prefix). Users should use the long_description
+                # field for longer text.
+                if len(self.apps[app_name].description) > 80:
+                    self.console.warning(
+                        f"The description for '{app_name}' is "
+                        f"{len(self.apps[app_name].description)} characters. "
+                        "Briefcase descriptions should be no more than 80 "
+                        "characters. Long descriptions may cause icon display "
+                        "issues on some platforms (e.g., MSI installers). "
+                        "Use the `long_description` field for longer text."
+                    )
+
         except OSError as e:
             raise BriefcaseConfigError(
                 f"""\

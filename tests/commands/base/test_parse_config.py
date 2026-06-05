@@ -3,6 +3,13 @@ from packaging.version import Version
 
 from briefcase.exceptions import BriefcaseConfigError
 
+from unittest.mock import MagicMock
+
+import pytest
+from packaging.version import Version
+
+from briefcase.exceptions import BriefcaseConfigError
+
 from ...utils import create_file
 
 
@@ -223,3 +230,56 @@ def test_parse_config_with_invalid_override(base_command):
                 "version": "not-a-version-number",
             },
         )
+
+
+def test_short_description_no_warning(base_command):
+    """A config with a short description (<=80 chars) does not trigger a warning."""
+    filename = base_command.base_path / "pyproject.toml"
+    create_file(
+        filename,
+        """
+        [tool.briefcase]
+        project_name = "Sample project"
+        version = "1.2.3"
+        description = "A sample app"
+        bundle = "org.beeware"
+        license = "MIT"
+
+        [tool.briefcase.app.my-app]
+        sources = ['src/my_app']
+    """,
+    )
+
+    base_command.console.warning = MagicMock()
+    base_command.parse_config(filename, {})
+
+    base_command.console.warning.assert_not_called()
+
+
+def test_long_description_warning(base_command):
+    """A config with a long description (>80 chars) triggers a warning."""
+    long_desc = "x" * 81
+    filename = base_command.base_path / "pyproject.toml"
+    create_file(
+        filename,
+        f"""
+        [tool.briefcase]
+        project_name = "Sample project"
+        version = "1.2.3"
+        bundle = "org.beeware"
+        license = "MIT"
+
+        [tool.briefcase.app.my-app]
+        description = "{long_desc}"
+        sources = ['src/my_app']
+    """,
+    )
+
+    base_command.console.warning = MagicMock()
+    base_command.parse_config(filename, {})
+
+    base_command.console.warning.assert_called_once()
+    warning_msg = base_command.console.warning.call_args[0][0]
+    assert "my-app" in warning_msg
+    assert "81 characters" in warning_msg
+    assert "long_description" in warning_msg
