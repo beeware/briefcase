@@ -40,7 +40,7 @@ jobs:
     continue-on-error: true
     steps:
     - name: Checkout
-      uses: actions/checkout@v6.0.2
+      uses: actions/checkout@v6.0.3
 
     - name: Set up Python
       uses: actions/setup-python@v6.2.0
@@ -83,7 +83,7 @@ jobs:
     timeout-minutes: 5
     steps:
       - name: Checkout
-        uses: actions/checkout@v6.0.2
+        uses: actions/checkout@v6.0.3
         with:
           fetch-depth: 1
 
@@ -132,7 +132,7 @@ jobs:
           #   experimental: true
     steps:
     - name: Checkout
-      uses: actions/checkout@v6.0.2
+      uses: actions/checkout@v6.0.3
       with:
         fetch-depth: 0
 
@@ -186,7 +186,7 @@ jobs:
     if: always() && contains('success,failure', needs.unit-tests.result)
     steps:
     - name: Checkout
-      uses: actions/checkout@v6.0.2
+      uses: actions/checkout@v6.0.3
       with:
         fetch-depth: 0
 
