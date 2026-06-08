@@ -295,7 +295,7 @@ The location of your Briefcase project:
 contains a comma. This will cause problems with some tools, preventing
 you from building and packaging applications.
 
-Move the project to a location without commas in its path.
+Move the project to a path that does not contain commas.
 
 """
             )
@@ -313,7 +313,7 @@ The location of your Briefcase project:
 contains a left-to-right mark character. This will cause problems with some
 tools on Windows, preventing you from building and packaging applications.
 
-Move the project to a location without this character in its path.
+Move the project to a path that does not container this character.
 
 """
             )
@@ -328,6 +328,8 @@ Move the project to a location without this character in its path.
 
                     contains spaces. This can cause problems with some tools,
                     preventing you from building and packaging applications.
+                    If you experience problems building or running the app,
+                    move the project to a path that doesn't contain spaces.
                 """,
             )
 
