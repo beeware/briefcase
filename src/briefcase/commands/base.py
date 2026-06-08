@@ -183,6 +183,7 @@ class BaseCommand(ABC):
             console=console,
             base_path=self.data_path / "tools",
         )
+        self.validate_base_path()
         self.validate_python_version()
 
         # Immediately add tools that must be always available
@@ -279,6 +280,58 @@ a custom location for Briefcase's tools.
                 ) from e
 
         return Path(data_path)
+
+    def validate_base_path(self):
+        """Validate the Briefcase project path for known third-party tool issues."""
+        base_path = os.fsdecode(self.base_path)
+
+        if "," in base_path:
+            raise BriefcaseCommandError(
+                f"""
+The location of your Briefcase project:
+
+    {base_path}
+
+contains a comma. This will cause problems with some tools, preventing
+you from building and packaging applications.
+
+Move the project to a path that does not contain commas.
+
+"""
+            )
+
+        if (
+            platform.system() == "Windows"  # pragma: no-cover-if-not-windows
+            and "\u200e" in base_path
+        ):
+            raise BriefcaseCommandError(
+                f"""
+The location of your Briefcase project:
+
+    {base_path}
+
+contains a left-to-right mark character. This will cause problems with some
+tools on Windows, preventing you from building and packaging applications.
+
+Move the project to a path that does not container this character.
+
+"""
+            )
+
+        if " " in base_path:
+            self.console.warning_banner(
+                "Project path contains spaces",
+                f"""
+                    The location of your Briefcase project:
+
+                        {base_path}
+
+                    contains spaces. This can cause problems with some tools,
+                    preventing you from building and packaging applications.
+                    If you experience problems building or running the app,
+                    move the project to a path that doesn't contain spaces.
+                """,
+            )
 
     def validate_locale(self):
         """Validate the system's locale is compatible."""
