@@ -162,6 +162,19 @@ def test_capture_stacktrace_for_briefcaseerror(console, skip_logfile):
     assert console.skip_log is skip_logfile
 
 
+def test_capture_stacktrace_no_exception(console):
+    """capture_stacktrace is a no-op when there is no active exception."""
+    console.capture_stacktrace()
+
+    assert console.stacktraces == []
+
+
+def test_close_is_idempotent(console):
+    """Close() can be called more than once."""
+    console.close()
+    console.close()
+
+
 def test_save_log_to_file_do_not_log(console, command):
     """Nothing is done to save log if no command or --log wasn't passed."""
     console.save_log_to_file(command=None)
