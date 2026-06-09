@@ -5,7 +5,8 @@ from unittest.mock import MagicMock
 import pytest
 from packaging.version import Version
 
-from briefcase.exceptions import UnsupportedHostError
+from briefcase.exceptions import BriefcaseCommandError, UnsupportedHostError
+from briefcase.integrations.subprocess import Subprocess
 from briefcase.platforms.windows.app import WindowsAppCreateCommand
 
 
@@ -259,3 +260,60 @@ def test_external(create_command, external_first_app, tmp_path):
     context = create_command.output_format_template_context(external_first_app)
     assert context["package_path"] == str(tmp_path / "base_path/external/src")
     assert context["binary_path"] == "internal/app.exe"
+
+
+@pytest.mark.parametrize(
+    ("template_version", "app_version", "compatible"),
+    [
+        (10240, 7601, False),
+        (10240, 10240, True),
+        (10240, 17763, True),
+        (None, 10240, True),
+        (10240, None, True),
+        (None, None, True),
+        # Values provided as strings are converted to int
+        ("10240", "7601", False),
+        (10240, "7601", False),
+        ("10240", 7601, False),
+    ],
+)
+def test_min_os_version(
+    create_command,
+    first_app_templated,
+    template_version,
+    app_version,
+    compatible,
+):
+    """If the app defines a min OS version that is incompatible with the app template,
+    an error is raised."""
+    first_app_templated.requires = ["first", "second==1.2.3", "third>=3.2.1"]
+    create_command.target_windows_build = MagicMock(return_value=template_version)
+    if app_version:
+        first_app_templated.min_os_version = app_version
+    create_command.tools[first_app_templated].app_context = MagicMock(
+        spec_set=Subprocess
+    )
+    if not compatible:
+        with pytest.raises(
+            BriefcaseCommandError,
+            match=(
+                f"Your Windows app specifies a minimum build number of {app_version}, "
+                f"but the app template only supports {template_version}"
+            ),
+        ):
+            create_command.install_app_requirements(first_app_templated)
+        create_command.tools[first_app_templated].app_context.run.assert_not_called()
+    else:
+        create_command.install_app_requirements(first_app_templated)
+        create_command.tools[first_app_templated].app_context.run.assert_called()
+
+
+def test_target_windows_build(create_command, first_app_templated):
+    "Test that the target Windows build is returned"
+
+    create_command._briefcase_toml[first_app_templated] = {"briefcase": {}}
+    assert create_command.target_windows_build(first_app_templated) is None
+    create_command._briefcase_toml[first_app_templated] = {
+        "briefcase": {"target_windows_build": 10240}
+    }
+    assert create_command.target_windows_build(first_app_templated) == 10240
