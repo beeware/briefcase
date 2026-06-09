@@ -271,6 +271,10 @@ def test_external(create_command, external_first_app, tmp_path):
         (None, 10240, True),
         (10240, None, True),
         (None, None, True),
+        # Values provided as strings are converted to int
+        ("10240", "7601", False),
+        (10240, "7601", False),
+        ("10240", 7601, False),
     ],
 )
 def test_min_os_version(

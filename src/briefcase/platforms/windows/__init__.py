@@ -263,7 +263,7 @@ class WindowsCreateCommand(CreateCommand):
         **kwargs,
     ):
         if template_min_version := self.target_windows_build(app):
-            min_version = getattr(app, "min_os_version", template_min_version)
+            min_version = int(getattr(app, "min_os_version", template_min_version))
             if min_version < template_min_version:
                 raise BriefcaseCommandError(
                     "Your Windows app specifies a minimum build number of "
