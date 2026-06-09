@@ -142,7 +142,7 @@ Install a 64bit version of Python and run Briefcase again.
         :return: version or None if one isn't specified
         """
         try:
-            return int(self.briefcase_toml(app)["briefcase"]["target_windows_build"])
+            return self.briefcase_toml(app)["briefcase"]["target_windows_build"]
         except KeyError:
             return None
 
@@ -264,7 +264,7 @@ class WindowsCreateCommand(CreateCommand):
     ):
         if template_min_version := self.target_windows_build(app):
             min_version = int(getattr(app, "min_os_version", template_min_version))
-            if min_version < template_min_version:
+            if min_version < int(template_min_version):
                 raise BriefcaseCommandError(
                     "Your Windows app specifies a minimum build number of "
                     f"{min_version}, but the app template only supports "
