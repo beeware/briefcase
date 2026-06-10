@@ -41,6 +41,12 @@ APP_NAME_SPEC = (
     "and cannot end with '-' or '_')."
 )
 
+# The `description` is a short, single-line summary of the app. Longer values
+# belong in `long_description`. Some packaging formats embed the description in
+# length-limited fields (e.g. Windows MSI shortcuts truncate at 256 characters,
+# corrupting the icon path), so Briefcase warns when it exceeds this length.
+MAX_DESCRIPTION_LENGTH = 80
+
 
 def is_valid_pep508_name(app_name):
     """Determine if the name is valid by PEP508 rules."""
@@ -1462,6 +1468,20 @@ def parse_config(config_file: Path, platform, output_format, console):
 
         # Normalize license fields to PEP 639 representation.
         normalize_license_config(config, app_name, base_path, console)
+
+        # The description should be a short, single-line summary. Warn (but don't
+        # fail) if it's too long, as some packaging formats embed it in
+        # length-limited fields; for example, an over-long description corrupts
+        # the shortcut icon path in Windows MSI installers.
+        description = config.get("description")
+        if isinstance(description, str) and len(description) > MAX_DESCRIPTION_LENGTH:
+            console.warning(
+                f"The description for {app_name!r} is {len(description)} characters "
+                f"long. Briefcase recommends a description of no more than "
+                f"{MAX_DESCRIPTION_LENGTH} characters; longer descriptions may be "
+                f"truncated when packaging for some platforms. Move any detailed "
+                f"text into the `long_description` field."
+            )
 
         # Construct a configuration object, and add it to the list
         # of configurations that are being handled.
