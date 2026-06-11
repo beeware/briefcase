@@ -3,7 +3,11 @@ from unittest.mock import MagicMock
 import pytest
 
 from briefcase.console import Console
-from briefcase.integrations.virtual_environment import NoOpVenvContext, VenvContext
+from briefcase.integrations.base import ToolCache
+from briefcase.integrations.subprocess import Subprocess
+from briefcase.integrations.virtual_environment import (
+    NoOpEnvManager,
+)
 
 
 @pytest.fixture
@@ -17,61 +21,40 @@ def venv_path(tmp_path):
 
 
 @pytest.fixture
-def venv_context(mock_tools, venv_path):
-    return VenvContext(
-        tools=mock_tools,
-        venv_path=venv_path,
-    )
+def noop_manager(mock_tools, venv_path):
+    return NoOpEnvManager(mock_tools, venv_path)
 
 
 @pytest.fixture
-def noop_context(mock_tools, venv_path):
-    return NoOpVenvContext(tools=mock_tools, venv_path=venv_path)
+def simple_manager():
+    # Define a test manager that adds "rewrite" to the start of
+    # every argument list, and adds "VENV" to the environment
+    manager = MagicMock()
+
+    def rewrite_args(args):
+        return ["rewrite", *args]
+
+    def build_env(overrides):
+        env = overrides.copy() if overrides else {}
+        env["VENV"] = "active"
+        return env
+
+    manager.rewrite_args = rewrite_args
+    manager.build_env = build_env
+
+    return manager
 
 
 @pytest.fixture
-def mock_subprocess_setup(venv_context, monkeypatch):
-    """Setup mock objects for subprocess testing across all VenvContext tests."""
-    mock_rewrite_head = MagicMock(return_value=["rewritten", "args"])
-    mock_full_env = MagicMock(return_value={"FULL": "env"})
-    mock_subprocess = MagicMock()
-
-    mock_popen_instance = MagicMock()
-    mock_completed_process = MagicMock()
-
-    mock_subprocess.Popen.return_value = mock_popen_instance
-    mock_subprocess.run.return_value = mock_completed_process
-    mock_subprocess.check_output.return_value = "output"
-
-    monkeypatch.setattr(venv_context, "_rewrite_head", mock_rewrite_head)
-    monkeypatch.setattr(venv_context, "full_env", mock_full_env)
-    monkeypatch.setattr(venv_context.tools, "subprocess", mock_subprocess)
-
-    return {
-        "rewrite_head": mock_rewrite_head,
-        "full_env": mock_full_env,
-        "subprocess": mock_subprocess,
-        "popen_instance": mock_popen_instance,
-        "completed_process": mock_completed_process,
-    }
+def process():
+    return MagicMock()
 
 
 @pytest.fixture
-def mock_noop_subprocess_setup(noop_context, monkeypatch):
-    """Setup mock objects for subprocess testing across all NoOpVenvContext tests."""
-    mock_subprocess = MagicMock()
-
-    mock_popen_instance = MagicMock()
-    mock_completed_process = MagicMock()
-
-    mock_subprocess.Popen.return_value = mock_popen_instance
-    mock_subprocess.run.return_value = mock_completed_process
-    mock_subprocess.check_output.return_value = "output"
-
-    monkeypatch.setattr(noop_context.tools, "subprocess", mock_subprocess)
-
-    return {
-        "subprocess": mock_subprocess,
-        "popen_instance": mock_popen_instance,
-        "completed_process": mock_completed_process,
-    }
+def mock_tools(mock_tools, process) -> ToolCache:
+    # Mock subprocess
+    mock_tools.subprocess = MagicMock(spec_set=Subprocess)
+    mock_tools.subprocess.run.return_value = 42
+    mock_tools.subprocess.check_output.return_value = "command output"
+    mock_tools.subprocess.Popen.return_value = process
+    return mock_tools

@@ -11,7 +11,7 @@ from briefcase.commands.create import _is_local_path
 from briefcase.commands.run import RunAppMixin
 from briefcase.config import FinalizedAppConfig
 from briefcase.exceptions import BriefcaseCommandError, RequirementsInstallError
-from briefcase.integrations.virtual_environment import VenvContext
+from briefcase.integrations.virtual_environment import VirtualEnvironment
 
 from .base import BaseCommand
 from .create import write_dist_info
@@ -90,7 +90,7 @@ class DevCommand(RunAppMixin, BaseCommand):
     def install_dev_requirements(
         self,
         app: FinalizedAppConfig,
-        venv: VenvContext,
+        venv: VirtualEnvironment,
         **options,
     ):
         """Install the requirements for the app dev.
@@ -146,7 +146,7 @@ class DevCommand(RunAppMixin, BaseCommand):
         self,
         app: FinalizedAppConfig,
         env: dict,
-        venv: VenvContext,
+        venv: VirtualEnvironment,
         passthrough: list[str],
         **options,
     ):

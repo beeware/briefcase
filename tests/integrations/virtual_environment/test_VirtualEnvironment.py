@@ -1,48 +1,27 @@
-import pytest
+from unittest.mock import MagicMock
 
-from briefcase.integrations.virtual_environment import (
-    NoOpEnvironment,
-    VenvEnvironment,
-    VirtualEnvironment,
-)
+from briefcase.integrations.virtual_environment import VirtualEnvironment
 
 
-@pytest.fixture
-def virtual_environment(mock_tools):
-    return VirtualEnvironment.verify(mock_tools)
+def test_create(mock_tools, venv_path):
+    """An environment can be created."""
+    manager = MagicMock()
+    manager.prepare = MagicMock(return_value=True)
+
+    env = VirtualEnvironment(mock_tools, manager, recreate=False)
+
+    manager.prepare.assert_called_once_with(recreate=False)
+    assert env.manager == manager
+    assert env.created is True
 
 
-def test_isolated(virtual_environment, venv_path):
-    """Factory returns VenvEnvironment when isolated is true."""
-    env = virtual_environment.create(venv_path, isolated=True, recreate=False)
+def test_recreate(mock_tools, venv_path):
+    """An environment can be recreated."""
+    manager = MagicMock()
+    manager.prepare = MagicMock(return_value=True)
 
-    assert isinstance(env, VenvEnvironment)
-    assert env.path == venv_path
-    assert not env.recreate
+    env = VirtualEnvironment(mock_tools, manager, recreate=True)
 
-
-def test_non_isolated(virtual_environment, venv_path):
-    """Factory returns NoOpEnvironment when isolated is false."""
-    env = virtual_environment.create(venv_path, isolated=False, recreate=False)
-
-    assert isinstance(env, NoOpEnvironment)
-    assert env.path == venv_path
-    assert not env.recreate
-
-
-def test_recreate_isolated(virtual_environment, venv_path):
-    """An isolated environment can be re-created."""
-    env = virtual_environment.create(venv_path, isolated=True, recreate=True)
-
-    assert isinstance(env, VenvEnvironment)
-    assert env.path == venv_path
-    assert env.recreate
-
-
-def test_recreate_non_isolated(virtual_environment, venv_path):
-    """An non-isolated environment can be re-created."""
-    env = virtual_environment.create(venv_path, isolated=False, recreate=True)
-
-    assert isinstance(env, NoOpEnvironment)
-    assert env.path == venv_path
-    assert env.recreate
+    manager.prepare.assert_called_once_with(recreate=True)
+    assert env.manager == manager
+    assert env.created is True
