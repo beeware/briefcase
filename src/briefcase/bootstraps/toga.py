@@ -58,7 +58,9 @@ requires = [
     def pyproject_table_linux(self):
         return """\
 requires = [
-    "toga-gtk~=0.5.0",
+    "git+https://github.com/beeware/toga@main#subdirectory=core",
+    "git+https://github.com/beeware/toga@main#subdirectory=travertino",
+    "git+https://github.com/beeware/toga@main#subdirectory=gtk",
     # PyGObject 3.52.1 enforces a requirement on libgirepository-2.0-dev. This library
     # isn't available on Debian 12/Ubuntu 22.04. If you don't need to support those (or
     # older) releases, you can remove this version pin. See beeware/toga#3143.
@@ -191,7 +193,7 @@ linuxdeploy_plugins = [
     def pyproject_table_linux_flatpak(self):
         return """\
 flatpak_runtime = "org.gnome.Platform"
-flatpak_runtime_version = "48"
+flatpak_runtime_version = "50"
 flatpak_sdk = "org.gnome.Sdk"
 """
 
