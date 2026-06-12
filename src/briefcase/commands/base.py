@@ -52,7 +52,7 @@ from briefcase.exceptions import (
 from briefcase.integrations.base import ToolCache
 from briefcase.integrations.file import File
 from briefcase.integrations.subprocess import Subprocess
-from briefcase.integrations.virtual_environment import VirtualEnvironmentTool
+from briefcase.integrations.virtual_environment import VirtualEnvironmentManager
 from briefcase.platforms import get_output_formats, get_platforms
 
 
@@ -188,7 +188,7 @@ class BaseCommand(ABC):
 
         # Immediately add tools that must be always available
         Subprocess.verify(tools=self.tools)
-        VirtualEnvironmentTool.verify(tools=self.tools)
+        VirtualEnvironmentManager.verify(tools=self.tools)
         File.verify(tools=self.tools)
 
         if not is_clone:

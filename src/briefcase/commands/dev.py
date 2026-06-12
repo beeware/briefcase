@@ -7,10 +7,9 @@ import sys
 from collections.abc import Mapping
 from pathlib import Path
 
-from briefcase.commands.create import _is_local_path
 from briefcase.commands.run import RunAppMixin
 from briefcase.config import FinalizedAppConfig
-from briefcase.exceptions import BriefcaseCommandError, RequirementsInstallError
+from briefcase.exceptions import BriefcaseCommandError
 from briefcase.integrations.virtual_environment import VirtualEnvironment
 
 from .base import BaseCommand
@@ -102,7 +101,6 @@ class DevCommand(RunAppMixin, BaseCommand):
         :param venv: The context object used to run commands inside the virtual
             environment.
         """
-
         requires = app.requires or []
         if app.test_requires:
             requires.extend(app.test_requires)
@@ -110,37 +108,12 @@ class DevCommand(RunAppMixin, BaseCommand):
             self.console.info("No application requirements")
             return
 
-        require_args = []
-        for req in requires:
-            # Any requirement that is a local path, but *not* a reference to an archive
-            # file (zip, whl, etc), can be installed editable. If in doubt, install
-            # non-editable.
-            if _is_local_path(req) and not _is_archive(req):
-                require_args.extend(["-e", req])
-            else:
-                require_args.append(req)
-
         with self.console.wait_bar("Installing dev requirements..."):
-            try:
-                venv.run(
-                    [
-                        sys.executable,
-                        "-u",
-                        "-X",
-                        "utf8",
-                        "-m",
-                        "pip",
-                        "install",
-                        "--upgrade",
-                        *(["-vv"] if self.console.is_deep_debug else []),
-                        *require_args,
-                        *app.requirement_installer_args,
-                    ],
-                    check=True,
-                    encoding="UTF-8",
-                )
-            except subprocess.CalledProcessError as e:
-                raise RequirementsInstallError() from e
+            venv.install_requirements(
+                requires,
+                allow_editable=True,
+                installer_args=app.requirement_installer_args,
+            )
 
     def run_dev_app(
         self,
@@ -361,15 +334,3 @@ class DevCommand(RunAppMixin, BaseCommand):
                     passthrough=[] if passthrough is None else passthrough,
                     **options,
                 )
-
-
-def _is_archive(filename):
-    """Determine if the file is an archive file.
-
-    :param filename: The path to check
-    :returns: True if the file is an archive.
-    """
-    return any(
-        filename.endswith(ext)
-        for ext in [".tar.gz", ".tar.bz2", ".tar", ".zip", ".whl"]
-    )

@@ -6,10 +6,10 @@ from pathlib import Path
 
 from briefcase.exceptions import BriefcaseCommandError
 from briefcase.integrations.subprocess import SubprocessArgsT
-from briefcase.integrations.virtual_environment.base import EnvManager
+from briefcase.integrations.virtual_environment.base import VirtualEnvironment
 
 
-class VenvEnvManager(EnvManager):
+class VenvVirtualEnvironment(VirtualEnvironment):
     """An environment manager using the Python standard library module venv."""
 
     @property
@@ -60,7 +60,8 @@ class VenvEnvManager(EnvManager):
                 ) from e
 
             try:
-                self._update_core_tools()
+                # Ensure pip is upgraded in the environment
+                self.install_requirements(["pip"])
             except Exception as e:
                 raise BriefcaseCommandError(
                     f"Failed to update core tooling for {self.venv_path}"
@@ -110,10 +111,3 @@ class VenvEnvManager(EnvManager):
         env.pop("PYTHONHOME", None)
 
         return env
-
-    def _update_core_tools(self) -> None:
-        """Upgrade pip inside the freshly-created venv."""
-        self.tools.subprocess.run(
-            [self.executable, "-m", "pip", "install", "-U", "pip"],
-            check=True,
-        )

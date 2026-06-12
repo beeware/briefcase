@@ -1,3 +1,5 @@
+import shutil
+from pathlib import Path
 from unittest.mock import MagicMock
 
 import pytest
@@ -6,7 +8,8 @@ from briefcase.console import Console
 from briefcase.integrations.base import ToolCache
 from briefcase.integrations.subprocess import Subprocess
 from briefcase.integrations.virtual_environment import (
-    NoOpEnvManager,
+    NoOpVirtualEnvironment,
+    VirtualEnvironment,
 )
 
 
@@ -21,28 +24,50 @@ def venv_path(tmp_path):
 
 
 @pytest.fixture
-def noop_manager(mock_tools, venv_path):
-    return NoOpEnvManager(mock_tools, venv_path)
+def noop_venv(mock_tools, venv_path):
+    return NoOpVirtualEnvironment(mock_tools, venv_path)
 
 
-@pytest.fixture
-def simple_manager():
-    # Define a test manager that adds "rewrite" to the start of
-    # every argument list, and adds "VENV" to the environment
-    manager = MagicMock()
+class MockVirtualEnvironment(VirtualEnvironment):
+    @property
+    def executable(self) -> Path:
+        return self.venv_path / "something/bin/python"
 
-    def rewrite_args(args):
+    @property
+    def bin_dir(self) -> Path:
+        return self.executable.parent
+
+    def exists(self) -> bool:
+        return (self.venv_path / "something").exists()
+
+    def prepare(self, recreate=False) -> bool:
+        if not self.exists() or recreate:
+            marker = self.venv_path / "something/marker"
+            marker.parent.mkdir(parents=True, exist_ok=True)
+            marker.write_text("mock env", encoding="utf-8")
+            created = True
+        else:
+            created = False
+
+        return created
+
+    def clean(self) -> None:
+        """Unlink the marker file if present."""
+        if (self.venv_path / "something").exists():
+            shutil.rmtree(self.venv_path / "something")
+
+    def rewrite_args(self, args):
         return ["rewrite", *args]
 
-    def build_env(overrides):
+    def build_env(self, overrides):
         env = overrides.copy() if overrides else {}
         env["VENV"] = "active"
         return env
 
-    manager.rewrite_args = rewrite_args
-    manager.build_env = build_env
 
-    return manager
+@pytest.fixture
+def mock_venv(mock_tools, venv_path):
+    return MockVirtualEnvironment(mock_tools, venv_path)
 
 
 @pytest.fixture

@@ -3,13 +3,6 @@ from pathlib import Path
 
 import pytest
 
-from briefcase.integrations.virtual_environment import VenvEnvManager
-
-
-@pytest.fixture
-def manager(mock_tools, venv_path):
-    return VenvEnvManager(mock_tools, venv_path)
-
 
 @pytest.mark.parametrize(
     "empty_args",
@@ -19,9 +12,9 @@ def manager(mock_tools, venv_path):
         None,
     ],
 )
-def test_rewrite_args_empty(manager, empty_args):
+def test_rewrite_args_empty(venv, empty_args):
     """Empty inputs are returned unchanged."""
-    result = manager.rewrite_args(empty_args)
+    result = venv.rewrite_args(empty_args)
     assert result == empty_args
 
 
@@ -39,10 +32,10 @@ def test_rewrite_args_empty(manager, empty_args):
         ),
     ],
 )
-def test_rewrite_args_replaces_system_python(manager, args, expected_suffix):
+def test_rewrite_args_replaces_system_python(venv, args, expected_suffix):
     """The head argument is replaced when it equals sys.executable."""
-    result = manager.rewrite_args(args)
-    assert result == [manager.executable, *expected_suffix]
+    result = venv.rewrite_args(args)
+    assert result == [venv.executable, *expected_suffix]
 
 
 @pytest.mark.parametrize(
@@ -53,15 +46,15 @@ def test_rewrite_args_replaces_system_python(manager, args, expected_suffix):
         ("python", "-c", "import sys"),
     ],
 )
-def test_rewrite_args_no_replacement(manager, args):
+def test_rewrite_args_no_replacement(venv, args):
     """Arguments whose head is not sys.executable are converted to a list verbatim."""
-    result = manager.rewrite_args(args)
+    result = venv.rewrite_args(args)
     assert result == list(args)
     assert isinstance(result, list)
 
 
 @pytest.mark.skipif(sys.platform != "win32", reason="Windows specific test")
-def test_rewrite_args_case_insensitive(manager):
+def test_rewrite_args_case_insensitive(venv):
     """On Windows, `rewrite_args` is case-insensitive."""
-    result = manager.rewrite_args([sys.executable.lower(), "-V"])
-    assert result == [manager.executable, "-V"]
+    result = venv.rewrite_args([sys.executable.lower(), "-V"])
+    assert result == [venv.executable, "-V"]

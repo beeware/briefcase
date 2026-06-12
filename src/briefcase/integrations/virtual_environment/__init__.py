@@ -1,12 +1,11 @@
-from .base import EnvManager
-from .noop import NoOpEnvManager
-from .std_venv import VenvEnvManager
-from .tool import VirtualEnvironment, VirtualEnvironmentTool
+from .base import VirtualEnvironment
+from .noop import NoOpVirtualEnvironment
+from .std_venv import VenvVirtualEnvironment
+from .tool import VirtualEnvironmentManager
 
 __all__ = [
-    "EnvManager",
-    "NoOpEnvManager",
-    "VenvEnvManager",
+    "NoOpVirtualEnvironment",
+    "VenvVirtualEnvironment",
     "VirtualEnvironment",
-    "VirtualEnvironmentTool",
+    "VirtualEnvironmentManager",
 ]

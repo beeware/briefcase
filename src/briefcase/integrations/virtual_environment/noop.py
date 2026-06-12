@@ -1,12 +1,11 @@
 import sys
 from pathlib import Path
 
-from briefcase.integrations.base import ToolCache
 from briefcase.integrations.subprocess import SubprocessArgsT
-from briefcase.integrations.virtual_environment.base import EnvManager
+from briefcase.integrations.virtual_environment.base import VirtualEnvironment
 
 
-class NoOpEnvManager(EnvManager):
+class NoOpVirtualEnvironment(VirtualEnvironment):
     """An environment manager for running in the ambient Python interpreter.
 
     No real virtual environment is created. Instead a small marker file is
@@ -17,9 +16,9 @@ class NoOpEnvManager(EnvManager):
     ambient process environment is preserved.
     """
 
-    def __init__(self, tools: ToolCache, venv_path: Path):
-        super().__init__(tools, venv_path)
-        self.marker_path = venv_path / "venv_path"
+    @property
+    def marker_path(self) -> Path:
+        return self.venv_path / "venv_path"
 
     @property
     def executable(self) -> Path:
