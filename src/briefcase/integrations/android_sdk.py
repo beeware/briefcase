@@ -702,17 +702,13 @@ connection.
         except KeyError:
             self.tools.console.debug(f"Device {avd!r} doesn't define a skin.")
 
-    def list_available_system_images(
-        self, min_version: int = ANDROID_MIN_OS_VERSION
-    ) -> list[str]:
+    def list_available_system_images(self, min_api_level: int) -> list[str]:
         """Returns a sorted list of system image package identifiers available for the
         current architecture and minimum Android version.
 
-        :param min_version: The minimum Android version to include. Defaults to
-        ``ANDROID_MIN_OS_VERSION``.
-        e.g., ``["system-images;android-31;default;x86_64",   "system-
-        images;android-34;default;x86_64",   "system-
-        images;android-34;google_apis;x86_64"]``
+        e.g., ``{"system-images;android-31;default;x86_64"}``
+
+        :param min_api_level: The minimum Android API level to include.
         """
 
         try:
@@ -739,7 +735,7 @@ connection.
             # extract the version identifier and apply the minimum version floor.
             version_str = parts[1].split("-")[1]
             try:
-                if int(version_str.split(".")[0]) < min_version:
+                if int(version_str.split(".")[0]) < min_api_level:
                     continue
             except ValueError:
                 # Non-numeric version (e.g. CANARY, CinnamonBun) included.
@@ -1162,7 +1158,7 @@ a default name '{default_avd}'.
 
         # Get available images, raise an error if none found.
         available_images = self.list_available_system_images(
-            min_version=getattr(app, "min_os_version", ANDROID_MIN_OS_VERSION)
+            min_api_level=getattr(app, "min_os_version", ANDROID_MIN_OS_VERSION)
         )
         if not available_images:
             raise BriefcaseCommandError(
