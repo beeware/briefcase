@@ -3,6 +3,7 @@ import subprocess
 import pytest
 
 from briefcase.exceptions import BriefcaseCommandError
+from briefcase.integrations.android_sdk import ANDROID_MIN_OS_VERSION
 from briefcase.integrations.base import ToolCache
 
 
@@ -27,7 +28,9 @@ def test_list_available_system_images(mock_tools, android_sdk):
         "  emulator                                    | 35.4.9  | Android Emulator\n"
     )
 
-    result = android_sdk.list_available_system_images()
+    result = android_sdk.list_available_system_images(
+        min_api_level=ANDROID_MIN_OS_VERSION
+    )
 
     # android-25 is filtered out (below minimum version)
     assert result == [
@@ -40,6 +43,28 @@ def test_list_available_system_images(mock_tools, android_sdk):
     )
 
 
+def test_list_available_system_images_custom_min_api_level(mock_tools, android_sdk):
+    """A custom minimum version filters out images below that version."""
+    mock_tools.subprocess.check_output.return_value = (
+        "Available Packages:\n"
+        "  Path                                        | Version | Description\n"
+        "  -------                                     | ------- | -------\n"
+        "  system-images;android-26;default;x86_64     | 3       | Intel x86_64 Atom System Image\n"
+        "  system-images;android-27;default;x86_64     | 3       | Intel x86_64 Atom System Image\n"
+        "  system-images;android-28;default;x86_64     | 5       | Intel x86_64 Atom System Image\n"
+        "  system-images;android-31;default;x86_64     | 5       | Intel x86_64 Atom System Image\n"
+        "  emulator                                    | 35.4.9  | Android Emulator\n"
+    )
+
+    result = android_sdk.list_available_system_images(min_api_level=28)
+
+    # android-26 and android-27 are filtered out (below custom minimum of 28)
+    assert result == [
+        "system-images;android-28;default;x86_64",
+        "system-images;android-31;default;x86_64",
+    ]
+
+
 def test_list_available_system_images_dotted_version(mock_tools, android_sdk):
     """System images with dotted versions (e.g. android-36.1) are included."""
     mock_tools.subprocess.check_output.return_value = (
@@ -50,7 +75,9 @@ def test_list_available_system_images_dotted_version(mock_tools, android_sdk):
         "  emulator                                     | 35.4.9  | Android Emulator\n"
     )
 
-    result = android_sdk.list_available_system_images()
+    result = android_sdk.list_available_system_images(
+        min_api_level=ANDROID_MIN_OS_VERSION
+    )
 
     assert result == [
         "system-images;android-36.1;default;x86_64",
@@ -72,7 +99,9 @@ def test_list_available_system_images_dotted_version_below_minimum(
         "  emulator                                     | 35.4.9  | Android Emulator\n"
     )
 
-    result = android_sdk.list_available_system_images()
+    result = android_sdk.list_available_system_images(
+        min_api_level=ANDROID_MIN_OS_VERSION
+    )
 
     # android-25.1 is filtered out (below minimum version 26)
     assert result == [
@@ -91,7 +120,9 @@ def test_list_available_system_images_named_version(mock_tools, android_sdk):
         "  emulator                                           | 35.4.9     | Android Emulator\n"
     )
 
-    result = android_sdk.list_available_system_images()
+    result = android_sdk.list_available_system_images(
+        min_api_level=ANDROID_MIN_OS_VERSION
+    )
 
     assert result == [
         "system-images;android-CANARY;google_apis;x86_64",
@@ -109,7 +140,9 @@ def test_list_available_system_images_other_abi(mock_tools, android_sdk):
         "  emulator                                    | 35.4.9  | Android Emulator\n"
     )
 
-    result = android_sdk.list_available_system_images()
+    result = android_sdk.list_available_system_images(
+        min_api_level=ANDROID_MIN_OS_VERSION
+    )
 
     # Only x86_64 images returned (fixture sets host_arch to x86_64)
     assert result == [
@@ -128,7 +161,9 @@ def test_list_available_system_images_duplicates(mock_tools, android_sdk):
         "  emulator                                    | 35.4.9  | Android Emulator\n"
     )
 
-    result = android_sdk.list_available_system_images()
+    result = android_sdk.list_available_system_images(
+        min_api_level=ANDROID_MIN_OS_VERSION
+    )
 
     assert result == [
         "system-images;android-31;default;x86_64",
@@ -144,7 +179,9 @@ def test_no_available_system_images(mock_tools, android_sdk):
         "  emulator                                    | 35.4.9  | Android Emulator\n"
     )
 
-    result = android_sdk.list_available_system_images()
+    result = android_sdk.list_available_system_images(
+        min_api_level=ANDROID_MIN_OS_VERSION
+    )
 
     assert result == []
 
@@ -156,7 +193,7 @@ def test_list_available_system_images_failure(mock_tools, android_sdk):
     )
 
     with pytest.raises(BriefcaseCommandError):
-        android_sdk.list_available_system_images()
+        android_sdk.list_available_system_images(min_api_level=ANDROID_MIN_OS_VERSION)
 
 
 def test_list_available_system_images_malformed_package(mock_tools, android_sdk):
@@ -170,7 +207,9 @@ def test_list_available_system_images_malformed_package(mock_tools, android_sdk)
         "  emulator                                    | 35.4.9  | Android Emulator\n"
     )
 
-    result = android_sdk.list_available_system_images()
+    result = android_sdk.list_available_system_images(
+        min_api_level=ANDROID_MIN_OS_VERSION
+    )
 
     # Malformed entry is skipped
     assert result == [
