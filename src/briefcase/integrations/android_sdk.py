@@ -23,7 +23,7 @@ from briefcase.integrations.java import JDK
 from briefcase.integrations.subprocess import SubprocessArgT
 
 DEVICE_NOT_FOUND = re.compile(r"^error: device '[^']*' not found")
-ANDROID_MIN_OS_VERSION = 26
+ANDROID_MIN_OS_VERSION = 24
 
 
 def create_avd_validator(emulators):
