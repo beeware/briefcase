@@ -40,6 +40,18 @@ def create_avd_validator(emulators):
     return _validate_avd_name
 
 
+def _parse_system_image(package: str):
+    """Parse a system image package identifier into its components.
+
+    :param package: e.g. ``"system-images;android-31;default;x86_64"``
+    :returns: A tuple of (api_level, tag, abi) or None if invalid.
+    """
+    parts = package.split(";")
+    if len(parts) != 4 or parts[0] != "system-images":
+        return None
+    return parts[1], parts[2], parts[3]
+
+
 class AndroidDeviceNotAuthorized(BriefcaseCommandError):
     def __init__(self, device):
         self.device = device
@@ -724,21 +736,18 @@ connection.
         images = []
         for line in output.splitlines():
             package = line.split("|")[0].strip()
-            if not package.startswith("system-images"):
+            parsed = _parse_system_image(package)
+            if parsed is None:
                 continue
-            parts = package.split(";")
-            if len(parts) != 4:
+            api_level, _, abi = parsed
+            if abi != self.emulator_abi:
                 continue
-            if parts[3] != self.emulator_abi:
-                continue
-            # parts[1] is e.g. "android-31", "android-36.1", or "android-CANARY";
-            # extract the version identifier and apply the minimum version floor.
-            version_str = parts[1].split("-")[1]
+            api_level_str = api_level.split("-")[1]  # "android-31" -> "31"
             try:
-                if int(version_str.split(".")[0]) < min_api_level:
+                if int(api_level_str.split(".")[0]) < min_api_level:
                     continue
             except ValueError:
-                # Non-numeric version (e.g. CANARY, CinnamonBun) included.
+                # Non-numeric API level (e.g. CANARY, CinnamonBun) always include.
                 pass
             images.append(package)
         return sorted(set(images))
