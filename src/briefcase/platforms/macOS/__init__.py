@@ -1145,6 +1145,13 @@ class macOSPackageMixin(macOSSigningMixin):
         # Submit the app for notarization
         submission_id = self.submit_notarization(app, identity=notarization_identity)
 
+        self.write_notarization_request(
+            app,
+            identity=identity,
+            submission_id=submission_id,
+            installer_identity=installer_identity,
+        )
+
         self.console.warning(f"""
 Briefcase will now wait for Apple to approve the notarization request.
 This can take some time - in some cases, hours.
@@ -1153,13 +1160,22 @@ If notarization is interrupted, you can resume by running:
 
     briefcase package macOS {self.output_format} {format_args} {identity_args} --resume {submission_id}
 
+Alternatively, rerunning the same briefcase package command without any
+--resume argument will automatically detect the interrupted notarization
+and resume it.
+
 """)  # noqa: E501
 
-        self.finalize_notarization(
-            app,
-            identity=notarization_identity,
-            submission_id=submission_id,
-        )
+        try:
+            self.finalize_notarization(
+                app,
+                identity=notarization_identity,
+                submission_id=submission_id,
+            )
+        except Exception:
+            raise
+        else:
+            self.delete_notarization_request(app)
 
     def submit_notarization(self, app, identity: SigningIdentity) -> str:
         """Submit a file for notarization, returning the ID of the notarizatzion task.

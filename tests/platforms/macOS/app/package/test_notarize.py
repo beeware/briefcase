@@ -173,6 +173,13 @@ def test_notarize_app(
         check=True,
     )
 
+    marker_path = (
+        tmp_path / "base_path/dist/First App-0.0.1.app.zip.notarization-request"
+    )
+    assert not marker_path.exists(), (
+        "Marker should have been deleted after successful notarization"
+    )
+
 
 def test_notarize_dmg(
     package_command,
@@ -272,6 +279,11 @@ def test_notarize_dmg(
             tmp_path / "base_path/dist/First App-0.0.1.dmg",
         ],
         check=True,
+    )
+
+    marker_path = tmp_path / "base_path/dist/First App-0.0.1.dmg.notarization-request"
+    assert not marker_path.exists(), (
+        "Marker should have been deleted after successful notarization"
     )
 
 
@@ -378,6 +390,11 @@ def test_notarize_pkg(
             tmp_path / "base_path/dist/First App-0.0.1.pkg",
         ],
         check=True,
+    )
+
+    marker_path = tmp_path / "base_path/dist/First App-0.0.1.pkg.notarization-request"
+    assert not marker_path.exists(), (
+        "Marker should have been deleted after successful notarization"
     )
 
 
@@ -1283,8 +1300,99 @@ def test_interrupt_notarization(
         ),
     ]
 
+    marker_path = tmp_path / "base_path/dist/First App-0.0.1.dmg.notarization-request"
+    assert marker_path.exists()
+
+    import tomllib
+
+    with marker_path.open("rb") as f:
+        data = tomllib.load(f)
+
+    assert data["identity"] == sekrit_identity.id
+    assert data["submission_id"] == submission_id
+
     # No stapling occurred
     package_command.tools.subprocess.run.assert_not_called()
+
+
+def test_notarize_interrupt_leaves_marker(
+    package_command,
+    first_app_dmg,
+    sekrit_identity,
+    sleep_zero,
+    tmp_path,
+):
+    """If notarization is interrupted by the user, the marker file is left in place."""
+    submission_id = str(uuid.uuid4())
+    package_command.tools.subprocess.parse_output.side_effect = [
+        {"id": submission_id},
+        subprocess.CalledProcessError(
+            returncode=69,
+            cmd=["xcrun", "notarytool", "log"],
+        ),
+        subprocess.CalledProcessError(
+            returncode=69,
+            cmd=["xcrun", "notarytool", "log"],
+        ),
+        KeyboardInterrupt,
+    ]
+
+    with pytest.raises(NotarizationInterrupted):
+        package_command.notarize(first_app_dmg, identity=sekrit_identity)
+
+    marker_path = tmp_path / "base_path/dist/First App-0.0.1.dmg.notarization-request"
+    assert marker_path.exists()
+
+    import tomllib
+
+    with marker_path.open("rb") as f:
+        data = tomllib.load(f)
+
+    assert data["identity"] == sekrit_identity.id
+    assert data["submission_id"] == submission_id
+
+
+def test_notarize_staple_failure_leaves_marker(
+    package_command,
+    first_app_dmg,
+    sekrit_identity,
+    sleep_zero,
+    tmp_path,
+):
+    """If stapling fails, the marker file is left in place."""
+    submission_id = str(uuid.uuid4())
+    package_command.tools.subprocess.parse_output.side_effect = [
+        {"id": submission_id},
+        subprocess.CalledProcessError(
+            returncode=69,
+            cmd=["xcrun", "notarytool", "log"],
+        ),
+        subprocess.CalledProcessError(
+            returncode=69,
+            cmd=["xcrun", "notarytool", "log"],
+        ),
+        {"status": "Accepted"},
+    ]
+    package_command.tools.subprocess.run.side_effect = [
+        subprocess.CalledProcessError(
+            returncode=42,
+            cmd=["xcrun", "stapler"],
+        ),
+    ]
+
+    with pytest.raises(BriefcaseCommandError, match=r"Unable to staple"):
+        package_command.notarize(first_app_dmg, identity=sekrit_identity)
+
+    marker_path = tmp_path / "base_path/dist/First App-0.0.1.dmg.notarization-request"
+    assert marker_path.exists()
+
+    import tomllib
+
+    with marker_path.open("rb") as f:
+        data = tomllib.load(f)
+
+    assert data["identity"] == sekrit_identity.id
+    assert data["submission_id"] == submission_id
 
 
 def test_notarization_request_path_zip(
