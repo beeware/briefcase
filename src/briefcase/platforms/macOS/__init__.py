@@ -1066,7 +1066,7 @@ class macOSPackageMixin(macOSSigningMixin):
         :param submission_id: The notarization submission being resumed.
         :param options: Any additional arguments passed to the package command.
         """
-        if options.get("submission_id"):
+        if options.get("submission_id") or self.notarization_request_path(app).exists():
             if not self.notarization_path(app).exists():
                 raise BriefcaseCommandError(
                     "Notarization cannot be resumed, as the notarization artefact "
@@ -1490,6 +1490,56 @@ password:
                 identity=notarization_identity,
                 submission_id=submission_id,
             )
+            return
+
+        # Check for a notarization request marker that indicates an interrupted
+        # notarization that can be auto-resumed.
+        marker_path = self.notarization_request_path(app)
+        if marker_path.exists():
+            marker_data = self.read_notarization_request(app)
+
+            submission_id = marker_data["submission_id"]
+
+            identity = self.select_identity(
+                identity=marker_data["identity"],
+                allow_adhoc=False,
+            )
+
+            if app.packaging_format == "pkg":
+                installer_identity = marker_data.get("installer_identity")
+                if installer_identity:
+                    notarization_identity = self.select_identity(
+                        identity=installer_identity,
+                        app_identity=identity,
+                    )
+                else:
+                    notarization_identity = self.select_identity(
+                        identity=None,
+                        app_identity=identity,
+                    )
+            else:
+                notarization_identity = identity
+
+            self.console.info(
+                "Found interrupted notarization request. "
+                f"Resuming notarization for submission {submission_id}...",
+                prefix=app.app_name,
+            )
+
+            self.console.info()
+            self.validate_submission_id(
+                app,
+                identity=notarization_identity,
+                submission_id=submission_id,
+            )
+
+            self.console.info()
+            self.finalize_notarization(
+                app,
+                identity=notarization_identity,
+                submission_id=submission_id,
+            )
+            self.delete_notarization_request(app)
             return
 
         # It's a normal packaging pass.

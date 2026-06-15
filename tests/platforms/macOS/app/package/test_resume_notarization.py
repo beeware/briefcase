@@ -1034,3 +1034,338 @@ def test_notarization_rejected(
 
     # No staple attempt is made.
     package_command.tools.subprocess.run.assert_not_called()
+
+
+def test_clean_dist_folder_preserves_with_marker(
+    package_command,
+    first_app_with_binaries,
+    tmp_path,
+):
+    """When a notarization request marker exists, the notarization artifact is
+    preserved."""
+    create_file(
+        tmp_path / "base_path/dist/First App-0.0.1.dmg",
+        "distribution file",
+    )
+
+    marker_path = tmp_path / "base_path/dist/First App-0.0.1.dmg.notarization-request"
+    marker_path.parent.mkdir(parents=True, exist_ok=True)
+    marker_path.write_text(
+        'identity = "CAFEBEEF"\n'
+        'submission_id = "00000000-0000-0000-0000-000000000000"\n'
+    )
+
+    first_app_with_binaries.packaging_format = "dmg"
+
+    package_command.clean_dist_folder(first_app_with_binaries)
+
+    assert (tmp_path / "base_path/dist/First App-0.0.1.dmg").exists()
+
+
+def test_clean_dist_folder_preserves_with_resume_flag(
+    package_command,
+    first_app_with_binaries,
+    tmp_path,
+):
+    """When --resume is provided explicitly, the notarization artifact is preserved."""
+    create_file(
+        tmp_path / "base_path/dist/First App-0.0.1.dmg",
+        "distribution file",
+    )
+
+    first_app_with_binaries.packaging_format = "dmg"
+
+    package_command.clean_dist_folder(
+        first_app_with_binaries,
+        submission_id=str(uuid.uuid4()),
+    )
+
+    assert (tmp_path / "base_path/dist/First App-0.0.1.dmg").exists()
+
+
+def test_clean_dist_folder_cleans_without_marker(
+    package_command,
+    first_app_with_binaries,
+    tmp_path,
+):
+    """When no notarization request marker exists and no --resume, clean as normal."""
+    create_file(
+        tmp_path / "base_path/dist/First App-0.0.1.dmg",
+        "distribution file",
+    )
+
+    first_app_with_binaries.packaging_format = "dmg"
+
+    package_command.clean_dist_folder(first_app_with_binaries)
+
+    assert not (tmp_path / "base_path/dist/First App-0.0.1.dmg").exists()
+
+
+def test_auto_resume_notarize_dmg(
+    package_command,
+    first_app_with_binaries,
+    sekrit_identity,
+    tmp_path,
+    sleep_zero,
+):
+    """Notarization of a DMG can be auto-resumed from a marker file."""
+    create_file(
+        tmp_path / "base_path/dist/First App-0.0.1.dmg",
+        "distribution file",
+    )
+
+    submission_id = str(uuid.uuid4())
+    marker_path = tmp_path / "base_path/dist/First App-0.0.1.dmg.notarization-request"
+    marker_path.parent.mkdir(parents=True, exist_ok=True)
+    marker_path.write_text(
+        f'identity = "{sekrit_identity.id}"\nsubmission_id = "{submission_id}"\n'
+    )
+
+    package_command.select_identity.return_value = sekrit_identity
+    package_command.ditto_archive = mock.MagicMock()
+
+    package_command.tools.subprocess.parse_output.side_effect = [
+        {
+            "history": [
+                {
+                    "id": str(uuid.uuid4()),
+                    "name": "Other App-1.2.3.dmg",
+                    "status": "Accepted",
+                },
+                {
+                    "id": submission_id,
+                    "name": "First App-0.0.1.dmg",
+                    "status": "In Progress",
+                },
+            ]
+        },
+        subprocess.CalledProcessError(
+            returncode=69, cmd=["xcrun", "notarytool", "log"]
+        ),
+        subprocess.CalledProcessError(
+            returncode=69, cmd=["xcrun", "notarytool", "log"]
+        ),
+        {"status": "Accepted"},
+    ]
+
+    package_command._package_app(
+        first_app_with_binaries,
+        update=False,
+        packaging_format="dmg",
+        identity=sekrit_identity.id,
+    )
+
+    package_command.select_identity.assert_called_once_with(
+        identity=sekrit_identity.id,
+        allow_adhoc=False,
+    )
+
+    assert not marker_path.exists()
+
+    package_command.tools.subprocess.run.assert_called_once_with(
+        ["xcrun", "stapler", "staple", tmp_path / "base_path/dist/First App-0.0.1.dmg"],
+        check=True,
+    )
+    package_command.ditto_archive.assert_not_called()
+
+
+def test_auto_resume_notarize_zip(
+    package_command,
+    first_app_with_binaries,
+    sekrit_identity,
+    tmp_path,
+    sleep_zero,
+):
+    """Notarization of an app bundle can be auto-resumed from a marker file."""
+    package_command.select_identity.return_value = sekrit_identity
+    package_command.ditto_archive = mock.MagicMock()
+
+    submission_id = str(uuid.uuid4())
+    marker_path = (
+        tmp_path / "base_path/dist/First App-0.0.1.app.zip.notarization-request"
+    )
+    marker_path.parent.mkdir(parents=True, exist_ok=True)
+    marker_path.write_text(
+        f'identity = "{sekrit_identity.id}"\nsubmission_id = "{submission_id}"\n'
+    )
+
+    package_command.tools.subprocess.parse_output.side_effect = [
+        {
+            "history": [
+                {
+                    "id": str(uuid.uuid4()),
+                    "name": "Other App-1.2.3.dmg",
+                    "status": "Accepted",
+                },
+                {
+                    "id": submission_id,
+                    "name": "First App.app.zip",
+                    "status": "In Progress",
+                },
+            ]
+        },
+        subprocess.CalledProcessError(
+            returncode=69, cmd=["xcrun", "notarytool", "log"]
+        ),
+        subprocess.CalledProcessError(
+            returncode=69, cmd=["xcrun", "notarytool", "log"]
+        ),
+        {"status": "Accepted"},
+    ]
+
+    package_command._package_app(
+        first_app_with_binaries,
+        update=False,
+        packaging_format="zip",
+        identity=sekrit_identity.id,
+    )
+
+    package_command.select_identity.assert_called_once_with(
+        identity=sekrit_identity.id,
+        allow_adhoc=False,
+    )
+
+    assert not marker_path.exists()
+
+    package_command.tools.subprocess.run.assert_called_once_with(
+        [
+            "xcrun",
+            "stapler",
+            "staple",
+            tmp_path / "base_path/build/first-app/macos/app/First App.app",
+        ],
+        check=True,
+    )
+    package_command.ditto_archive.assert_called_once_with(
+        tmp_path / "base_path/build/first-app/macos/app/First App.app",
+        tmp_path / "base_path/dist/First App-0.0.1.app.zip",
+    )
+
+
+def test_auto_resume_notarize_pkg(
+    package_command,
+    first_app_with_binaries,
+    sekrit_identity,
+    sekrit_installer_identity,
+    tmp_path,
+    sleep_zero,
+):
+    """Notarization of a PKG installer can be auto-resumed from a marker file."""
+    create_file(
+        tmp_path / "base_path/dist/First App-0.0.1.pkg",
+        "distribution file",
+    )
+
+    submission_id = str(uuid.uuid4())
+    marker_path = tmp_path / "base_path/dist/First App-0.0.1.pkg.notarization-request"
+    marker_path.parent.mkdir(parents=True, exist_ok=True)
+    marker_path.write_text(
+        f'identity = "{sekrit_identity.id}"\n'
+        f'submission_id = "{submission_id}"\n'
+        f'installer_identity = "{sekrit_installer_identity.id}"\n'
+    )
+
+    package_command.select_identity.side_effect = [
+        sekrit_identity,
+        sekrit_installer_identity,
+    ]
+    package_command.ditto_archive = mock.MagicMock()
+
+    package_command.tools.subprocess.parse_output.side_effect = [
+        {
+            "history": [
+                {
+                    "id": str(uuid.uuid4()),
+                    "name": "Other App-1.2.3.dmg",
+                    "status": "Accepted",
+                },
+                {
+                    "id": submission_id,
+                    "name": "First App-0.0.1.pkg",
+                    "status": "In Progress",
+                },
+            ]
+        },
+        subprocess.CalledProcessError(
+            returncode=69, cmd=["xcrun", "notarytool", "log"]
+        ),
+        subprocess.CalledProcessError(
+            returncode=69, cmd=["xcrun", "notarytool", "log"]
+        ),
+        {"status": "Accepted"},
+    ]
+
+    package_command._package_app(
+        first_app_with_binaries,
+        update=False,
+        packaging_format="pkg",
+        identity=sekrit_identity.id,
+    )
+
+    assert package_command.select_identity.mock_calls == [
+        mock.call(identity=sekrit_identity.id, allow_adhoc=False),
+        mock.call(identity=sekrit_installer_identity.id, app_identity=sekrit_identity),
+    ]
+
+    assert not marker_path.exists()
+
+    package_command.tools.subprocess.run.assert_called_once_with(
+        ["xcrun", "stapler", "staple", tmp_path / "base_path/dist/First App-0.0.1.pkg"],
+        check=True,
+    )
+    package_command.ditto_archive.assert_not_called()
+
+
+def test_auto_resume_precedence_explicit_resume(
+    package_command,
+    first_app_with_binaries,
+    sekrit_identity,
+    tmp_path,
+    sleep_zero,
+):
+    """Explicit --resume takes precedence over a marker file."""
+    create_file(
+        tmp_path / "base_path/dist/First App-0.0.1.dmg",
+        "distribution file",
+    )
+
+    marker_submission_id = str(uuid.uuid4())
+    marker_path = tmp_path / "base_path/dist/First App-0.0.1.dmg.notarization-request"
+    marker_path.parent.mkdir(parents=True, exist_ok=True)
+    marker_path.write_text(
+        f'identity = "{sekrit_identity.id}"\nsubmission_id = "{marker_submission_id}"\n'
+    )
+
+    cli_submission_id = str(uuid.uuid4())
+
+    package_command.select_identity.return_value = sekrit_identity
+    package_command.ditto_archive = mock.MagicMock()
+
+    package_command.tools.subprocess.parse_output.side_effect = [
+        {
+            "history": [
+                {
+                    "id": str(uuid.uuid4()),
+                    "name": "Other App-1.2.3.dmg",
+                    "status": "Accepted",
+                },
+                {
+                    "id": cli_submission_id,
+                    "name": "First App-0.0.1.dmg",
+                    "status": "In Progress",
+                },
+            ]
+        },
+        {"status": "Accepted"},
+    ]
+
+    package_command._package_app(
+        first_app_with_binaries,
+        update=False,
+        packaging_format="dmg",
+        identity=sekrit_identity.id,
+        submission_id=cli_submission_id,
+    )
+
+    # The marker should NOT have been deleted (CLI submission was used, not the marker)
+    assert marker_path.exists()
