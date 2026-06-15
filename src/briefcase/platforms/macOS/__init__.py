@@ -1399,9 +1399,8 @@ password:
                     f"{filename.relative_to(self.base_path)}"
                 ) from e
 
-            marker_path = self.notarization_request_path(app)
-            if marker_path.exists():
-                marker_path.unlink()
+            if self.notarization_request_path(app).exists():
+                self.notarization_request_path(app).unlink()
 
         # Notarization on a zip package is performed on the bare app, so we can't
         # complete packaging until notarization has completed.
