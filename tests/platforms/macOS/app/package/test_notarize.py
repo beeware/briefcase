@@ -1314,3 +1314,207 @@ def test_notarization_request_path_pkg(
 ):
     path = package_command.notarization_request_path(first_app_pkg)
     assert path == tmp_path / "base_path/dist/First App-0.0.1.pkg.notarization-request"
+
+
+def test_write_notarization_request_app(
+    package_command,
+    first_app_dmg,
+    sekrit_identity,
+    tmp_path,
+):
+    submission_id = str(uuid.uuid4())
+    package_command.write_notarization_request(
+        first_app_dmg,
+        identity=sekrit_identity,
+        submission_id=submission_id,
+    )
+
+    marker_path = tmp_path / "base_path/dist/First App-0.0.1.dmg.notarization-request"
+    assert marker_path.exists()
+
+    import tomllib
+
+    with marker_path.open("rb") as f:
+        data = tomllib.load(f)
+
+    assert data == {
+        "identity": "CAFEBEEF",
+        "submission_id": submission_id,
+    }
+
+
+def test_write_notarization_request_pkg(
+    package_command,
+    first_app_pkg,
+    sekrit_identity,
+    sekrit_installer_identity,
+    tmp_path,
+):
+    submission_id = str(uuid.uuid4())
+    package_command.write_notarization_request(
+        first_app_pkg,
+        identity=sekrit_identity,
+        submission_id=submission_id,
+        installer_identity=sekrit_installer_identity,
+    )
+
+    marker_path = tmp_path / "base_path/dist/First App-0.0.1.pkg.notarization-request"
+    assert marker_path.exists()
+
+    import tomllib
+
+    with marker_path.open("rb") as f:
+        data = tomllib.load(f)
+
+    assert data == {
+        "identity": "CAFEBEEF",
+        "submission_id": submission_id,
+        "installer_identity": "CAFEFACE",
+    }
+
+
+def test_read_notarization_request(
+    package_command,
+    first_app_dmg,
+    tmp_path,
+):
+    marker_path = tmp_path / "base_path/dist/First App-0.0.1.dmg.notarization-request"
+    marker_path.parent.mkdir(parents=True, exist_ok=True)
+    marker_path.write_text(
+        'identity = "CAFEBEEF"\n'
+        'submission_id = "00000000-0000-0000-0000-000000000000"\n'
+    )
+
+    data = package_command.read_notarization_request(first_app_dmg)
+    assert data == {
+        "identity": "CAFEBEEF",
+        "submission_id": "00000000-0000-0000-0000-000000000000",
+    }
+
+
+def test_read_notarization_request_with_installer(
+    package_command,
+    first_app_pkg,
+    tmp_path,
+):
+    marker_path = tmp_path / "base_path/dist/First App-0.0.1.pkg.notarization-request"
+    marker_path.parent.mkdir(parents=True, exist_ok=True)
+    marker_path.write_text(
+        'identity = "CAFEBEEF"\n'
+        'submission_id = "00000000-0000-0000-0000-000000000000"\n'
+        'installer_identity = "CAFEFACE"\n'
+    )
+
+    data = package_command.read_notarization_request(first_app_pkg)
+    assert data == {
+        "identity": "CAFEBEEF",
+        "submission_id": "00000000-0000-0000-0000-000000000000",
+        "installer_identity": "CAFEFACE",
+    }
+
+
+def test_read_notarization_request_missing_file(
+    package_command,
+    first_app_dmg,
+    tmp_path,
+):
+    with pytest.raises(BriefcaseCommandError, match=r"does not exist"):
+        package_command.read_notarization_request(first_app_dmg)
+
+
+def test_read_notarization_request_malformed_toml(
+    package_command,
+    first_app_dmg,
+    tmp_path,
+):
+    marker_path = tmp_path / "base_path/dist/First App-0.0.1.dmg.notarization-request"
+    marker_path.parent.mkdir(parents=True, exist_ok=True)
+    marker_path.write_text("this is not valid toml = {{")
+
+    with pytest.raises(BriefcaseCommandError, match=r"malformed"):
+        package_command.read_notarization_request(first_app_dmg)
+
+
+def test_read_notarization_request_missing_identity(
+    package_command,
+    first_app_dmg,
+    tmp_path,
+):
+    marker_path = tmp_path / "base_path/dist/First App-0.0.1.dmg.notarization-request"
+    marker_path.parent.mkdir(parents=True, exist_ok=True)
+    marker_path.write_text('submission_id = "00000000-0000-0000-0000-000000000000"\n')
+
+    with pytest.raises(BriefcaseCommandError, match=r"identity"):
+        package_command.read_notarization_request(first_app_dmg)
+
+
+def test_read_notarization_request_missing_submission_id(
+    package_command,
+    first_app_dmg,
+    tmp_path,
+):
+    marker_path = tmp_path / "base_path/dist/First App-0.0.1.dmg.notarization-request"
+    marker_path.parent.mkdir(parents=True, exist_ok=True)
+    marker_path.write_text('identity = "CAFEBEEF"\n')
+
+    with pytest.raises(BriefcaseCommandError, match=r"submission_id"):
+        package_command.read_notarization_request(first_app_dmg)
+
+
+def test_read_notarization_request_non_string_value(
+    package_command,
+    first_app_dmg,
+    tmp_path,
+):
+    marker_path = tmp_path / "base_path/dist/First App-0.0.1.dmg.notarization-request"
+    marker_path.parent.mkdir(parents=True, exist_ok=True)
+    marker_path.write_text('identity = "CAFEBEEF"\nsubmission_id = 12345\n')
+
+    with pytest.raises(BriefcaseCommandError, match=r"string"):
+        package_command.read_notarization_request(first_app_dmg)
+
+
+def test_read_notarization_request_non_string_installer_identity(
+    package_command,
+    first_app_pkg,
+    tmp_path,
+):
+    """Reading a notarization request with a non-string installer_identity raises an
+    error."""
+    marker_path = tmp_path / "base_path/dist/First App-0.0.1.pkg.notarization-request"
+    marker_path.parent.mkdir(parents=True, exist_ok=True)
+    marker_path.write_text(
+        'identity = "CAFEBEEF"\n'
+        'submission_id = "00000000-0000-0000-0000-000000000000"\n'
+        "installer_identity = 12345\n"
+    )
+
+    with pytest.raises(BriefcaseCommandError, match=r"non-string"):
+        package_command.read_notarization_request(first_app_pkg)
+
+
+def test_delete_notarization_request(
+    package_command,
+    first_app_dmg,
+    tmp_path,
+):
+    marker_path = tmp_path / "base_path/dist/First App-0.0.1.dmg.notarization-request"
+    marker_path.parent.mkdir(parents=True, exist_ok=True)
+    marker_path.write_text(
+        'identity = "CAFEBEEF"\nsubmission_id = "00000000-0000-0000-0000-000000000000"\n'
+    )
+
+    package_command.delete_notarization_request(first_app_dmg)
+    assert not marker_path.exists()
+
+
+def test_delete_notarization_request_missing(
+    package_command,
+    first_app_dmg,
+    tmp_path,
+):
+    marker_path = tmp_path / "base_path/dist/First App-0.0.1.dmg.notarization-request"
+    assert not marker_path.exists()
+
+    # Should not raise
+    package_command.delete_notarization_request(first_app_dmg)

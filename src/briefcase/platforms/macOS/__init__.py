@@ -898,6 +898,98 @@ class macOSPackageMixin(macOSSigningMixin):
         dist_path = self.distribution_path(app)
         return dist_path.with_suffix(dist_path.suffix + ".notarization-request")
 
+    def write_notarization_request(
+        self,
+        app: FinalizedAppConfig,
+        identity: SigningIdentity,
+        submission_id: str,
+        installer_identity: SigningIdentity | None = None,
+    ) -> None:
+        """Write a notarization request marker file.
+
+        The marker file is written as TOML to the path returned by
+        :meth:`notarization_request_path`. It stores the signing identity ID,
+        submission ID, and optionally the installer identity ID.
+
+        :param app: The app being packaged.
+        :param identity: The app signing identity used for notarization.
+        :param submission_id: The submission ID from Apple's notarization service.
+        :param installer_identity: The installer signing identity, if any.
+        """
+        import tomli_w
+
+        data: dict[str, str] = {
+            "identity": identity.id,
+            "submission_id": submission_id,
+        }
+        if installer_identity is not None:
+            data["installer_identity"] = installer_identity.id
+
+        marker_path = self.notarization_request_path(app)
+        marker_path.parent.mkdir(parents=True, exist_ok=True)
+        with marker_path.open("wb") as f:
+            tomli_w.dump(data, f)
+
+    def read_notarization_request(self, app: FinalizedAppConfig) -> dict[str, str]:
+        """Read and validate a notarization request marker file.
+
+        :param app: The app being packaged.
+        :returns: A dict with keys ``identity``, ``submission_id``, and optionally
+            ``installer_identity``.
+        :raises BriefcaseCommandError: If the marker is missing, malformed, or
+            has missing or invalid values.
+        """
+        marker_path = self.notarization_request_path(app)
+
+        if not marker_path.exists():
+            raise BriefcaseCommandError(
+                f"Notarization request marker {marker_path} does not exist."
+            )
+
+        try:
+            import tomllib
+        except ImportError:  # pragma: no-cover-if-gte-py311
+            import tomli as tomllib  # type: ignore[no-redef]
+
+        try:
+            with marker_path.open("rb") as f:
+                data = tomllib.load(f)
+        except tomllib.TOMLDecodeError as e:
+            raise BriefcaseCommandError(
+                f"Notarization request marker {marker_path} is malformed: {e}"
+            ) from e
+
+        for key in ("identity", "submission_id"):
+            if key not in data:
+                raise BriefcaseCommandError(
+                    f"Notarization request marker {marker_path} "
+                    f"is missing required key {key!r}."
+                )
+            if not isinstance(data[key], str):
+                raise BriefcaseCommandError(
+                    f"Notarization request marker {marker_path} "
+                    f"has non-string value for {key!r}."
+                )
+
+        if "installer_identity" in data and not isinstance(
+            data["installer_identity"], str
+        ):
+            raise BriefcaseCommandError(
+                f"Notarization request marker {marker_path} "
+                f"has non-string value for 'installer_identity'."
+            )
+
+        return data
+
+    def delete_notarization_request(self, app: FinalizedAppConfig) -> None:
+        """Delete the notarization request marker file if it exists.
+
+        :param app: The app being packaged.
+        """
+        marker_path = self.notarization_request_path(app)
+        with suppress(FileNotFoundError):
+            marker_path.unlink()
+
     def add_options(self, parser):
         super().add_options(parser)
 
