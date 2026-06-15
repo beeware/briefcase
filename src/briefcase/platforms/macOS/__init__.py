@@ -893,6 +893,11 @@ class macOSPackageMixin(macOSSigningMixin):
         else:
             return self.dist_path / f"{app.formal_name}-{app.version}.dmg"
 
+    def notarization_request_path(self, app: FinalizedAppConfig) -> Path:
+        """The path to use for tracking a notarization request."""
+        dist_path = self.distribution_path(app)
+        return dist_path.with_suffix(dist_path.suffix + ".notarization-request")
+
     def add_options(self, parser):
         super().add_options(parser)
 

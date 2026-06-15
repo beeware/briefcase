@@ -1285,3 +1285,32 @@ def test_interrupt_notarization(
 
     # No stapling occurred
     package_command.tools.subprocess.run.assert_not_called()
+
+
+def test_notarization_request_path_zip(
+    package_command,
+    first_app_zip,
+    tmp_path,
+):
+    path = package_command.notarization_request_path(first_app_zip)
+    assert (
+        path == tmp_path / "base_path/dist/First App-0.0.1.app.zip.notarization-request"
+    )
+
+
+def test_notarization_request_path_dmg(
+    package_command,
+    first_app_dmg,
+    tmp_path,
+):
+    path = package_command.notarization_request_path(first_app_dmg)
+    assert path == tmp_path / "base_path/dist/First App-0.0.1.dmg.notarization-request"
+
+
+def test_notarization_request_path_pkg(
+    package_command,
+    first_app_pkg,
+    tmp_path,
+):
+    path = package_command.notarization_request_path(first_app_pkg)
+    assert path == tmp_path / "base_path/dist/First App-0.0.1.pkg.notarization-request"
