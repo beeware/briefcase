@@ -1152,7 +1152,6 @@ resume it.
             app,
             identity=notarization_identity,
             submission_id=submission_id,
-            marker_path=self.notarization_request_path(app),
         )
 
     def submit_notarization(self, app, identity: SigningIdentity) -> str:
@@ -1319,7 +1318,6 @@ password:
         app: FinalizedAppConfig,
         identity: SigningIdentity,
         submission_id: str,
-        marker_path: Path | None = None,
     ):
         """Finalize a notarization task.
 
@@ -1329,8 +1327,6 @@ password:
         :param app: The app to notarize.
         :param identity: The code signing identity to use.
         :param submission_id: The submission ID of the notarization task to finalize.
-        :param marker_path: If given, the notarization request marker file to delete on
-            successful finalization.
         """
         try:
             with self.console.wait_bar("Waiting for notarization acceptance..."):
@@ -1403,7 +1399,8 @@ password:
                     f"{filename.relative_to(self.base_path)}"
                 ) from e
 
-            if marker_path is not None and marker_path.exists():
+            marker_path = self.notarization_request_path(app)
+            if marker_path.exists():
                 marker_path.unlink()
 
         # Notarization on a zip package is performed on the bare app, so we can't
@@ -1510,7 +1507,6 @@ password:
                 app,
                 identity=notarization_identity,
                 submission_id=submission_id,
-                marker_path=marker_path,
             )
             return
 
