@@ -1483,31 +1483,59 @@ password:
         if marker_path.exists():
             marker_data = self.read_notarization_request(app)
 
-            submission_id = marker_data["submission_id"]
+            # Validate marker identity against command-line identity
+            if identity is not None and marker_data["identity"] != identity:
+                raise BriefcaseCommandError(
+                    f"Notarization request marker identity "
+                    f"{marker_data['identity']!r} does not match "
+                    f"the specified identity {identity!r}."
+                )
 
-            identity = self.select_identity(
-                identity=marker_data["identity"],
-                allow_adhoc=False,
+            # Validate marker installer_identity against command-line
+            # installer_identity
+            if installer_identity is not None:
+                if "installer_identity" not in marker_data:
+                    raise BriefcaseCommandError(
+                        "Notarization request marker does not contain an "
+                        "installer identity, but --installer-identity "
+                        f"({installer_identity}) was specified."
+                    )
+                if marker_data["installer_identity"] != installer_identity:
+                    raise BriefcaseCommandError(
+                        "Notarization request marker installer identity "
+                        f"{marker_data['installer_identity']!r} does not "
+                        f"match the specified installer identity "
+                        f"{installer_identity!r}."
+                    )
+
+            self.console.info(
+                "Found interrupted notarization request. "
+                f"Resuming notarization for submission "
+                f"{marker_data['submission_id']}...",
+                prefix=app.app_name,
             )
 
+            if identity is None:
+                identity = marker_data["identity"]
+            if installer_identity is None and "installer_identity" in marker_data:
+                installer_identity = marker_data["installer_identity"]
+            submission_id = marker_data["submission_id"]
+
+        if submission_id:
+            # If we're resuming notarization, we *can't* use an adhoc identity,
+            # so don't allow it to be selected.
+            identity = self.select_identity(identity=identity, allow_adhoc=False)
+
             if app.packaging_format == "pkg":
-                installer_identity = marker_data.get("installer_identity")
-                if installer_identity:
-                    notarization_identity = self.select_identity(
-                        identity=installer_identity,
-                        app_identity=identity,
-                    )
-                else:
-                    notarization_identity = self.select_identity(
-                        identity=None,
-                        app_identity=identity,
-                    )
+                notarization_identity = self.select_identity(
+                    identity=installer_identity,
+                    app_identity=identity,
+                )
             else:
                 notarization_identity = identity
 
             self.console.info(
-                "Found interrupted notarization request. "
-                f"Resuming notarization for submission {submission_id}...",
+                f"Resuming notarization for submission {submission_id}",
                 prefix=app.app_name,
             )
 

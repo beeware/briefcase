@@ -1370,3 +1370,107 @@ def test_auto_resume_precedence_explicit_resume(
 
     # The marker should NOT have been deleted (CLI submission was used, not the marker)
     assert marker_path.exists()
+
+
+def test_auto_resume_identity_mismatch(
+    package_command,
+    first_app_with_binaries,
+    sekrit_identity,
+    tmp_path,
+):
+    """Auto-resume raises an error when CLI identity doesn't match the marker."""
+    create_file(
+        tmp_path / "base_path/dist/First App-0.0.1.dmg",
+        "distribution file",
+    )
+
+    marker_path = tmp_path / "base_path/dist/First App-0.0.1.dmg.notarization-request"
+    marker_path.parent.mkdir(parents=True, exist_ok=True)
+    marker_path.write_text(
+        f'identity = "DEADBEEF"\nsubmission_id = "{uuid.uuid4()!s}"\n',
+        encoding="utf-8",
+    )
+
+    with pytest.raises(
+        BriefcaseCommandError,
+        match=(
+            r"Notarization request marker identity 'DEADBEEF' does not match "
+            r"the specified identity 'CAFEBEEF'"
+        ),
+    ):
+        package_command._package_app(
+            first_app_with_binaries,
+            update=False,
+            packaging_format="dmg",
+            identity=sekrit_identity.id,
+        )
+
+
+def test_auto_resume_installer_identity_mismatch(
+    package_command,
+    first_app_with_binaries,
+    sekrit_identity,
+    tmp_path,
+):
+    """Auto-resume raises an error when CLI installer_identity doesn't match."""
+    create_file(
+        tmp_path / "base_path/dist/First App-0.0.1.pkg",
+        "distribution file",
+    )
+
+    marker_path = tmp_path / "base_path/dist/First App-0.0.1.pkg.notarization-request"
+    marker_path.parent.mkdir(parents=True, exist_ok=True)
+    marker_path.write_text(
+        f'identity = "{sekrit_identity.id}"\n'
+        f'submission_id = "{uuid.uuid4()!s}"\n'
+        f'installer_identity = "DEADBEEF"\n',
+        encoding="utf-8",
+    )
+
+    with pytest.raises(
+        BriefcaseCommandError,
+        match=(
+            r"Notarization request marker installer identity 'DEADBEEF' does not "
+            r"match the specified installer identity 'CAFEBEEF'"
+        ),
+    ):
+        package_command._package_app(
+            first_app_with_binaries,
+            update=False,
+            packaging_format="pkg",
+            identity=sekrit_identity.id,
+            installer_identity=sekrit_identity.id,
+        )
+
+
+def test_auto_resume_installer_identity_missing_from_marker(
+    package_command,
+    first_app_with_binaries,
+    sekrit_identity,
+    tmp_path,
+):
+    """Auto-resume raises an error when CLI has installer_identity but marker
+    doesn't."""
+    create_file(
+        tmp_path / "base_path/dist/First App-0.0.1.pkg",
+        "distribution file",
+    )
+
+    marker_path = tmp_path / "base_path/dist/First App-0.0.1.pkg.notarization-request"
+    marker_path.parent.mkdir(parents=True, exist_ok=True)
+    marker_path.write_text(
+        f'identity = "{sekrit_identity.id}"\nsubmission_id = "{uuid.uuid4()!s}"\n',
+        encoding="utf-8",
+    )
+
+    with pytest.raises(
+        BriefcaseCommandError,
+        match=(r"Notarization request marker does not contain an installer identity"),
+    ):
+        package_command._package_app(
+            first_app_with_binaries,
+            update=False,
+            packaging_format="pkg",
+            identity=sekrit_identity.id,
+            installer_identity=sekrit_identity.id,
+        )
