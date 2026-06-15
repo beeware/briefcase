@@ -1442,52 +1442,42 @@ password:
         # Confirm the project isn't currently on an iCloud synced drive.
         self.verify_not_on_icloud(app)
 
-        auto_resume = False
-
         # Check for a notarization request marker that indicates an interrupted
         # notarization that can be auto-resumed. Only checked when no explicit
         # --resume is provided.
-        if submission_id is None:
-            marker_path = self.notarization_request_path(app)
-            if marker_path.exists():
-                marker_data = self.read_notarization_request(app)
+        marker_path = self.notarization_request_path(app)
+        if submission_id is None and marker_path.exists():
+            marker_data = self.read_notarization_request(app)
 
-                # Identity
-                if identity is not None and marker_data["identity"] != identity:
-                    raise BriefcaseCommandError(
-                        f"Notarization request marker identity "
-                        f"{marker_data['identity']!r} does not match "
-                        f"the specified identity {identity!r}."
-                    )
-                if identity is None:
-                    identity = marker_data["identity"]
-
-                # Installer identity
-                if installer_identity is not None:
-                    if "installer_identity" not in marker_data:
-                        raise BriefcaseCommandError(
-                            "Notarization request marker does not contain an "
-                            "installer identity, but --installer-identity "
-                            f"({installer_identity}) was specified."
-                        )
-                    if marker_data["installer_identity"] != installer_identity:
-                        raise BriefcaseCommandError(
-                            "Notarization request marker installer identity "
-                            f"{marker_data['installer_identity']!r} does not "
-                            f"match the specified installer identity "
-                            f"{installer_identity!r}."
-                        )
-                if installer_identity is None and "installer_identity" in marker_data:
-                    installer_identity = marker_data["installer_identity"]
-
-                self.console.info(
-                    "Found interrupted notarization request. "
-                    f"Resuming notarization for submission "
-                    f"{marker_data['submission_id']}...",
-                    prefix=app.app_name,
+            # Identity
+            if identity is not None and marker_data["identity"] != identity:
+                raise BriefcaseCommandError(
+                    f"Notarization request marker identity "
+                    f"{marker_data['identity']!r} does not match "
+                    f"the specified identity {identity!r}."
                 )
-                auto_resume = True
-                submission_id = marker_data["submission_id"]
+            if identity is None:
+                identity = marker_data["identity"]
+
+            # Installer identity
+            if installer_identity is not None:
+                if "installer_identity" not in marker_data:
+                    raise BriefcaseCommandError(
+                        "Notarization request marker does not contain an "
+                        "installer identity, but --installer-identity "
+                        f"({installer_identity}) was specified."
+                    )
+                if marker_data["installer_identity"] != installer_identity:
+                    raise BriefcaseCommandError(
+                        "Notarization request marker installer identity "
+                        f"{marker_data['installer_identity']!r} does not "
+                        f"match the specified installer identity "
+                        f"{installer_identity!r}."
+                    )
+            if installer_identity is None and "installer_identity" in marker_data:
+                installer_identity = marker_data["installer_identity"]
+
+            submission_id = marker_data["submission_id"]
 
         if submission_id:
             # If we're resuming notarization, we *can't* use an adhoc identity,
@@ -1520,8 +1510,7 @@ password:
                 identity=notarization_identity,
                 submission_id=submission_id,
             )
-            if auto_resume:
-                marker_path = self.notarization_request_path(app)
+            if marker_path.exists():
                 marker_path.unlink()
             return
 

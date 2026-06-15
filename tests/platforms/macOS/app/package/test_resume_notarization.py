@@ -1368,8 +1368,8 @@ def test_auto_resume_precedence_explicit_resume(
         submission_id=cli_submission_id,
     )
 
-    # The marker should NOT have been deleted (CLI submission was used, not the marker)
-    assert marker_path.exists()
+    # The marker should be deleted after a successful resume
+    assert not marker_path.exists()
 
 
 def test_auto_resume_identity_mismatch(
