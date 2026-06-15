@@ -1442,8 +1442,7 @@ password:
         # Check for a notarization request marker that indicates an interrupted
         # notarization that can be auto-resumed. Only checked when no explicit
         # --resume is provided.
-        marker_path = self.notarization_request_path(app)
-        if submission_id is None and marker_path.exists():
+        if submission_id is None and self.notarization_request_path(app).exists():
             marker_data = self.read_notarization_request(app)
 
             # Identity
