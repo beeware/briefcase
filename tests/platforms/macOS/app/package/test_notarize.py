@@ -56,255 +56,43 @@ def first_app_pkg(first_app_with_binaries, tmp_path):
     return first_app_with_binaries
 
 
-def test_notarize_app(
+@pytest.mark.parametrize(
+    ("packaging_format", "needs_archive", "needs_installer"),
+    [
+        ("zip", True, False),
+        ("dmg", False, False),
+        ("pkg", False, True),
+    ],
+)
+def test_notarize(
     package_command,
-    first_app_zip,
-    sekrit_identity,
-    tmp_path,
-    sleep_zero,
-):
-    """An app can be notarized."""
-    app_path = (
-        tmp_path
-        / "base_path"
-        / "build"
-        / "first-app"
-        / "macos"
-        / "app"
-        / "First App.app"
-    )
-    archive_path = tmp_path / "base_path/build/first-app/macos/app/First App.app.zip"
-
-    # Mock the creation of the ditto archive
-    package_command.ditto_archive = MagicMock()
-
-    # Mock the return values of subprocesses
-    submission_id = str(uuid.uuid4())
-    package_command.tools.subprocess.parse_output.side_effect = [
-        # notarytool submit
-        {"id": submission_id},
-        # notarytool log; 2 failures, then a successful result.
-        subprocess.CalledProcessError(
-            returncode=69,
-            cmd=["xcrun", "notarytool", "log"],
-        ),
-        subprocess.CalledProcessError(
-            returncode=69,
-            cmd=["xcrun", "notarytool", "log"],
-        ),
-        {"status": "Accepted"},
-    ]
-
-    package_command.notarize(first_app_zip, identity=sekrit_identity)
-
-    # As a result of mocking ditto, the zip archive won't *actually* be created;
-    # and as a result of mocking os, it won't *actually* be deleted either - but we can
-    # verify that it *would* have been deleted. ditto will also be called when finalizing,
-    # to create the actual distribution artefact.
-    assert package_command.ditto_archive.mock_calls == [
-        mock.call(app_path, archive_path),
-        mock.call(app_path, tmp_path / "base_path/dist/First App-0.0.1.app.zip"),
-    ]
-    package_command.tools.os.unlink.assert_called_with(archive_path)
-
-    # The calls to notarization tools were made
-    assert package_command.tools.subprocess.parse_output.mock_calls == [
-        # Submit *archive* for notarization
-        mock.call(
-            json_parser,
-            [
-                "xcrun",
-                "notarytool",
-                "submit",
-                archive_path,
-                "--keychain-profile",
-                "briefcase-macOS-DEADBEEF",
-                "--output-format",
-                "json",
-            ],
-            quiet=1,
-        ),
-        # Check status 3 times
-        mock.call(
-            json_parser,
-            [
-                "xcrun",
-                "notarytool",
-                "log",
-                "--keychain-profile",
-                "briefcase-macOS-DEADBEEF",
-                submission_id,
-            ],
-            quiet=1,
-        ),
-        mock.call(
-            json_parser,
-            [
-                "xcrun",
-                "notarytool",
-                "log",
-                "--keychain-profile",
-                "briefcase-macOS-DEADBEEF",
-                submission_id,
-            ],
-            quiet=1,
-        ),
-        mock.call(
-            json_parser,
-            [
-                "xcrun",
-                "notarytool",
-                "log",
-                "--keychain-profile",
-                "briefcase-macOS-DEADBEEF",
-                submission_id,
-            ],
-            quiet=1,
-        ),
-    ]
-
-    package_command.tools.subprocess.run.assert_called_once_with(
-        [
-            "xcrun",
-            "stapler",
-            "staple",
-            app_path,
-        ],
-        check=True,
-    )
-
-    marker_path = (
-        tmp_path / "base_path/dist/First App-0.0.1.app.zip.notarization-request"
-    )
-    assert not marker_path.exists(), (
-        "Marker should have been deleted after successful notarization"
-    )
-
-
-def test_notarize_dmg(
-    package_command,
-    first_app_dmg,
-    sekrit_identity,
-    sleep_zero,
-    tmp_path,
-):
-    """A DMG can be notarized."""
-    # Mock the creation of the ditto archive
-    package_command.ditto_archive = MagicMock()
-
-    # Mock the return values of subprocesses
-    submission_id = str(uuid.uuid4())
-    package_command.tools.subprocess.parse_output.side_effect = [
-        # notarytool submit
-        {"id": submission_id},
-        # notarytool log; 2 failures, then a successful result.
-        subprocess.CalledProcessError(
-            returncode=69,
-            cmd=["xcrun", "notarytool", "log"],
-        ),
-        subprocess.CalledProcessError(
-            returncode=69,
-            cmd=["xcrun", "notarytool", "log"],
-        ),
-        {"status": "Accepted"},
-    ]
-
-    package_command.notarize(first_app_dmg, identity=sekrit_identity)
-
-    # The DMG didn't require an archive file, so ditto and unlink weren't invoked.
-    package_command.ditto_archive.assert_not_called()
-    package_command.tools.os.unlink.assert_not_called()
-
-    # The calls to notarization tools were made
-    assert package_command.tools.subprocess.parse_output.mock_calls == [
-        # Submit dmg for notarization
-        mock.call(
-            json_parser,
-            [
-                "xcrun",
-                "notarytool",
-                "submit",
-                tmp_path / "base_path/dist/First App-0.0.1.dmg",
-                "--keychain-profile",
-                "briefcase-macOS-DEADBEEF",
-                "--output-format",
-                "json",
-            ],
-            quiet=1,
-        ),
-        # Check status 3 times
-        mock.call(
-            json_parser,
-            [
-                "xcrun",
-                "notarytool",
-                "log",
-                "--keychain-profile",
-                "briefcase-macOS-DEADBEEF",
-                submission_id,
-            ],
-            quiet=1,
-        ),
-        mock.call(
-            json_parser,
-            [
-                "xcrun",
-                "notarytool",
-                "log",
-                "--keychain-profile",
-                "briefcase-macOS-DEADBEEF",
-                submission_id,
-            ],
-            quiet=1,
-        ),
-        mock.call(
-            json_parser,
-            [
-                "xcrun",
-                "notarytool",
-                "log",
-                "--keychain-profile",
-                "briefcase-macOS-DEADBEEF",
-                submission_id,
-            ],
-            quiet=1,
-        ),
-    ]
-
-    package_command.tools.subprocess.run.assert_called_once_with(
-        [
-            "xcrun",
-            "stapler",
-            "staple",
-            tmp_path / "base_path/dist/First App-0.0.1.dmg",
-        ],
-        check=True,
-    )
-
-    marker_path = tmp_path / "base_path/dist/First App-0.0.1.dmg.notarization-request"
-    assert not marker_path.exists(), (
-        "Marker should have been deleted after successful notarization"
-    )
-
-
-def test_notarize_pkg(
-    package_command,
-    first_app_pkg,
+    first_app_with_binaries,
     sekrit_identity,
     sekrit_installer_identity,
-    sleep_zero,
     tmp_path,
+    sleep_zero,
+    packaging_format,
+    needs_archive,
+    needs_installer,
 ):
-    """A PKG can be notarized."""
-    # Mock the creation of the ditto archive
+    """A package can be notarized across different formats."""
+    first_app_with_binaries.packaging_format = packaging_format
+
+    app_path = tmp_path / "base_path/build/first-app/macos/app/First App.app"
+    archive_path = tmp_path / "base_path/build/first-app/macos/app/First App.app.zip"
+    dist_path = tmp_path / "base_path/dist" / f"First App-0.0.1.{packaging_format}"
+    if packaging_format == "zip":
+        dist_path = tmp_path / "base_path/dist/First App-0.0.1.app.zip"
+
+    if not needs_archive:
+        dist_path.parent.mkdir(parents=True, exist_ok=True)
+        dist_path.write_text("distribution file", encoding="utf-8")
+
     package_command.ditto_archive = MagicMock()
 
-    # Mock the return values of subprocesses
     submission_id = str(uuid.uuid4())
     package_command.tools.subprocess.parse_output.side_effect = [
-        # notarytool submit
         {"id": submission_id},
-        # notarytool log; 2 failures, then a successful result.
         subprocess.CalledProcessError(
             returncode=69,
             cmd=["xcrun", "notarytool", "log"],
@@ -316,26 +104,33 @@ def test_notarize_pkg(
         {"status": "Accepted"},
     ]
 
-    package_command.notarize(
-        first_app_pkg,
-        identity=sekrit_identity,
-        installer_identity=sekrit_installer_identity,
-    )
+    notarize_kwargs = {"identity": sekrit_identity}
+    if needs_installer:
+        notarize_kwargs["installer_identity"] = sekrit_installer_identity
+    package_command.notarize(first_app_with_binaries, **notarize_kwargs)
 
-    # The PKG didn't require an archive file, so ditto and unlink weren't invoked.
-    package_command.ditto_archive.assert_not_called()
-    package_command.tools.os.unlink.assert_not_called()
+    if needs_archive:
+        assert package_command.ditto_archive.mock_calls == [
+            mock.call(app_path, archive_path),
+            mock.call(
+                app_path,
+                tmp_path / "base_path/dist/First App-0.0.1.app.zip",
+            ),
+        ]
+        package_command.tools.os.unlink.assert_called_with(archive_path)
+    else:
+        package_command.ditto_archive.assert_not_called()
+        package_command.tools.os.unlink.assert_not_called()
 
-    # The calls to notarization tools were made
+    submit_path = archive_path if needs_archive else dist_path
     assert package_command.tools.subprocess.parse_output.mock_calls == [
-        # Submit pkg for notarization
         mock.call(
             json_parser,
             [
                 "xcrun",
                 "notarytool",
                 "submit",
-                tmp_path / "base_path/dist/First App-0.0.1.pkg",
+                submit_path,
                 "--keychain-profile",
                 "briefcase-macOS-DEADBEEF",
                 "--output-format",
@@ -343,7 +138,6 @@ def test_notarize_pkg(
             ],
             quiet=1,
         ),
-        # Check status 3 times
         mock.call(
             json_parser,
             [
@@ -382,17 +176,23 @@ def test_notarize_pkg(
         ),
     ]
 
+    staple_path = app_path if needs_archive else dist_path
     package_command.tools.subprocess.run.assert_called_once_with(
         [
             "xcrun",
             "stapler",
             "staple",
-            tmp_path / "base_path/dist/First App-0.0.1.pkg",
+            staple_path,
         ],
         check=True,
     )
 
-    marker_path = tmp_path / "base_path/dist/First App-0.0.1.pkg.notarization-request"
+    marker_suffix = (
+        "First App-0.0.1.app.zip.notarization-request"
+        if packaging_format == "zip"
+        else f"First App-0.0.1.{packaging_format}.notarization-request"
+    )
+    marker_path = tmp_path / "base_path" / "dist" / marker_suffix
     assert not marker_path.exists(), (
         "Marker should have been deleted after successful notarization"
     )
@@ -1392,90 +1192,71 @@ def test_notarize_staple_failure_leaves_marker(
     assert data["submission_id"] == submission_id
 
 
-def test_notarization_request_path_zip(
+@pytest.mark.parametrize(
+    ("packaging_format", "expected_suffix"),
+    [
+        ("zip", "First App-0.0.1.app.zip.notarization-request"),
+        ("dmg", "First App-0.0.1.dmg.notarization-request"),
+        ("pkg", "First App-0.0.1.pkg.notarization-request"),
+    ],
+)
+def test_notarization_request_path(
     package_command,
-    first_app_zip,
+    first_app_with_binaries,
     tmp_path,
+    packaging_format,
+    expected_suffix,
 ):
-    path = package_command.notarization_request_path(first_app_zip)
-    assert (
-        path == tmp_path / "base_path/dist/First App-0.0.1.app.zip.notarization-request"
-    )
+    """Notarization request marker path is computed correctly for each format."""
+    first_app_with_binaries.packaging_format = packaging_format
+    path = package_command.notarization_request_path(first_app_with_binaries)
+    assert path == tmp_path / "base_path" / "dist" / expected_suffix
 
 
-def test_notarization_request_path_dmg(
+@pytest.mark.parametrize("packaging_format", ["dmg", "pkg"])
+def test_write_notarization_request(
     package_command,
-    first_app_dmg,
-    tmp_path,
-):
-    path = package_command.notarization_request_path(first_app_dmg)
-    assert path == tmp_path / "base_path/dist/First App-0.0.1.dmg.notarization-request"
-
-
-def test_notarization_request_path_pkg(
-    package_command,
-    first_app_pkg,
-    tmp_path,
-):
-    path = package_command.notarization_request_path(first_app_pkg)
-    assert path == tmp_path / "base_path/dist/First App-0.0.1.pkg.notarization-request"
-
-
-def test_write_notarization_request_app(
-    package_command,
-    first_app_dmg,
-    sekrit_identity,
-    tmp_path,
-):
-    submission_id = str(uuid.uuid4())
-    package_command.write_notarization_request(
-        first_app_dmg,
-        identity=sekrit_identity,
-        submission_id=submission_id,
-    )
-
-    marker_path = tmp_path / "base_path/dist/First App-0.0.1.dmg.notarization-request"
-    assert marker_path.exists()
-
-    import tomllib
-
-    with marker_path.open("rb") as f:
-        data = tomllib.load(f)
-
-    assert data == {
-        "identity": "CAFEBEEF",
-        "submission_id": submission_id,
-    }
-
-
-def test_write_notarization_request_pkg(
-    package_command,
-    first_app_pkg,
+    first_app_with_binaries,
     sekrit_identity,
     sekrit_installer_identity,
     tmp_path,
+    packaging_format,
 ):
+    """Notarization request marker is written with correct content."""
+    first_app_with_binaries.packaging_format = packaging_format
+
     submission_id = str(uuid.uuid4())
+    kwargs = {
+        "identity": sekrit_identity,
+        "submission_id": submission_id,
+    }
+    if packaging_format == "pkg":
+        kwargs["installer_identity"] = sekrit_installer_identity
+
     package_command.write_notarization_request(
-        first_app_pkg,
-        identity=sekrit_identity,
-        submission_id=submission_id,
-        installer_identity=sekrit_installer_identity,
+        first_app_with_binaries,
+        **kwargs,
     )
 
-    marker_path = tmp_path / "base_path/dist/First App-0.0.1.pkg.notarization-request"
-    assert marker_path.exists()
+    expected_path = (
+        tmp_path
+        / "base_path"
+        / "dist"
+        / f"First App-0.0.1.{packaging_format}.notarization-request"
+    )
+    assert expected_path.exists()
 
     import tomllib
 
-    with marker_path.open("rb") as f:
+    with expected_path.open("rb") as f:
         data = tomllib.load(f)
 
-    assert data == {
-        "identity": "CAFEBEEF",
-        "submission_id": submission_id,
-        "installer_identity": "CAFEFACE",
-    }
+    assert data["identity"] == sekrit_identity.id
+    assert data["submission_id"] == submission_id
+    if packaging_format == "pkg":
+        assert data["installer_identity"] == sekrit_installer_identity.id
+    else:
+        assert "installer_identity" not in data
 
 
 def test_read_notarization_request(
