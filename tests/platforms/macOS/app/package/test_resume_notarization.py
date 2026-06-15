@@ -1052,7 +1052,8 @@ def test_clean_dist_folder_preserves_with_marker(
     marker_path.parent.mkdir(parents=True, exist_ok=True)
     marker_path.write_text(
         'identity = "CAFEBEEF"\n'
-        'submission_id = "00000000-0000-0000-0000-000000000000"\n'
+        'submission_id = "00000000-0000-0000-0000-000000000000"\n',
+        encoding="utf-8",
     )
 
     first_app_with_binaries.packaging_format = "dmg"
@@ -1118,7 +1119,8 @@ def test_auto_resume_notarize_dmg(
     marker_path = tmp_path / "base_path/dist/First App-0.0.1.dmg.notarization-request"
     marker_path.parent.mkdir(parents=True, exist_ok=True)
     marker_path.write_text(
-        f'identity = "{sekrit_identity.id}"\nsubmission_id = "{submission_id}"\n'
+        f'identity = "{sekrit_identity.id}"\nsubmission_id = "{submission_id}"\n',
+        encoding="utf-8",
     )
 
     package_command.select_identity.return_value = sekrit_identity
@@ -1186,7 +1188,8 @@ def test_auto_resume_notarize_zip(
     )
     marker_path.parent.mkdir(parents=True, exist_ok=True)
     marker_path.write_text(
-        f'identity = "{sekrit_identity.id}"\nsubmission_id = "{submission_id}"\n'
+        f'identity = "{sekrit_identity.id}"\nsubmission_id = "{submission_id}"\n',
+        encoding="utf-8",
     )
 
     package_command.tools.subprocess.parse_output.side_effect = [
@@ -1262,7 +1265,8 @@ def test_auto_resume_notarize_pkg(
     marker_path.write_text(
         f'identity = "{sekrit_identity.id}"\n'
         f'submission_id = "{submission_id}"\n'
-        f'installer_identity = "{sekrit_installer_identity.id}"\n'
+        f'installer_identity = "{sekrit_installer_identity.id}"\n',
+        encoding="utf-8",
     )
 
     package_command.select_identity.side_effect = [
@@ -1333,7 +1337,8 @@ def test_auto_resume_precedence_explicit_resume(
     marker_path = tmp_path / "base_path/dist/First App-0.0.1.dmg.notarization-request"
     marker_path.parent.mkdir(parents=True, exist_ok=True)
     marker_path.write_text(
-        f'identity = "{sekrit_identity.id}"\nsubmission_id = "{marker_submission_id}"\n'
+        f'identity = "{sekrit_identity.id}"\nsubmission_id = "{marker_submission_id}"\n',
+        encoding="utf-8",
     )
 
     cli_submission_id = str(uuid.uuid4())

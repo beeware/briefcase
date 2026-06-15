@@ -1490,7 +1490,8 @@ def test_read_notarization_request(
     marker_path.parent.mkdir(parents=True, exist_ok=True)
     marker_path.write_text(
         'identity = "CAFEBEEF"\n'
-        'submission_id = "00000000-0000-0000-0000-000000000000"\n'
+        'submission_id = "00000000-0000-0000-0000-000000000000"\n',
+        encoding="utf-8",
     )
 
     data = package_command.read_notarization_request(first_app_dmg)
@@ -1510,7 +1511,8 @@ def test_read_notarization_request_with_installer(
     marker_path.write_text(
         'identity = "CAFEBEEF"\n'
         'submission_id = "00000000-0000-0000-0000-000000000000"\n'
-        'installer_identity = "CAFEFACE"\n'
+        'installer_identity = "CAFEFACE"\n',
+        encoding="utf-8",
     )
 
     data = package_command.read_notarization_request(first_app_pkg)
@@ -1537,7 +1539,7 @@ def test_read_notarization_request_malformed_toml(
 ):
     marker_path = tmp_path / "base_path/dist/First App-0.0.1.dmg.notarization-request"
     marker_path.parent.mkdir(parents=True, exist_ok=True)
-    marker_path.write_text("this is not valid toml = {{")
+    marker_path.write_text("this is not valid toml = {{", encoding="utf-8")
 
     with pytest.raises(BriefcaseCommandError, match=r"malformed"):
         package_command.read_notarization_request(first_app_dmg)
@@ -1550,7 +1552,9 @@ def test_read_notarization_request_missing_identity(
 ):
     marker_path = tmp_path / "base_path/dist/First App-0.0.1.dmg.notarization-request"
     marker_path.parent.mkdir(parents=True, exist_ok=True)
-    marker_path.write_text('submission_id = "00000000-0000-0000-0000-000000000000"\n')
+    marker_path.write_text(
+        'submission_id = "00000000-0000-0000-0000-000000000000"\n', encoding="utf-8"
+    )
 
     with pytest.raises(BriefcaseCommandError, match=r"identity"):
         package_command.read_notarization_request(first_app_dmg)
@@ -1563,7 +1567,7 @@ def test_read_notarization_request_missing_submission_id(
 ):
     marker_path = tmp_path / "base_path/dist/First App-0.0.1.dmg.notarization-request"
     marker_path.parent.mkdir(parents=True, exist_ok=True)
-    marker_path.write_text('identity = "CAFEBEEF"\n')
+    marker_path.write_text('identity = "CAFEBEEF"\n', encoding="utf-8")
 
     with pytest.raises(BriefcaseCommandError, match=r"submission_id"):
         package_command.read_notarization_request(first_app_dmg)
@@ -1576,7 +1580,9 @@ def test_read_notarization_request_non_string_value(
 ):
     marker_path = tmp_path / "base_path/dist/First App-0.0.1.dmg.notarization-request"
     marker_path.parent.mkdir(parents=True, exist_ok=True)
-    marker_path.write_text('identity = "CAFEBEEF"\nsubmission_id = 12345\n')
+    marker_path.write_text(
+        'identity = "CAFEBEEF"\nsubmission_id = 12345\n', encoding="utf-8"
+    )
 
     with pytest.raises(BriefcaseCommandError, match=r"string"):
         package_command.read_notarization_request(first_app_dmg)
@@ -1594,7 +1600,8 @@ def test_read_notarization_request_non_string_installer_identity(
     marker_path.write_text(
         'identity = "CAFEBEEF"\n'
         'submission_id = "00000000-0000-0000-0000-000000000000"\n'
-        "installer_identity = 12345\n"
+        "installer_identity = 12345\n",
+        encoding="utf-8",
     )
 
     with pytest.raises(BriefcaseCommandError, match=r"non-string"):
@@ -1609,7 +1616,8 @@ def test_delete_notarization_request(
     marker_path = tmp_path / "base_path/dist/First App-0.0.1.dmg.notarization-request"
     marker_path.parent.mkdir(parents=True, exist_ok=True)
     marker_path.write_text(
-        'identity = "CAFEBEEF"\nsubmission_id = "00000000-0000-0000-0000-000000000000"\n'
+        'identity = "CAFEBEEF"\nsubmission_id = "00000000-0000-0000-0000-000000000000"\n',
+        encoding="utf-8",
     )
 
     package_command.delete_notarization_request(first_app_dmg)
