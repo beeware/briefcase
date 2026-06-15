@@ -1320,6 +1320,76 @@ def test_auto_resume_notarize_pkg(
     package_command.ditto_archive.assert_not_called()
 
 
+def test_auto_resume_notarize_pkg_without_installer_identity(
+    package_command,
+    first_app_with_binaries,
+    sekrit_identity,
+    tmp_path,
+    sleep_zero,
+):
+    """PKG auto-resume when marker lacks installer_identity falls back to selecting an
+    installer identity."""
+    create_file(
+        tmp_path / "base_path/dist/First App-0.0.1.pkg",
+        "distribution file",
+    )
+
+    submission_id = str(uuid.uuid4())
+    marker_path = tmp_path / "base_path/dist/First App-0.0.1.pkg.notarization-request"
+    marker_path.parent.mkdir(parents=True, exist_ok=True)
+    marker_path.write_text(
+        f'identity = "{sekrit_identity.id}"\nsubmission_id = "{submission_id}"\n',
+        encoding="utf-8",
+    )
+
+    package_command.select_identity.return_value = sekrit_identity
+    package_command.ditto_archive = mock.MagicMock()
+
+    package_command.tools.subprocess.parse_output.side_effect = [
+        {
+            "history": [
+                {
+                    "id": str(uuid.uuid4()),
+                    "name": "Other App-1.2.3.dmg",
+                    "status": "Accepted",
+                },
+                {
+                    "id": submission_id,
+                    "name": "First App-0.0.1.pkg",
+                    "status": "In Progress",
+                },
+            ]
+        },
+        subprocess.CalledProcessError(
+            returncode=69, cmd=["xcrun", "notarytool", "log"]
+        ),
+        subprocess.CalledProcessError(
+            returncode=69, cmd=["xcrun", "notarytool", "log"]
+        ),
+        {"status": "Accepted"},
+    ]
+
+    package_command._package_app(
+        first_app_with_binaries,
+        update=False,
+        packaging_format="pkg",
+        identity=sekrit_identity.id,
+    )
+
+    assert package_command.select_identity.mock_calls == [
+        mock.call(identity=sekrit_identity.id, allow_adhoc=False),
+        mock.call(identity=None, app_identity=sekrit_identity),
+    ]
+
+    assert not marker_path.exists()
+
+    package_command.tools.subprocess.run.assert_called_once_with(
+        ["xcrun", "stapler", "staple", tmp_path / "base_path/dist/First App-0.0.1.pkg"],
+        check=True,
+    )
+    package_command.ditto_archive.assert_not_called()
+
+
 def test_auto_resume_precedence_explicit_resume(
     package_command,
     first_app_with_binaries,
