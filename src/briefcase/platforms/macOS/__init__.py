@@ -39,6 +39,13 @@ except ImportError:  # pragma: no-cover-if-is-macos
     # Allow the plugin to be loaded; raise an error when tools are verified.
     dmgbuild = None
 
+import tomli_w
+
+try:
+    import tomllib
+except ImportError:  # pragma: no-cover-if-gte-py311
+    import tomli as tomllib  # type: ignore[no-redef]
+
 
 DEFAULT_OUTPUT_FORMAT = "app"
 
@@ -916,7 +923,6 @@ class macOSPackageMixin(macOSSigningMixin):
         :param submission_id: The submission ID from Apple's notarization service.
         :param installer_identity: The installer signing identity, if any.
         """
-        import tomli_w
 
         data: dict[str, str] = {
             "identity": identity.id,
@@ -947,11 +953,6 @@ class macOSPackageMixin(macOSSigningMixin):
             )
 
         try:
-            import tomllib
-        except ImportError:  # pragma: no-cover-if-gte-py311
-            import tomli as tomllib  # type: ignore[no-redef]
-
-        try:
             with marker_path.open("rb") as f:
                 data = tomllib.load(f)
         except tomllib.TOMLDecodeError as e:
@@ -980,15 +981,6 @@ class macOSPackageMixin(macOSSigningMixin):
             )
 
         return data
-
-    def delete_notarization_request(self, app: FinalizedAppConfig) -> None:
-        """Delete the notarization request marker file if it exists.
-
-        :param app: The app being packaged.
-        """
-        marker_path = self.notarization_request_path(app)
-        with suppress(FileNotFoundError):
-            marker_path.unlink()
 
     def add_options(self, parser):
         super().add_options(parser)
@@ -1166,7 +1158,9 @@ notarization and resume it.
         except Exception:
             raise
         else:
-            self.delete_notarization_request(app)
+            marker_path = self.notarization_request_path(app)
+            with suppress(FileNotFoundError):
+                marker_path.unlink()
 
     def submit_notarization(self, app, identity: SigningIdentity) -> str:
         """Submit a file for notarization, returning the ID of the notarizatzion task.
@@ -1530,7 +1524,9 @@ password:
                 identity=notarization_identity,
                 submission_id=submission_id,
             )
-            self.delete_notarization_request(app)
+            marker_path = self.notarization_request_path(app)
+            with suppress(FileNotFoundError):
+                marker_path.unlink()
             return
 
         # It's a normal packaging pass.

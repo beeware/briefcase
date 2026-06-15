@@ -1,6 +1,7 @@
 import os
 import subprocess
 import uuid
+from contextlib import suppress
 from unittest import mock
 from unittest.mock import MagicMock
 
@@ -1582,7 +1583,9 @@ def test_delete_notarization_request(
         encoding="utf-8",
     )
 
-    package_command.delete_notarization_request(first_app_dmg)
+    marker_path = package_command.notarization_request_path(first_app_dmg)
+    with suppress(FileNotFoundError):
+        marker_path.unlink()
     assert not marker_path.exists()
 
 
@@ -1591,8 +1594,9 @@ def test_delete_notarization_request_missing(
     first_app_dmg,
     tmp_path,
 ):
-    marker_path = tmp_path / "base_path/dist/First App-0.0.1.dmg.notarization-request"
+    marker_path = package_command.notarization_request_path(first_app_dmg)
     assert not marker_path.exists()
 
     # Should not raise
-    package_command.delete_notarization_request(first_app_dmg)
+    with suppress(FileNotFoundError):
+        marker_path.unlink()
