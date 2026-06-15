@@ -908,14 +908,13 @@ class macOSPackageMixin(macOSSigningMixin):
         """Write a notarization request marker file.
 
         The marker file is written as TOML to the path returned by
-        `notarization_request_path()`. It stores the signing identity ID,
-        submission ID, and optionally the installer identity ID.
+        `notarization_request_path()`. It stores the signing identity ID, submission ID,
+        and optionally the installer identity ID.
 
-        **Parameters:**
-        - **app** - The app being packaged.
-        - **identity** - The app signing identity used for notarization.
-        - **submission_id** - The submission ID from Apple's notarization service.
-        - **installer_identity** - The installer signing identity, if any.
+        :param app: The app being packaged.
+        :param identity: The app signing identity used for notarization.
+        :param submission_id: The submission ID from Apple's notarization service.
+        :param installer_identity: The installer signing identity, if any.
         """
         import tomli_w
 
@@ -934,16 +933,11 @@ class macOSPackageMixin(macOSSigningMixin):
     def read_notarization_request(self, app: FinalizedAppConfig) -> dict[str, str]:
         """Read and validate a notarization request marker file.
 
-        **Parameters:**
-        - **app** - The app being packaged.
-
-        **Returns:**
-        - A dict with keys ``identity``, ``submission_id``, and optionally
-          ``installer_identity``.
-
-        **Raises:**
-        - **BriefcaseCommandError** - If the marker is missing, malformed, or
-          has missing or invalid values.
+        :param app: The app being packaged.
+        :returns: A dict with keys ``identity``, ``submission_id``, and optionally
+            ``installer_identity``.
+        :raises BriefcaseCommandError: If the marker is missing, malformed, or
+            has missing or invalid values.
         """
         marker_path = self.notarization_request_path(app)
 
@@ -990,8 +984,7 @@ class macOSPackageMixin(macOSSigningMixin):
     def delete_notarization_request(self, app: FinalizedAppConfig) -> None:
         """Delete the notarization request marker file if it exists.
 
-        **Parameters:**
-        - **app** - The app being packaged.
+        :param app: The app being packaged.
         """
         marker_path = self.notarization_request_path(app)
         with suppress(FileNotFoundError):
