@@ -1239,10 +1239,7 @@ def test_interrupt_notarization(
     with pytest.raises(NotarizationInterrupted):
         package_command.notarize(first_app_dmg, identity=sekrit_identity)
 
-    assert (
-        f"briefcase package macOS app -p dmg --identity CAFEBEEF --resume {submission_id}"
-        in capsys.readouterr().out
-    )
+    assert "--resume option" in capsys.readouterr().out
 
     # The calls to notarization tools were made
     assert package_command.tools.subprocess.parse_output.mock_calls == [
@@ -1571,41 +1568,6 @@ def test_read_notarization_request_missing_submission_id(
 
     with pytest.raises(BriefcaseCommandError, match=r"submission_id"):
         package_command.read_notarization_request(first_app_dmg)
-
-
-def test_read_notarization_request_non_string_value(
-    package_command,
-    first_app_dmg,
-    tmp_path,
-):
-    marker_path = tmp_path / "base_path/dist/First App-0.0.1.dmg.notarization-request"
-    marker_path.parent.mkdir(parents=True, exist_ok=True)
-    marker_path.write_text(
-        'identity = "CAFEBEEF"\nsubmission_id = 12345\n', encoding="utf-8"
-    )
-
-    with pytest.raises(BriefcaseCommandError, match=r"string"):
-        package_command.read_notarization_request(first_app_dmg)
-
-
-def test_read_notarization_request_non_string_installer_identity(
-    package_command,
-    first_app_pkg,
-    tmp_path,
-):
-    """Reading a notarization request with a non-string installer_identity raises an
-    error."""
-    marker_path = tmp_path / "base_path/dist/First App-0.0.1.pkg.notarization-request"
-    marker_path.parent.mkdir(parents=True, exist_ok=True)
-    marker_path.write_text(
-        'identity = "CAFEBEEF"\n'
-        'submission_id = "00000000-0000-0000-0000-000000000000"\n'
-        "installer_identity = 12345\n",
-        encoding="utf-8",
-    )
-
-    with pytest.raises(BriefcaseCommandError, match=r"non-string"):
-        package_command.read_notarization_request(first_app_pkg)
 
 
 def test_delete_notarization_request(

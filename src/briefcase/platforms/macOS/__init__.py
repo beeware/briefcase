@@ -934,8 +934,8 @@ class macOSPackageMixin(macOSSigningMixin):
         """Read and validate a notarization request marker file.
 
         :param app: The app being packaged.
-        :returns: A dict with keys ``identity``, ``submission_id``, and optionally
-            ``installer_identity``.
+        :returns: A dict with keys `identity`, `submission_id`, and optionally
+            `installer_identity`.
         :raises BriefcaseCommandError: If the marker is missing, malformed, or
             has missing or invalid values.
         """
@@ -1132,15 +1132,9 @@ class macOSPackageMixin(macOSSigningMixin):
         """
         # Determine the arguments that would be needed to reproduce this notarization
         if installer_identity:
-            identity_args = (
-                f"--identity {identity.id} --installer-identity {installer_identity.id}"
-            )
             notarization_identity = installer_identity
         else:
-            identity_args = f"--identity {identity.id}"
             notarization_identity = identity
-
-        format_args = f"-p {app.packaging_format}"
 
         # Submit the app for notarization
         submission_id = self.submit_notarization(app, identity=notarization_identity)
@@ -1152,19 +1146,16 @@ class macOSPackageMixin(macOSSigningMixin):
             installer_identity=installer_identity,
         )
 
-        self.console.warning(f"""
+        self.console.warning("""
 Briefcase will now wait for Apple to approve the notarization request.
 This can take some time - in some cases, hours.
 
-If notarization is interrupted, you can resume by running:
+If notarization is interrupted, you can use the --resume option to
+continue. Alternatively, rerunning the same briefcase package command
+without a --resume argument will automatically detect the interrupted
+notarization and resume it.
 
-    briefcase package macOS {self.output_format} {format_args} {identity_args} --resume {submission_id}
-
-Alternatively, rerunning the same briefcase package command without any
---resume argument will automatically detect the interrupted notarization
-and resume it.
-
-""")  # noqa: E501
+""")
 
         try:
             self.finalize_notarization(
