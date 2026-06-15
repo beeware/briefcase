@@ -1142,10 +1142,9 @@ class macOSPackageMixin(macOSSigningMixin):
 Briefcase will now wait for Apple to approve the notarization request.
 This can take some time - in some cases, hours.
 
-If notarization is interrupted, you can use the --resume option to
-continue. Alternatively, rerunning the same briefcase package command
-without a --resume argument will automatically detect the interrupted
-notarization and resume it.
+If notarization is interrupted, rerunning the same briefcase package
+command will automatically detect the interrupted notarization and
+resume it.
 
 """)
 
@@ -1159,8 +1158,7 @@ notarization and resume it.
             raise
         else:
             marker_path = self.notarization_request_path(app)
-            with suppress(FileNotFoundError):
-                marker_path.unlink()
+            marker_path.unlink()
 
     def submit_notarization(self, app, identity: SigningIdentity) -> str:
         """Submit a file for notarization, returning the ID of the notarizatzion task.
@@ -1553,8 +1551,7 @@ password:
                 submission_id=submission_id,
             )
             marker_path = self.notarization_request_path(app)
-            with suppress(FileNotFoundError):
-                marker_path.unlink()
+            marker_path.unlink()
             return
 
         # It's a normal packaging pass.

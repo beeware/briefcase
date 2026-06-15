@@ -1,7 +1,6 @@
 import os
 import subprocess
 import uuid
-from contextlib import suppress
 from unittest import mock
 from unittest.mock import MagicMock
 
@@ -1240,7 +1239,7 @@ def test_interrupt_notarization(
     with pytest.raises(NotarizationInterrupted):
         package_command.notarize(first_app_dmg, identity=sekrit_identity)
 
-    assert "--resume option" in capsys.readouterr().out
+    assert "rerunning the same briefcase package" in capsys.readouterr().out
 
     # The calls to notarization tools were made
     assert package_command.tools.subprocess.parse_output.mock_calls == [
@@ -1569,34 +1568,3 @@ def test_read_notarization_request_missing_submission_id(
 
     with pytest.raises(BriefcaseCommandError, match=r"submission_id"):
         package_command.read_notarization_request(first_app_dmg)
-
-
-def test_delete_notarization_request(
-    package_command,
-    first_app_dmg,
-    tmp_path,
-):
-    marker_path = tmp_path / "base_path/dist/First App-0.0.1.dmg.notarization-request"
-    marker_path.parent.mkdir(parents=True, exist_ok=True)
-    marker_path.write_text(
-        'identity = "CAFEBEEF"\nsubmission_id = "00000000-0000-0000-0000-000000000000"\n',
-        encoding="utf-8",
-    )
-
-    marker_path = package_command.notarization_request_path(first_app_dmg)
-    with suppress(FileNotFoundError):
-        marker_path.unlink()
-    assert not marker_path.exists()
-
-
-def test_delete_notarization_request_missing(
-    package_command,
-    first_app_dmg,
-    tmp_path,
-):
-    marker_path = package_command.notarization_request_path(first_app_dmg)
-    assert not marker_path.exists()
-
-    # Should not raise
-    with suppress(FileNotFoundError):
-        marker_path.unlink()
