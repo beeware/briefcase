@@ -1,22 +1,23 @@
 import os
 import shutil
-import subprocess as stdlib_subprocess
+import subprocess as subprocess
 import sys
+from pathlib import Path
 
-from briefcase.exceptions import BriefcaseCommandError
+from briefcase.exceptions import BriefcaseCommandError, RequirementsInstallError
 from briefcase.integrations.subprocess import SubprocessArgsT
 from briefcase.integrations.virtual_environment.base import VirtualEnvironment
 
 
-class VenvVirtualEnvironment(VirtualEnvironment):
-    """An environment manager using the Python standard library module venv."""
+class UvVirtualEnvironment(VirtualEnvironment):
+    """An environment manager using uv."""
 
     def exists(self) -> bool:
-        """`True` iff the venv directory and its `pyvenv.cfg` are present."""
+        """`True` iff the uv environment directory and its `pyvenv.cfg` are present."""
         return self.venv_path.exists() and (self.venv_path / "pyvenv.cfg").exists()
 
     def prepare(self, recreate=False) -> bool:
-        """Prepare a venv at the given environment.
+        """Prepare a uv venv at the given environment.
 
         If the venv does not already exist, or a recreate has been requested, create it.
 
@@ -40,20 +41,19 @@ class VenvVirtualEnvironment(VirtualEnvironment):
             try:
                 self.venv_path.parent.mkdir(parents=True, exist_ok=True)
                 self.tools.subprocess.run(
-                    [sys.executable, "-m", "venv", self.venv_path],
+                    [
+                        "uv",
+                        "venv",
+                        "--python",
+                        sys.executable,
+                        "--seed",
+                        self.venv_path,
+                    ],
                     check=True,
                 )
-            except stdlib_subprocess.CalledProcessError as e:
+            except subprocess.CalledProcessError as e:
                 raise BriefcaseCommandError(
                     f"Failed to create virtual environment at {self.venv_path}"
-                ) from e
-
-            try:
-                # Ensure pip is upgraded in the environment
-                self.install_requirements(["pip"])
-            except Exception as e:
-                raise BriefcaseCommandError(
-                    f"Failed to update core tooling for {self.venv_path}"
                 ) from e
 
         return True
@@ -74,7 +74,7 @@ class VenvVirtualEnvironment(VirtualEnvironment):
             return args
         head = os.fspath(args[0])
         if os.path.normcase(head) == os.path.normcase(sys.executable):
-            return [self.executable, *args[1:]]
+            return ["uv", "run", "python", *args[1:]]
         return list(args)
 
     def build_env(
@@ -100,3 +100,47 @@ class VenvVirtualEnvironment(VirtualEnvironment):
         env.pop("PYTHONHOME", None)
 
         return env
+
+    def install_requirements(
+        self,
+        requires,
+        installer_args=None,
+        allow_editable=False,
+    ):
+        """Install requirements into the environment with `uv pip`.
+
+        :param requires: The list of requirements to install.
+        :param installer_args: A list of additional arguments to pass to the installer.
+        :param allow_editable: Should editable installs be allowed?
+        """
+        require_args = []
+        for req in requires:
+            # Any requirement that is a local path, but *not* a reference to an archive
+            # file (zip, tgz, etc) or wheel can be installed editable. If in doubt,
+            # install non-editable.
+            if (
+                allow_editable
+                and self.tools.file.is_local_path(req)
+                and not self.tools.file.is_archive(req)
+                and Path(req).suffix != ".whl"
+            ):
+                require_args.extend(["-e", req])
+            else:
+                require_args.append(req)
+
+        try:
+            self.run(
+                [
+                    "uv",
+                    "pip",
+                    "install",
+                    "--upgrade",
+                    *(["-vv"] if self.tools.console.is_deep_debug else []),
+                    *require_args,
+                    *([] if installer_args is None else installer_args),
+                ],
+                check=True,
+                encoding="UTF-8",
+            )
+        except subprocess.CalledProcessError as e:
+            raise RequirementsInstallError() from e

@@ -1,3 +1,4 @@
+import os
 import subprocess
 import sys
 
@@ -6,9 +7,9 @@ import pytest
 from briefcase.exceptions import RequirementsInstallError
 
 
-def test_install_requirements(mock_tools, mock_venv):
+def test_install_requirements(mock_tools, venv):
     """Requirements can be installed with pip."""
-    mock_venv.install_requirements(
+    venv.install_requirements(
         [
             "pkg1",
             "pkg2==1.2.3",
@@ -19,12 +20,7 @@ def test_install_requirements(mock_tools, mock_venv):
 
     mock_tools.subprocess.run.assert_called_once_with(
         [
-            "rewrite",
-            mock_venv.executable,
-            "-u",
-            "-X",
-            "utf8",
-            "-m",
+            "uv",
             "pip",
             "install",
             "--upgrade",
@@ -36,7 +32,10 @@ def test_install_requirements(mock_tools, mock_venv):
         ],
         check=True,
         encoding="UTF-8",
-        env={"VENV": "active"},
+        env={
+            "PATH": str(venv.bin_dir) + os.pathsep + os.environ["PATH"],
+            "VIRTUAL_ENV": str(venv.venv_path),
+        },
     )
 
 
@@ -101,25 +100,20 @@ def test_install_requirements(mock_tools, mock_venv):
 @pytest.mark.parametrize("allow_editable", [True, False])
 def test_install_requirements_path_formats(
     mock_tools,
-    mock_venv,
+    venv,
     requirement,
     editable,
     allow_editable,
 ):
     """Test possible path formats that pip supports for editable installation."""
-    mock_venv.install_requirements(
+    venv.install_requirements(
         [requirement],
         allow_editable=allow_editable,
     )
 
     mock_tools.subprocess.run.assert_called_once_with(
         [
-            "rewrite",
-            mock_venv.executable,
-            "-u",
-            "-X",
-            "utf8",
-            "-m",
+            "uv",
             "pip",
             "install",
             "--upgrade",
@@ -128,30 +122,28 @@ def test_install_requirements_path_formats(
         + (["-e", requirement] if (editable and allow_editable) else [requirement]),
         check=True,
         encoding="UTF-8",
-        env={"VENV": "active"},
+        env={
+            "PATH": str(venv.bin_dir) + os.pathsep + os.environ["PATH"],
+            "VIRTUAL_ENV": str(venv.venv_path),
+        },
     )
 
 
-def test_install_failure(mock_tools, mock_venv):
+def test_install_failure(mock_tools, venv):
     """An install failure is reported as a RequirementsInstallError."""
     mock_tools.subprocess.run.side_effect = subprocess.CalledProcessError(
         cmd="pip", returncode=1
     )
 
     with pytest.raises(RequirementsInstallError):
-        mock_venv.install_requirements(
+        venv.install_requirements(
             ["problem-package"],
             allow_editable=True,
         )
 
     mock_tools.subprocess.run.assert_called_once_with(
         [
-            "rewrite",
-            mock_venv.executable,
-            "-u",
-            "-X",
-            "utf8",
-            "-m",
+            "uv",
             "pip",
             "install",
             "--upgrade",
@@ -160,5 +152,8 @@ def test_install_failure(mock_tools, mock_venv):
         ],
         check=True,
         encoding="UTF-8",
-        env={"VENV": "active"},
+        env={
+            "PATH": str(venv.bin_dir) + os.pathsep + os.environ["PATH"],
+            "VIRTUAL_ENV": str(venv.venv_path),
+        },
     )

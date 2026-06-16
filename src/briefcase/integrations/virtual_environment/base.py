@@ -1,3 +1,4 @@
+import os
 import subprocess
 from abc import ABC, abstractmethod
 from pathlib import Path
@@ -35,14 +36,14 @@ class VirtualEnvironment(ABC):
         self.created = self.prepare(recreate=recreate)
 
     @property
-    @abstractmethod
-    def executable(self) -> Path:
-        """The Python interpreter associated with this environment."""
+    def bin_dir(self) -> Path:
+        """The venv's binary directory (`bin` on POSIX, `Scripts` on Windows)."""
+        return self.venv_path / ("Scripts" if os.name == "nt" else "bin")
 
     @property
-    @abstractmethod
-    def bin_dir(self) -> Path:
-        """The directory containing the interpreter and its scripts."""
+    def executable(self) -> Path:
+        """Path to the Python executable inside the venv."""
+        return self.bin_dir / ("python.exe" if os.name == "nt" else "python")
 
     @abstractmethod
     def exists(self) -> bool:

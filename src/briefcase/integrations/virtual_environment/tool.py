@@ -4,6 +4,7 @@ from briefcase.integrations.base import Tool, ToolCache
 from briefcase.integrations.virtual_environment.base import VirtualEnvironment
 from briefcase.integrations.virtual_environment.noop import NoOpVirtualEnvironment
 from briefcase.integrations.virtual_environment.std_venv import VenvVirtualEnvironment
+from briefcase.integrations.virtual_environment.uv import UvVirtualEnvironment
 
 
 class VirtualEnvironmentManager(Tool):
@@ -51,11 +52,18 @@ class VirtualEnvironmentManager(Tool):
             initialised.
         """
         if isolated:
-            venv: VirtualEnvironment = VenvVirtualEnvironment(
-                self.tools,
-                venv_path,
-                recreate=recreate,
-            )
+            if False:
+                venv: VirtualEnvironment = UvVirtualEnvironment(
+                    self.tools,
+                    venv_path,
+                    recreate=recreate,
+                )
+            else:
+                venv = VenvVirtualEnvironment(
+                    self.tools,
+                    venv_path,
+                    recreate=recreate,
+                )
         else:
             venv = NoOpVirtualEnvironment(
                 self.tools,
