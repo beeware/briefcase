@@ -5,6 +5,7 @@ from unittest import mock
 from unittest.mock import MagicMock
 
 import pytest
+import tomllib
 
 from briefcase.exceptions import BriefcaseCommandError, NotarizationInterrupted
 from briefcase.integrations.subprocess import Subprocess, json_parser
@@ -1100,8 +1101,6 @@ def test_interrupt_notarization(
     marker_path = tmp_path / "base_path/dist/First App-0.0.1.dmg.notarization-request"
     assert marker_path.exists()
 
-    import tomllib
-
     with marker_path.open("rb") as f:
         data = tomllib.load(f)
 
@@ -1139,8 +1138,6 @@ def test_notarize_interrupt_leaves_marker(
 
     marker_path = tmp_path / "base_path/dist/First App-0.0.1.dmg.notarization-request"
     assert marker_path.exists()
-
-    import tomllib
 
     with marker_path.open("rb") as f:
         data = tomllib.load(f)
@@ -1182,8 +1179,6 @@ def test_notarize_staple_failure_leaves_marker(
 
     marker_path = tmp_path / "base_path/dist/First App-0.0.1.dmg.notarization-request"
     assert marker_path.exists()
-
-    import tomllib
 
     with marker_path.open("rb") as f:
         data = tomllib.load(f)
@@ -1245,8 +1240,6 @@ def test_write_notarization_request(
         / f"First App-0.0.1.{packaging_format}.notarization-request"
     )
     assert expected_path.exists()
-
-    import tomllib
 
     with expected_path.open("rb") as f:
         data = tomllib.load(f)
