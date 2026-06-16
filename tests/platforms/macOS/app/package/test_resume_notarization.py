@@ -216,6 +216,152 @@ def test_resume_notarize_artefact_missing(
         )
 
 
+def test_auto_resume_identity_inherited(
+    package_command,
+    first_app_with_binaries,
+    sekrit_identity,
+    sekrit_installer_identity,
+    tmp_path,
+    sleep_zero,
+):
+    """Auto-resume inherits identity from the marker when no CLI identity is
+    provided."""
+    create_file(
+        tmp_path / "base_path/dist/First App-0.0.1.dmg",
+        "distribution file",
+    )
+
+    submission_id = str(uuid.uuid4())
+    marker_path = tmp_path / "base_path/dist/First App-0.0.1.dmg.notarization-request"
+    marker_path.parent.mkdir(parents=True, exist_ok=True)
+    marker_path.write_text(
+        f'identity = "{sekrit_identity.id}"\nsubmission_id = "{submission_id}"\n',
+        encoding="utf-8",
+    )
+
+    package_command.select_identity.return_value = sekrit_identity
+    package_command.ditto_archive = mock.MagicMock()
+
+    package_command.tools.subprocess.parse_output.side_effect = [
+        {
+            "history": [
+                {
+                    "id": str(uuid.uuid4()),
+                    "name": "Other App-1.2.3.dmg",
+                    "status": "Accepted",
+                },
+                {
+                    "id": submission_id,
+                    "name": "First App-0.0.1.dmg",
+                    "status": "In Progress",
+                },
+            ]
+        },
+        subprocess.CalledProcessError(
+            returncode=69, cmd=["xcrun", "notarytool", "log"]
+        ),
+        subprocess.CalledProcessError(
+            returncode=69, cmd=["xcrun", "notarytool", "log"]
+        ),
+        {"status": "Accepted"},
+    ]
+
+    package_command._package_app(
+        first_app_with_binaries,
+        update=False,
+        packaging_format="dmg",
+    )
+
+    package_command.select_identity.assert_called_once_with(
+        identity=sekrit_identity.id,
+        allow_adhoc=False,
+    )
+
+    assert not marker_path.exists()
+
+    package_command.tools.subprocess.run.assert_called_once_with(
+        ["xcrun", "stapler", "staple", tmp_path / "base_path/dist/First App-0.0.1.dmg"],
+        check=True,
+    )
+    package_command.ditto_archive.assert_not_called()
+
+
+def test_auto_resume_installer_identity_matches_marker(
+    package_command,
+    first_app_with_binaries,
+    sekrit_identity,
+    sekrit_installer_identity,
+    tmp_path,
+    sleep_zero,
+):
+    """Auto-resume succeeds when CLI installer_identity matches the marker value."""
+    create_file(
+        tmp_path / "base_path/dist/First App-0.0.1.pkg",
+        "distribution file",
+    )
+
+    submission_id = str(uuid.uuid4())
+    marker_path = tmp_path / "base_path/dist/First App-0.0.1.pkg.notarization-request"
+    marker_path.parent.mkdir(parents=True, exist_ok=True)
+    marker_path.write_text(
+        f'identity = "{sekrit_identity.id}"\n'
+        f'submission_id = "{submission_id}"\n'
+        f'installer_identity = "{sekrit_identity.id}"\n',
+        encoding="utf-8",
+    )
+
+    package_command.select_identity.side_effect = [
+        sekrit_identity,
+        sekrit_installer_identity,
+    ]
+    package_command.ditto_archive = mock.MagicMock()
+
+    package_command.tools.subprocess.parse_output.side_effect = [
+        {
+            "history": [
+                {
+                    "id": str(uuid.uuid4()),
+                    "name": "Other App-1.2.3.dmg",
+                    "status": "Accepted",
+                },
+                {
+                    "id": submission_id,
+                    "name": "First App-0.0.1.pkg",
+                    "status": "In Progress",
+                },
+            ]
+        },
+        subprocess.CalledProcessError(
+            returncode=69, cmd=["xcrun", "notarytool", "log"]
+        ),
+        subprocess.CalledProcessError(
+            returncode=69, cmd=["xcrun", "notarytool", "log"]
+        ),
+        {"status": "Accepted"},
+    ]
+
+    package_command._package_app(
+        first_app_with_binaries,
+        update=False,
+        packaging_format="pkg",
+        identity=sekrit_identity.id,
+        installer_identity=sekrit_identity.id,
+    )
+
+    assert package_command.select_identity.mock_calls == [
+        mock.call(identity=sekrit_identity.id, allow_adhoc=False),
+        mock.call(identity=sekrit_identity.id, app_identity=sekrit_identity),
+    ]
+
+    assert not marker_path.exists()
+
+    package_command.tools.subprocess.run.assert_called_once_with(
+        ["xcrun", "stapler", "staple", tmp_path / "base_path/dist/First App-0.0.1.pkg"],
+        check=True,
+    )
+    package_command.ditto_archive.assert_not_called()
+
+
 def test_resume_notarize_app_dist_artefact_exists(
     package_command,
     first_app_with_binaries,
