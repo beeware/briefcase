@@ -54,6 +54,11 @@ def parse_cmdline(args, console: Console | None = None):
     if console is None:
         console = Console()
 
+    # Normalize command aliases before argparse processing
+    COMMAND_ALIASES = {"pakidge": "package"}  # pragma: no cover
+    if args and args[0] in COMMAND_ALIASES:
+        args[0] = COMMAND_ALIASES[args[0]]
+
     platforms = get_platforms()
 
     briefcase_description = (
