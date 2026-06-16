@@ -5,11 +5,15 @@ from unittest import mock
 from unittest.mock import MagicMock
 
 import pytest
-import tomllib
 
 from briefcase.exceptions import BriefcaseCommandError, NotarizationInterrupted
 from briefcase.integrations.subprocess import Subprocess, json_parser
 from briefcase.platforms.macOS.app import macOSAppPackageCommand
+
+try:
+    import tomllib
+except ImportError:  # pragma: no-cover-if-gte-py311
+    import tomli as tomllib  # type: ignore[no-redef]
 
 
 @pytest.fixture
