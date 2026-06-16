@@ -966,19 +966,6 @@ class macOSPackageMixin(macOSSigningMixin):
                     f"Notarization request marker {marker_path} "
                     f"is missing required key {key!r}."
                 )
-            if not isinstance(data[key], str):
-                raise BriefcaseCommandError(
-                    f"Notarization request marker {marker_path} "
-                    f"has non-string value for {key!r}."
-                )
-
-        if "installer_identity" in data and not isinstance(
-            data["installer_identity"], str
-        ):
-            raise BriefcaseCommandError(
-                f"Notarization request marker {marker_path} "
-                f"has non-string value for 'installer_identity'."
-            )
 
         return data
 
