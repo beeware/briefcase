@@ -11,7 +11,8 @@ class VirtualEnvironment(ABC):
     """A managed Python environment.
 
     The virtual environment will exist on disk after an instance of this object has been
-    construted. The environment becomes active when used as a context manager.
+    constructed. The instance can be used as a context manager; entering/exiting the
+    context doesn't do anything.
     """
 
     def __init__(

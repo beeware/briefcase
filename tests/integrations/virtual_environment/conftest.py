@@ -57,9 +57,11 @@ class MockVirtualEnvironment(VirtualEnvironment):
             shutil.rmtree(self.venv_path / "something")
 
     def rewrite_args(self, args):
+        # The mock venv puts "rewrite" as the first argument of every call
         return ["rewrite", *args]
 
     def build_env(self, overrides):
+        # The mock venv puts "VENV=active" in the environment dictionary
         env = overrides.copy() if overrides else {}
         env["VENV"] = "active"
         return env
@@ -71,15 +73,15 @@ def mock_venv(mock_tools, venv_path):
 
 
 @pytest.fixture
-def process():
+def mock_POpen_instance():
     return MagicMock()
 
 
 @pytest.fixture
-def mock_tools(mock_tools, process) -> ToolCache:
+def mock_tools(mock_tools, mock_POpen_instance) -> ToolCache:
     # Mock subprocess
     mock_tools.subprocess = MagicMock(spec_set=Subprocess)
     mock_tools.subprocess.run.return_value = 42
     mock_tools.subprocess.check_output.return_value = "command output"
-    mock_tools.subprocess.Popen.return_value = process
+    mock_tools.subprocess.Popen.return_value = mock_POpen_instance
     return mock_tools

@@ -84,7 +84,11 @@ def test_only_test_requirements(dev_command, first_app):
     dev_command.install_dev_requirements(app=first_app, venv=mock_venv)
 
     mock_venv.install_requirements.assert_called_once_with(
-        ["test-one", "test_two", "./local1"],
+        [
+            "test-one",
+            "test_two",
+            "./local1",
+        ],
         allow_editable=True,
         installer_args=[],
     )
@@ -99,7 +103,11 @@ def test_requirement_installer_args(dev_command, first_app):
     dev_command.install_dev_requirements(app=first_app, venv=mock_venv)
 
     mock_venv.install_requirements.assert_called_once_with(
-        ["one", "two", "./local1"],
+        [
+            "one",
+            "two",
+            "./local1",
+        ],
         allow_editable=True,
         installer_args=["--no-cache"],
     )
