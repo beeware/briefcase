@@ -300,7 +300,7 @@ class DevCommand(RunAppMixin, BaseCommand):
         if isolated:
             self.console.info("Activating dev environment...", prefix=app.app_name)
 
-        with self.tools.virtual_environment.create(
+        with self.tools.virtual_environment(
             venv_path=self.venv_path(app.app_name),
             isolated=isolated,
             recreate=update_requirements,

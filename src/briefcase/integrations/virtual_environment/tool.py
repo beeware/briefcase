@@ -20,7 +20,7 @@ class VirtualEnvironmentManager(Tool):
         tools.virtual_environment = VirtualEnvironmentManager(tools=tools)
         return tools.virtual_environment
 
-    def create(
+    def __call__(
         self,
         venv_path: Path,
         *,

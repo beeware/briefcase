@@ -25,7 +25,7 @@ class DummyDevCommand(DevCommand):
         self.actions = []
         self.env = {"a": 1, "b": 2, "c": 3}
 
-        self.tools.virtual_environment.create = mock.MagicMock(
+        self.tools.virtual_environment = mock.MagicMock(
             side_effect=self.virtual_environment
         )
         # Track which venvs exist for this command instance
