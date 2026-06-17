@@ -301,6 +301,7 @@ class DevCommand(RunAppMixin, BaseCommand):
             self.console.info("Activating dev environment...", prefix=app.app_name)
 
         with self.tools.virtual_environment(
+            env_manager=app.env_manager,
             venv_path=self.venv_path(app.app_name),
             isolated=isolated,
             recreate=update_requirements,

@@ -1,5 +1,6 @@
 from pathlib import Path
 
+from briefcase.config import EnvManagerT
 from briefcase.integrations.base import Tool, ToolCache
 from briefcase.integrations.virtual_environment.base import VirtualEnvironment
 from briefcase.integrations.virtual_environment.noop import NoOpVirtualEnvironment
@@ -27,6 +28,7 @@ class VirtualEnvironmentManager(Tool):
         *,
         isolated: bool = True,
         recreate: bool = False,
+        env_manager: EnvManagerT = "venv",
     ) -> VirtualEnvironment:
         """Construct and return a `VirtualEnvironment` for the requested mode.
 
@@ -51,24 +53,16 @@ class VirtualEnvironmentManager(Tool):
         :raises BriefcaseCommandError: if the environment cannot be created or
             initialised.
         """
-        if isolated:
-            if False:
-                venv: VirtualEnvironment = UvVirtualEnvironment(
-                    self.tools,
-                    venv_path,
-                    recreate=recreate,
-                )
-            else:
-                venv = VenvVirtualEnvironment(
-                    self.tools,
-                    venv_path,
-                    recreate=recreate,
-                )
-        else:
-            venv = NoOpVirtualEnvironment(
-                self.tools,
-                venv_path,
-                recreate=recreate,
-            )
+        if not isolated:
+            env_manager = None
+
+        venv: VirtualEnvironment = {
+            None: NoOpVirtualEnvironment,
+            "uv": UvVirtualEnvironment,
+            # "conda": CondaVirtualEnvironment,
+            # "pixi": PixiVirtualEnvironment,
+        }.get(env_manager, VenvVirtualEnvironment)(
+            self.tools, venv_path, recreate=recreate
+        )
 
         return venv
