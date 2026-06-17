@@ -622,6 +622,90 @@ def test_resume_notarize_from_marker(
     assert not marker_path.exists()
 
 
+def test_resume_notarize_from_marker_explicit_identity(
+    package_command,
+    first_app_with_binaries,
+    sekrit_identity,
+    sekrit_installer_identity,
+    tmp_path,
+    sleep_zero,
+):
+    """An interrupted PKG notarization can be resumed when the identity and installer
+    identity are provided explicitly and match the marker."""
+    first_app_with_binaries.packaging_format = "pkg"
+    create_file(
+        tmp_path / "base_path/dist/First App-0.0.1.pkg",
+        "distribution file",
+    )
+    package_command.select_identity.side_effect = [
+        sekrit_identity,
+        sekrit_installer_identity,
+    ]
+
+    submission_id = str(uuid.uuid4())
+    package_command.tools.subprocess.parse_output.side_effect = [
+        # notarytool history returns list with the app's submission ID
+        {
+            "history": [
+                {
+                    "id": str(uuid.uuid4()),
+                    "name": "Other App-1.2.3.dmg",
+                    "status": "Accepted",
+                },
+                {
+                    "id": submission_id,
+                    "name": "First App-0.0.1.pkg",
+                    "status": "In Progress",
+                },
+            ]
+        },
+        # notarytool log; 2 failures, then a successful result.
+        subprocess.CalledProcessError(
+            returncode=69,
+            cmd=["xcrun", "notarytool", "log"],
+        ),
+        subprocess.CalledProcessError(
+            returncode=69,
+            cmd=["xcrun", "notarytool", "log"],
+        ),
+        {"status": "Accepted"},
+    ]
+
+    # Write a marker recording the interrupted notarization.
+    package_command.write_notarization_request(
+        first_app_with_binaries,
+        identity=sekrit_identity,
+        submission_id=submission_id,
+        installer_identity=sekrit_installer_identity,
+    )
+    marker_path = package_command.notarization_request_path(first_app_with_binaries)
+
+    # Resume, providing the identity and installer identity explicitly. Both match the
+    # values in the marker, so notarization proceeds.
+    package_command._package_app(
+        first_app_with_binaries,
+        update=False,
+        packaging_format="pkg",
+        identity=sekrit_identity.id,
+        installer_identity=sekrit_installer_identity.id,
+    )
+
+    # The explicit identities were used to resume notarization.
+    assert package_command.select_identity.mock_calls == [
+        mock.call(
+            identity=sekrit_identity.id,
+            allow_adhoc=False,
+        ),
+        mock.call(
+            identity=sekrit_installer_identity.id,
+            app_identity=sekrit_identity,
+        ),
+    ]
+
+    # Notarization succeeded, so the marker has been cleaned up.
+    assert not marker_path.exists()
+
+
 @pytest.mark.parametrize(
     ("packaging_format", "submission_name", "dist_artefact", "use_installer"),
     RESUME_FORMATS,
@@ -738,6 +822,91 @@ def test_resume_notarize_from_marker_rejected(
 
     # Notarization didn't succeed, so the marker is retained for a future resume.
     assert marker_path.exists()
+
+
+def test_read_notarization_request_invalid(
+    package_command,
+    first_app_with_binaries,
+):
+    """A missing or malformed notarization request marker raises an error."""
+    first_app_with_binaries.packaging_format = "dmg"
+    marker_path = package_command.notarization_request_path(first_app_with_binaries)
+
+    # No marker file exists.
+    with pytest.raises(BriefcaseCommandError, match="does not exist"):
+        package_command.read_notarization_request(first_app_with_binaries)
+
+    # The marker exists, but isn't valid TOML.
+    create_file(marker_path, "[not-valid-toml")
+    with pytest.raises(BriefcaseCommandError, match="is malformed"):
+        package_command.read_notarization_request(first_app_with_binaries)
+
+    # The marker is valid TOML, but is missing a required key.
+    create_file(marker_path, 'identity = "CAFEBEEF"\n')
+    with pytest.raises(BriefcaseCommandError, match="is missing required key"):
+        package_command.read_notarization_request(first_app_with_binaries)
+
+
+def test_resume_notarization_marker_conflict(
+    package_command,
+    first_app_with_binaries,
+    sekrit_identity,
+    sekrit_installer_identity,
+    tmp_path,
+):
+    """A notarization request marker that conflicts with the requested packaging raises
+    an error."""
+    first_app_with_binaries.packaging_format = "dmg"
+
+    # The interrupted notarization left a distribution artefact behind.
+    create_file(
+        tmp_path / "base_path/dist/First App-0.0.1.dmg",
+        "distribution file",
+    )
+
+    # The identity provided doesn't match the identity in the marker.
+    package_command.write_notarization_request(
+        first_app_with_binaries,
+        identity=sekrit_identity,
+        submission_id="submission-1",
+    )
+    with pytest.raises(
+        BriefcaseCommandError, match="does not match the specified identity"
+    ):
+        package_command._package_app(
+            first_app_with_binaries,
+            update=False,
+            packaging_format="dmg",
+            identity="someone-else",
+        )
+
+    # An installer identity was provided, but the marker doesn't contain one.
+    with pytest.raises(
+        BriefcaseCommandError, match="does not contain an installer identity"
+    ):
+        package_command._package_app(
+            first_app_with_binaries,
+            update=False,
+            packaging_format="dmg",
+            installer_identity=sekrit_installer_identity.id,
+        )
+
+    # The installer identity provided doesn't match the marker.
+    package_command.write_notarization_request(
+        first_app_with_binaries,
+        identity=sekrit_identity,
+        submission_id="submission-1",
+        installer_identity=sekrit_installer_identity,
+    )
+    with pytest.raises(
+        BriefcaseCommandError, match="does not match the specified installer identity"
+    ):
+        package_command._package_app(
+            first_app_with_binaries,
+            update=False,
+            packaging_format="dmg",
+            installer_identity="someone-else",
+        )
 
 
 def test_resume_notarize_app_artefact_missing(
