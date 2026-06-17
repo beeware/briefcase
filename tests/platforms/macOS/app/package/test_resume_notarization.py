@@ -824,52 +824,61 @@ def test_resume_notarize_from_marker_rejected(
     assert marker_path.exists()
 
 
-def test_read_notarization_request_invalid(
+def test_read_notarization_request_missing(
     package_command,
     first_app_with_binaries,
 ):
-    """A missing or malformed notarization request marker raises an error."""
+    """A missing notarization request marker raises an error."""
     first_app_with_binaries.packaging_format = "dmg"
-    marker_path = package_command.notarization_request_path(first_app_with_binaries)
 
-    # No marker file exists.
     with pytest.raises(BriefcaseCommandError, match="does not exist"):
         package_command.read_notarization_request(first_app_with_binaries)
 
-    # The marker exists, but isn't valid TOML.
+
+def test_read_notarization_request_malformed(
+    package_command,
+    first_app_with_binaries,
+):
+    """A notarization request marker that isn't valid TOML raises an error."""
+    first_app_with_binaries.packaging_format = "dmg"
+    marker_path = package_command.notarization_request_path(first_app_with_binaries)
     create_file(marker_path, "[not-valid-toml")
+
     with pytest.raises(BriefcaseCommandError, match="is malformed"):
         package_command.read_notarization_request(first_app_with_binaries)
 
-    # The marker is valid TOML, but is missing a required key.
+
+def test_read_notarization_request_missing_key(
+    package_command,
+    first_app_with_binaries,
+):
+    """A notarization request marker that is missing a required key raises an error."""
+    first_app_with_binaries.packaging_format = "dmg"
+    marker_path = package_command.notarization_request_path(first_app_with_binaries)
     create_file(marker_path, 'identity = "CAFEBEEF"\n')
+
     with pytest.raises(BriefcaseCommandError, match="is missing required key"):
         package_command.read_notarization_request(first_app_with_binaries)
 
 
-def test_resume_notarization_marker_conflict(
+def test_resume_notarization_marker_identity_mismatch(
     package_command,
     first_app_with_binaries,
     sekrit_identity,
-    sekrit_installer_identity,
     tmp_path,
 ):
-    """A notarization request marker that conflicts with the requested packaging raises
-    an error."""
+    """A marker identity that doesn't match the requested identity raises an error."""
     first_app_with_binaries.packaging_format = "dmg"
-
-    # The interrupted notarization left a distribution artefact behind.
     create_file(
         tmp_path / "base_path/dist/First App-0.0.1.dmg",
         "distribution file",
     )
-
-    # The identity provided doesn't match the identity in the marker.
     package_command.write_notarization_request(
         first_app_with_binaries,
         identity=sekrit_identity,
         submission_id="submission-1",
     )
+
     with pytest.raises(
         BriefcaseCommandError, match="does not match the specified identity"
     ):
@@ -880,7 +889,26 @@ def test_resume_notarization_marker_conflict(
             identity="someone-else",
         )
 
-    # An installer identity was provided, but the marker doesn't contain one.
+
+def test_resume_notarization_marker_installer_missing(
+    package_command,
+    first_app_with_binaries,
+    sekrit_identity,
+    sekrit_installer_identity,
+    tmp_path,
+):
+    """An installer identity provided without one in the marker raises an error."""
+    first_app_with_binaries.packaging_format = "dmg"
+    create_file(
+        tmp_path / "base_path/dist/First App-0.0.1.dmg",
+        "distribution file",
+    )
+    package_command.write_notarization_request(
+        first_app_with_binaries,
+        identity=sekrit_identity,
+        submission_id="submission-1",
+    )
+
     with pytest.raises(
         BriefcaseCommandError, match="does not contain an installer identity"
     ):
@@ -891,13 +919,28 @@ def test_resume_notarization_marker_conflict(
             installer_identity=sekrit_installer_identity.id,
         )
 
-    # The installer identity provided doesn't match the marker.
+
+def test_resume_notarization_marker_installer_mismatch(
+    package_command,
+    first_app_with_binaries,
+    sekrit_identity,
+    sekrit_installer_identity,
+    tmp_path,
+):
+    """A marker installer identity that doesn't match the requested one raises an
+    error."""
+    first_app_with_binaries.packaging_format = "dmg"
+    create_file(
+        tmp_path / "base_path/dist/First App-0.0.1.dmg",
+        "distribution file",
+    )
     package_command.write_notarization_request(
         first_app_with_binaries,
         identity=sekrit_identity,
         submission_id="submission-1",
         installer_identity=sekrit_installer_identity,
     )
+
     with pytest.raises(
         BriefcaseCommandError, match="does not match the specified installer identity"
     ):
