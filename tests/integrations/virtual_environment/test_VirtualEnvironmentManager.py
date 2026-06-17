@@ -1,9 +1,9 @@
 import pytest
 
 from briefcase.integrations.virtual_environment import (
+    CondaVirtualEnvironment,
     NoOpVirtualEnvironment,
-    # CondaVirtualEnvironment,
-    # PixiVirtualEnvironment,
+    PixiVirtualEnvironment,
     UvVirtualEnvironment,
     VenvVirtualEnvironment,
     VirtualEnvironmentManager,
@@ -12,8 +12,8 @@ from briefcase.integrations.virtual_environment import (
 ENV_MANAGERS = [
     ("venv", VenvVirtualEnvironment),
     ("uv", UvVirtualEnvironment),
-    # ("conda", CondaVirtualEnvironment),
-    # ("pixi", PixiVirtualEnvironment),
+    ("conda", CondaVirtualEnvironment),
+    ("pixi", PixiVirtualEnvironment),
 ]
 
 
