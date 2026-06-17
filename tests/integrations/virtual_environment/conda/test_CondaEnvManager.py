@@ -11,8 +11,11 @@ PYTHON_VERSION = f"{sys.version_info.major}.{sys.version_info.minor}"
 
 
 @pytest.mark.parametrize("recreate", [True, False])
-def test_create(mock_tools, venv_path, recreate):
+@pytest.mark.parametrize("verbose", [True, False])
+def test_create(mock_tools, venv_path, recreate, verbose):
     """A conda environment can be created."""
+    mock_tools.console.is_verbose = verbose
+
     venv = CondaVirtualEnvironment(mock_tools, venv_path, recreate=recreate)
 
     assert venv.created
@@ -25,8 +28,8 @@ def test_create(mock_tools, venv_path, recreate):
             venv_path,
             f"python={PYTHON_VERSION}",
             "--yes",
-            "--quiet",
-        ],
+        ]
+        + ([] if verbose else ["--quiet"]),
         check=True,
     )
 
@@ -51,28 +54,6 @@ def test_idempotent_when_venv_exists(mock_tools, venv_path):
     mock_tools.subprocess.run.assert_not_called()
 
 
-def test_recreate(mock_tools, venv_path):
-    """If an environment already exists, recreating can be triggered."""
-    venv_path.mkdir()
-    (venv_path / "conda-meta").mkdir()
-
-    venv = CondaVirtualEnvironment(mock_tools, venv_path, recreate=True)
-
-    assert venv.created
-    mock_tools.subprocess.run.assert_called_once_with(
-        [
-            "conda",
-            "create",
-            "--prefix",
-            venv_path,
-            f"python={PYTHON_VERSION}",
-            "--yes",
-            "--quiet",
-        ],
-        check=True,
-    )
-
-
 def test_venv_failure(mock_tools, venv_path):
     """If the environment can't be created, BriefcaseCommandError is raised."""
     mock_tools.subprocess.run = MagicMock(
@@ -93,7 +74,6 @@ def test_venv_failure(mock_tools, venv_path):
             venv_path,
             f"python={PYTHON_VERSION}",
             "--yes",
-            "--quiet",
         ],
         check=True,
     )

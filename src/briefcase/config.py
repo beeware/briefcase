@@ -415,7 +415,6 @@ class GlobalConfig(BaseConfig):
         author=None,
         author_email=None,
         requires_python=None,
-        env_manager=None,
         **kwargs,
     ):
         super().__init__(**kwargs)
@@ -440,13 +439,6 @@ class GlobalConfig(BaseConfig):
             raise InvalidVersionError(
                 f"Version number ({self.version}) is not valid."
             ) from None
-
-        if env_manager in {"venv", "uv", "conda", "pixi"}:
-            self.env_manager = env_manager
-        elif env_manager is None:
-            self.env_manager = "venv"
-        else:
-            raise BriefcaseConfigError(f"Unknown environment manager {env_manager!r}")
 
     def __repr__(self):
         return f"<{self.project_name} v{self.version} GlobalConfig>"
@@ -625,6 +617,7 @@ class DraftAppConfig(AppConfig):
         external_package_path: str | None = None,
         external_package_executable_path: str | None = None,
         install_launcher: bool | None = None,
+        env_manager: EnvManagerT | None = None,
         **kwargs,
     ):
         super().__init__(**kwargs)
@@ -726,6 +719,13 @@ class DraftAppConfig(AppConfig):
                     f"The `sources` list for {self.app_name!r} does not include a "
                     f"package named {self.module_name!r}."
                 )
+
+        if env_manager in {"venv", "uv", "conda", "pixi"}:
+            self.env_manager = env_manager
+        elif env_manager is None:
+            self.env_manager = "venv"
+        else:
+            raise BriefcaseConfigError(f"Unknown environment manager {env_manager!r}")
 
 
 class FinalizedAppConfig(AppConfig):

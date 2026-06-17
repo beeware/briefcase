@@ -2,8 +2,9 @@ import os
 import shutil
 import subprocess
 import sys
+from pathlib import Path
 
-from briefcase.exceptions import BriefcaseCommandError
+from briefcase.exceptions import BriefcaseCommandError, RequirementsInstallError
 from briefcase.integrations.subprocess import SubprocessArgsT
 from briefcase.integrations.virtual_environment.base import VirtualEnvironment
 
@@ -15,8 +16,7 @@ class CondaVirtualEnvironment(VirtualEnvironment):
     create --prefix <path>``). The Python interpreter installed into the
     environment matches the major/minor version of the interpreter running
     Briefcase. Commands are executed against the environment by activating it
-    (prepending the environment's binary directory to ``PATH``) rather than by
-    wrapping every invocation in ``conda run``.
+    (prepending the environment's binary directory to ``PATH``).
     """
 
     @property
@@ -78,40 +78,59 @@ class CondaVirtualEnvironment(VirtualEnvironment):
         if self.exists():
             shutil.rmtree(self.venv_path)
 
-    def rewrite_args(self, args: SubprocessArgsT) -> SubprocessArgsT:
-        """Replace the head argument with the environment's Python iff it equals
-        `sys.executable` (case-insensitive, normalised).
+    def install_requirements(
+        self,
+        requires,
+        installer_args=None,
+        allow_editable=False,
+    ):
+        """Install requirements into the environment with `conda install`.
 
-        Empty inputs are returned unchanged. Otherwise a fresh `list` is
-        returned; the input is never mutated.
+        :param requires: The list of requirements to install.
+        :param installer_args: A list of additional arguments to pass to the installer.
+        :param allow_editable: Ignored; conda does not support editable installs.
         """
-        if not args:
-            return args
+        if not requires:
+            return
+
+        try:
+            self.tools.subprocess.run(
+                [
+                    "conda",
+                    "install",
+                    "--prefix",
+                    self.venv_path,
+                    "--yes",
+                    *(["--quiet"] if not self.tools.console.is_verbose else []),
+                    *([] if installer_args is None else installer_args),
+                    *requires,
+                ],
+                check=True,
+            )
+        except subprocess.CalledProcessError as e:
+            raise RequirementsInstallError() from e
+
+    def rewrite_args(self, args: SubprocessArgsT) -> SubprocessArgsT:
+        """Run the command in a conda environment.
+
+        If the first argument is a reference to `sys.executable`, remove
+        any path component.
+        """
         head = os.fspath(args[0])
         if os.path.normcase(head) == os.path.normcase(sys.executable):
-            return [self.executable, *args[1:]]
-        return list(args)
+            head = Path(sys.executable).name
+        return ["conda", "run", "--prefix", self.venv_path, head, *args[1:]]
 
     def build_env(
         self,
         overrides: dict[str, str | None] | None,
-    ) -> dict[str, str]:
-        """Build a subprocess environment that activates the conda environment.
+    ) -> dict[str, str | None] | None:
+        """Return an environment for the conda invocation.
 
-        Prepends the environment's `bin_dir` to `PATH`, sets `CONDA_PREFIX`,
-        and removes `PYTHONHOME`. Caller-supplied overrides are honoured.
+        No special handling is required, as all conda commands take
+        a `--prefix` argument.
 
         :param overrides: Caller-supplied environment overrides.
-        :returns: An updated environment applying modifications
-            to enable the virtual environment
+        :returns: `overrides`
         """
-        env = dict(overrides) if overrides else {}
-
-        old_path = env.get("PATH") or os.environ.get("PATH", "")
-        env["PATH"] = os.fspath(self.bin_dir) + (
-            os.pathsep + old_path if old_path else ""
-        )
-        env["CONDA_PREFIX"] = os.fspath(self.venv_path)
-        env.pop("PYTHONHOME", None)
-
-        return env
+        return overrides

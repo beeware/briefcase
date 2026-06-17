@@ -107,14 +107,16 @@ The contact email address for the person or organization responsible for the pro
 
 #### `env_manager`
 
-**EXPERIMENTAL** This is an experimental feature. It may not be available or implemented on all platforms.
+**EXPERIMENTAL** This is an experimental feature. It is currently only used by developer mode.
 
-The environment manager to use when creating isolated Python environments and installing requirements.
+The environment manager to use when creating isolated Python environments and installing requirements; one of:
 
 * `venv` - The `venv` package provided by the Python standard library
 * `uv` - The [uv](https://docs.astral.sh/uv/) environment manager
 * `conda` - The [Conda](https://docs.conda.io/) environment manager
 * `pixi` - The [Pixi](https://pixi.prefix.dev/) environment manager
+
+Defaults to `venv`.
 
 #### `license_files`
 
