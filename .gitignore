@@ -56,4 +56,5 @@ logs/
 .specify/integrations
 .specify/workflows
 .specify/workflow.yml
-specs
+/specs/
+/docs/superpowers/

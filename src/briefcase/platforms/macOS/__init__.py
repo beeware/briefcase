@@ -39,6 +39,13 @@ except ImportError:  # pragma: no-cover-if-is-macos
     # Allow the plugin to be loaded; raise an error when tools are verified.
     dmgbuild = None
 
+import tomli_w
+
+try:
+    import tomllib
+except ImportError:  # pragma: no-cover-if-gte-py311
+    import tomli as tomllib  # type: ignore[no-redef]
+
 
 DEFAULT_OUTPUT_FORMAT = "app"
 
@@ -893,6 +900,75 @@ class macOSPackageMixin(macOSSigningMixin):
         else:
             return self.dist_path / f"{app.formal_name}-{app.version}.dmg"
 
+    def notarization_request_path(self, app: FinalizedAppConfig) -> Path:
+        """The path to use for tracking a notarization request."""
+        dist_path = self.distribution_path(app)
+        return dist_path.with_suffix(dist_path.suffix + ".notarization-request")
+
+    def write_notarization_request(
+        self,
+        app: FinalizedAppConfig,
+        identity: SigningIdentity,
+        submission_id: str,
+        installer_identity: SigningIdentity | None = None,
+    ) -> None:
+        """Write a notarization request marker file.
+
+        The marker file is written as TOML to the path returned by
+        `notarization_request_path()`. It stores the signing identity ID, submission ID,
+        and optionally the installer identity ID.
+
+        :param app: The app being packaged.
+        :param identity: The app signing identity used for notarization.
+        :param submission_id: The submission ID from Apple's notarization service.
+        :param installer_identity: The installer signing identity, if any.
+        """
+
+        data: dict[str, str] = {
+            "identity": identity.id,
+            "submission_id": submission_id,
+        }
+        if installer_identity is not None:
+            data["installer_identity"] = installer_identity.id
+
+        marker_path = self.notarization_request_path(app)
+        marker_path.parent.mkdir(parents=True, exist_ok=True)
+        with marker_path.open("wb") as f:
+            tomli_w.dump(data, f)
+
+    def read_notarization_request(self, app: FinalizedAppConfig) -> dict[str, str]:
+        """Read and validate a notarization request marker file.
+
+        :param app: The app being packaged.
+        :returns: A dict with keys `identity`, `submission_id`, and optionally
+            `installer_identity`.
+        :raises BriefcaseCommandError: If the marker is missing, malformed, or
+            has missing or invalid values.
+        """
+        marker_path = self.notarization_request_path(app)
+
+        if not marker_path.exists():
+            raise BriefcaseCommandError(
+                f"Notarization request marker {marker_path} does not exist."
+            )
+
+        try:
+            with marker_path.open("rb") as f:
+                data = tomllib.load(f)
+        except tomllib.TOMLDecodeError as e:
+            raise BriefcaseCommandError(
+                f"Notarization request marker {marker_path} is malformed: {e}"
+            ) from e
+
+        for key in ("identity", "submission_id"):
+            if key not in data:
+                raise BriefcaseCommandError(
+                    f"Notarization request marker {marker_path} "
+                    f"is missing required key {key!r}."
+                )
+
+        return data
+
     def add_options(self, parser):
         super().add_options(parser)
 
@@ -969,7 +1045,7 @@ class macOSPackageMixin(macOSSigningMixin):
         :param submission_id: The notarization submission being resumed.
         :param options: Any additional arguments passed to the package command.
         """
-        if options.get("submission_id"):
+        if options.get("submission_id") or self.notarization_request_path(app).exists():
             if not self.notarization_path(app).exists():
                 raise BriefcaseCommandError(
                     "Notarization cannot be resumed, as the notarization artefact "
@@ -1035,28 +1111,29 @@ class macOSPackageMixin(macOSSigningMixin):
         """
         # Determine the arguments that would be needed to reproduce this notarization
         if installer_identity:
-            identity_args = (
-                f"--identity {identity.id} --installer-identity {installer_identity.id}"
-            )
             notarization_identity = installer_identity
         else:
-            identity_args = f"--identity {identity.id}"
             notarization_identity = identity
-
-        format_args = f"-p {app.packaging_format}"
 
         # Submit the app for notarization
         submission_id = self.submit_notarization(app, identity=notarization_identity)
 
-        self.console.warning(f"""
+        self.write_notarization_request(
+            app,
+            identity=identity,
+            submission_id=submission_id,
+            installer_identity=installer_identity,
+        )
+
+        self.console.warning("""
 Briefcase will now wait for Apple to approve the notarization request.
 This can take some time - in some cases, hours.
 
-If notarization is interrupted, you can resume by running:
+If notarization is interrupted, rerunning the same briefcase package
+command will automatically detect the interrupted notarization and
+resume it.
 
-    briefcase package macOS {self.output_format} {format_args} {identity_args} --resume {submission_id}
-
-""")  # noqa: E501
+""")
 
         self.finalize_notarization(
             app,
@@ -1309,6 +1386,9 @@ password:
                     f"{filename.relative_to(self.base_path)}"
                 ) from e
 
+            if self.notarization_request_path(app).exists():
+                self.notarization_request_path(app).unlink()
+
         # Notarization on a zip package is performed on the bare app, so we can't
         # complete packaging until notarization has completed.
         if app.packaging_format == "zip":
@@ -1345,6 +1425,48 @@ password:
         """
         # Confirm the project isn't currently on an iCloud synced drive.
         self.verify_not_on_icloud(app)
+
+        # Check for a notarization request marker that indicates an interrupted
+        # notarization that can be auto-resumed. Only checked when no explicit
+        # --resume is provided.
+        if submission_id is None and self.notarization_request_path(app).exists():
+            marker_data = self.read_notarization_request(app)
+
+            # Identity
+            if identity:
+                if marker_data["identity"] != identity:
+                    raise BriefcaseCommandError(
+                        f"Notarization request marker identity "
+                        f"{marker_data['identity']!r} does not match "
+                        f"the specified identity {identity!r}."
+                    )
+            else:
+                # User didn't specify an identity - use the identity defined
+                # in the marker file.
+                identity = marker_data["identity"]
+
+            # Installer identity
+            if "installer_identity" in marker_data:
+                if installer_identity:
+                    if marker_data["installer_identity"] != installer_identity:
+                        raise BriefcaseCommandError(
+                            "Notarization request marker installer identity "
+                            f"{marker_data['installer_identity']!r} does not "
+                            f"match the specified installer identity "
+                            f"{installer_identity!r}."
+                        )
+                else:
+                    # User didn't specify an installer identity - use the
+                    # installer_identity from the marker file.
+                    installer_identity = marker_data["installer_identity"]
+            elif installer_identity is not None:
+                raise BriefcaseCommandError(
+                    "Notarization request marker does not contain an "
+                    "installer identity, but --installer-identity "
+                    f"({installer_identity}) was specified."
+                )
+
+            submission_id = marker_data["submission_id"]
 
         if submission_id:
             # If we're resuming notarization, we *can't* use an adhoc identity,
