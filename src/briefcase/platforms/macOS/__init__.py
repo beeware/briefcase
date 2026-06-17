@@ -1433,32 +1433,38 @@ password:
             marker_data = self.read_notarization_request(app)
 
             # Identity
-            if identity is not None and marker_data["identity"] != identity:
-                raise BriefcaseCommandError(
-                    f"Notarization request marker identity "
-                    f"{marker_data['identity']!r} does not match "
-                    f"the specified identity {identity!r}."
-                )
-            if identity is None:
+            if identity:
+                if marker_data["identity"] != identity:
+                    raise BriefcaseCommandError(
+                        f"Notarization request marker identity "
+                        f"{marker_data['identity']!r} does not match "
+                        f"the specified identity {identity!r}."
+                    )
+            else:
+                # User didn't specify an identity - use the identity defined
+                # in the marker file.
                 identity = marker_data["identity"]
 
             # Installer identity
-            if installer_identity is not None:
-                if "installer_identity" not in marker_data:
-                    raise BriefcaseCommandError(
-                        "Notarization request marker does not contain an "
-                        "installer identity, but --installer-identity "
-                        f"({installer_identity}) was specified."
-                    )
-                if marker_data["installer_identity"] != installer_identity:
-                    raise BriefcaseCommandError(
-                        "Notarization request marker installer identity "
-                        f"{marker_data['installer_identity']!r} does not "
-                        f"match the specified installer identity "
-                        f"{installer_identity!r}."
-                    )
-            if installer_identity is None and "installer_identity" in marker_data:
-                installer_identity = marker_data["installer_identity"]
+            if "installer_identity" in marker_data:
+                if installer_identity:
+                    if "marker_data["installer_identity"] != installer_identity:
+                        raise BriefcaseCommandError(
+                            "Notarization request marker installer identity "
+                            f"{marker_data['installer_identity']!r} does not "
+                            f"match the specified installer identity "
+                            f"{installer_identity!r}."
+                        )
+                else:
+                    # User didn't specify an installer identity - use the
+                    # installer_identity from the marker file.
+                    installer_identity = marker_data["installer_identity"]                
+            elif installer_identity is not None:
+                raise BriefcaseCommandError(
+                    "Notarization request marker does not contain an "
+                    "installer identity, but --installer-identity "
+                    f"({installer_identity}) was specified."
+                )
 
             submission_id = marker_data["submission_id"]
 
