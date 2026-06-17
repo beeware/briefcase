@@ -173,6 +173,9 @@ def test_notarize_app(
         check=True,
     )
 
+    # A successful notarization cleans up the notarization request marker.
+    assert not package_command.notarization_request_path(first_app_zip).exists()
+
 
 def test_notarize_dmg(
     package_command,
@@ -273,6 +276,9 @@ def test_notarize_dmg(
         ],
         check=True,
     )
+
+    # A successful notarization cleans up the notarization request marker.
+    assert not package_command.notarization_request_path(first_app_dmg).exists()
 
 
 def test_notarize_pkg(
@@ -379,6 +385,9 @@ def test_notarize_pkg(
         ],
         check=True,
     )
+
+    # A successful notarization cleans up the notarization request marker.
+    assert not package_command.notarization_request_path(first_app_pkg).exists()
 
 
 def test_notarize_unknown_credentials(
@@ -517,6 +526,9 @@ def test_notarize_unknown_credentials(
             check=True,
         ),
     ]
+
+    # A successful notarization cleans up the notarization request marker.
+    assert not package_command.notarization_request_path(first_app_dmg).exists()
 
 
 def test_credential_storage_failure_app(
@@ -1079,6 +1091,9 @@ def test_unknown_notarization_status_failure(
     # No staple attempt is made.
     package_command.tools.subprocess.run.assert_not_called()
 
+    # Notarization didn't succeed, so the marker is retained for a future resume.
+    assert package_command.notarization_request_path(first_app_dmg).exists()
+
 
 def test_stapling_failure(
     package_command,
@@ -1192,6 +1207,9 @@ def test_stapling_failure(
         check=True,
     )
 
+    # Notarization didn't succeed, so the marker is retained for a future resume.
+    assert package_command.notarization_request_path(first_app_dmg).exists()
+
 
 def test_interrupt_notarization(
     package_command,
@@ -1201,7 +1219,7 @@ def test_interrupt_notarization(
     tmp_path,
     capsys,
 ):
-    """If notarization is interrupted, the submission ID is output for the user."""
+    """If notarization is interrupted, a marker is written so it can be resumed."""
     # Mock the return values of subprocesses
     submission_id = str(uuid.uuid4())
     package_command.tools.subprocess.parse_output.side_effect = [
@@ -1222,8 +1240,10 @@ def test_interrupt_notarization(
     with pytest.raises(NotarizationInterrupted):
         package_command.notarize(first_app_dmg, identity=sekrit_identity)
 
+    # The user is told that the interrupted notarization will be resumed by
+    # rerunning the same command.
     assert (
-        f"briefcase package macOS app -p dmg --identity CAFEBEEF --resume {submission_id}"
+        "If notarization is interrupted, rerunning the same briefcase package"
         in capsys.readouterr().out
     )
 
@@ -1285,3 +1305,6 @@ def test_interrupt_notarization(
 
     # No stapling occurred
     package_command.tools.subprocess.run.assert_not_called()
+
+    # Notarization was interrupted, so the marker is retained so it can be resumed.
+    assert package_command.notarization_request_path(first_app_dmg).exists()
