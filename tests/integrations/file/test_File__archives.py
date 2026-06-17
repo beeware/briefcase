@@ -29,6 +29,11 @@ def custom_packing_format():
         ("filename.doc", False),
         ("filename.archive.doc", False),
         ("filename.archive.ext.doc", False),
+        # Even though .whl files are zips internally,
+        # they aren't identified as archives.
+        ("filename.whl", False),
+        ("filename-1.2.3-cp315-cp315-macos_11_0_universal2.whl", False),
+        ("filename-1.2.3-py3-none-any.whl", False),
     ],
 )
 @pytest.mark.usefixtures("custom_packing_format")
