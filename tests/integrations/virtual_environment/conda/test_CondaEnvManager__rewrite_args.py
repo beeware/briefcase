@@ -53,7 +53,7 @@ def test_rewrite_args_case_insensitive(venv):
     assert result == [
         "conda",
         "run",
-        "-p",
+        "--prefix",
         venv.venv_path,
         Path(sys.executable).name,
         "-V",

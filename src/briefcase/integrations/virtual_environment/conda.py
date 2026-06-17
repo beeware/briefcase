@@ -47,7 +47,7 @@ class CondaVirtualEnvironment(VirtualEnvironment):
                 return False
 
         with self.tools.console.wait_bar(
-            f"{creating} virtual environment ({self.venv_path.name})..."
+            f"{creating} Conda environment ({self.venv_path.name})..."
         ):
             if recreate:
                 self.clean()
@@ -68,7 +68,7 @@ class CondaVirtualEnvironment(VirtualEnvironment):
                 )
             except subprocess.CalledProcessError as e:
                 raise BriefcaseCommandError(
-                    f"Failed to create virtual environment at {self.venv_path}"
+                    f"Failed to create Conda environment at {self.venv_path}"
                 ) from e
 
         return True
@@ -85,6 +85,9 @@ class CondaVirtualEnvironment(VirtualEnvironment):
         allow_editable=False,
     ):
         """Install requirements into the environment with `conda install`.
+
+        Conda has no concept of editable installs, so `allow_editable` is
+        ignored.
 
         :param requires: The list of requirements to install.
         :param installer_args: A list of additional arguments to pass to the installer.

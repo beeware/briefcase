@@ -33,7 +33,7 @@ class UvVirtualEnvironment(VirtualEnvironment):
                 return False
 
         with self.tools.console.wait_bar(
-            f"{creating} virtual environment ({self.venv_path.name})..."
+            f"{creating} uv environment ({self.venv_path.name})..."
         ):
             if recreate:
                 self.clean()
@@ -53,7 +53,7 @@ class UvVirtualEnvironment(VirtualEnvironment):
                 )
             except subprocess.CalledProcessError as e:
                 raise BriefcaseCommandError(
-                    f"Failed to create virtual environment at {self.venv_path}"
+                    f"Failed to create uv environment at {self.venv_path}"
                 ) from e
 
         return True

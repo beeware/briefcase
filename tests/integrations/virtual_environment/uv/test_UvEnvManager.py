@@ -63,7 +63,7 @@ def test_venv_failure(mock_tools, venv_path):
 
     with pytest.raises(
         BriefcaseCommandError,
-        match=r"Failed to create virtual environment at ",
+        match=r"Failed to create uv environment at ",
     ):
         UvVirtualEnvironment(mock_tools, venv_path)
 

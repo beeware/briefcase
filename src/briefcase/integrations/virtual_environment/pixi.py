@@ -4,7 +4,7 @@ import subprocess
 import sys
 from pathlib import Path
 
-from briefcase.exceptions import BriefcaseCommandError
+from briefcase.exceptions import BriefcaseCommandError, RequirementsInstallError
 from briefcase.integrations.subprocess import SubprocessArgsT
 from briefcase.integrations.virtual_environment.base import VirtualEnvironment
 
@@ -12,13 +12,11 @@ from briefcase.integrations.virtual_environment.base import VirtualEnvironment
 class PixiVirtualEnvironment(VirtualEnvironment):
     """An environment manager using pixi.
 
-    A pixi *workspace* is created at the requested path (``pixi init``), with a
+    A pixi *workspace* is created at the requested path (`pixi init`), with a
     Python dependency added that matches the major/minor version of the
     interpreter running Briefcase. Pixi materialises the actual environment in
     a ``.pixi/envs/default`` directory inside the workspace, so the binary
     directory and Python executable are resolved relative to that location.
-    Commands are executed against the environment by prepending that binary
-    directory to ``PATH``.
     """
 
     @property
@@ -64,7 +62,7 @@ class PixiVirtualEnvironment(VirtualEnvironment):
                 return False
 
         with self.tools.console.wait_bar(
-            f"{creating} virtual environment ({self.venv_path.name})..."
+            f"{creating} Pixi environment ({self.venv_path.name})..."
         ):
             if recreate:
                 self.clean()
@@ -91,7 +89,7 @@ class PixiVirtualEnvironment(VirtualEnvironment):
                 )
             except subprocess.CalledProcessError as e:
                 raise BriefcaseCommandError(
-                    f"Failed to create virtual environment at {self.venv_path}"
+                    f"Failed to create Pixi environment at {self.venv_path}"
                 ) from e
 
         return True
@@ -101,41 +99,68 @@ class PixiVirtualEnvironment(VirtualEnvironment):
         if self.venv_path.exists():
             shutil.rmtree(self.venv_path)
 
-    def rewrite_args(self, args: SubprocessArgsT) -> SubprocessArgsT:
-        """Replace the head argument with the environment's Python iff it equals
-        `sys.executable` (case-insensitive, normalised).
+    def install_requirements(
+        self,
+        requires,
+        installer_args=None,
+        allow_editable=False,
+    ):
+        """Install requirements into the environment with `conda install`.
 
-        Empty inputs are returned unchanged. Otherwise a fresh `list` is
-        returned; the input is never mutated.
+        Conda has no concept of editable installs, so `allow_editable` is
+        ignored.
+
+        :param requires: The list of requirements to install.
+        :param installer_args: A list of additional arguments to pass to the installer.
+        :param allow_editable: Ignored; conda does not support editable installs.
         """
-        if not args:
-            return args
+        if not requires:
+            return
+
+        try:
+            self.tools.subprocess.run(
+                [
+                    "pixi",
+                    "add",
+                    "--manifest-path",
+                    self.venv_path,
+                    *([] if installer_args is None else installer_args),
+                    *requires,
+                ],
+                check=True,
+            )
+        except subprocess.CalledProcessError as e:
+            raise RequirementsInstallError() from e
+
+    def rewrite_args(self, args: SubprocessArgsT) -> SubprocessArgsT:
+        """Run the command in a conda environment.
+
+        If the first argument is a reference to `sys.executable`, remove
+        any path component.
+        """
         head = os.fspath(args[0])
         if os.path.normcase(head) == os.path.normcase(sys.executable):
-            return [self.executable, *args[1:]]
-        return list(args)
+            head = Path(sys.executable).name
+        return [
+            "pixi",
+            "run",
+            "--manifest-path",
+            self.venv_path,
+            "--executable",
+            head,
+            *args[1:],
+        ]
 
     def build_env(
         self,
         overrides: dict[str, str | None] | None,
-    ) -> dict[str, str]:
-        """Build a subprocess environment that activates the pixi environment.
+    ) -> dict[str, str | None] | None:
+        """Return an environment for the conda invocation.
 
-        Prepends the environment's `bin_dir` to `PATH`, sets `CONDA_PREFIX` to
-        the materialised environment path, and removes `PYTHONHOME`.
-        Caller-supplied overrides are honoured.
+        No special handling is required, as all pixi commands take
+        a `--prefix` argument.
 
         :param overrides: Caller-supplied environment overrides.
-        :returns: An updated environment applying modifications
-            to enable the virtual environment
+        :returns: `overrides`
         """
-        env = dict(overrides) if overrides else {}
-
-        old_path = env.get("PATH") or os.environ.get("PATH", "")
-        env["PATH"] = os.fspath(self.bin_dir) + (
-            os.pathsep + old_path if old_path else ""
-        )
-        env["CONDA_PREFIX"] = os.fspath(self.env_path)
-        env.pop("PYTHONHOME", None)
-
-        return env
+        return overrides

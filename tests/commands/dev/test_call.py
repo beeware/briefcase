@@ -54,10 +54,21 @@ class DummyDevCommand(DevCommand):
         super().verify_app_tools(app=app)
         self.actions.append(("verify-app-tools", app.app_name))
 
-    def virtual_environment(self, venv_path, isolated=False, recreate=False):
+    def virtual_environment(
+        self,
+        venv_path,
+        isolated=False,
+        recreate=False,
+        env_manager="venv",
+    ):
         # Extract the app name from the venv_path to use as a cache key.
         app_name = venv_path.parts[-2]
-        self.actions.append(("virtual-environment", app_name, isolated, recreate))
+        if not isolated:
+            env_manager = None
+
+        self.actions.append(
+            ("virtual-environment", app_name, isolated, recreate, env_manager)
+        )
 
         # Simulate venv.created behavior:
         # - created=True if venv doesn't exist yet (first time) OR recreate=True
@@ -134,7 +145,7 @@ def test_no_args_one_app(dev_command, first_app):
         # App tools are verified for app
         ("verify-app-tools", "first"),
         # Virtual environment context is acquired
-        ("virtual-environment", "first", True, False),
+        ("virtual-environment", "first", True, False, "venv"),
         # Run the first app devly
         (
             "run_dev",
@@ -191,7 +202,7 @@ def test_no_args_two_apps(dev_command, first_app, second_app, monkeypatch):
         # App tools are verified for app
         ("verify-app-tools", "second"),
         # Virtual environment context is acquired
-        ("virtual-environment", "second", True, False),
+        ("virtual-environment", "second", True, False, "venv"),
         # Requirements are installed into the venv
         ("dev_requirements", "second", second_venv),
         # Run the first app devly
@@ -258,7 +269,7 @@ def test_with_arg_one_app(dev_command, first_app):
         # App tools are verified for app
         ("verify-app-tools", "first"),
         # Virtual environment context is acquired
-        ("virtual-environment", "first", True, False),
+        ("virtual-environment", "first", True, False, "venv"),
         # Run the first app devly
         (
             "run_dev",
@@ -302,7 +313,7 @@ def test_with_arg_two_apps(dev_command, first_app, second_app):
         # App tools are verified for app
         ("verify-app-tools", "second"),
         # Virtual environment context is acquired
-        ("virtual-environment", "second", True, False),
+        ("virtual-environment", "second", True, False, "venv"),
         # Run the second app devly
         (
             "run_dev",
@@ -346,7 +357,7 @@ def test_create_venv(dev_command, first_app):
         # App tools are verified for app
         ("verify-app-tools", "first"),
         # Virtual environment context is acquired
-        ("virtual-environment", "first", True, False),
+        ("virtual-environment", "first", True, False, "venv"),
         # Requirements are installed into the new venv
         ("dev_requirements", "first", first_venv),
         # Run the first app devly
@@ -403,7 +414,7 @@ def test_create_venv_requirements_failure(dev_command, first_app):
         # App tools are verified for app
         ("verify-app-tools", "first"),
         # Virtual environment context is acquired
-        ("virtual-environment", "first", True, False),
+        ("virtual-environment", "first", True, False, "venv"),
         # No further actions are recorded due to the requirements failure.
     ]
 
@@ -441,7 +452,7 @@ def test_non_isolated(dev_command, first_app):
         # App tools are verified for app
         ("verify-app-tools", "first"),
         # No-op virtual environment context is acquired
-        ("virtual-environment", "first", False, False),
+        ("virtual-environment", "first", False, False, None),
         # Requirements are installed into the venv
         ("dev_requirements", "first", first_venv),
         # Run the first app devly
@@ -505,7 +516,7 @@ def test_update_requirements(dev_command, first_app):
         # App tools are verified for app
         ("verify-app-tools", "first"),
         # Virtual environment context is acquired with recreate=True
-        ("virtual-environment", "first", True, True),
+        ("virtual-environment", "first", True, True, "venv"),
         # Requirements were installed again
         ("dev_requirements", "first", first_venv),
         # Then, it will be started
@@ -562,7 +573,7 @@ def test_install_requirements_failure(dev_command, first_app):
         # App tools are verified for app
         ("verify-app-tools", "first"),
         # Virtual environment context is acquired with recreate=True
-        ("virtual-environment", "first", True, True),
+        ("virtual-environment", "first", True, True, "venv"),
         # But installing requirements fails.
     ]
 
@@ -600,7 +611,7 @@ def test_run_uninstalled(dev_command, first_app_uninstalled):
         # App tools are verified for app
         ("verify-app-tools", "first"),
         # Virtual environment context is acquired
-        ("virtual-environment", "first", True, False),
+        ("virtual-environment", "first", True, False, "venv"),
         # The app will be installed
         ("dev_requirements", "first", first_venv),
         # Then, it will be started
@@ -646,7 +657,7 @@ def test_update_uninstalled(dev_command, first_app_uninstalled):
         # App tools are verified for app
         ("verify-app-tools", "first"),
         # Virtual environment context is acquired with recreate=True
-        ("virtual-environment", "first", True, True),
+        ("virtual-environment", "first", True, True, "venv"),
         # An update was requested
         ("dev_requirements", "first", first_venv),
         # Then, it will be started
@@ -690,7 +701,7 @@ def test_no_run(dev_command, first_app_uninstalled):
         # App tools are verified for app
         ("verify-app-tools", "first"),
         # Virtual environment context is acquired with recreate=True
-        ("virtual-environment", "first", True, True),
+        ("virtual-environment", "first", True, True, "venv"),
         # An update was requested
         ("dev_requirements", "first", first_venv),
     ]
@@ -725,7 +736,7 @@ def test_run_test(dev_command, first_app):
         # App tools are verified for app
         ("verify-app-tools", "first"),
         # Virtual environment context is acquired
-        ("virtual-environment", "first", True, False),
+        ("virtual-environment", "first", True, False, "venv"),
         # Then, it will be started
         (
             "run_dev",
@@ -768,7 +779,7 @@ def test_run_test_uninstalled(dev_command, first_app_uninstalled):
         # App tools are verified for app
         ("verify-app-tools", "first"),
         # Virtual environment context is acquired
-        ("virtual-environment", "first", True, False),
+        ("virtual-environment", "first", True, False, "venv"),
         # Development requirements will be installed
         ("dev_requirements", "first", first_venv),
         # Then, it will be started

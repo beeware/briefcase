@@ -43,6 +43,27 @@ def test_creates_parent_directory(mock_tools, tmp_path):
     assert venv_path.parent.is_dir()
 
 
+def test_recreate(mock_tools, venv_path):
+    """If an environment already exists, recreating can be triggered."""
+    venv_path.mkdir()
+    (venv_path / "conda-meta").mkdir()
+
+    venv = CondaVirtualEnvironment(mock_tools, venv_path, recreate=True)
+
+    assert venv.created
+    mock_tools.subprocess.run.assert_called_once_with(
+        [
+            "conda",
+            "create",
+            "--prefix",
+            venv_path,
+            f"python={PYTHON_VERSION}",
+            "--yes",
+        ],
+        check=True,
+    )
+
+
 def test_idempotent_when_venv_exists(mock_tools, venv_path):
     """If the environment already exists, creating the environment is a no-op."""
     venv_path.mkdir()
@@ -62,7 +83,7 @@ def test_venv_failure(mock_tools, venv_path):
 
     with pytest.raises(
         BriefcaseCommandError,
-        match=r"Failed to create virtual environment at ",
+        match=r"Failed to create Conda environment at ",
     ):
         CondaVirtualEnvironment(mock_tools, venv_path)
 
