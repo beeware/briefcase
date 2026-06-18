@@ -781,8 +781,8 @@ def test_long_description_warning(tmp_path):
     # The description is preserved as-is...
     assert apps["my_app"]["description"] == long_description
     # ...but the user is warned that it's too long.
-    console.warning.assert_called_once()
-    warning_text = console.warning.call_args[0][0]
+    console.warning_banner.assert_called_once()
+    warning_text = console.warning_banner.call_args[0][1]
     assert "my_app" in warning_text
     assert str(len(long_description)) in warning_text
     assert "long_description" in warning_text
@@ -813,7 +813,7 @@ def test_short_description_no_warning(tmp_path):
         console=console,
     )
 
-    console.warning.assert_not_called()
+    console.warning_banner.assert_not_called()
 
 
 def test_license_pep621_table_with_files_is_error(tmp_path):
