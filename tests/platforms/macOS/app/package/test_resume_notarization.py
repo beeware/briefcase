@@ -11,13 +11,6 @@ from briefcase.integrations.subprocess import json_parser
 
 from .....utils import create_file
 
-RESUME_FORMATS = [
-    # (packaging_format, submission name in notarytool history, dist artefact, uses an installer identity)
-    pytest.param("zip", "First App.app.zip", None, False, id="app"),
-    pytest.param("dmg", "First App-0.0.1.dmg", "First App-0.0.1.dmg", False, id="dmg"),
-    pytest.param("pkg", "First App-0.0.1.pkg", "First App-0.0.1.pkg", True, id="pkg"),
-]
-
 
 def test_resume_notarize_app(
     package_command,
@@ -432,8 +425,38 @@ def test_resume_notarize_pkg(
 
 
 @pytest.mark.parametrize(
-    ("packaging_format", "submission_name", "dist_artefact", "use_installer"),
-    RESUME_FORMATS,
+    (
+        "packaging_format",
+        "submission_name",
+        "dist_artefact",
+        "use_installer",
+        "delete_build",
+    ),
+    [
+        pytest.param("zip", "First App.app.zip", None, False, False, id="app"),
+        pytest.param(
+            "dmg", "First App-0.0.1.dmg", "First App-0.0.1.dmg", False, False, id="dmg"
+        ),
+        pytest.param(
+            "dmg",
+            "First App-0.0.1.dmg",
+            "First App-0.0.1.dmg",
+            False,
+            True,
+            id="dmg-build-deleted",
+        ),
+        pytest.param(
+            "pkg", "First App-0.0.1.pkg", "First App-0.0.1.pkg", True, False, id="pkg"
+        ),
+        pytest.param(
+            "pkg",
+            "First App-0.0.1.pkg",
+            "First App-0.0.1.pkg",
+            True,
+            True,
+            id="pkg-build-deleted",
+        ),
+    ],
 )
 def test_resume_notarize_from_marker(
     package_command,
@@ -446,10 +469,15 @@ def test_resume_notarize_from_marker(
     submission_name,
     dist_artefact,
     use_installer,
+    delete_build,
 ):
     """An interrupted notarization can be auto-resumed from its marker file."""
     # Set the packaging format, so the marker path can be determined.
     first_app_with_binaries.packaging_format = packaging_format
+
+    # Simulate a partially cleaned workspace by deleting the entire build directory.
+    if delete_build:
+        shutil.rmtree(tmp_path / "base_path/build")
 
     # Create a pre-existing distribution artefact. A .zip is built from the app via
     # ditto as part of finalization, so it doesn't need a pre-existing artefact.
@@ -708,7 +736,15 @@ def test_resume_notarize_from_marker_explicit_identity(
 
 @pytest.mark.parametrize(
     ("packaging_format", "submission_name", "dist_artefact", "use_installer"),
-    RESUME_FORMATS,
+    [
+        pytest.param("zip", "First App.app.zip", None, False, id="app"),
+        pytest.param(
+            "dmg", "First App-0.0.1.dmg", "First App-0.0.1.dmg", False, id="dmg"
+        ),
+        pytest.param(
+            "pkg", "First App-0.0.1.pkg", "First App-0.0.1.pkg", True, id="pkg"
+        ),
+    ],
 )
 def test_resume_notarize_from_marker_rejected(
     package_command,
@@ -1117,15 +1153,12 @@ def test_resume_notarize_app_dist_artefact_exists(
     )
 
     # As this is a .zip distribution, there's a finalization step to create the actual
-    # distribution artefact with ditto. This file won't actually be created though, as
-    # we're mocking ditto. However, as a result of resuming with a pre-existing
-    # distribution artefact, the pre-existing artefact will have been deleted.
+    # distribution artefact with ditto. The pre-existing artefact is preserved until
+    # ditto overwrites it.
     package_command.ditto_archive.assert_called_once_with(
         tmp_path / "base_path/build/first-app/macos/app/First App.app",
         tmp_path / "base_path/dist/First App-0.0.1.app.zip",
     )
-
-    assert not (tmp_path / "base_path/dist/First App-0.0.1.app.zip").exists()
 
 
 def test_resume_notarize_artefact_missing(
