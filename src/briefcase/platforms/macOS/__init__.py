@@ -1067,16 +1067,6 @@ class macOSPackageMixin(macOSSigningMixin):
             return True
         return False
 
-    def verify_resume_app(self, app, **options):
-        """Verify the app for a resumed notarization operation.
-
-        Only verifies that the required tools are available. Skips template and Python
-        version checks since those were validated during initial packaging.
-
-        :param app: app configuration
-        """
-        self.verify_app_tools(app)
-
     def ditto_archive(
         self,
         app_filename: Path,

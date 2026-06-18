@@ -72,11 +72,14 @@ class PackageCommand(BaseCommand):
         """Verify the app for a resumed packaging operation.
 
         Called instead of `verify_app` when `can_resume()` returns
-        `True`. The default implementation delegates to `verify_app`.
+        `True`. Verifies that tools are available and the required Python
+        version is present, but skips template and app-level checks that
+        were validated during the initial packaging pass.
 
         :param app: app configuration
         """
-        self.verify_app(app)  # pragma: no cover
+        self.verify_app_tools(app)
+        self.verify_required_python(app)
 
     def package_app(self, app: FinalizedAppConfig, **options):
         """Package an application.
