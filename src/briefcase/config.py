@@ -1463,6 +1463,21 @@ def parse_config(config_file: Path, platform, output_format, console):
         # Normalize license fields to PEP 639 representation.
         normalize_license_config(config, app_name, base_path, console)
 
+        # Warn if the description is too long for some packaging formats.
+        description = config.get("description")
+        if isinstance(description, str) and len(description) > 80:
+            console.warning_banner(
+                "Application description is too long",
+                f"""
+                    The description for {app_name!r} is {len(description)}
+                    characters long. Briefcase recommends a description of no
+                    more than 80 characters; longer descriptions may be
+                    truncated when packaging for some platforms.
+
+                    Move any detailed text into the `long_description` field.
+                """,
+            )
+
         # Construct a configuration object, and add it to the list
         # of configurations that are being handled.
         app_configs[app_name] = config

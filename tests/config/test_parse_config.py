@@ -754,6 +754,68 @@ def test_pep_621_merge(tmp_path):
     }
 
 
+def test_long_description_warning(tmp_path):
+    """A description longer than the recommended length raises a warning."""
+    long_description = "This is a needlessly long app description " + ("x" * 50)
+    assert len(long_description) > 80
+
+    config_file = create_file(
+        tmp_path / "pyproject.toml",
+        f"""
+        [tool.briefcase]
+        license = "MIT"
+
+        [tool.briefcase.app.my_app]
+        description = "{long_description}"
+        """,
+    )
+
+    console = Mock()
+    _, apps = parse_config(
+        config_file,
+        platform="macOS",
+        output_format="Xcode",
+        console=console,
+    )
+
+    # The description is preserved as-is...
+    assert apps["my_app"]["description"] == long_description
+    # ...but the user is warned that it's too long.
+    console.warning_banner.assert_called_once()
+    warning_text = console.warning_banner.call_args[0][1]
+    assert "my_app" in warning_text
+    assert str(len(long_description)) in warning_text
+    assert "long_description" in warning_text
+
+
+def test_short_description_no_warning(tmp_path):
+    """A description at the recommended length doesn't raise a warning."""
+    # A description that is exactly at the limit is acceptable.
+    description = "x" * 80
+    assert len(description) == 80
+
+    config_file = create_file(
+        tmp_path / "pyproject.toml",
+        f"""
+        [tool.briefcase]
+        license = "MIT"
+
+        [tool.briefcase.app.my_app]
+        description = "{description}"
+        """,
+    )
+
+    console = Mock()
+    parse_config(
+        config_file,
+        platform="macOS",
+        output_format="Xcode",
+        console=console,
+    )
+
+    console.warning_banner.assert_not_called()
+
+
 def test_license_pep621_table_with_files_is_error(tmp_path):
     """PEP 621 table format mixed with license-files raises an error."""
     config_file = create_file(
