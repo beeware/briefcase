@@ -11,13 +11,6 @@ from briefcase.integrations.subprocess import json_parser
 
 from .....utils import create_file
 
-RESUME_FORMATS = [
-    # (packaging_format, submission name in notarytool history, dist artefact, uses an installer identity)
-    pytest.param("zip", "First App.app.zip", None, False, id="app"),
-    pytest.param("dmg", "First App-0.0.1.dmg", "First App-0.0.1.dmg", False, id="dmg"),
-    pytest.param("pkg", "First App-0.0.1.pkg", "First App-0.0.1.pkg", True, id="pkg"),
-]
-
 
 def test_resume_notarize_app(
     package_command,
@@ -743,7 +736,15 @@ def test_resume_notarize_from_marker_explicit_identity(
 
 @pytest.mark.parametrize(
     ("packaging_format", "submission_name", "dist_artefact", "use_installer"),
-    RESUME_FORMATS,
+    [
+        pytest.param("zip", "First App.app.zip", None, False, id="app"),
+        pytest.param(
+            "dmg", "First App-0.0.1.dmg", "First App-0.0.1.dmg", False, id="dmg"
+        ),
+        pytest.param(
+            "pkg", "First App-0.0.1.pkg", "First App-0.0.1.pkg", True, id="pkg"
+        ),
+    ],
 )
 def test_resume_notarize_from_marker_rejected(
     package_command,
