@@ -64,15 +64,15 @@ class PackageCommand(BaseCommand):
         resumable operations (e.g., notarization) should override this method.
 
         :param app: The app being packaged
-        :returns: ``True`` if packaging can be resumed; ``False`` otherwise.
+        :returns: `True` if packaging can be resumed; `False` otherwise.
         """
         return False
 
     def verify_resume_app(self, app, **options):
         """Verify the app for a resumed packaging operation.
 
-        Called instead of :meth:`verify_app` when ``can_resume()`` returns
-        ``True``. The default implementation delegates to :meth:`verify_app`.
+        Called instead of `verify_app` when `can_resume()` returns
+        `True`. The default implementation delegates to `verify_app`.
 
         :param app: app configuration
         """

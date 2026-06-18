@@ -1047,13 +1047,13 @@ class macOSPackageMixin(macOSSigningMixin):
 
         Checks for an explicit submission ID or a notarization request marker.
         If either exists, verifies that the notarization artefact is present.
-        Raises ``BriefcaseCommandError`` if the marker/submission ID exists but
+        Raises `BriefcaseCommandError` if the marker/submission ID exists but
         the artefact is missing.
 
         :param app: The app being packaged.
         :param submission_id: The notarization submission ID to resume (if any).
         :param options: Any additional arguments.
-        :returns: ``True`` if notarization can be resumed.
+        :returns: `True` if notarization can be resumed.
         """
         self.verify_app_packaging_format(app)
         if bool(submission_id) or self.notarization_request_path(app).exists():
