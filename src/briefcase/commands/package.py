@@ -76,7 +76,7 @@ class PackageCommand(BaseCommand):
 
         :param app: app configuration
         """
-        self.verify_app(app)
+        self.verify_app(app)  # pragma: no cover
 
     def package_app(self, app: FinalizedAppConfig, **options):
         """Package an application.
