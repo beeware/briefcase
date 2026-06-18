@@ -1,9 +1,16 @@
+import shutil
+from pathlib import Path
 from unittest.mock import MagicMock
 
 import pytest
 
 from briefcase.console import Console
-from briefcase.integrations.virtual_environment import NoOpVenvContext, VenvContext
+from briefcase.integrations.base import ToolCache
+from briefcase.integrations.subprocess import Subprocess
+from briefcase.integrations.virtual_environment import (
+    NoOpVirtualEnvironment,
+    VirtualEnvironment,
+)
 
 
 @pytest.fixture
@@ -17,61 +24,64 @@ def venv_path(tmp_path):
 
 
 @pytest.fixture
-def venv_context(mock_tools, venv_path):
-    return VenvContext(
-        tools=mock_tools,
-        venv_path=venv_path,
-    )
+def noop_venv(mock_tools, venv_path):
+    return NoOpVirtualEnvironment(mock_tools, venv_path)
+
+
+class MockVirtualEnvironment(VirtualEnvironment):
+    @property
+    def executable(self) -> Path:
+        return self.venv_path / "something/bin/python"
+
+    @property
+    def bin_dir(self) -> Path:
+        return self.executable.parent
+
+    def exists(self) -> bool:
+        return (self.venv_path / "something").exists()
+
+    def prepare(self, recreate=False) -> bool:
+        if not self.exists() or recreate:
+            marker = self.venv_path / "something/marker"
+            marker.parent.mkdir(parents=True, exist_ok=True)
+            marker.write_text("mock env", encoding="utf-8")
+            created = True
+        else:
+            created = False
+
+        return created
+
+    def clean(self) -> None:
+        """Unlink the marker file if present."""
+        if (self.venv_path / "something").exists():
+            shutil.rmtree(self.venv_path / "something")
+
+    def rewrite_args(self, args):
+        # The mock venv puts "rewrite" as the first argument of every call
+        return ["rewrite", *args]
+
+    def build_env(self, overrides):
+        # The mock venv puts "VENV=active" in the environment dictionary
+        env = overrides.copy() if overrides else {}
+        env["VENV"] = "active"
+        return env
 
 
 @pytest.fixture
-def noop_context(mock_tools, venv_path):
-    return NoOpVenvContext(tools=mock_tools, venv_path=venv_path)
+def mock_venv(mock_tools, venv_path):
+    return MockVirtualEnvironment(mock_tools, venv_path)
 
 
 @pytest.fixture
-def mock_subprocess_setup(venv_context, monkeypatch):
-    """Setup mock objects for subprocess testing across all VenvContext tests."""
-    mock_rewrite_head = MagicMock(return_value=["rewritten", "args"])
-    mock_full_env = MagicMock(return_value={"FULL": "env"})
-    mock_subprocess = MagicMock()
-
-    mock_popen_instance = MagicMock()
-    mock_completed_process = MagicMock()
-
-    mock_subprocess.Popen.return_value = mock_popen_instance
-    mock_subprocess.run.return_value = mock_completed_process
-    mock_subprocess.check_output.return_value = "output"
-
-    monkeypatch.setattr(venv_context, "_rewrite_head", mock_rewrite_head)
-    monkeypatch.setattr(venv_context, "full_env", mock_full_env)
-    monkeypatch.setattr(venv_context.tools, "subprocess", mock_subprocess)
-
-    return {
-        "rewrite_head": mock_rewrite_head,
-        "full_env": mock_full_env,
-        "subprocess": mock_subprocess,
-        "popen_instance": mock_popen_instance,
-        "completed_process": mock_completed_process,
-    }
+def mock_POpen_instance():
+    return MagicMock()
 
 
 @pytest.fixture
-def mock_noop_subprocess_setup(noop_context, monkeypatch):
-    """Setup mock objects for subprocess testing across all NoOpVenvContext tests."""
-    mock_subprocess = MagicMock()
-
-    mock_popen_instance = MagicMock()
-    mock_completed_process = MagicMock()
-
-    mock_subprocess.Popen.return_value = mock_popen_instance
-    mock_subprocess.run.return_value = mock_completed_process
-    mock_subprocess.check_output.return_value = "output"
-
-    monkeypatch.setattr(noop_context.tools, "subprocess", mock_subprocess)
-
-    return {
-        "subprocess": mock_subprocess,
-        "popen_instance": mock_popen_instance,
-        "completed_process": mock_completed_process,
-    }
+def mock_tools(mock_tools, mock_POpen_instance) -> ToolCache:
+    # Mock subprocess
+    mock_tools.subprocess = MagicMock(spec_set=Subprocess)
+    mock_tools.subprocess.run.return_value = 42
+    mock_tools.subprocess.check_output.return_value = "command output"
+    mock_tools.subprocess.Popen.return_value = mock_POpen_instance
+    return mock_tools

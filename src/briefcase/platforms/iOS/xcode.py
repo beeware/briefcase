@@ -625,7 +625,13 @@ class iOSXcodeRunCommand(iOSXcodeMixin, RunCommand):
                 "Uninstalling any existing app version..."
             ) as keep_alive,
             self.tools.subprocess.Popen(
-                ["xcrun", "simctl", "uninstall", udid, app.bundle_identifier]
+                [
+                    "xcrun",
+                    "simctl",
+                    "uninstall",
+                    udid,
+                    app.bundle_identifier,
+                ]
             ) as uninstall_popen,
         ):
             while (ret_code := uninstall_popen.poll()) is None:
@@ -641,7 +647,13 @@ class iOSXcodeRunCommand(iOSXcodeMixin, RunCommand):
         with (
             self.console.wait_bar(f"Installing new {label} version...") as keep_alive,
             self.tools.subprocess.Popen(
-                ["xcrun", "simctl", "install", udid, self.binary_path(app)]
+                [
+                    "xcrun",
+                    "simctl",
+                    "install",
+                    udid,
+                    self.binary_path(app),
+                ]
             ) as install_popen,
         ):
             while (ret_code := install_popen.poll()) is None:
@@ -661,7 +673,8 @@ class iOSXcodeRunCommand(iOSXcodeMixin, RunCommand):
         #   and for native NSLog() calls in the bootstrap binary
         # Case (2) works when the standard library is dynamically linked,
         #   and ctypes (which handles the NSLog integration) is an
-        #   extension module.
+        #   extension module. It also catches the case for the CPython
+        #   builtin behavior of redirecting to the system log.
         # It's not enough to filter on *just* the processImagePath,
         # as the process will generate lots of system-level messages.
         # We can't filter on *just* the senderImagePath, because other
@@ -679,10 +692,13 @@ class iOSXcodeRunCommand(iOSXcodeMixin, RunCommand):
                 "--predicate",
                 (
                     f'senderImagePath ENDSWITH "/{app.formal_name}"'
-                    f' OR (processImagePath ENDSWITH "/{app.formal_name}"'
-                    ' AND (senderImagePath ENDSWITH "-iphonesimulator.so"'
-                    ' OR senderImagePath ENDSWITH "-iphonesimulator.dylib"'
-                    ' OR senderImagePath ENDSWITH "_ctypes.framework/_ctypes"))'
+                    f'OR (processImagePath ENDSWITH "/{app.formal_name}"'
+                    '  AND (senderImagePath ENDSWITH "-iphonesimulator.so"'
+                    '    OR senderImagePath ENDSWITH "-iphonesimulator.dylib"'
+                    '    OR senderImagePath ENDSWITH "_ctypes.framework/_ctypes"'
+                    '    OR senderImagePath ENDSWITH "/Python"'
+                    "  )"
+                    ")"
                 ),
             ],
             stdout=subprocess.PIPE,

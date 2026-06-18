@@ -105,6 +105,8 @@ Do not submit the application for notarization. By default, apps will be submitt
 
 Apple's notarization server can take a long time to respond - in some cases, hours. When you submit an app for notarization, the console output of the `package` command will provide you with a submission ID. If the notarization process is interrupted for any reason (including user intervention), you can use this submission ID with the `--resume` option to resume the notarization process for an app.
 
+In general, you won't need to use the `--resume` option. When an interruption occurs, rerunning the same `briefcase package` command will automatically resume the notarization process.
+
 ## Application configuration
 
 The following options can be added to the `tool.briefcase.app.<appname>.macOS` section of your `pyproject.toml` file.
@@ -236,9 +238,15 @@ iCloud stores and maintains metadata on some content stored in iCloud-synchroniz
 
 This most commonly affects the <span class="title-ref">Documents</span> and <span class="title-ref">Desktop</span> folders (and subfolders), but can affect other locations if they are synchronized with iCloud.
 
-### Packaging with  { #--adhoc-sign }`
+### Packaging with `--adhoc-sign`
 
 Using the `--adhoc-sign` option on macOS produces an app that will be able to run on your own machine, but won't run on any other computer. In order to distribute your app to other users, you will need to sign the app with a full signing identity.
+
+### App notarization
+
+Apple requires applications are both signed and notarized. While signing can be done locally, notarization is a process that involves sending the application to Apple, and receiving a response.
+
+Briefcase will manage that entire notarization process, but the process can take anywhere from minutes to hours depending on the backlog on Apple's servers. In the event that the process is interrupted, rerunning the same `briefcase package` command will resume the process.
 
 ### Inconsistent content in non-universal wheels
 

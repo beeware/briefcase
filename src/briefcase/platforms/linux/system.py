@@ -22,7 +22,7 @@ from briefcase.config import AppConfig, DraftAppConfig, FinalizedAppConfig, merg
 from briefcase.exceptions import BriefcaseCommandError, UnsupportedHostError
 from briefcase.integrations.docker import Docker, DockerAppContext
 from briefcase.integrations.subprocess import NativeAppContext
-from briefcase.integrations.virtual_environment import VenvContext
+from briefcase.integrations.virtual_environment import VirtualEnvironment
 from briefcase.platforms.linux import (
     ARCH,
     DEBIAN,
@@ -1001,7 +1001,7 @@ class LinuxSystemDevCommand(LinuxSystemMixin, DevCommand):
     def install_dev_requirements(
         self,
         app: FinalizedAppConfig,
-        venv: VenvContext,
+        venv: VirtualEnvironment,
         **options,
     ):
         """Install the requirements into the dev environment.

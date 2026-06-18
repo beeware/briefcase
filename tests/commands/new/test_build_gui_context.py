@@ -66,7 +66,7 @@ test_requires = [
 universal_build = true
 requires = [
     "toga-cocoa~=0.5.0",
-    "std-nslog~=1.0.3",
+    "std-nslog~=2.0.0",
 ]
 """,
         "pyproject_table_linux": """\
@@ -203,7 +203,6 @@ requires = [
         "pyproject_table_iOS": """\
 requires = [
     "toga-iOS~=0.5.0",
-    "std-nslog~=1.0.3",
 ]
 """,
         "pyproject_table_android": '''\
@@ -414,7 +413,7 @@ universal_build = true
 # Pyside 6.10 (required for Python 3.14 support) enforces a macOS 13 minimum.
 min_os_version = "13.0"
 requires = [
-    "std-nslog~=1.0.3",
+    "std-nslog~=2.0.0",
 ]
 """,
         "pyproject_table_linux": """\
@@ -567,7 +566,7 @@ test_requires = [
         "pyproject_table_macOS": """\
 universal_build = true
 requires = [
-    "std-nslog~=1.0.3",
+    "std-nslog~=2.0.0",
 ]
 """,
         "pyproject_table_linux": """\

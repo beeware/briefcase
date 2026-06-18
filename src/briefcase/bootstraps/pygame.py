@@ -67,7 +67,7 @@ test_requires = [
         return """\
 universal_build = true
 requires = [
-    "std-nslog~=1.0.3",
+    "std-nslog~=2.0.0",
 ]
 """
 
