@@ -1117,15 +1117,12 @@ def test_resume_notarize_app_dist_artefact_exists(
     )
 
     # As this is a .zip distribution, there's a finalization step to create the actual
-    # distribution artefact with ditto. This file won't actually be created though, as
-    # we're mocking ditto. However, as a result of resuming with a pre-existing
-    # distribution artefact, the pre-existing artefact will have been deleted.
+    # distribution artefact with ditto. The pre-existing artefact is preserved until
+    # ditto overwrites it.
     package_command.ditto_archive.assert_called_once_with(
         tmp_path / "base_path/build/first-app/macos/app/First App.app",
         tmp_path / "base_path/dist/First App-0.0.1.app.zip",
     )
-
-    assert not (tmp_path / "base_path/dist/First App-0.0.1.app.zip").exists()
 
 
 def test_resume_notarize_artefact_missing(
