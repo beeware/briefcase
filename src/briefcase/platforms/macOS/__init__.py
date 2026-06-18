@@ -1022,9 +1022,12 @@ class macOSPackageMixin(macOSSigningMixin):
         # These are abstracted to enable testing without patching.
         self.dmgbuild = dmgbuild
 
-    def verify_app(self, app):
-        super().verify_app(app)
+    def verify_app_packaging_format(self, app):
+        """Set the default packaging format if not already set, and validate console app
+        format requirements.
 
+        :param app: The app being packaged.
+        """
         if app.console_app:
             if app.packaging_format is None:
                 app.packaging_format = "pkg"
@@ -1035,17 +1038,25 @@ class macOSPackageMixin(macOSSigningMixin):
         elif app.packaging_format is None:
             app.packaging_format = "dmg"
 
-    def clean_dist_folder(self, app, **options):
-        """Clean up any existing artefacts in the dist folder.
+    def verify_app(self, app):
+        super().verify_app(app)
+        self.verify_app_packaging_format(app)
 
-        If we are resuming a notarization session verify that the artefact exists, but
-        *do not* delete it.
+    def can_resume(self, app, submission_id=None, **options):
+        """Determine if notarization can be resumed.
+
+        Checks for an explicit submission ID or a notarization request marker.
+        If either exists, verifies that the notarization artefact is present.
+        Raises ``BriefcaseCommandError`` if the marker/submission ID exists but
+        the artefact is missing.
 
         :param app: The app being packaged.
-        :param submission_id: The notarization submission being resumed.
-        :param options: Any additional arguments passed to the package command.
+        :param submission_id: The notarization submission ID to resume (if any).
+        :param options: Any additional arguments.
+        :returns: ``True`` if notarization can be resumed.
         """
-        if options.get("submission_id") or self.notarization_request_path(app).exists():
+        self.verify_app_packaging_format(app)
+        if bool(submission_id) or self.notarization_request_path(app).exists():
             if not self.notarization_path(app).exists():
                 raise BriefcaseCommandError(
                     "Notarization cannot be resumed, as the notarization artefact "
@@ -1053,14 +1064,18 @@ class macOSPackageMixin(macOSSigningMixin):
                     f"({self.notarization_path(app).relative_to(self.base_path)}) "
                     "does not exist."
                 )
+            return True
+        return False
 
-            # If the packaging format is zip, the distribution artefact is created
-            # *after* completion of notarization. If there's an existing distribution
-            # artefact, it must be from a previous notarization/stapling attempt.
-            if app.packaging_format == "zip":
-                super().clean_dist_folder(app, **options)
-        else:
-            super().clean_dist_folder(app, **options)
+    def verify_resume_app(self, app, **options):
+        """Verify the app for a resumed notarization operation.
+
+        Only verifies that the required tools are available. Skips template and Python
+        version checks since those were validated during initial packaging.
+
+        :param app: app configuration
+        """
+        self.verify_app_tools(app)
 
     def ditto_archive(
         self,
