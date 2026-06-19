@@ -72,6 +72,7 @@ def test_no_notarize_option(package_command):
         "packaging_format": None,
         "submission_id": None,
         "update": False,
+        "wait": True,
     }
     assert overrides == {}
 
@@ -91,6 +92,7 @@ def test_installer_identity_option(package_command):
         "packaging_format": None,
         "submission_id": None,
         "update": False,
+        "wait": True,
     }
     assert overrides == {}
 
@@ -108,6 +110,7 @@ def test_no_sign_installer(package_command):
         "packaging_format": None,
         "submission_id": None,
         "update": False,
+        "wait": True,
     }
     assert overrides == {}
 
@@ -125,6 +128,7 @@ def test_resume(package_command):
         "packaging_format": None,
         "submission_id": "cafe-beef-1234",
         "update": False,
+        "wait": True,
     }
     assert overrides == {}
 

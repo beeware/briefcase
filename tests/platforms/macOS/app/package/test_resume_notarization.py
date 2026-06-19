@@ -1,5 +1,6 @@
 import shutil
 import subprocess
+import time
 import uuid
 from pathlib import Path
 from unittest import mock
@@ -1595,3 +1596,103 @@ def test_notarization_rejected(
 
     # No staple attempt is made.
     package_command.tools.subprocess.run.assert_not_called()
+
+
+def test_resume_no_wait_incomplete(
+    package_command,
+    first_app_with_binaries,
+    sekrit_identity,
+    tmp_path,
+    sleep_zero,
+):
+    """Resuming with --no-wait errors if notarization is still pending."""
+    package_command.select_identity.return_value = sekrit_identity
+    package_command.ditto_archive = mock.MagicMock()
+
+    submission_id = str(uuid.uuid4())
+    package_command.tools.subprocess.parse_output.side_effect = [
+        # notarytool history returns the app's submission ID
+        {
+            "history": [
+                {
+                    "id": submission_id,
+                    "name": "First App.app.zip",
+                    "status": "In Progress",
+                },
+            ]
+        },
+        # notarytool log: still not ready.
+        subprocess.CalledProcessError(
+            returncode=69,
+            cmd=["xcrun", "notarytool", "log"],
+        ),
+    ]
+
+    with pytest.raises(
+        BriefcaseCommandError,
+        match=r"Apple has not completed notarising the app; try again later",
+    ):
+        package_command._package_app(
+            first_app_with_binaries,
+            update=False,
+            packaging_format="zip",
+            identity=sekrit_identity.id,
+            submission_id=submission_id,
+            wait=False,
+        )
+
+    # History + exactly one status check were made; no retry loop.
+    assert package_command.tools.subprocess.parse_output.call_count == 2
+    time.sleep.assert_not_called()
+
+
+def test_resume_no_wait_single_attempt(
+    package_command,
+    first_app_with_binaries,
+    sekrit_identity,
+    tmp_path,
+    sleep_zero,
+):
+    """Resuming with --no-wait checks notarization status exactly once."""
+    package_command.select_identity.return_value = sekrit_identity
+    package_command.ditto_archive = mock.MagicMock()
+
+    submission_id = str(uuid.uuid4())
+    package_command.tools.subprocess.parse_output.side_effect = [
+        # notarytool history returns the app's submission ID
+        {
+            "history": [
+                {
+                    "id": submission_id,
+                    "name": "First App.app.zip",
+                    "status": "Accepted",
+                },
+            ]
+        },
+        # notarytool log: accepted on the first (and only) check.
+        {"status": "Accepted"},
+    ]
+
+    package_command._package_app(
+        first_app_with_binaries,
+        update=False,
+        packaging_format="zip",
+        identity=sekrit_identity.id,
+        submission_id=submission_id,
+        wait=False,
+    )
+
+    # History + exactly one status check; no retry loop and no sleeping.
+    assert package_command.tools.subprocess.parse_output.call_count == 2
+    time.sleep.assert_not_called()
+
+    # Notarization succeeded, so the artefact was stapled.
+    package_command.tools.subprocess.run.assert_called_once_with(
+        [
+            "xcrun",
+            "stapler",
+            "staple",
+            tmp_path / "base_path/build/first-app/macos/app/First App.app",
+        ],
+        check=True,
+    )

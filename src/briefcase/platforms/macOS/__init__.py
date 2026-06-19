@@ -1006,6 +1006,14 @@ class macOSPackageMixin(macOSSigningMixin):
             help="The notarization submission ID to resume",
             required=False,
         )
+        parser.add_argument(
+            "--no-wait",
+            dest="wait",
+            action="store_const",
+            const=False,
+            default=True,
+            help="Submit for notarization but don't wait for notarization to complete",
+        )
 
     def verify_tools(self):
         # Require the Xcode command line tools.
@@ -1310,6 +1318,7 @@ password:
         app: FinalizedAppConfig,
         identity: SigningIdentity,
         submission_id: str,
+        wait: bool = True,
     ):
         """Finalize a notarization task.
 
@@ -1319,9 +1328,16 @@ password:
         :param app: The app to notarize.
         :param identity: The code signing identity to use.
         :param submission_id: The submission ID of the notarization task to finalize.
+        :param wait: If ``True``, poll until notarization completes. If ``False``,
+            check the status once and raise an error if it is not yet complete.
         """
         try:
-            with self.console.wait_bar("Waiting for notarization acceptance..."):
+            label = (
+                "Waiting for notarization acceptance..."
+                if wait
+                else "Checking notarization status..."
+            )
+            with self.console.wait_bar(label):
                 accepted = False
                 while not accepted:
                     try:
@@ -1363,7 +1379,13 @@ password:
                             # Error code 69 (nice) indicates the server can't give a log
                             # response for the provided submission ID. We've already
                             # validated that it's a valid submission ID, so that means
-                            # notarization isn't complete yet. Try again in 10 seconds.
+                            # notarization isn't complete yet.
+                            if not wait:
+                                raise BriefcaseCommandError(
+                                    "Apple has not completed notarising the app; "
+                                    "try again later"
+                                ) from e
+                            # Try again in 10 seconds.
                             time.sleep(10)
                         else:
                             self.tools.subprocess.output_error(e)
@@ -1408,6 +1430,7 @@ password:
         sign_installer=True,
         installer_identity=None,
         submission_id=None,
+        wait=True,
         **kwargs,
     ):
         """Package an app bundle.
@@ -1427,6 +1450,8 @@ password:
         :param installer_identity: The signing identity to use when signing the
             installer. Ignored unless the packaging format is ``pkg``.
         :param submission_id: The submission ID of the notarization task to resume.
+        :param wait: Should briefcase wait for notarization to complete?
+            Default: ``True``.
         """
         # Confirm the project isn't currently on an iCloud synced drive.
         self.verify_not_on_icloud(app)
@@ -1503,6 +1528,7 @@ password:
                 app,
                 identity=notarization_identity,
                 submission_id=submission_id,
+                wait=wait,
             )
             return
 
