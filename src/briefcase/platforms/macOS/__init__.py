@@ -1113,6 +1113,7 @@ class macOSPackageMixin(macOSSigningMixin):
         app: FinalizedAppConfig,
         identity: SigningIdentity,
         installer_identity: SigningIdentity | None = None,
+        wait: bool = True,
     ):
         """Submit a file for notarization, and wait for that notarization to be
         completed.
@@ -1121,6 +1122,8 @@ class macOSPackageMixin(macOSSigningMixin):
         :param identity: The code signing used to notarize the app.
         :param installer_identity: The signing identity to use when signing the
             installer. Optional unless the packaging format is ``pkg``.
+        :param wait: If ``True``, wait for notarization to complete. If ``False``,
+            submit the app and return without finalizing.
         """
         # Determine the arguments that would be needed to reproduce this notarization
         if installer_identity:
@@ -1138,7 +1141,13 @@ class macOSPackageMixin(macOSSigningMixin):
             installer_identity=installer_identity,
         )
 
-        self.console.warning("""
+        if not wait:
+            self.console.info(
+                "The submission has been sent. You'll need to run briefcase "
+                "package at some point in the future to finalize the notarization."
+            )
+        else:
+            self.console.warning("""
 Briefcase will now wait for Apple to approve the notarization request.
 This can take some time - in some cases, hours.
 
@@ -1148,11 +1157,11 @@ resume it.
 
 """)
 
-        self.finalize_notarization(
-            app,
-            identity=notarization_identity,
-            submission_id=submission_id,
-        )
+            self.finalize_notarization(
+                app,
+                identity=notarization_identity,
+                submission_id=submission_id,
+            )
 
     def submit_notarization(self, app, identity: SigningIdentity) -> str:
         """Submit a file for notarization, returning the ID of the notarizatzion task.
@@ -1573,6 +1582,7 @@ password:
                 app,
                 notarize_app=notarize_app,
                 identity=identity,
+                wait=wait,
             )
 
         elif app.packaging_format == "pkg":
@@ -1592,6 +1602,7 @@ password:
                 notarize_app=notarize_app,
                 identity=identity,
                 installer_identity=installer_identity,
+                wait=wait,
             )
 
         else:  # Default packaging format is DMG
@@ -1599,6 +1610,7 @@ password:
                 app,
                 notarize_app=notarize_app,
                 identity=identity,
+                wait=wait,
             )
 
     def package_zip(
@@ -1606,6 +1618,7 @@ password:
         app: FinalizedAppConfig,
         notarize_app: bool,
         identity: SigningIdentity,
+        wait: bool = True,
     ):
         """Package an .app bundle in a zip file.
 
@@ -1619,7 +1632,7 @@ password:
                 f"Notarizing app using team ID {identity.team_id}...",
                 prefix=app.app_name,
             )
-            self.notarize(app, identity=identity)
+            self.notarize(app, identity=identity, wait=wait)
         else:
             self.finalize_package_zip(app)
 
@@ -1637,6 +1650,7 @@ password:
         notarize_app: bool,
         identity: SigningIdentity,
         installer_identity: SigningIdentity | None,
+        wait: bool = True,
     ):
         """Package the app as an installer."""
         dist_path: Path = self.distribution_path(app)
@@ -1754,6 +1768,7 @@ password:
                 app,
                 identity=identity,
                 installer_identity=installer_identity,
+                wait=wait,
             )
 
     def package_dmg(
@@ -1761,6 +1776,7 @@ password:
         app: FinalizedAppConfig,
         notarize_app: bool,
         identity: SigningIdentity,
+        wait: bool = True,
     ):
         """Package an app as a DMG installer."""
         dist_path: Path = self.distribution_path(app)
@@ -1830,4 +1846,4 @@ password:
                 f"Notarizing DMG with team ID {identity.team_id}...",
                 prefix=app.app_name,
             )
-            self.notarize(app, identity=identity)
+            self.notarize(app, identity=identity, wait=wait)

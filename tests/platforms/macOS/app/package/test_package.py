@@ -231,6 +231,7 @@ def test_package_app(
     package_command.notarize.assert_called_once_with(
         first_app_with_binaries,
         identity=sekrit_identity,
+        wait=True,
     )
 
     # The app doesn't specify an app icon or installer icon, so there's no

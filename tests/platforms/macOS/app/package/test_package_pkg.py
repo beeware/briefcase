@@ -122,6 +122,7 @@ def test_gui_app(
         first_app_with_binaries,
         identity=sekrit_identity,
         installer_identity=sekrit_installer_identity,
+        wait=True,
     )
 
 
@@ -321,6 +322,7 @@ def test_console_app(
         first_app_with_binaries,
         identity=sekrit_identity,
         installer_identity=sekrit_installer_identity,
+        wait=True,
     )
 
 
@@ -520,6 +522,7 @@ def test_no_license(
         first_app_with_binaries,
         identity=sekrit_identity,
         installer_identity=sekrit_installer_identity,
+        wait=True,
     )
 
 
@@ -740,4 +743,5 @@ def test_external_app(
         external_first_app,
         identity=sekrit_identity,
         installer_identity=sekrit_installer_identity,
+        wait=True,
     )
