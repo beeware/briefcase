@@ -1006,6 +1006,14 @@ class macOSPackageMixin(macOSSigningMixin):
             help="The notarization submission ID to resume",
             required=False,
         )
+        parser.add_argument(
+            "--no-wait",
+            dest="wait",
+            action="store_const",
+            const=False,
+            default=True,
+            help="Don't wait for notarization; submit and check status once, then exit",
+        )
 
     def verify_tools(self):
         # Require the Xcode command line tools.
@@ -1105,6 +1113,7 @@ class macOSPackageMixin(macOSSigningMixin):
         app: FinalizedAppConfig,
         identity: SigningIdentity,
         installer_identity: SigningIdentity | None = None,
+        wait: bool = True,
     ):
         """Submit a file for notarization, and wait for that notarization to be
         completed.
@@ -1113,6 +1122,8 @@ class macOSPackageMixin(macOSSigningMixin):
         :param identity: The code signing used to notarize the app.
         :param installer_identity: The signing identity to use when signing the
             installer. Optional unless the packaging format is ``pkg``.
+        :param wait: If `True`, wait for notarization to complete. If `False`,
+            submit the app and return without finalizing.
         """
         # Determine the arguments that would be needed to reproduce this notarization
         if installer_identity:
@@ -1130,7 +1141,14 @@ class macOSPackageMixin(macOSSigningMixin):
             installer_identity=installer_identity,
         )
 
-        self.console.warning("""
+        if not wait:
+            self.console.info(
+                f"{app.formal_name} as been submitted to Apple for notarization. "
+                "You'll need to run briefcase package at some point in the future "
+                "to finalize the notarization."
+            )
+        else:
+            self.console.warning("""
 Briefcase will now wait for Apple to approve the notarization request.
 This can take some time - in some cases, hours.
 
@@ -1140,11 +1158,11 @@ resume it.
 
 """)
 
-        self.finalize_notarization(
-            app,
-            identity=notarization_identity,
-            submission_id=submission_id,
-        )
+            self.finalize_notarization(
+                app,
+                identity=notarization_identity,
+                submission_id=submission_id,
+            )
 
     def submit_notarization(self, app, identity: SigningIdentity) -> str:
         """Submit a file for notarization, returning the ID of the notarizatzion task.
@@ -1310,6 +1328,7 @@ password:
         app: FinalizedAppConfig,
         identity: SigningIdentity,
         submission_id: str,
+        wait: bool = True,
     ):
         """Finalize a notarization task.
 
@@ -1319,9 +1338,16 @@ password:
         :param app: The app to notarize.
         :param identity: The code signing identity to use.
         :param submission_id: The submission ID of the notarization task to finalize.
+        :param wait: If `True`, poll until notarization completes. If `False`,
+            check the status once and raise an error if it is not yet complete.
         """
         try:
-            with self.console.wait_bar("Waiting for notarization acceptance..."):
+            label = (
+                "Waiting for notarization acceptance..."
+                if wait
+                else "Checking notarization status..."
+            )
+            with self.console.wait_bar(label):
                 accepted = False
                 while not accepted:
                     try:
@@ -1363,8 +1389,15 @@ password:
                             # Error code 69 (nice) indicates the server can't give a log
                             # response for the provided submission ID. We've already
                             # validated that it's a valid submission ID, so that means
-                            # notarization isn't complete yet. Try again in 10 seconds.
-                            time.sleep(10)
+                            # notarization isn't complete yet.
+                            if not wait:
+                                raise BriefcaseCommandError(
+                                    "Apple has not completed notarising the app; "
+                                    "try again later"
+                                ) from e
+                            else:
+                                # Try again in 10 seconds.
+                                time.sleep(10)
                         else:
                             self.tools.subprocess.output_error(e)
                             raise BriefcaseCommandError(
@@ -1408,6 +1441,7 @@ password:
         sign_installer=True,
         installer_identity=None,
         submission_id=None,
+        wait=True,
         **kwargs,
     ):
         """Package an app bundle.
@@ -1427,6 +1461,8 @@ password:
         :param installer_identity: The signing identity to use when signing the
             installer. Ignored unless the packaging format is ``pkg``.
         :param submission_id: The submission ID of the notarization task to resume.
+        :param wait: Should briefcase wait for notarization to complete?
+            Default: ``True``.
         """
         # Confirm the project isn't currently on an iCloud synced drive.
         self.verify_not_on_icloud(app)
@@ -1503,6 +1539,7 @@ password:
                 app,
                 identity=notarization_identity,
                 submission_id=submission_id,
+                wait=wait,
             )
             return
 
@@ -1547,6 +1584,7 @@ password:
                 app,
                 notarize_app=notarize_app,
                 identity=identity,
+                wait=wait,
             )
 
         elif app.packaging_format == "pkg":
@@ -1566,6 +1604,7 @@ password:
                 notarize_app=notarize_app,
                 identity=identity,
                 installer_identity=installer_identity,
+                wait=wait,
             )
 
         else:  # Default packaging format is DMG
@@ -1573,6 +1612,7 @@ password:
                 app,
                 notarize_app=notarize_app,
                 identity=identity,
+                wait=wait,
             )
 
     def package_zip(
@@ -1580,6 +1620,7 @@ password:
         app: FinalizedAppConfig,
         notarize_app: bool,
         identity: SigningIdentity,
+        wait: bool = True,
     ):
         """Package an .app bundle in a zip file.
 
@@ -1593,7 +1634,7 @@ password:
                 f"Notarizing app using team ID {identity.team_id}...",
                 prefix=app.app_name,
             )
-            self.notarize(app, identity=identity)
+            self.notarize(app, identity=identity, wait=wait)
         else:
             self.finalize_package_zip(app)
 
@@ -1611,6 +1652,7 @@ password:
         notarize_app: bool,
         identity: SigningIdentity,
         installer_identity: SigningIdentity | None,
+        wait: bool = True,
     ):
         """Package the app as an installer."""
         dist_path: Path = self.distribution_path(app)
@@ -1728,6 +1770,7 @@ password:
                 app,
                 identity=identity,
                 installer_identity=installer_identity,
+                wait=wait,
             )
 
     def package_dmg(
@@ -1735,6 +1778,7 @@ password:
         app: FinalizedAppConfig,
         notarize_app: bool,
         identity: SigningIdentity,
+        wait: bool = True,
     ):
         """Package an app as a DMG installer."""
         dist_path: Path = self.distribution_path(app)
@@ -1804,4 +1848,4 @@ password:
                 f"Notarizing DMG with team ID {identity.team_id}...",
                 prefix=app.app_name,
             )
-            self.notarize(app, identity=identity)
+            self.notarize(app, identity=identity, wait=wait)
