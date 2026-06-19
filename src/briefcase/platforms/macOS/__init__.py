@@ -1122,7 +1122,7 @@ class macOSPackageMixin(macOSSigningMixin):
         :param identity: The code signing used to notarize the app.
         :param installer_identity: The signing identity to use when signing the
             installer. Optional unless the packaging format is ``pkg``.
-        :param wait: If ``True``, wait for notarization to complete. If ``False``,
+        :param wait: If `True`, wait for notarization to complete. If `False`,
             submit the app and return without finalizing.
         """
         # Determine the arguments that would be needed to reproduce this notarization
@@ -1143,8 +1143,9 @@ class macOSPackageMixin(macOSSigningMixin):
 
         if not wait:
             self.console.info(
-                "The submission has been sent. You'll need to run briefcase "
-                "package at some point in the future to finalize the notarization."
+                f"{app.formal_name} as been submitted to Apple for notarization. "
+                "You'll need to run briefcase package at some point in the future "
+                "to finalize the notarization."
             )
         else:
             self.console.warning("""
@@ -1161,7 +1162,6 @@ resume it.
                 app,
                 identity=notarization_identity,
                 submission_id=submission_id,
-                wait=wait,
             )
 
     def submit_notarization(self, app, identity: SigningIdentity) -> str:
@@ -1338,7 +1338,7 @@ password:
         :param app: The app to notarize.
         :param identity: The code signing identity to use.
         :param submission_id: The submission ID of the notarization task to finalize.
-        :param wait: If ``True``, poll until notarization completes. If ``False``,
+        :param wait: If `True`, poll until notarization completes. If `False`,
             check the status once and raise an error if it is not yet complete.
         """
         try:
@@ -1395,8 +1395,9 @@ password:
                                     "Apple has not completed notarising the app; "
                                     "try again later"
                                 ) from e
-                            # Try again in 10 seconds.
-                            time.sleep(10)
+                            else:
+                                # Try again in 10 seconds.
+                                time.sleep(10)
                         else:
                             self.tools.subprocess.output_error(e)
                             raise BriefcaseCommandError(
