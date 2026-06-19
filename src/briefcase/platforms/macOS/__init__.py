@@ -1012,7 +1012,7 @@ class macOSPackageMixin(macOSSigningMixin):
             action="store_const",
             const=False,
             default=True,
-            help="Submit for notarization but don't wait for notarization to complete",
+            help="Don't wait for notarization; submit and check status once, then exit",
         )
 
     def verify_tools(self):
@@ -1161,6 +1161,7 @@ resume it.
                 app,
                 identity=notarization_identity,
                 submission_id=submission_id,
+                wait=wait,
             )
 
     def submit_notarization(self, app, identity: SigningIdentity) -> str:
