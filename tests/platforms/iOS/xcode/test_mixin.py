@@ -32,12 +32,13 @@ def test_binary_path(create_command, first_app_config, tmp_path):
     )
 
 
-def test_distribution_path(create_command, first_app_config, tmp_path):
-    with pytest.raises(
-        NoDistributionArtefact,
-        match=r"WARNING: No distributable artefact has been generated",
-    ):
+def test_distribution_path(create_command, first_app_config, capsys, tmp_path):
+    with pytest.raises(NoDistributionArtefact):
         create_command.distribution_path(first_app_config)
+
+    output = capsys.readouterr().out
+    assert "WARNING: No distributable artefact has been generated" in output
+    assert "briefcase open iOS" in output
 
 
 def test_verify(create_command, monkeypatch):
