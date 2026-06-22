@@ -908,8 +908,7 @@ no extension).
                 manpage_source = self.base_path / app.man_page
                 if not manpage_source.is_file():
                     raise BriefcaseCommandError(
-                        f"The man page source file '{app.man_page}' "
-                        "does not exist."
+                        f"The man page source file '{app.man_page}' does not exist."
                     )
             else:
                 manpage_source = self.bundle_path(app) / f"{app.app_name}.1"

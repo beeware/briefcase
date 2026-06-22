@@ -258,6 +258,6 @@ def test_custom_man_page_missing(build_command, first_app, tmp_path):
 
     with pytest.raises(
         BriefcaseCommandError,
-        match=r"The man page source file 'docs/nonexistent\.1' does not exist\.",
+        match=r"The man page source file 'docs/nonexistent\.1' does not exist.",
     ):
         build_command.build_app(first_app)
