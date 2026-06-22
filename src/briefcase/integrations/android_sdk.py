@@ -52,6 +52,37 @@ def _parse_system_image(package: str):
     return parts[1], parts[2], parts[3]
 
 
+def _api_level_sort_key(api_level: str) -> tuple:
+    """Sort key for API level strings, ordering numeric levels (and their ext suffixes)
+    numerically. Non-numeric levels sort after all numeric ones.
+
+    e.g. "android-34" -> (0, 34.0, 0)      "android-34-ext9" -> (0, 34.0, 9)
+    "android-36.0-Baklava" -> (0, 36.0, 0)      "android-CANARY" -> (1, "android-
+    CANARY")
+    """
+    value = api_level.split("-", 1)[
+        1
+    ]  # "34", "34-ext9", "36.1", "36.0-Baklava", "CANARY"
+    base, _, ext = value.partition("-ext")
+    base = base.split("-", 1)[
+        0
+    ]  # strip trailing "-Name" suffix, e.g. "36.0-Baklava" -> "36.0"
+    try:
+        return 0, float(base), int(ext) if ext else 0
+    except ValueError:
+        return 1, api_level
+
+
+def min_api_level(app: FinalizedAppConfig) -> int:
+    """The minimum API level to use for the app, as an int.
+
+    ``min_os_version`` may be configured as a string or an int, so it's
+    coerced to int here to avoid a TypeError when compared against
+    numeric API levels.
+    """
+    return int(getattr(app, "min_os_version", ANDROID_MIN_OS_VERSION))
+
+
 class AndroidDeviceNotAuthorized(BriefcaseCommandError):
     def __init__(self, device):
         self.device = device
@@ -1167,7 +1198,7 @@ a default name '{default_avd}'.
 
         # Get available images, raise an error if none found.
         available_images = self.list_available_system_images(
-            min_api_level=getattr(app, "min_os_version", ANDROID_MIN_OS_VERSION)
+            min_api_level=min_api_level(app)
         )
         if not available_images:
             raise BriefcaseCommandError(
@@ -1180,32 +1211,34 @@ architecture. Check your network connection and re-run `briefcase run android`.
 """
             )
 
-        # Ask the user to select an Android version.
-        versions = sorted({img.split(";")[1].split("-")[1] for img in available_images})
-        version = self.tools.console.selection_question(
-            intro="Select the Android version for the emulator:",
-            description="Android version",
-            options=versions,
-            default="31",
+        # Parse available images once for use in both selection questions.
+        parsed_images = [_parse_system_image(img) for img in available_images]
+
+        # Ask the user to select an API level.
+        api_levels = sorted(
+            {api_level for api_level, _, abi in parsed_images},
+            key=_api_level_sort_key,
+        )
+        api_level = self.tools.console.selection_question(
+            intro="Select the API level for the emulator:",
+            description="API level",
+            options=api_levels,
+            default="android-31",
         )
 
-        # Ask the user to select an image type for the chosen version.
-        image_types = sorted(
-            {
-                f"{img.split(';')[1]};{img.split(';')[2]}"
-                for img in available_images
-                if img.split(";")[1].startswith(f"android-{version}")
-            },
-            key=lambda x: (0 if x.endswith(";default") else 1, x),
+        # Ask the user to select a tag for the chosen API level.
+        tags = sorted(
+            {tag for level, tag, _ in parsed_images if level == api_level},
+            key=lambda x: (0 if x == "default" else 1, x),
         )
-        image_type = self.tools.console.selection_question(
-            intro="Select the system image type:",
-            description="Image type",
-            options=image_types,
-            default=image_types[0],
+        tag = self.tools.console.selection_question(
+            intro="Select the system image tag:",
+            description="Tag",
+            options=tags,
+            default=tags[0],
         )
 
-        system_image = f"system-images;{image_type};{self.emulator_abi}"
+        system_image = f"system-images;{api_level};{tag};{self.emulator_abi}"
 
         self._create_emulator(
             avd=avd,

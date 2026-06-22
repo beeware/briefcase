@@ -25,7 +25,11 @@ from briefcase.debuggers.base import (
     DebuggerConnectionMode,
 )
 from briefcase.exceptions import BriefcaseCommandError
-from briefcase.integrations.android_sdk import ADB, ANDROID_MIN_OS_VERSION, AndroidSDK
+from briefcase.integrations.android_sdk import (
+    ADB,
+    AndroidSDK,
+    min_api_level,
+)
 from briefcase.integrations.subprocess import SubprocessArgT
 
 if TYPE_CHECKING:
@@ -225,10 +229,7 @@ class GradleCreateCommand(GradleMixin, CreateCommand):
                 "androidx.swiperefreshlayout:swiperefreshlayout:1.1.0",
             ]
 
-        try:
-            min_os_version = app.min_os_version
-        except AttributeError:
-            min_os_version = ANDROID_MIN_OS_VERSION
+        min_os_version = min_api_level(app)
 
         return {
             "version_code": version_code,
