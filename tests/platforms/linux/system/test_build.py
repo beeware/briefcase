@@ -231,3 +231,33 @@ def test_missing_manpage(build_command, first_app, tmp_path):
     assert (doc_path / "changelog.gz").exists()
     with gzip.open(doc_path / "changelog.gz") as f:
         assert f.read().decode() == "First App Changelog"
+
+
+@pytest.mark.skipif(sys.platform == "win32", reason="Can't build Linux apps on Windows")
+def test_custom_man_page(build_command, first_app, tmp_path):
+    """A custom man page is used when man_page is set in config."""
+    create_file(
+        tmp_path / "base_path/docs/first-app.1",
+        "Custom man page content",
+    )
+    first_app.man_page = "docs/first-app.1"
+
+    build_command.build_app(first_app)
+
+    bundle_path = tmp_path / "base_path/build/first-app/somevendor/surprising"
+    man_path = bundle_path / "first-app-0.0.1/usr/share/man/man1"
+    assert (man_path / "first-app.1.gz").exists()
+    with gzip.open(man_path / "first-app.1.gz") as f:
+        assert f.read().decode() == "Custom man page content"
+
+
+@pytest.mark.skipif(sys.platform == "win32", reason="Can't build Linux apps on Windows")
+def test_custom_man_page_missing(build_command, first_app, tmp_path):
+    """If a custom man page is specified but doesn't exist, an error is raised."""
+    first_app.man_page = "docs/nonexistent.1"
+
+    with pytest.raises(
+        BriefcaseCommandError,
+        match=r"The man page source file 'docs/nonexistent\.1' does not exist\.",
+    ):
+        build_command.build_app(first_app)
