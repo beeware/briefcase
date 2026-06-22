@@ -904,7 +904,7 @@ no extension).
         man_folder.mkdir(parents=True, exist_ok=True)
 
         with self.console.wait_bar("Installing man page..."):
-            if app.man_page:
+            if app.man_page:  # pragma: no-cover-if-is-windows
                 manpage_source = self.base_path / app.man_page
                 if not manpage_source.is_file():
                     raise BriefcaseCommandError(
