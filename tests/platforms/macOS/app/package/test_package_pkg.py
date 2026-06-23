@@ -1,3 +1,4 @@
+import os
 import plistlib
 from unittest import mock
 
@@ -408,6 +409,75 @@ def test_console_app_adhoc_signed(
 
     # No notarization was performed
     package_command.notarize.assert_not_called()
+
+
+def test_gui_app_post_install_script(
+    package_command,
+    first_app_with_binaries,
+    tmp_path,
+):
+    """GUI app can include a custom post-install script in its PKG installer."""
+    first_app_with_binaries.packaging_format = "pkg"
+    first_app_with_binaries.post_install_script = "scripts/post_install.sh"
+
+    package_command.notarize = mock.Mock()
+    # Spy on chmod; the executable bit can't be checked via the file mode on Windows.
+    package_command.tools.os = mock.MagicMock(spec_set=os)
+    bundle_path = tmp_path / "base_path/build/first-app/macos/app"
+
+    create_file(
+        tmp_path / "base_path/scripts/post_install.sh",
+        "#!/bin/sh\necho 'Custom post-install'\n",
+    )
+    create_file(bundle_path / "installer/resources/LICENSE", "Original License")
+
+    package_command.package_app(first_app_with_binaries, adhoc_sign=True)
+
+    postinstall = bundle_path / "installer/pkg_scripts/postinstall"
+    assert postinstall.read_text(encoding="utf-8") == (
+        "#!/bin/sh\necho 'Custom post-install'\n"
+    )
+    # The postinstall script is made executable for pkgbuild.
+    package_command.tools.os.chmod.assert_called_once_with(postinstall, 0o755)
+
+    pkgbuild_args = package_command.tools.subprocess.run.mock_calls[0].args[0]
+    assert ["--scripts", bundle_path / "installer/pkg_scripts"] == pkgbuild_args[-3:-1]
+
+
+def test_console_app_post_install_script(
+    package_command,
+    first_app_with_binaries,
+    tmp_path,
+):
+    """A console app's custom post-install script is appended to the template's."""
+    first_app_with_binaries.packaging_format = "pkg"
+    first_app_with_binaries.console_app = True
+    first_app_with_binaries.post_install_script = "scripts/post_install.sh"
+
+    package_command.notarize = mock.Mock()
+    bundle_path = tmp_path / "base_path/build/first-app/macos/app"
+
+    template_postinstall = bundle_path / "installer/scripts/postinstall"
+    create_file(template_postinstall, "#!/bin/sh\necho symlink\n")
+    create_file(
+        tmp_path / "base_path/scripts/post_install.sh",
+        "#!/bin/sh\necho custom\n",
+    )
+
+    package_command.package_app(first_app_with_binaries, adhoc_sign=True)
+
+    postinstall = bundle_path / "installer/pkg_scripts/postinstall"
+    assert postinstall.read_text(encoding="utf-8") == (
+        "#!/bin/sh\necho symlink\n\n#!/bin/sh\necho custom\n"
+    )
+    assert (
+        template_postinstall.read_text(encoding="utf-8") == "#!/bin/sh\necho symlink\n"
+    )
+
+    package_command.package_app(first_app_with_binaries, adhoc_sign=True)
+    assert postinstall.read_text(encoding="utf-8") == (
+        "#!/bin/sh\necho symlink\n\n#!/bin/sh\necho custom\n"
+    )
 
 
 def test_no_license(

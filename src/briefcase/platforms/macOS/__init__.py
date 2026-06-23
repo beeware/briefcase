@@ -1049,6 +1049,41 @@ class macOSPackageMixin(macOSSigningMixin):
     def verify_app(self, app):
         super().verify_app(app)
         self.verify_app_packaging_format(app)
+        self.verify_install_scripts(app)
+
+    def verify_install_scripts(self, app):
+        """Verify the post-install and pre-uninstall script configuration.
+
+        :param app: The config object for the app
+        """
+        post_install = getattr(app, "post_install_script", None)
+        pre_uninstall = getattr(app, "pre_uninstall_script", None)
+
+        if app.packaging_format == "pkg":
+            if post_install and not (self.base_path / post_install).is_file():
+                raise BriefcaseCommandError(
+                    f"Couldn't find post-install script {post_install}."
+                )
+            if pre_uninstall:
+                self.console.warning(
+                    "macOS PKG installers do not support pre-uninstall scripts; "
+                    f"the pre_uninstall_script setting ({pre_uninstall}) "
+                    "will be ignored."
+                )
+        else:
+            installer = app.packaging_format.upper()
+            if post_install:
+                self.console.warning(
+                    f"macOS {installer} installers do not support post-install "
+                    f"scripts; the post_install_script setting "
+                    f"({post_install}) will be ignored."
+                )
+            if pre_uninstall:
+                self.console.warning(
+                    f"macOS {installer} installers do not support pre-uninstall "
+                    f"scripts; the pre_uninstall_script setting "
+                    f"({pre_uninstall}) will be ignored."
+                )
 
     def can_resume(self, app, submission_id=None, **options):
         """Determine if notarization can be resumed.
@@ -1646,6 +1681,41 @@ password:
         ):
             self.ditto_archive(self.package_path(app), self.distribution_path(app))
 
+    def build_pkg_scripts(self, app: FinalizedAppConfig, installer_path: Path) -> Path:
+        """Assemble the scripts directory passed to ``pkgbuild --scripts``.
+
+        pkgbuild runs the postinstall script in this directory after unpacking the app.
+        Console apps have one that symlinks the binary onto the PATH; the configured
+        post-install script is appended to it. For other apps, the configured script
+        becomes the postinstall script.
+
+        :param app: The config object for the app
+        :param installer_path: The path to the installer bundle
+        :returns: The scripts directory to pass to pkgbuild
+        """
+        template_postinstall = installer_path / "scripts" / "postinstall"
+        scripts_path = installer_path / "pkg_scripts"
+        postinstall = scripts_path / "postinstall"
+
+        if scripts_path.exists():
+            self.tools.shutil.rmtree(scripts_path)
+        scripts_path.mkdir(parents=True)
+
+        post_install = (self.base_path / app.post_install_script).read_text(
+            encoding="utf-8"
+        )
+        if app.console_app and template_postinstall.is_file():
+            # Append the configured script to the template's postinstall.
+            base = template_postinstall.read_text(encoding="utf-8").rstrip()
+            postinstall.write_text(f"{base}\n\n{post_install}", encoding="utf-8")
+        else:
+            postinstall.write_text(post_install, encoding="utf-8")
+
+        # pkgbuild requires the postinstall script to be executable.
+        self.tools.os.chmod(postinstall, 0o755)
+
+        return scripts_path
+
     def package_pkg(
         self,
         app: FinalizedAppConfig,
@@ -1707,18 +1777,23 @@ password:
                 components_plist,
             )
 
-        # Console apps are installed in /Library/Formal Name, and include the
-        # post-install scripts. Normal apps are installed in /Applications, and don't
-        # include the scripts.
+        # Console apps are installed in /Library/Formal Name; normal apps are
+        # installed in /Applications.
         if app.console_app:
-            install_args = [
-                "--install-location",
-                f"/Library/{app.formal_name}",
-                "--scripts",
-                installer_path / "scripts",
-            ]
+            install_args = ["--install-location", f"/Library/{app.formal_name}"]
         else:
             install_args = ["--install-location", "/Applications"]
+
+        # Console apps always have a post-install script (it symlinks the binary onto
+        # the PATH); any app can also configure its own. If a custom script is
+        # configured, assemble a dedicated scripts directory for it.
+        scripts_path = installer_path / "scripts"
+        if post_install := getattr(app, "post_install_script", None):
+            with self.console.wait_bar("Installing post-install script..."):
+                scripts_path = self.build_pkg_scripts(app, installer_path)
+
+        if app.console_app or post_install:
+            install_args += ["--scripts", scripts_path]
 
         with self.console.wait_bar("Building app package..."):
             installer_packages_path = installer_path / "packages"

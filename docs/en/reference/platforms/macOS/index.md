@@ -162,6 +162,17 @@ Any Boolean or string value can be used for an `Info.plist` value.
 
 The minimum macOS version that the app will support. This controls the value of `MACOSX_DEPLOYMENT_TARGET` used when building the app.
 
+### `post_install_script`
+
+/// note | Only used for PKG packaging
+///
+
+A path, relative to the project root, to a shell script that will be executed during installation, after the installer content has been unpacked. The script must be a valid macOS installer `postinstall` script (i.e., a script with an appropriate shebang line such as `#!/bin/sh`).
+
+For console apps, Briefcase provides a post-install script that creates a symbolic link to the app on the `PATH`; your script will be run *after* that link has been created.
+
+DMG and ZIP "installers" cannot run scripts; if you define a `post_install_script` while using one of those formats, the setting will be ignored. There is no PKG analog for a pre-uninstall script.
+
 ### `universal_build`
 
 A Boolean, indicating whether Briefcase should build a universal app (i.e, an app that can target both x86_64 and ARM64). Defaults to `true`; if `false`, the binary will only be executable on the host platform on which it was built - i.e., if you build on an x86_64 machine, you will produce an x86_65 binary; if you build on an ARM64 machine, you will produce an ARM64 binary.
