@@ -28,7 +28,6 @@ def full_context():
         "version": "1.2.3",
         "description": "This is a simple app",
         "long_description": None,
-        "man_page": None,
         "sources": ["src/my_app"],
         "test_sources": None,
         "test_requires": None,

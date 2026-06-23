@@ -471,7 +471,6 @@ class AppConfig(BaseConfig):
     test_requires: list[str] | None
     supported: bool
     long_description: str | None
-    man_page: str | None
     license: dict | None
     license_files: list[str]
     console_app: bool
@@ -607,7 +606,6 @@ class DraftAppConfig(AppConfig):
         test_requires: list[str] | None = None,
         supported: bool = True,
         long_description: str | None = None,
-        man_page: str | None = None,
         console_app: bool = False,
         requirement_installer_args: list[str] | None = None,
         external_package_path: str | None = None,
@@ -637,7 +635,6 @@ class DraftAppConfig(AppConfig):
         self.test_requires = test_requires
         self.supported = supported
         self.long_description = long_description
-        self.man_page = man_page
         self.license = license
         self.license_files = [] if license_files is None else license_files
         self.console_app = console_app

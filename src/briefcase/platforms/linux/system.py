@@ -904,11 +904,12 @@ no extension).
         man_folder.mkdir(parents=True, exist_ok=True)
 
         with self.console.wait_bar("Installing man page..."):
-            if app.man_page:  # pragma: no-cover-if-is-windows
-                manpage_source = self.base_path / app.man_page
+            man_page = getattr(app, "man_page", None)
+            if man_page:  # pragma: no-cover-if-is-windows
+                manpage_source = self.base_path / man_page
                 if not manpage_source.is_file():
                     raise BriefcaseCommandError(
-                        f"The man page source file '{app.man_page}' does not exist."
+                        f"The man page source file '{man_page}' does not exist."
                     )
             else:
                 manpage_source = self.bundle_path(app) / f"{app.app_name}.1"
