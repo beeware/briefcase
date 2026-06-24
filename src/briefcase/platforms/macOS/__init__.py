@@ -1703,35 +1703,28 @@ password:
     def build_pkg_scripts(self, app: FinalizedAppConfig, installer_path: Path) -> Path:
         """Assemble the scripts directory passed to `pkgbuild --scripts`.
 
-        pkgbuild runs the postinstall script in this directory after unpacking the app.
-        Console apps have one that symlinks the binary onto the PATH; the configured
-        post-install script is appended to it. For other apps, the configured script
-        becomes the postinstall script.
+        pkgbuild runs the templated postinstall script after unpacking the app; that
+        script invokes a sibling `_postinstall` script if one is present. The configured
+        post-install script is copied in under that name, so it runs as its own process
+        with its own interpreter. The directory is rebuilt from scratch each time.
 
         :param app: The config object for the app
         :param installer_path: The path to the installer bundle
         :returns: The scripts directory to pass to pkgbuild
         """
-        template_postinstall = installer_path / "scripts" / "postinstall"
         scripts_path = installer_path / "pkg_scripts"
-        postinstall = scripts_path / "postinstall"
 
-        if scripts_path.exists():
-            self.tools.shutil.rmtree(scripts_path)
-        scripts_path.mkdir(parents=True)
+        # Start from a clean copy of the templated scripts directory.
+        self.tools.shutil.rmtree(scripts_path, ignore_errors=True)
+        self.tools.shutil.copytree(installer_path / "scripts", scripts_path)
 
-        post_install = (self.base_path / app.post_install_script).read_text(
-            encoding="utf-8"
+        # Add the configured script as the `_postinstall` that the templated
+        # postinstall script invokes.
+        post_install = scripts_path / "_postinstall"
+        self.tools.shutil.copyfile(
+            self.base_path / app.post_install_script, post_install
         )
-        if app.console_app and template_postinstall.is_file():
-            # Append the configured script to the template's postinstall.
-            base = template_postinstall.read_text(encoding="utf-8").rstrip()
-            postinstall.write_text(f"{base}\n\n{post_install}", encoding="utf-8")
-        else:
-            postinstall.write_text(post_install, encoding="utf-8")
-
-        # pkgbuild requires the postinstall script to be executable.
-        self.tools.os.chmod(postinstall, 0o755)
+        self.tools.os.chmod(post_install, 0o755)
 
         return scripts_path
 
