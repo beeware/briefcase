@@ -480,6 +480,33 @@ def test_console_app_post_install_script(
     )
 
 
+def test_installer_resources(package_command, first_app_with_binaries, tmp_path):
+    """User installer resources are merged with the templated installer resources."""
+    first_app_with_binaries.packaging_format = "pkg"
+    first_app_with_binaries.installer_resources = "installer_extras"
+
+    package_command.notarize = mock.Mock()
+    bundle_path = tmp_path / "base_path/build/first-app/macos/app"
+
+    create_file(bundle_path / "installer/resources/welcome.html", "<html>")
+    create_file(bundle_path / "installer/final_resources/stale.txt", "stale")
+    create_file(tmp_path / "base_path/installer_extras/helper.dat", "payload")
+
+    package_command.package_app(first_app_with_binaries, adhoc_sign=True)
+
+    final = bundle_path / "installer/final_resources"
+    assert (final / "welcome.html").is_file()
+    assert (final / "LICENSE").read_text(encoding="utf-8") == (
+        "The Actual First App License"
+    )
+    assert (final / "helper.dat").read_text(encoding="utf-8") == "payload"
+    assert not (final / "stale.txt").exists()
+
+    productbuild_args = package_command.tools.subprocess.run.mock_calls[1].args[0]
+    idx = productbuild_args.index("--resources")
+    assert productbuild_args[idx + 1] == final
+
+
 def test_no_license(
     package_command,
     first_app_with_binaries,

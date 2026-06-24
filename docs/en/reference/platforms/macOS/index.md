@@ -158,6 +158,17 @@ will result in an `Info.plist` declaration of:
 
 Any Boolean or string value can be used for an `Info.plist` value.
 
+### `installer_resources`
+
+/// note | Only used for PKG packaging
+///
+
+A path, relative to the project root, to a directory of additional resources to include in the PKG installer. The contents of this directory are added alongside Briefcase's own installer resources (such as the welcome screen and license), and can be referenced by the installer's distribution definition.
+
+These resources are part of the installer itself, they are used while the installer is running, and are not installed onto the target machine.
+
+DMG and ZIP "installers" do not carry resources, if you define `installer_resources` while using one of those formats, the setting will be ignored.
+
 ### `min_os_version`
 
 The minimum macOS version that the app will support. This controls the value of `MACOSX_DEPLOYMENT_TARGET` used when building the app.

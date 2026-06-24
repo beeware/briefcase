@@ -71,15 +71,28 @@ def test_post_install_script_missing(package_command, first_app_with_binaries):
         package_command.verify_app(first_app_with_binaries)
 
 
+def test_installer_resources_missing(package_command, first_app_with_binaries):
+    """A configured installer resources directory that doesn't exist is an error."""
+    first_app_with_binaries.packaging_format = "pkg"
+    first_app_with_binaries.installer_resources = "missing_dir"
+
+    with pytest.raises(
+        BriefcaseCommandError,
+        match=r"Couldn't find installer resources directory missing_dir",
+    ):
+        package_command.verify_app(first_app_with_binaries)
+
+
 @pytest.mark.parametrize(
     ("packaging_format", "setting", "expected"),
     [
         ("pkg", "pre_uninstall_script", "PKG installers do not support pre-uninstall"),
         ("dmg", "post_install_script", "DMG installers do not support post-install"),
         ("dmg", "pre_uninstall_script", "DMG installers do not support pre-uninstall"),
+        ("dmg", "installer_resources", "DMG installers do not support additional"),
     ],
 )
-def test_install_script_warnings(
+def test_install_option_warnings(
     package_command,
     first_app_with_binaries,
     capsys,
@@ -87,7 +100,7 @@ def test_install_script_warnings(
     setting,
     expected,
 ):
-    """A script that won't be used is reported as ignored."""
+    """A setting that won't be used is reported as ignored."""
     first_app_with_binaries.packaging_format = packaging_format
     setattr(first_app_with_binaries, setting, "scripts/x.sh")
 
