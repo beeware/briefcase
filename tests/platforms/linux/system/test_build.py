@@ -251,7 +251,6 @@ def test_custom_man_page(build_command, first_app, tmp_path):
         assert f.read().decode() == "Custom man page content"
 
 
-@pytest.mark.skipif(sys.platform == "win32", reason="Can't build Linux apps on Windows")
 def test_custom_man_page_missing(build_command, first_app, tmp_path):
     """If a custom man page is specified but doesn't exist, an error is raised."""
     first_app.man_page = "docs/nonexistent.1"

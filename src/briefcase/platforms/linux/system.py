@@ -905,7 +905,7 @@ no extension).
 
         with self.console.wait_bar("Installing man page..."):
             man_page = getattr(app, "man_page", None)
-            if man_page:  # pragma: no-cover-if-is-windows
+            if man_page:
                 manpage_source = self.base_path / man_page
                 if not manpage_source.is_file():
                     raise BriefcaseCommandError(
