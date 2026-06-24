@@ -10,6 +10,7 @@ Briefcase converts Python projects into standalone native applications for macOS
 ## Quick Reference
 
 - **Language**: Python >= 3.10 (3.10–3.14 supported)
+- **Docstrings**: Sphinx style with Markdown content
 - **Dev environment**: Python 3.13 virtualenv with `dev` dependency group
 - **License**: BSD-3-Clause
 - **Entry point**: `briefcase` via `src/briefcase/__main__.py:main()`
@@ -247,6 +248,8 @@ Types: `feature`, `bugfix`, `removal`, `doc`, `misc`.
 
 Fragment text must describe user-facing impact, not implementation details. Use `misc` for housekeeping, minor changes, or changes to features not yet in a formal release.
 
+Fragment content must use Markdown syntax.
+
 ## Documentation Style
 
 Markdown files in this project (including `AGENTS.md`, `docs/en/`, and `changes/` fragments) must **not** use hard line breaks to enforce an 80-character column limit. Each paragraph or list item must be written as a single unbroken line, regardless of its length. Let the reader's editor or renderer handle wrapping.
@@ -295,3 +298,37 @@ When writing or editing any `.md` file, do not insert newlines mid-sentence or m
       second_argument,
   )
   ```
+
+### Docstring formatting
+
+Docstrings in code must use Sphinx style with Markdown content. Use the `:param:` and `:returns:` syntax, with Markdown formatting for all docstring content:
+
+```console
+"""Construct a valid class name from a formal name.
+
+`formal_name` is used here.
+
+:param formal_name: The formal name
+:returns: The app's class name
+"""
+```
+
+## Pull request template
+
+When submitting a pull request, you must include all information requested in the pull request template:
+
+```console
+<!--- Describe your changes in detail -->
+<!--- What problem does this change solve? -->
+<!--- If this PR relates to an issue, include Refs #XXX or Fixes #XXX -->
+
+## PR Checklist:
+ <!--- Go over all the following points, and put an `x` in all the boxes that apply. -->
+ - [ ] I will abide by the BeeWare Code of Conduct
+ - [ ] I have read and have followed the **CONTRIBUTING.md** file
+ - [ ] This PR was generated or assisted using an AI tool
+ <!-- update or delete the next line to reflect your usage -->
+ Assisted-by:
+```
+
+The details of the change, and linking any related issue should come first. The PR checklist at the end must be present, and filled out appropriately; all three boxes must be checked, and `Assisted-by:` must be followed by the assisting model.
