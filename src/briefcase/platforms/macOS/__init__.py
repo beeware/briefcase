@@ -1682,7 +1682,7 @@ password:
             self.ditto_archive(self.package_path(app), self.distribution_path(app))
 
     def build_pkg_scripts(self, app: FinalizedAppConfig, installer_path: Path) -> Path:
-        """Assemble the scripts directory passed to ``pkgbuild --scripts``.
+        """Assemble the scripts directory passed to `pkgbuild --scripts`.
 
         pkgbuild runs the postinstall script in this directory after unpacking the app.
         Console apps have one that symlinks the binary onto the PATH; the configured
