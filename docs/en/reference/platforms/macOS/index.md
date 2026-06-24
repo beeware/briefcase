@@ -167,7 +167,7 @@ The minimum macOS version that the app will support. This controls the value of 
 /// note | Only used for PKG packaging
 ///
 
-A path, relative to the project root, to a shell script that will be executed during installation, after the installer content has been unpacked. The script must be a valid macOS installer `postinstall` script (i.e., a script with an appropriate shebang line such as `#!/bin/sh`).
+A path, relative to the project root, to a shell script that will be executed during installation, after the installer content has been unpacked. The script must be a valid macOS shell script file with an appropriate shebang line (e.g., `#!/bin/sh`).
 
 For console apps, Briefcase provides a post-install script that creates a symbolic link to the app on the `PATH`; your script will be run *after* that link has been created.
 
