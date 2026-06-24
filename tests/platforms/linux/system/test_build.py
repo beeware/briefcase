@@ -233,7 +233,6 @@ def test_missing_manpage(build_command, first_app, tmp_path):
         assert f.read().decode() == "First App Changelog"
 
 
-@pytest.mark.skipif(sys.platform == "win32", reason="Can't build Linux apps on Windows")
 def test_custom_man_page(build_command, first_app, tmp_path):
     """A custom man page is used when man_page is set in config."""
     create_file(
