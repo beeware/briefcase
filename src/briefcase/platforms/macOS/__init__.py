@@ -1826,20 +1826,22 @@ password:
         # Console apps always have a post-install script (it symlinks the binary onto
         # the PATH); any app can also configure its own. If a custom script is
         # configured, assemble a dedicated scripts directory for it.
-        scripts_path = installer_path / "scripts"
         if post_install := getattr(app, "post_install_script", None):
             with self.console.wait_bar("Installing post-install script..."):
                 scripts_path = self.build_pkg_scripts(app, installer_path)
+        else:
+            scripts_path = installer_path / "scripts"
 
         if app.console_app or post_install:
             install_args += ["--scripts", scripts_path]
 
         # Assemble the installer resources. If the user has supplied additional
         # resources, overlay them onto the templated resources in a clean directory.
-        resources_path = installer_path / "resources"
         if getattr(app, "installer_resources", None):
             with self.console.wait_bar("Installing additional installer resources..."):
                 resources_path = self.build_pkg_resources(app, installer_path)
+        else:
+            resources_path = installer_path / "resources"
 
         with self.console.wait_bar("Building app package..."):
             installer_packages_path = installer_path / "packages"

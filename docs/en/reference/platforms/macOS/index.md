@@ -167,7 +167,7 @@ A path, relative to the project root, to a directory of additional resources to 
 
 These resources are part of the installer itself, they are used while the installer is running, and are not installed onto the target machine.
 
-DMG and ZIP "installers" do not carry resources, if you define `installer_resources` while using one of those formats, the setting will be ignored.
+DMG and ZIP "installers" do not carry resources. If you define `installer_resources` while using one of those formats, the setting will be ignored with a warning.
 
 ### `min_os_version`
 
@@ -182,7 +182,7 @@ A path, relative to the project root, to a shell script that will be executed du
 
 For console apps, Briefcase provides a post-install script that creates a symbolic link to the app on the `PATH`; your script will be run *after* that link has been created.
 
-DMG and ZIP "installers" cannot run scripts; if you define a `post_install_script` while using one of those formats, the setting will be ignored. There is no PKG analog for a pre-uninstall script.
+DMG and ZIP "installers" cannot run scripts. if you define a `post_install_script` while using one of those formats, the setting will be ignored with a warning. There is no PKG analog for a pre-uninstall script.
 
 ### `universal_build`
 
