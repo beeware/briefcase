@@ -422,31 +422,56 @@ def test_post_install_script(package_command, first_app_with_binaries, tmp_path)
     bundle_path = tmp_path / "base_path/build/first-app/macos/app"
 
     # The templated scripts directory; its postinstall invokes `_postinstall`.
-    create_file(bundle_path / "installer/scripts/postinstall", "#!/bin/sh\nhook\n")
+    POSTINSTALL_BODY = "#!/bin/sh\nhook\n"
+    create_file(bundle_path / "installer/scripts/postinstall", POSTINSTALL_BODY)
     # The user's script keeps its own interpreter.
-    create_file(
-        tmp_path / "base_path/scripts/post_install.sh",
-        "#!/usr/bin/env python3\nprint('custom')\n",
-    )
+    USER_POSTINSTALL_BODY = "#!/usr/bin/env python3\nprint('custom')\n"
+    create_file(tmp_path / "base_path/scripts/post_install.sh", USER_POSTINSTALL_BODY)
 
     package_command.package_app(first_app_with_binaries, adhoc_sign=True)
 
-    pkg_scripts = bundle_path / "installer/pkg_scripts"
+    pkg_scripts = bundle_path / "installer/final_scripts"
     # The templated postinstall is carried over unchanged...
-    assert (pkg_scripts / "postinstall").read_text(
-        encoding="utf-8"
-    ) == "#!/bin/sh\nhook\n"
+    assert (pkg_scripts / "postinstall").read_text(encoding="utf-8") == POSTINSTALL_BODY
     # ...and the user's script is installed verbatim as an executable `_postinstall`.
     assert (pkg_scripts / "_postinstall").read_text(encoding="utf-8") == (
-        "#!/usr/bin/env python3\nprint('custom')\n"
+        USER_POSTINSTALL_BODY
     )
     package_command.tools.os.chmod.assert_called_once_with(
         pkg_scripts / "_postinstall", 0o755
     )
 
     # pkgbuild was given the generated scripts directory.
-    pkgbuild_args = package_command.tools.subprocess.run.mock_calls[0].args[0]
-    assert ["--scripts", pkg_scripts] == pkgbuild_args[-3:-1]
+    assert package_command.tools.subprocess.run.mock_calls == [
+        mock.call(
+            [
+                "pkgbuild",
+                "--root",
+                bundle_path / "installer/root",
+                "--component-plist",
+                bundle_path / "installer/components.plist",
+                "--install-location",
+                "/Applications",
+                "--scripts",
+                bundle_path / "installer/final_scripts",
+                bundle_path / "installer/packages/first-app.pkg",
+            ],
+            check=True,
+        ),
+        mock.call(
+            [
+                "productbuild",
+                "--distribution",
+                bundle_path / "installer/Distribution.xml",
+                "--package-path",
+                bundle_path / "installer/packages",
+                "--resources",
+                bundle_path / "installer/resources",
+                tmp_path / "base_path/dist/First App-0.0.1.pkg",
+            ],
+            check=True,
+        ),
+    ]
 
 
 def test_installer_resources(package_command, first_app_with_binaries, tmp_path):
@@ -471,9 +496,35 @@ def test_installer_resources(package_command, first_app_with_binaries, tmp_path)
     assert (final / "helper.dat").read_text(encoding="utf-8") == "payload"
     assert not (final / "stale.txt").exists()
 
-    productbuild_args = package_command.tools.subprocess.run.mock_calls[1].args[0]
-    idx = productbuild_args.index("--resources")
-    assert productbuild_args[idx + 1] == final
+    # The packaging calls got the custom resources directory
+    assert package_command.tools.subprocess.run.mock_calls == [
+        mock.call(
+            [
+                "pkgbuild",
+                "--root",
+                bundle_path / "installer/root",
+                "--component-plist",
+                bundle_path / "installer/components.plist",
+                "--install-location",
+                "/Applications",
+                bundle_path / "installer/packages/first-app.pkg",
+            ],
+            check=True,
+        ),
+        mock.call(
+            [
+                "productbuild",
+                "--distribution",
+                bundle_path / "installer/Distribution.xml",
+                "--package-path",
+                bundle_path / "installer/packages",
+                "--resources",
+                bundle_path / "installer/final_resources",
+                tmp_path / "base_path/dist/First App-0.0.1.pkg",
+            ],
+            check=True,
+        ),
+    ]
 
 
 def test_no_license(

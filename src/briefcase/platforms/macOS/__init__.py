@@ -1712,7 +1712,7 @@ password:
         :param installer_path: The path to the installer bundle
         :returns: The scripts directory to pass to pkgbuild
         """
-        scripts_path = installer_path / "pkg_scripts"
+        scripts_path = installer_path / "final_scripts"
 
         # Start from a clean copy of the templated scripts directory.
         self.tools.shutil.rmtree(scripts_path, ignore_errors=True)
