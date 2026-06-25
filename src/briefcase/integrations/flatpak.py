@@ -168,13 +168,17 @@ You must install both flatpak and flatpak-builder.
         runtime: str,
         runtime_version: str,
         sdk: str,
+        base: str | None = None,
+        base_version: str | None = None,
     ):
-        """Verify that a specific Flatpak runtime and SDK are available.
+        """Verify that a specific Flatpak runtime, SDK and base are available.
 
         :param repo_alias: The alias of the repo where the runtime and SDK are stored.
         :param runtime: The identifier of the Flatpak runtime
         :param runtime_version: The version of the Flatpak runtime
         :param sdk: The Flatpak SDK
+        :param base: (Optional) The Flatpak base
+        :param base_version: The version of the Flatpak base if specified
         """
         try:
             self.tools.subprocess.run(
@@ -187,6 +191,7 @@ You must install both flatpak and flatpak-builder.
                     f"{runtime}/{self.tools.host_arch}/{runtime_version}",
                     f"{sdk}/{self.tools.host_arch}/{runtime_version}",
                 ]
+                + ([f"{base}/{self.tools.host_arch}/{base_version}"] if base else [])
                 + (["--verbose"] if self.tools.console.is_deep_debug else []),
                 check=True,
                 # flatpak install uses many animations that cannot be disabled
@@ -197,7 +202,12 @@ You must install both flatpak and flatpak-builder.
                 f"Unable to install "
                 f"Flatpak runtime {runtime}/{self.tools.host_arch}/{runtime_version} "
                 f"and SDK {sdk}/{self.tools.host_arch}/{runtime_version} "
-                f"from repo {repo_alias}."
+                + (
+                    f"and base {base}/{self.tools.host_arch}/{base_version} "
+                    if base
+                    else ""
+                )
+                + f"from repo {repo_alias}."
             ) from e
 
     def build(self, bundle_identifier: str, app_name: str, path: Path):
