@@ -89,7 +89,7 @@ Linux System packages do not support splash screens or installer images.
 
 The Linux system app template includes a `LICENSE` and `CHANGELOG` file, with stub content. When the application is generated from template, Briefcase will look in the project root folder (i.e., the folder that contains your `pyproject.toml`) for files with the same name. If these files are found, they will be copied into your project. You should ensure these files are complete and correct before publishing your app.
 
-The Linux system app template also includes an initial draft manfile for your app. This manfile will be populated with the [`description`][] and [`long_description`][] of your app. You may wish to add more details on app usage.
+The Linux system app template also includes an initial draft manfile for your app. This manfile will be populated with the [`description`][] and [`long_description`][] of your app. You may wish to add more details on app usage. If you need full control over the man page content, you can provide your own troff-formatted man page using the [`man_page`][] configuration option.
 
 ## Additional options
 
@@ -180,6 +180,16 @@ Any problems with installing or running your system package likely indicate an i
 ### `system_section`
 
 When an application is published as a `.deb` file, Debian requires that you specify a "section", describing a classification of the application area. The template will provide a default section of `utils`; if you want to override that default, you can specify a value for [`system_section`][]. For details on the allowed values for [`system_section`][], refer to the [Debian Policy Manual](https://www.debian.org/doc/debian-policy/ch-controlfields.html#s-f-section).
+
+### `man_page`
+
+The path to a troff-formatted man page file, relative to the project root directory (i.e., the directory containing your `pyproject.toml`). If specified, this file will replace the template-generated man page during the build. For example:
+
+```toml
+man_page = "docs/myapp.1"
+```
+
+If [`man_page`][] is not specified, the default template-generated man page will be used.
 
 ### `dockerfile_extra_content`
 
