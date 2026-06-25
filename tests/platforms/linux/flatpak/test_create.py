@@ -33,11 +33,15 @@ def test_output_format_template_context(create_command, first_app_config):
     first_app_config.flatpak_runtime = "org.beeware.Platform"
     first_app_config.flatpak_runtime_version = "37.42"
     first_app_config.flatpak_sdk = "org.beeware.SDK"
+    first_app_config.flatpak_base = "org.beeware.flatpak.BaseApp"
+    first_app_config.flatpak_base_version = "1.0"
 
     assert create_command.output_format_template_context(first_app_config) == {
         "flatpak_runtime": "org.beeware.Platform",
         "flatpak_runtime_version": "37.42",
         "flatpak_sdk": "org.beeware.SDK",
+        "flatpak_base": "org.beeware.flatpak.BaseApp",
+        "flatpak_base_version": "1.0",
     }
 
 
