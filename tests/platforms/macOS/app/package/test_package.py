@@ -59,6 +59,58 @@ def test_console_invalid_formats(
         package_command.verify_app(first_app_with_binaries)
 
 
+def test_post_install_script_missing(package_command, first_app_with_binaries):
+    """A configured post-install script that doesn't exist is an error."""
+    first_app_with_binaries.packaging_format = "pkg"
+    first_app_with_binaries.post_install_script = "scripts/missing.sh"
+
+    with pytest.raises(
+        BriefcaseCommandError,
+        match=r"Couldn't find post-install script scripts/missing\.sh",
+    ):
+        package_command.verify_app(first_app_with_binaries)
+
+
+def test_installer_resources_missing(package_command, first_app_with_binaries):
+    """A configured installer resources directory that doesn't exist is an error."""
+    first_app_with_binaries.packaging_format = "pkg"
+    first_app_with_binaries.installer_resources = "missing_dir"
+
+    with pytest.raises(
+        BriefcaseCommandError,
+        match=r"Couldn't find installer resources directory missing_dir",
+    ):
+        package_command.verify_app(first_app_with_binaries)
+
+
+@pytest.mark.parametrize(
+    ("packaging_format", "setting", "expected"),
+    [
+        ("pkg", "pre_uninstall_script", "PKG installers do not support pre-uninstall"),
+        ("dmg", "post_install_script", "DMG installers do not support post-install"),
+        ("dmg", "pre_uninstall_script", "DMG installers do not support pre-uninstall"),
+        ("dmg", "installer_resources", "DMG installers do not support additional"),
+    ],
+)
+def test_install_option_warnings(
+    package_command,
+    first_app_with_binaries,
+    capsys,
+    packaging_format,
+    setting,
+    expected,
+):
+    """A setting that won't be used is reported as ignored."""
+    first_app_with_binaries.packaging_format = packaging_format
+    setattr(first_app_with_binaries, setting, "scripts/x.sh")
+
+    package_command.verify_app(first_app_with_binaries)
+
+    output = " ".join(capsys.readouterr().out.split())
+    assert expected in output
+    assert "will be ignored" in output
+
+
 def test_no_notarize_option(package_command):
     """The --no-notarize option can be parsed."""
     options, overrides = package_command.parse_options(["--no-notarize"])
