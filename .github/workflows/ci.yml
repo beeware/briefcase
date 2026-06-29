@@ -43,7 +43,7 @@ jobs:
       uses: actions/checkout@v7.0.0
 
     - name: Set up Python
-      uses: actions/setup-python@v6.2.0
+      uses: actions/setup-python@v6.3.0
       with:
         python-version: "3.13"
 
@@ -88,7 +88,7 @@ jobs:
           fetch-depth: 1
 
       - name: Set up Python
-        uses: actions/setup-python@v6.2.0
+        uses: actions/setup-python@v6.3.0
         with:
           python-version: "3.X"
           cache: pip
@@ -137,7 +137,7 @@ jobs:
         fetch-depth: 0
 
     - name: Set up Python
-      uses: actions/setup-python@v6.2.0
+      uses: actions/setup-python@v6.3.0
       with:
         python-version: ${{ matrix.python-version }}
         allow-prereleases: true
@@ -191,7 +191,7 @@ jobs:
         fetch-depth: 0
 
     - name: Setup Python
-      uses: actions/setup-python@v6.2.0
+      uses: actions/setup-python@v6.3.0
       with:
         # Use minimum version of python for coverage to avoid phantom branches
         # https://github.com/nedbat/coveragepy/issues/1572#issuecomment-1522546425
