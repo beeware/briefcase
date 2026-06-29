@@ -855,7 +855,7 @@ def _normalize_pep639_license_config(
     if raw_license_files is None:
         raw_license_files = []
 
-    # Ensure `licence` is an SPDX expression
+    # Ensure `license` is an SPDX expression
     try:
         spdx_id = canonicalize_license_expression(raw_license)
     except InvalidLicenseExpression:
@@ -1000,7 +1000,7 @@ def _normalize_pep621_license_file_config(
         spdx_note = (
             "A license SPDX expression could not be identified from the "
             "license file. The license has been set to "
-            "'LicenseRef-UnknownLicense'"
+            "'LicenseRef-UnknownLicense'."
         )
 
     # Warn and finalize PEP 621 license.file coercion. Use `license_files` rather than
@@ -1012,7 +1012,7 @@ def _normalize_pep621_license_file_config(
 
             PEP 639 requires the definition of both `license` and
             `license-files`. The value for `license.file` will be used to
-            populate the PEP 639 `licence-files` setting.
+            populate the PEP 639 `license-files` setting.
 
             {spdx_note}
 
