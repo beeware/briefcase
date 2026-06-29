@@ -202,6 +202,10 @@ Briefcase will attempt to convert your [`version`][] into a valid MSI value by e
 
 However, if you need to override this default value, you can define [`version_triple`][] in your app settings. If provided, this value will be used in the MSI configuration file instead of the auto-generated value.
 
+### `create_desktop_shortcut`
+
+Whether the installer should offer an option to create a desktop shortcut. Defaults to `False`.
+
 ## Installer/uninstaller options
 
 Windows MSI installers are able to present a panel of optional features to the user as part of the installation or uninstallation process. These features are binary flags which can then be used by a [post-install script][post_install_script] to perform additional installation behaviors, or by a [pre-uninstall script][pre_uninstall_script] to perform additional uninstallation behaviors.
