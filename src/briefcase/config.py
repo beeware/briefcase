@@ -939,8 +939,7 @@ def _normalize_pep621_license_text_config(
             "cause problems packaging for some platforms."
         )
 
-    # Warn and finalize PEP 621 license.text coercion. Use `license_files` rather than
-    # `license-files` so it's a valid attribute name.
+    # Warn and finalize PEP 621 license.text coercion.
     console.warning_banner(
         f"'{app_name}' uses PEP 621 `license.text` format",
         f"""
