@@ -101,19 +101,47 @@ class UvVirtualEnvironment(VirtualEnvironment):
 
         return env
 
+    @property
+    def platform_tag(self):
+        """Output a uv python-platform tag.
+
+        UV ignores the min_os_version; and uses GNU-style references to ARM64
+        """
+        if self.platform is None:
+            platform = self.tools.sys.platform
+
+        if platform == "darwin":
+            arch = self.arch or self.tools.platform.machine()
+            if arch == "arm64":
+                arch = "aarch64"
+
+            return f"{arch}-apple-darwin"
+        else:
+            raise NotImplementedError()
+
     def install_requirements(
         self,
-        requires,
-        installer_args=None,
-        allow_editable=False,
+        requires: list[str],
+        allow_editable: bool = False,
+        require_binary: bool = False,
+        include_deps: bool = True,
+        install_path: Path | None = None,
+        extra_installer_args: list[str] | None = None,
+        install_hint: str = "",
     ):
         """Install requirements into the environment with `uv pip`.
 
         :param requires: The list of requirements to install.
-        :param installer_args: A list of additional arguments to pass to the installer.
         :param allow_editable: Should editable installs be allowed?
+        :param require_binary: Should binary wheels be required?
+        :param include_deps: Should transitive dependencies be installed?
+        :param install_path: Where should the packages be installed?
+        :param extra_installer_args: A list of additional arguments to pass to the
+            installer.
+        :param install_hint: If an install fails, an additional context-specific hint
+            that can be displayed to the user.
         """
-        require_args = []
+        install_args = []
         for req in requires:
             # Any requirement that is a local path, but *not* a reference to an archive
             # file (zip, tgz, etc) or wheel can be installed editable. If in doubt,
@@ -124,11 +152,29 @@ class UvVirtualEnvironment(VirtualEnvironment):
                 and not self.tools.file.is_archive(req)
                 and Path(req).suffix != ".whl"
             ):
-                require_args.extend(["-e", req])
+                install_args.extend(["-e", req])
             else:
-                require_args.append(req)
+                install_args.append(req)
 
         try:
+            env = None
+            if install_path:
+                install_args.append(f"--target={install_path}")
+
+                if self.platform_tag:
+                    install_args.extend(["--python-platform", self.platform_tag])
+                    if self.platform == "darwin" and self.min_os_version:
+                        env = {"MACOSX_DEPLOYMENT_TARGET": self.min_os_version}
+
+            if require_binary:
+                install_args.extend(["--only-binary", ":all:"])
+
+            if not include_deps:
+                install_args.append("--no-deps")
+
+            if extra_installer_args:
+                install_args.extend(extra_installer_args)
+
             self.run(
                 [
                     "uv",
@@ -136,11 +182,11 @@ class UvVirtualEnvironment(VirtualEnvironment):
                     "install",
                     "--upgrade",
                     *(["-vv"] if self.tools.console.is_deep_debug else []),
-                    *require_args,
-                    *([] if installer_args is None else installer_args),
+                    *install_args,
                 ],
                 check=True,
                 encoding="UTF-8",
+                env=env,
             )
         except subprocess.CalledProcessError as e:
-            raise RequirementsInstallError() from e
+            raise RequirementsInstallError(install_hint=install_hint) from e

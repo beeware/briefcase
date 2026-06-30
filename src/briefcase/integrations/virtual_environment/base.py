@@ -22,6 +22,9 @@ class VirtualEnvironment(ABC):
         venv_path: Path,
         *,
         recreate: bool = False,
+        platform: str | None = None,
+        min_os_version: str | None = None,
+        arch: str | None = None,
     ):
         """Initialise the virtual environment on a specific path.
 
@@ -30,9 +33,16 @@ class VirtualEnvironment(ABC):
             For an isolated venv, this is the venv directory; for a no-op
             environment, it is the directory used for the marker file.
         :param recreate: Should the environment be recreated if it already exists?
+        :param platform: TODO
+        :param min_os_version: TODO
+        :param arch: TODO
+        :param min_os_version: TODO
         """
         self.tools = tools
         self.venv_path = venv_path
+        self.platform = platform
+        self.min_os_version = min_os_version
+        self.arch = arch
         self.created = self.prepare(recreate=recreate)
 
     @property
@@ -68,11 +78,25 @@ class VirtualEnvironment(ABC):
     def clean(self) -> None:
         """Remove the on-disk state associated with this environment."""
 
+    @property
+    def platform_tag(self):
+        if self.platform:
+            if self.platform == "darwin":
+                arch = self.arch or self.tools.platform.machine()
+                min_os_version = self.min_os_version or "11.0"
+                return f"macosx_{min_os_version}_{arch}"
+            else:
+                raise NotImplementedError()
+
     def install_requirements(
         self,
-        requires,
-        installer_args=None,
-        allow_editable=False,
+        requires: list[str],
+        allow_editable: bool = False,
+        require_binary: bool = False,
+        include_deps: bool = True,
+        install_path: Path | None = None,
+        extra_installer_args: list[str] | None = None,
+        install_hint: str = "",
     ):
         """Install requirements into the environment with pip.
 
@@ -80,10 +104,16 @@ class VirtualEnvironment(ABC):
         other than `pip` to install requirements.
 
         :param requires: The list of requirements to install.
-        :param installer_args: A list of additional arguments to pass to the installer.
         :param allow_editable: Should editable installs be allowed?
+        :param require_binary: Should binary wheels be required?
+        :param include_deps: Should transitive dependencies be installed?
+        :param install_path: Where should the packages be installed?
+        :param extra_installer_args: A list of additional arguments to pass to the
+            installer.
+        :param install_hint: If an install fails, an additional context-specific hint
+            that can be displayed to the user.
         """
-        require_args = []
+        install_args = []
         for req in requires:
             # Any requirement that is a local path, but *not* a reference to an archive
             # file (zip, tgz, etc) or wheel can be installed editable. If in doubt,
@@ -94,11 +124,26 @@ class VirtualEnvironment(ABC):
                 and not self.tools.file.is_archive(req)
                 and Path(req).suffix != ".whl"
             ):
-                require_args.extend(["-e", req])
+                install_args.extend(["-e", req])
             else:
-                require_args.append(req)
+                install_args.append(req)
 
         try:
+            if install_path:
+                install_args.append(f"--target={install_path}")
+
+                if self.platform_tag:
+                    install_args.extend(["--platform", self.platform_tag])
+
+            if require_binary:
+                install_args.extend(["--only-binary", ":all:"])
+
+            if not include_deps:
+                install_args.append("--no-deps")
+
+            if extra_installer_args:
+                install_args.extend(extra_installer_args)
+
             self.run(
                 [
                     self.executable,
@@ -110,14 +155,13 @@ class VirtualEnvironment(ABC):
                     "install",
                     "--upgrade",
                     *(["-vv"] if self.tools.console.is_deep_debug else []),
-                    *require_args,
-                    *([] if installer_args is None else installer_args),
+                    *install_args,
                 ],
                 check=True,
                 encoding="UTF-8",
             )
         except subprocess.CalledProcessError as e:
-            raise RequirementsInstallError() from e
+            raise RequirementsInstallError(install_hint=install_hint) from e
 
     # -- Process management -------------------------------------------------
 

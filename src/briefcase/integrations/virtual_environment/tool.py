@@ -30,6 +30,9 @@ class VirtualEnvironmentManager(Tool):
         *,
         isolated: bool = True,
         recreate: bool = False,
+        platform: str | None = None,
+        min_os_version: str | None = None,
+        arch: str | None = None,
         env_manager: EnvManagerT = "venv",
     ) -> VirtualEnvironment:
         """Construct and return a `VirtualEnvironment` for the requested mode.
@@ -64,7 +67,12 @@ class VirtualEnvironmentManager(Tool):
             "conda": CondaVirtualEnvironment,
             "pixi": PixiVirtualEnvironment,
         }.get(env_manager, VenvVirtualEnvironment)(
-            self.tools, venv_path, recreate=recreate
+            self.tools,
+            venv_path,
+            recreate=recreate,
+            platform=platform,
+            min_os_version=min_os_version,
+            arch=arch,
         )
 
         return venv

@@ -112,7 +112,7 @@ class DevCommand(RunAppMixin, BaseCommand):
             venv.install_requirements(
                 requires,
                 allow_editable=True,
-                installer_args=app.requirement_installer_args,
+                extra_installer_args=app.requirement_installer_args,
             )
 
     def run_dev_app(
