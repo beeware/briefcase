@@ -63,18 +63,20 @@ class UpdateCommand(CreateCommand):
         self.console.info("Updating application code...", prefix=app.app_name)
         self.install_app_code(app=app)
 
-        if update_requirements:
-            self.console.info("Updating requirements...", prefix=app.app_name)
-            self.install_app_requirements(app=app)
-
-        if update_resources:
-            self.console.info("Updating application resources...", prefix=app.app_name)
-            self.install_app_resources(app=app)
+        venv = self.app_environment(app=app)
 
         if update_support:
             self.console.info("Updating application support...", prefix=app.app_name)
             self.cleanup_app_support_package(app=app)
             self.install_app_support_package(app=app)
+
+        if update_requirements:
+            self.console.info("Updating requirements...", prefix=app.app_name)
+            self.install_app_requirements(app=app, venv=venv)
+
+        if update_resources:
+            self.console.info("Updating application resources...", prefix=app.app_name)
+            self.install_app_resources(app=app)
 
         if update_stub:
             try:

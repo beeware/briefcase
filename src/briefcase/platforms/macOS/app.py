@@ -87,6 +87,18 @@ class macOSAppCreateCommand(macOSAppMixin, macOSCreateMixin, CreateCommand):
         # cache for the app, ensuring the current icon is loaded.
         self.binary_path(app).touch(exist_ok=True)
 
+    def install_managed_python_env(self, app: FinalizedAppConfig):
+        """Copy the managed Python environment into the app bundle."""
+        runtime_support_path = self.support_path(app, runtime=True)
+        if runtime_support_path.is_dir():
+            self.tools.shutil.rmtree(runtime_support_path)
+
+        self.tools.shutil.copytree(
+            self.venv_path(app),
+            runtime_support_path,
+            symlinks=True,
+        )
+
 
 class macOSAppUpdateCommand(macOSAppCreateCommand, UpdateCommand):
     description = "Update an existing macOS app."

@@ -20,6 +20,10 @@ class CondaVirtualEnvironment(VirtualEnvironment):
     """
 
     @property
+    def provides_python(self) -> bool:
+        return False
+
+    @property
     def python_version(self) -> str:
         """The ``major.minor`` Python version to request from conda."""
         return f"{sys.version_info.major}.{sys.version_info.minor}"
@@ -60,12 +64,46 @@ class CondaVirtualEnvironment(VirtualEnvironment):
                         "create",
                         "--prefix",
                         self.venv_path,
+                        "--yes",
+                        *(["--quiet"] if not self.tools.console.is_verbose else []),
+                    ],
+                    check=True,
+                )
+                if self.platform:
+                    match self.platform, self.arch:
+                        case "darwin", "arm64":
+                            conda_subdir = "osx-arm64"
+                        case "darwin", "x86_64":
+                            conda_subdir = "osx-64"
+                        case _, _:
+                            raise BriefcaseCommandError("Unsupported platform")
+
+                    self.tools.subprocess.run(
+                        [
+                            "conda",
+                            "config",
+                            "--file",
+                            self.venv_path / ".condarc",
+                            "--set",
+                            "subdir",
+                            conda_subdir,
+                            *(["--quiet"] if not self.tools.console.is_verbose else []),
+                        ],
+                        check=True,
+                    )
+                self.tools.subprocess.run(
+                    [
+                        "conda",
+                        "install",
+                        "--prefix",
+                        self.venv_path,
                         f"python={self.python_version}",
                         "--yes",
                         *(["--quiet"] if not self.tools.console.is_verbose else []),
                     ],
                     check=True,
                 )
+
             except subprocess.CalledProcessError as e:
                 raise BriefcaseCommandError(
                     f"Failed to create Conda environment at {self.venv_path}"
@@ -80,9 +118,14 @@ class CondaVirtualEnvironment(VirtualEnvironment):
 
     def install_requirements(
         self,
-        requires,
-        installer_args=None,
-        allow_editable=False,
+        requires: list[str],
+        allow_editable: bool = False,
+        require_binary: bool = False,
+        include_deps: bool = True,
+        install_path: Path | None = None,
+        min_os_version: str | None = None,
+        extra_installer_args: list[str] | None = None,
+        install_hint: str = "",
     ):
         """Install requirements into the environment with `conda install`.
 
@@ -90,13 +133,49 @@ class CondaVirtualEnvironment(VirtualEnvironment):
         ignored.
 
         :param requires: The list of requirements to install.
-        :param installer_args: A list of additional arguments to pass to the installer.
-        :param allow_editable: Ignored; conda does not support editable installs.
+        :param allow_editable: Should editable installs be allowed?
+        :param require_binary: Ignored; Conda always requires binary content.
+        :param include_deps: Should transitive dependencies be installed?
+        :param install_path: Ignored; Conda always installs into its own site-packages.
+        :param min_os_version: Ignored; Conda self-enforces the min OS version.
+        :param extra_installer_args: A list of additional arguments to pass to the
+            installer.
+        :param install_hint: If an install fails, an additional context-specific hint
+            that can be displayed to the user.
         """
         if not requires:
             return
 
+        conda_requires = []
+        pip_requires = []
+        for req in requires:
+            # Any requirement that is a local path must be installed with pip.
+            if self.tools.file.is_local_path(req):
+                # If editable installs are allowed, and the requirement is *not* a
+                # reference to an archive file (zip, tgz, etc) or wheel
+                if (
+                    allow_editable
+                    and not self.tools.file.is_archive(req)
+                    and Path(req).suffix != ".whl"
+                ):
+                    pip_requires.extend(["-e", req])
+                else:
+                    pip_requires.append(req)
+            else:
+                conda_requires.append(req)
+
         try:
+            if self.tools.console.is_verbose:
+                install_args = []
+            else:
+                install_args = ["--quiet"]
+
+            if not include_deps:
+                install_args.append("--no-deps")
+
+            if extra_installer_args:
+                install_args.extend(extra_installer_args)
+
             self.tools.subprocess.run(
                 [
                     "conda",
@@ -104,25 +183,57 @@ class CondaVirtualEnvironment(VirtualEnvironment):
                     "--prefix",
                     self.venv_path,
                     "--yes",
-                    *(["--quiet"] if not self.tools.console.is_verbose else []),
-                    *([] if installer_args is None else installer_args),
-                    *requires,
+                    *install_args,
+                    *conda_requires,
                 ],
                 check=True,
             )
         except subprocess.CalledProcessError as e:
-            raise RequirementsInstallError() from e
+            raise RequirementsInstallError(install_hint=install_hint) from e
+
+        try:
+            # If there are requirements that have to be installed with pip,
+            # run a separate `pip install` pass in the conda environment.
+            if pip_requires:
+                install_args = ["--only-binary", ":all:"]
+                if not include_deps:
+                    install_args.append("--no-deps")
+
+                self.run(
+                    [
+                        "pip",
+                        "install",
+                        *install_args,
+                        *pip_requires,
+                    ],
+                    check=True,
+                    env={
+                        "PIP_REQUIRE_VIRTUALENV": None,
+                    },
+                )
+        except subprocess.CalledProcessError as e:
+            raise RequirementsInstallError(install_hint=install_hint) from e
 
     def rewrite_args(self, args: SubprocessArgsT) -> SubprocessArgsT:
         """Run the command in a conda environment.
 
-        If the first argument is a reference to `sys.executable`, remove
-        any path component.
+        If the first argument is a reference to `sys.executable`, replace it
+        with a reference to the Conda environment Python interpreter. Otherwise,
+        run the command with `conda run`.
         """
         head = os.fspath(args[0])
         if os.path.normcase(head) == os.path.normcase(sys.executable):
-            head = Path(sys.executable).name
-        return ["conda", "run", "--prefix", self.venv_path, head, *args[1:]]
+            return [self.bin_dir / Path(sys.executable).name, *args[1:]]
+        else:
+            # Run the command in the environment; don't capture stdout.
+            return [
+                "conda",
+                "run",
+                "--prefix",
+                self.venv_path,
+                "--no-capture-output",
+                *args,
+            ]
 
     def build_env(
         self,

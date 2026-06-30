@@ -29,7 +29,8 @@ class VirtualEnvironmentManager(Tool):
         venv_path: Path,
         *,
         isolated: bool = True,
-        recreate: bool = False,
+        platform: str | None = None,
+        arch: str | None = None,
         env_manager: EnvManagerT = "venv",
     ) -> VirtualEnvironment:
         """Construct and return a `VirtualEnvironment` for the requested mode.
@@ -47,11 +48,7 @@ class VirtualEnvironmentManager(Tool):
             (a real, dedicated venv created via `python -m venv`). If
             `False`, use `NoOpVirtualEnvironment` (passthrough to the ambient
             interpreter, with first-use detection via a marker file).
-        :param recreate: If `True`, clean and re-initialise the environment,
-            even if it already exists.
-        :returns: A fully-prepared :class:`VirtualEnvironment`. Use it as a
-            context manager (`with env as venv:`) for scoping; `__enter__`
-            returns `self` and has no side effects.
+        :returns: A instance of a Virtual Environment.
         :raises BriefcaseCommandError: if the environment cannot be created or
             initialised.
         """
@@ -64,7 +61,10 @@ class VirtualEnvironmentManager(Tool):
             "conda": CondaVirtualEnvironment,
             "pixi": PixiVirtualEnvironment,
         }.get(env_manager, VenvVirtualEnvironment)(
-            self.tools, venv_path, recreate=recreate
+            self.tools,
+            venv_path,
+            platform=platform,
+            arch=arch,
         )
 
         return venv

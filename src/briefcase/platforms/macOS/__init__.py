@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import concurrent.futures
+import json
 import os
 import plistlib
 import re
@@ -27,6 +28,7 @@ from briefcase.platforms.macOS.utils import AppPackagesMergeMixin, is_mach_o_bin
 
 if TYPE_CHECKING:
     from briefcase.commands.base import BaseCommand
+    from briefcase.integrations.virtual_environment import VirtualEnvironment
 
     _MixinBase = BaseCommand
 else:
@@ -95,6 +97,7 @@ class macOSMixin(_MixinBase):
     platform = "macOS"
     supported_host_os: Collection[str] = {"Darwin"}
     supported_host_os_reason = "macOS applications can only be built on macOS."
+    supported_env_managers: Collection[str] = {"venv", "uv", "conda"}
     # 0.3.20 introduced a framework-based support package.
     platform_target_version: str | None = "0.3.20"
 
@@ -206,35 +209,43 @@ class macOSCreateMixin(AppPackagesMergeMixin):
     def _install_app_requirements(
         self,
         app: FinalizedAppConfig,
+        venv: VirtualEnvironment,
         requires: list[str],
         app_packages_path: Path,
         **kwargs,
     ):
-        try:
-            # Determine the min macOS version from the framework metadata
-            # of the macos-arm64_x86_64 slice of the XCframework
-            plist_file = (
-                self.support_path(app)
-                / "Python.xcframework/macos-arm64_x86_64"
-                / "Python.framework/Resources/Info.plist"
+        if venv.provides_python:
+            python_record = next((venv.venv_path / "conda-meta").glob("python-*.json"))
+            depends = json.loads(python_record.read_text())["depends"]
+            support_min_version = next(
+                dep.split(">=")[1] for dep in depends if dep.startswith("__osx")
             )
-            with plist_file.open("rb") as f:
-                info_plist = plistlib.load(f)
-
-            support_min_version = info_plist.get("MinimumOSVersion", "11.0")
-        except FileNotFoundError:
-            # If a plist file couldn't be found, it's an old-style support package;
-            # Determine min. macOS version from the VERSIONS file in the support package
-            versions = dict(
-                [part.strip() for part in line.split(": ", 1)]
-                for line in (
-                    (self.support_path(app) / "VERSIONS")
-                    .read_text(encoding="UTF-8")
-                    .split("\n")
+        else:
+            try:
+                # Determine the min macOS version from the framework metadata
+                # of the macos-arm64_x86_64 slice of the XCframework
+                plist_file = (
+                    self.support_path(app)
+                    / "Python.xcframework/macos-arm64_x86_64"
+                    / "Python.framework/Resources/Info.plist"
                 )
-                if ": " in line
-            )
-            support_min_version = versions.get("Min macOS version", "11.0")
+                with plist_file.open("rb") as f:
+                    info_plist = plistlib.load(f)
+
+                support_min_version = info_plist.get("MinimumOSVersion", "11.0")
+            except FileNotFoundError:
+                # If a plist file couldn't be found, it's an old-style support package;
+                # Determine min. macOS version from the VERSIONS file.
+                versions = dict(
+                    [part.strip() for part in line.split(": ", 1)]
+                    for line in (
+                        (self.support_path(app) / "VERSIONS")
+                        .read_text(encoding="UTF-8")
+                        .split("\n")
+                    )
+                    if ": " in line
+                )
+                support_min_version = versions.get("Min macOS version", "11.0")
 
         # Check that the app's definition is compatible with the support package
         # If the app doesn't specify a minimum version, use the support package
@@ -250,41 +261,45 @@ class macOSCreateMixin(AppPackagesMergeMixin):
 
         macOS_min_tag = macOS_min_version.replace(".", "_")
 
+        # Perform the initial install targeting the current platform
         if getattr(app, "universal_build", True):
-            # Perform the initial install targeting the current platform
             host_app_packages_path = (
                 self.bundle_path(app) / f"app_packages.{self.tools.host_arch}"
             )
-            # A standard install, except we explicitly reject installs from source
-            # tarballs with `--only-binary :all:`. This is for two reasons:
-            #
-            # 1. Consistency. We need to use `--only-binary :all:` when we do the second
-            #    "other arch" wheel install because of use of the `--platform` argument;
-            #    if we only reject source tarballs from one of the installs, then a
-            #    package that only provides binary wheels for one architecture would
-            #    cause inconsistent results depending on which platform was the host;
-            #    and
-            #
-            # 2. Security. Installs from source tarball involve executing arbitrary code
-            #    at time of installation; and it makes the entire development
-            #    environment building the app a vector for introducing vulnerabilities
-            #    into an app. Forcing the use of binary wheels ensures that we can know
-            #    with certainty the provenance of any binary content in the app.
-            #
-            # Since Briefcase is a tool designed to produce redistributable binaries,
-            # we've made the judgement call that the (minor, with known workarounds)
-            # inconvenience of not being able to use source tarballs is outweighed by
-            # the need to produce reliable, repeatable binary artefacts.
-            super()._install_app_requirements(
-                app,
-                requires=requires,
-                app_packages_path=host_app_packages_path,
-                pip_args=[
-                    "--only-binary",
-                    ":all:",
-                    "--platform",
-                    f"macosx_{macOS_min_tag}_{self.tools.host_arch}",
-                ],
+        else:
+            # If we're not building a universal binary, we can do a single install pass
+            # directly into the app_packages folder.
+            host_app_packages_path = app_packages_path
+
+        # We explicitly reject source installs for two reasons:
+        #
+        # 1. Consistency. We need to use `--only-binary :all:` when we do the second
+        #    "other arch" wheel install because of use of the `--platform` argument;
+        #    if we only reject source tarballs from one of the installs, then a
+        #    package that only provides binary wheels for one architecture would
+        #    cause inconsistent results depending on which platform was the host;
+        #    and
+        #
+        # 2. Security. Installs from source tarball involve executing arbitrary code
+        #    at time of installation; and it makes the entire development
+        #    environment building the app a vector for introducing vulnerabilities
+        #    into an app. Forcing the use of binary wheels ensures that we can know
+        #    with certainty the provenance of any binary content in the app.
+        #
+        # Since Briefcase is a tool designed to produce redistributable binaries,
+        # we've made the judgement call that the (minor, with known workarounds)
+        # inconvenience of not being able to use source tarballs is outweighed by
+        # the need to produce reliable, repeatable binary artefacts.
+
+        with self.console.wait_bar(
+            f"Installing app requirements for {self.tools.host_arch}..."
+        ):
+            venv.install_requirements(
+                requires,
+                allow_editable=False,
+                require_binary=True,
+                min_os_version=macOS_min_tag,
+                install_path=host_app_packages_path,
                 install_hint=f"""
 
 This may be because an {self.tools.host_arch} wheel that is compatible with
@@ -293,6 +308,7 @@ is not available.
 """,
             )
 
+        if getattr(app, "universal_build", True):
             # Install dependencies for the architecture that isn't the host architecture
             other_arch = {
                 "arm64": "x86_64",
@@ -315,23 +331,18 @@ is not available.
                 other_suffix=f"_{other_arch}",
             )
             if binary_packages:
+                other_venv = self.app_environment(app, host_arch=other_arch)
                 with self.console.wait_bar(
                     f"Installing binary app requirements for {other_arch}..."
                 ):
-                    self._pip_install(
-                        app,
-                        app_packages_path=other_app_packages_path,
-                        pip_args=[
-                            "--no-deps",
-                            "--platform",
-                            f"macosx_{macOS_min_tag}_{other_arch}",
-                            "--only-binary",
-                            ":all:",
-                        ]
-                        + [
+                    other_venv.install_requirements(
+                        [
                             f"{package}=={version}"
                             for package, version in binary_packages
                         ],
+                        allow_editable=False,
+                        require_binary=True,
+                        install_path=other_app_packages_path,
                         install_hint=f"""
 
 This may be because an {other_arch} wheel that is compatible with
@@ -369,21 +380,7 @@ in the macOS configuration section of your pyproject.toml.
                 sources=[host_app_packages_path, other_app_packages_path],
             )
         else:
-            # If we're not building a universal binary, we can do a single install pass
-            # directly into the app_packages folder.
-            super()._install_app_requirements(
-                app,
-                requires=requires,
-                app_packages_path=app_packages_path,
-                pip_args=[
-                    "--only-binary",
-                    ":all:",
-                    "--platform",
-                    f"macosx_{macOS_min_tag}_{self.tools.host_arch}",
-                ],
-            )
-
-            # Since we're only targeting 1 architecture, we can strip any universal
+            # Since we're not building a universal binary, we can strip any universal
             # libraries down to just the host architecture.
             self.thin_app_packages(app_packages_path, arch=self.tools.host_arch)
 

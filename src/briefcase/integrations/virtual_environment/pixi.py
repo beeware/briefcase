@@ -20,6 +20,10 @@ class PixiVirtualEnvironment(VirtualEnvironment):
     """
 
     @property
+    def provides_python(self) -> bool:
+        return False
+
+    @property
     def python_version(self) -> str:
         """The ``major.minor`` Python version to request from pixi."""
         return f"{sys.version_info.major}.{sys.version_info.minor}"

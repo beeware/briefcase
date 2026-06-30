@@ -9,19 +9,15 @@ from briefcase.integrations.subprocess import SubprocessArgsT
 
 
 class VirtualEnvironment(ABC):
-    """A managed Python environment.
-
-    The virtual environment will exist on disk after an instance of this object has been
-    constructed. The instance can be used as a context manager; entering/exiting the
-    context doesn't do anything.
-    """
+    """A managed Python environment."""
 
     def __init__(
         self,
         tools: ToolCache,
         venv_path: Path,
         *,
-        recreate: bool = False,
+        platform: str | None = None,
+        arch: str | None = None,
     ):
         """Initialise the virtual environment on a specific path.
 
@@ -29,11 +25,17 @@ class VirtualEnvironment(ABC):
         :param venv_path: The on-disk path associated with this environment.
             For an isolated venv, this is the venv directory; for a no-op
             environment, it is the directory used for the marker file.
-        :param recreate: Should the environment be recreated if it already exists?
+        :param platform: TODO
+        :param arch: TODO
         """
         self.tools = tools
         self.venv_path = venv_path
-        self.created = self.prepare(recreate=recreate)
+        self.platform = platform
+        self.arch = arch
+
+    @property
+    def provides_python(self) -> bool:
+        return False
 
     @property
     def bin_dir(self) -> Path:
@@ -55,9 +57,10 @@ class VirtualEnvironment(ABC):
 
     @abstractmethod
     def prepare(self, recreate=False) -> bool:
-        """Prepare a venv at the given environment.
+        """Ensure the virtual environment exists.
 
-        If the venv does not already exist, or a recreate has been requested, create it.
+        If the environment does not already exist, or a recreate has been requested,
+        create it.
 
         :param recreate: Force recreating the environment.
         :returns: `True` if the environment was created (or re-created).
@@ -68,11 +71,30 @@ class VirtualEnvironment(ABC):
     def clean(self) -> None:
         """Remove the on-disk state associated with this environment."""
 
+    def platform_tag(self, min_os_version: str | None):
+        platform = self.platform
+        if platform is None:
+            platform = {
+                "Darwin": "macOS",
+            }[self.tools.host_os]
+
+        if platform == "macOS":
+            arch = self.arch or self.tools.platform.machine()
+            min_os_tag = (min_os_version or "11.0").replace(".", "_")
+            return f"macosx_{min_os_tag}_{arch}"
+        else:
+            raise NotImplementedError()
+
     def install_requirements(
         self,
-        requires,
-        installer_args=None,
-        allow_editable=False,
+        requires: list[str],
+        allow_editable: bool = False,
+        require_binary: bool = False,
+        include_deps: bool = True,
+        install_path: Path | None = None,
+        min_os_version: str | None = None,
+        extra_installer_args: list[str] | None = None,
+        install_hint: str = "",
     ):
         """Install requirements into the environment with pip.
 
@@ -80,10 +102,17 @@ class VirtualEnvironment(ABC):
         other than `pip` to install requirements.
 
         :param requires: The list of requirements to install.
-        :param installer_args: A list of additional arguments to pass to the installer.
         :param allow_editable: Should editable installs be allowed?
+        :param require_binary: Should binary wheels be required?
+        :param include_deps: Should transitive dependencies be installed?
+        :param install_path: Where should the packages be installed?
+        :param min_os_version: The minimum OS version to enforce on packages.
+        :param extra_installer_args: A list of additional arguments to pass to the
+            installer.
+        :param install_hint: If an install fails, an additional context-specific hint
+            that can be displayed to the user.
         """
-        require_args = []
+        install_args = []
         for req in requires:
             # Any requirement that is a local path, but *not* a reference to an archive
             # file (zip, tgz, etc) or wheel can be installed editable. If in doubt,
@@ -94,11 +123,25 @@ class VirtualEnvironment(ABC):
                 and not self.tools.file.is_archive(req)
                 and Path(req).suffix != ".whl"
             ):
-                require_args.extend(["-e", req])
+                install_args.extend(["-e", req])
             else:
-                require_args.append(req)
+                install_args.append(req)
 
         try:
+            if install_path:
+                install_args.append(f"--target={install_path}")
+                if platform_tag := self.platform_tag(min_os_version):
+                    install_args.extend(["--platform", platform_tag])
+
+            if require_binary:
+                install_args.extend(["--only-binary", ":all:"])
+
+            if not include_deps:
+                install_args.append("--no-deps")
+
+            if extra_installer_args:
+                install_args.extend(extra_installer_args)
+
             self.run(
                 [
                     self.executable,
@@ -110,14 +153,13 @@ class VirtualEnvironment(ABC):
                     "install",
                     "--upgrade",
                     *(["-vv"] if self.tools.console.is_deep_debug else []),
-                    *require_args,
-                    *([] if installer_args is None else installer_args),
+                    *install_args,
                 ],
                 check=True,
                 encoding="UTF-8",
             )
         except subprocess.CalledProcessError as e:
-            raise RequirementsInstallError() from e
+            raise RequirementsInstallError(install_hint=install_hint) from e
 
     # -- Process management -------------------------------------------------
 
@@ -189,15 +231,3 @@ class VirtualEnvironment(ABC):
         if env is not None:
             kwargs["env"] = env
         return self.tools.subprocess.check_output(args, **kwargs)
-
-    # -- Context-manager protocol -------------------------------------------
-
-    def __enter__(self) -> "VirtualEnvironment":
-        """Return `self`.
-
-        The lifecycle work was performed in `__init__`.
-        """
-        return self
-
-    def __exit__(self, exc_type, exc_val, exc_tb):
-        return False

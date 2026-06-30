@@ -34,6 +34,7 @@ from briefcase import __version__
 from briefcase.config import (
     AppConfig,
     DraftAppConfig,
+    EnvManagerT,
     FinalizedAppConfig,
     GlobalConfig,
     parse_config,
@@ -136,6 +137,7 @@ class BaseCommand(ABC):
     cmd_line = "briefcase {command} {platform} {output_format}"
     supported_host_os: Collection[str] = {"Darwin", "Linux", "Windows"}
     supported_host_os_reason = f"This command is not supported on {platform.system()}."
+    supported_env_managers: Collection[EnvManagerT] = {"venv"}
 
     # defined by platform-specific subclasses
     command: str
@@ -723,6 +725,15 @@ Move the project to a path that does not container this character.
         """
         return
 
+    def verify_env_manager(self, app: AppConfig):
+        """Verify that the requested environment manager can be used."""
+        if app.env_manager not in self.supported_env_managers:
+            raise BriefcaseConfigError(
+                f"{app.app_name!r} declares the use of a {app.env_manager!r} "
+                f"environment, but {self.platform} {self.output_format} "
+                f"projects do not support environments of that type."
+            )
+
     def finalize_app_config(self, app: DraftAppConfig, **kwargs) -> FinalizedAppConfig:
         """Finalize the application config.
 
@@ -798,6 +809,8 @@ Move the project to a path that does not container this character.
         finalized: dict[str, FinalizedAppConfig] = {}
         for app in apps:
             if not isinstance(app, FinalizedAppConfig):
+                self.verify_env_manager(app)
+
                 app = self.finalize_app_config(
                     app,
                     test_mode=test_mode,

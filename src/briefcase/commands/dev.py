@@ -112,7 +112,7 @@ class DevCommand(RunAppMixin, BaseCommand):
             venv.install_requirements(
                 requires,
                 allow_editable=True,
-                installer_args=app.requirement_installer_args,
+                extra_installer_args=app.requirement_installer_args,
             )
 
     def run_dev_app(
@@ -220,14 +220,6 @@ class DevCommand(RunAppMixin, BaseCommand):
         ext = importlib.machinery.EXTENSION_SUFFIXES[0].split(".")[1]
         return f"dev.{ext}"
 
-    def venv_path(self, appname: str) -> Path:
-        """Return the path for the app's virtual environment.
-
-        :param app: The app config
-        :returns: Path where the venv should be located
-        """
-        return self.base_path / ".briefcase" / appname / self.venv_name
-
     def __call__(
         self,
         appname: str | None = None,
@@ -300,38 +292,42 @@ class DevCommand(RunAppMixin, BaseCommand):
         if isolated:
             self.console.info("Activating dev environment...", prefix=app.app_name)
 
-        with self.tools.virtual_environment(
+        venv = self.tools.virtual_environment(
             env_manager=app.env_manager,
-            venv_path=self.venv_path(app.app_name),
+            venv_path=(
+                self.base_path
+                / f".briefcase/{app.app_name}/{app.env_manager}-{self.venv_name}"
+            ),
             isolated=isolated,
-            recreate=update_requirements,
-        ) as venv:
-            if venv.created:
-                self.console.info("Installing requirements...", prefix=app.app_name)
-                try:
-                    self.install_dev_requirements(app, venv, **options)
-                except Exception:
-                    # If any problem occurs during installing requirements, remove the
-                    # venv; it will need to be re-created on the next run.
-                    venv.clean()
-                    raise
+        )
+        created = venv.prepare(recreate=update_requirements)
 
-                write_dist_info(
-                    app,
-                    self.app_module_path(app).parent / app.dist_info_name,
-                )
+        if created:
+            self.console.info("Installing requirements...", prefix=app.app_name)
+            try:
+                self.install_dev_requirements(app, venv, **options)
+            except Exception:
+                # If any problem occurs during installing requirements, remove the
+                # venv; it will need to be re-created on the next run.
+                venv.clean()
+                raise
 
-            if run_app:
-                if app.test_mode:
-                    self.console.info(
-                        "Running test suite in dev environment...", prefix=app.app_name
-                    )
-                else:
-                    self.console.info("Starting in dev mode...", prefix=app.app_name)
-                return self.run_dev_app(
-                    app,
-                    env=self.get_environment(app),
-                    venv=venv,
-                    passthrough=[] if passthrough is None else passthrough,
-                    **options,
+            write_dist_info(
+                app,
+                self.app_module_path(app).parent / app.dist_info_name,
+            )
+
+        if run_app:
+            if app.test_mode:
+                self.console.info(
+                    "Running test suite in dev environment...", prefix=app.app_name
                 )
+            else:
+                self.console.info("Starting in dev mode...", prefix=app.app_name)
+            return self.run_dev_app(
+                app,
+                env=self.get_environment(app),
+                venv=venv,
+                passthrough=[] if passthrough is None else passthrough,
+                **options,
+            )
