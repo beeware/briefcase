@@ -71,11 +71,12 @@ Briefcase will auto-detect the location of your Visual Studio installation, prov
 When you install Visual Studio, there are many optional components. You should ensure that you have installed the following:
 
 - .NET Desktop Development
-  - All default packages
+    - All default packages
 - Desktop Development with C++
-  - All default packages
-  - C++/CLI support for v143 build tools
-  - MSVC v143 VS 2022 C++ ARM64/x64 build tools
+    - All default packages
+    - C++/CLI support for v143 build tools
+    - MSVC v143 VS 2022 C++ x64 build tools
+    - MSVC v143 VS 2022 C++ ARM64 build tools (if required)
 
 ## Application configuration
 
