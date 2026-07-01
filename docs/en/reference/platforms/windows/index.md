@@ -204,7 +204,7 @@ However, if you need to override this default value, you can define [`version_tr
 
 ### `create_desktop_shortcut`
 
-Whether the installer should offer an option to create a desktop shortcut. Defaults to `False`.
+Whether the installer should default to creating a desktop shortcut. Defaults to `False`.
 
 ## Installer/uninstaller options
 
