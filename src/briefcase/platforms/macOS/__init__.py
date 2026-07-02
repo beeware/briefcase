@@ -250,41 +250,54 @@ class macOSCreateMixin(AppPackagesMergeMixin):
 
         macOS_min_tag = macOS_min_version.replace(".", "_")
 
+        # Perform the initial install targeting the current platform
         if getattr(app, "universal_build", True):
-            # Perform the initial install targeting the current platform
             host_app_packages_path = (
                 self.bundle_path(app) / f"app_packages.{self.tools.host_arch}"
             )
-            # A standard install, except we explicitly reject installs from source
-            # tarballs with `--only-binary :all:`. This is for two reasons:
-            #
-            # 1. Consistency. We need to use `--only-binary :all:` when we do the second
-            #    "other arch" wheel install because of use of the `--platform` argument;
-            #    if we only reject source tarballs from one of the installs, then a
-            #    package that only provides binary wheels for one architecture would
-            #    cause inconsistent results depending on which platform was the host;
-            #    and
-            #
-            # 2. Security. Installs from source tarball involve executing arbitrary code
-            #    at time of installation; and it makes the entire development
-            #    environment building the app a vector for introducing vulnerabilities
-            #    into an app. Forcing the use of binary wheels ensures that we can know
-            #    with certainty the provenance of any binary content in the app.
-            #
-            # Since Briefcase is a tool designed to produce redistributable binaries,
-            # we've made the judgement call that the (minor, with known workarounds)
-            # inconvenience of not being able to use source tarballs is outweighed by
-            # the need to produce reliable, repeatable binary artefacts.
-            super()._install_app_requirements(
-                app,
-                requires=requires,
-                app_packages_path=host_app_packages_path,
-                pip_args=[
-                    "--only-binary",
-                    ":all:",
-                    "--platform",
-                    f"macosx_{macOS_min_tag}_{self.tools.host_arch}",
-                ],
+        else:
+            # If we're not building a universal binary, we can do a single install pass
+            # directly into the app_packages folder.
+            host_app_packages_path = app_packages_path
+
+        # We explicitly reject source installs for two reasons:
+        #
+        # 1. Consistency. We need to use `--only-binary :all:` when we do the second
+        #    "other arch" wheel install because of use of the `--platform` argument;
+        #    if we only reject source tarballs from one of the installs, then a
+        #    package that only provides binary wheels for one architecture would
+        #    cause inconsistent results depending on which platform was the host;
+        #    and
+        #
+        # 2. Security. Installs from source tarball involve executing arbitrary code
+        #    at time of installation; and it makes the entire development
+        #    environment building the app a vector for introducing vulnerabilities
+        #    into an app. Forcing the use of binary wheels ensures that we can know
+        #    with certainty the provenance of any binary content in the app.
+        #
+        # Since Briefcase is a tool designed to produce redistributable binaries,
+        # we've made the judgement call that the (minor, with known workarounds)
+        # inconvenience of not being able to use source tarballs is outweighed by
+        # the need to produce reliable, repeatable binary artefacts.
+
+        with (
+            self.tools.virtual_environment(
+                env_manager=app.env_manager,
+                venv_path=self.venv_path(app),
+                isolated=True,
+                recreate=True,
+                min_os_version=macOS_min_tag,
+                arch=self.tools.host_arch,
+            ) as venv,
+            self.console.wait_bar(
+                f"Installing app requirements for {self.tools.host_arch}..."
+            ),
+        ):
+            venv.install_requirements(
+                requires,
+                allow_editable=False,
+                require_binary=True,
+                install_path=host_app_packages_path,
                 install_hint=f"""
 
 This may be because an {self.tools.host_arch} wheel that is compatible with
@@ -293,6 +306,7 @@ is not available.
 """,
             )
 
+        if getattr(app, "universal_build", True):
             # Install dependencies for the architecture that isn't the host architecture
             other_arch = {
                 "arm64": "x86_64",
@@ -315,23 +329,29 @@ is not available.
                 other_suffix=f"_{other_arch}",
             )
             if binary_packages:
-                with self.console.wait_bar(
-                    f"Installing binary app requirements for {other_arch}..."
+                with (
+                    self.tools.virtual_environment(
+                        env_manager=app.env_manager,
+                        venv_path=self.venv_path(
+                            app, f"{self.tools.host_os}-{other_arch}"
+                        ),
+                        isolated=True,
+                        recreate=True,
+                        min_os_version=macOS_min_tag,
+                        arch=other_arch,
+                    ) as venv,
+                    self.console.wait_bar(
+                        f"Installing binary app requirements for {other_arch}..."
+                    ),
                 ):
-                    self._pip_install(
-                        app,
-                        app_packages_path=other_app_packages_path,
-                        pip_args=[
-                            "--no-deps",
-                            "--platform",
-                            f"macosx_{macOS_min_tag}_{other_arch}",
-                            "--only-binary",
-                            ":all:",
-                        ]
-                        + [
+                    venv.install_requirements(
+                        [
                             f"{package}=={version}"
                             for package, version in binary_packages
                         ],
+                        allow_editable=False,
+                        require_binary=True,
+                        install_path=other_app_packages_path,
                         install_hint=f"""
 
 This may be because an {other_arch} wheel that is compatible with
@@ -369,21 +389,7 @@ in the macOS configuration section of your pyproject.toml.
                 sources=[host_app_packages_path, other_app_packages_path],
             )
         else:
-            # If we're not building a universal binary, we can do a single install pass
-            # directly into the app_packages folder.
-            super()._install_app_requirements(
-                app,
-                requires=requires,
-                app_packages_path=app_packages_path,
-                pip_args=[
-                    "--only-binary",
-                    ":all:",
-                    "--platform",
-                    f"macosx_{macOS_min_tag}_{self.tools.host_arch}",
-                ],
-            )
-
-            # Since we're only targeting 1 architecture, we can strip any universal
+            # Since we're not building a universal binary, we can strip any universal
             # libraries down to just the host architecture.
             self.thin_app_packages(app_packages_path, arch=self.tools.host_arch)
 

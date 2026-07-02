@@ -2,7 +2,6 @@ import os
 import shutil
 import subprocess as stdlib_subprocess
 import sys
-from pathlib import Path
 
 from briefcase.exceptions import BriefcaseCommandError
 from briefcase.integrations.subprocess import SubprocessArgsT
@@ -11,16 +10,6 @@ from briefcase.integrations.virtual_environment.base import VirtualEnvironment
 
 class VenvVirtualEnvironment(VirtualEnvironment):
     """An environment manager using the Python standard library module venv."""
-
-    @property
-    def bin_dir(self) -> Path:
-        """The venv's binary directory (`bin` on POSIX, `Scripts` on Windows)."""
-        return self.venv_path / ("Scripts" if os.name == "nt" else "bin")
-
-    @property
-    def executable(self) -> Path:
-        """Path to the Python executable inside the venv."""
-        return self.bin_dir / ("python.exe" if os.name == "nt" else "python")
 
     def exists(self) -> bool:
         """`True` iff the venv directory and its `pyvenv.cfg` are present."""

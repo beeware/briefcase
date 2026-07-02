@@ -105,6 +105,19 @@ The person or organization responsible for the project.
 
 The contact email address for the person or organization responsible for the project.
 
+#### `env_manager`
+
+**EXPERIMENTAL** This is an experimental feature. It is currently only used by developer mode.
+
+The environment manager to use when creating isolated Python environments and installing requirements; one of:
+
+* `venv` - The `venv` package provided by the Python standard library
+* `uv` - The [uv](https://docs.astral.sh/uv/) environment manager
+* `conda` - The [Conda](https://docs.conda.io/) environment manager
+* `pixi` - The [Pixi](https://pixi.prefix.dev/) environment manager
+
+Defaults to `venv`.
+
 #### `license_files`
 
 A [PEP 639](https://peps.python.org/pep-0639/) specification for the files in the project that define licenses that should be included with the packaged app. `license_files` must be a list of strings, each of which references a filename in the project (relative to the location of the `pyproject.toml`):

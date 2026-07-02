@@ -260,7 +260,6 @@ class WindowsCreateCommand(CreateCommand):
         app: FinalizedAppConfig,
         requires: list[str],
         app_packages_path: Path,
-        **kwargs,
     ):
         if template_min_version := self.target_windows_build(app):
             min_version = int(getattr(app, "min_os_version", template_min_version))
@@ -272,7 +271,9 @@ class WindowsCreateCommand(CreateCommand):
                 )
 
         return super()._install_app_requirements(
-            app, requires, app_packages_path, **kwargs
+            app,
+            requires=requires,
+            app_packages_path=app_packages_path,
         )
 
     def install_license(self, app: FinalizedAppConfig):
