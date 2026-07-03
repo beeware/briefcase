@@ -904,19 +904,27 @@ no extension).
         man_folder.mkdir(parents=True, exist_ok=True)
 
         with self.console.wait_bar("Installing man page..."):
-            manpage_source = self.bundle_path(app) / f"{app.app_name}.1"
-            if manpage_source.is_file():
-                with manpage_source.open(encoding="utf-8") as infile:
-                    outfile = gzip.GzipFile(
-                        man_folder / f"{app.app_name}.1.gz", mode="wb", mtime=0
+            man_page = getattr(app, "man_page", None)
+            if man_page:
+                manpage_source = self.base_path / man_page
+                if not manpage_source.is_file():
+                    raise BriefcaseCommandError(
+                        f"The man page source file '{man_page}' does not exist."
                     )
-                    outfile.write(infile.read().encode("utf-8"))
-                    outfile.close()
             else:
-                raise BriefcaseCommandError(
-                    "Template does not provide a manpage source file "
-                    f"`{app.app_name}.1`"
+                manpage_source = self.bundle_path(app) / f"{app.app_name}.1"
+                if not manpage_source.is_file():
+                    raise BriefcaseCommandError(
+                        "Template does not provide a manpage source file "
+                        f"`{app.app_name}.1`"
+                    )
+
+            with manpage_source.open(encoding="utf-8") as infile:
+                outfile = gzip.GzipFile(
+                    man_folder / f"{app.app_name}.1.gz", mode="wb", mtime=0
                 )
+                outfile.write(infile.read().encode("utf-8"))
+                outfile.close()
 
         self.console.verbose("Update file permissions...")
         with self.console.wait_bar("Updating file permissions..."):

@@ -2,6 +2,39 @@
 
 <!-- towncrier release notes start -->
 
+## 0.4.3 (2026-07-02)
+
+### Features
+
+* Linux system packages can now define a custom man page by setting `man_page` in `pyproject.toml`. ([#2545](https://github.com/beeware/briefcase/issues/2545))
+* macOS PKG installers can now include additional installer resources, configured with the `installer_resources` setting. ([#2561](https://github.com/beeware/briefcase/issues/2561))
+* MSI post-install and pre-uninstall scripts can now identify if they are running unattended. ([#2781](https://github.com/beeware/briefcase/issues/2781))
+* MSI installers now provide the user the ability to check disk space requirements prior to install. ([#2783](https://github.com/beeware/briefcase/issues/2783))
+* Windows MSIs with a post-install or pre-uninstall script will no longer display a console window when running in quiet mode. Script output will be captured by the installer log. ([#2789](https://github.com/beeware/briefcase/issues/2789))
+* The minimum supported Windows build number can now be specified using the `min_os_version` option. ([#2855](https://github.com/beeware/briefcase/issues/2855))
+* When a selection prompt provides a single option, it is now automatically selected as the default. ([#2856](https://github.com/beeware/briefcase/issues/2856))
+* MSI installers will now check that the app is not running or has open files before uninstalling. ([#2862](https://github.com/beeware/briefcase/issues/2862))
+* macOS PKG installers can now run a post-install script, configured with the `post_install_script` setting. ([#2865](https://github.com/beeware/briefcase/issues/2865))
+* macOS notarization state is now persisted automatically during briefcase package. If notarization is interrupted, rerunning the same package command will detect the interrupted notarization and resume it without requiring the `--resume` flag. ([#2883](https://github.com/beeware/briefcase/issues/2883))
+* The macOS notarization auto-resume workflow now allows for resuming notarization with only the distribution artefact - usually the contents of the `dist` directory. ([#2887](https://github.com/beeware/briefcase/issues/2887))
+* The macOS `package` command now accepts a `--no-wait` option that will submit an app for notarization without waiting for the notarization to complete. The submission can be finalized later by re-running `briefcase package`. ([#2888](https://github.com/beeware/briefcase/issues/2888))
+
+### Bugfixes
+
+* Briefcase now rejects project paths that contain commas or invisible left-to-right marks before project generation starts. ([#2580](https://github.com/beeware/briefcase/issues/2580))
+* Bundle identifiers with 2 parts are no longer rejected by the validation process. ([#2824](https://github.com/beeware/briefcase/issues/2824))
+* Briefcase now warns when an app's `description` is longer than 80 characters, as overly long descriptions can be truncated by some packaging formats (such as Windows MSI shortcut icons). ([#2864](https://github.com/beeware/briefcase/issues/2864))
+* Briefcase is now able to display application logs when running apps under macOS 26. If you are experiencing this problem, you will also need to either (a) upgrade `std-nslog` to 2.0.0+, or target your application at Python 3.14 (or newer). ([#2877](https://github.com/beeware/briefcase/issues/2877))
+* If a Linux Flatpak project specifies the use of a base image, Briefcase now verifies that base is installed and available. ([#2905](https://github.com/beeware/briefcase/issues/2905))
+
+### Documentation
+
+* The Windows code signing guide now describes how to generate a self-signed certificate for testing. ([#2899](https://github.com/beeware/briefcase/issues/2899))
+
+### Misc
+
+* [#2127](https://github.com/beeware/briefcase/issues/2127), [#2559](https://github.com/beeware/briefcase/issues/2559), [#2820](https://github.com/beeware/briefcase/issues/2820), [#2821](https://github.com/beeware/briefcase/issues/2821), [#2822](https://github.com/beeware/briefcase/issues/2822), [#2823](https://github.com/beeware/briefcase/issues/2823), [#2826](https://github.com/beeware/briefcase/issues/2826), [#2827](https://github.com/beeware/briefcase/issues/2827), [#2829](https://github.com/beeware/briefcase/issues/2829), [#2830](https://github.com/beeware/briefcase/issues/2830), [#2837](https://github.com/beeware/briefcase/issues/2837), [#2845](https://github.com/beeware/briefcase/issues/2845), [#2849](https://github.com/beeware/briefcase/issues/2849), [#2850](https://github.com/beeware/briefcase/issues/2850), [#2851](https://github.com/beeware/briefcase/issues/2851), [#2852](https://github.com/beeware/briefcase/issues/2852), [#2854](https://github.com/beeware/briefcase/issues/2854), [#2857](https://github.com/beeware/briefcase/issues/2857), [#2858](https://github.com/beeware/briefcase/issues/2858), [#2859](https://github.com/beeware/briefcase/issues/2859), [#2860](https://github.com/beeware/briefcase/issues/2860), [#2866](https://github.com/beeware/briefcase/issues/2866), [#2872](https://github.com/beeware/briefcase/issues/2872), [#2874](https://github.com/beeware/briefcase/issues/2874), [#2875](https://github.com/beeware/briefcase/issues/2875), [#2876](https://github.com/beeware/briefcase/issues/2876), [#2879](https://github.com/beeware/briefcase/issues/2879), [#2880](https://github.com/beeware/briefcase/issues/2880), [#2881](https://github.com/beeware/briefcase/issues/2881), [#2882](https://github.com/beeware/briefcase/issues/2882), [#2885](https://github.com/beeware/briefcase/issues/2885), [#2892](https://github.com/beeware/briefcase/issues/2892), [#2893](https://github.com/beeware/briefcase/issues/2893), [#2894](https://github.com/beeware/briefcase/issues/2894), [#2895](https://github.com/beeware/briefcase/issues/2895), [#2896](https://github.com/beeware/briefcase/issues/2896), [#2897](https://github.com/beeware/briefcase/issues/2897), [#2898](https://github.com/beeware/briefcase/issues/2898), [#2902](https://github.com/beeware/briefcase/issues/2902), [#2904](https://github.com/beeware/briefcase/issues/2904), [#2906](https://github.com/beeware/briefcase/issues/2906), [#2907](https://github.com/beeware/briefcase/issues/2907), [#2908](https://github.com/beeware/briefcase/issues/2908), [#2909](https://github.com/beeware/briefcase/issues/2909), [#2910](https://github.com/beeware/briefcase/issues/2910), [#2911](https://github.com/beeware/briefcase/issues/2911), [#2912](https://github.com/beeware/briefcase/issues/2912), [#2913](https://github.com/beeware/briefcase/issues/2913), [#2916](https://github.com/beeware/briefcase/issues/2916)
+
 ## 0.4.2 (2026-05-06)
 
 ### Features

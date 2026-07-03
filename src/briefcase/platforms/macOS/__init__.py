@@ -1003,6 +1003,14 @@ class macOSPackageMixin(macOSSigningMixin):
             help="The notarization submission ID to resume",
             required=False,
         )
+        parser.add_argument(
+            "--no-wait",
+            dest="wait",
+            action="store_const",
+            const=False,
+            default=True,
+            help="Don't wait for notarization; submit and check status once, then exit",
+        )
 
     def verify_tools(self):
         # Require the Xcode command line tools.
@@ -1019,9 +1027,12 @@ class macOSPackageMixin(macOSSigningMixin):
         # These are abstracted to enable testing without patching.
         self.dmgbuild = dmgbuild
 
-    def verify_app(self, app):
-        super().verify_app(app)
+    def verify_app_packaging_format(self, app):
+        """Set the default packaging format if not already set, and validate console app
+        format requirements.
 
+        :param app: The app being packaged.
+        """
         if app.console_app:
             if app.packaging_format is None:
                 app.packaging_format = "pkg"
@@ -1032,17 +1043,79 @@ class macOSPackageMixin(macOSSigningMixin):
         elif app.packaging_format is None:
             app.packaging_format = "dmg"
 
-    def clean_dist_folder(self, app, **options):
-        """Clean up any existing artefacts in the dist folder.
+    def verify_app(self, app):
+        super().verify_app(app)
+        self.verify_app_packaging_format(app)
+        self.verify_packaging_options(app)
 
-        If we are resuming a notarization session verify that the artefact exists, but
-        *do not* delete it.
+    def verify_packaging_options(self, app):
+        """Verify the macOS-specific packaging configuration.
+
+        Only PKG installers can run a post-install script or carry extra installer
+        resources, and there's no PKG equivalent of a pre-uninstall script. Warn about
+        any setting that won't be used, and check that configured paths exist.
+
+        :param app: The config object for the app
+        """
+        post_install = getattr(app, "post_install_script", None)
+        pre_uninstall = getattr(app, "pre_uninstall_script", None)
+        installer_resources = getattr(app, "installer_resources", None)
+
+        if app.packaging_format == "pkg":
+            if post_install and not (self.base_path / post_install).is_file():
+                raise BriefcaseCommandError(
+                    f"Couldn't find post-install script {post_install}."
+                )
+            if (
+                installer_resources
+                and not (self.base_path / installer_resources).is_dir()
+            ):
+                raise BriefcaseCommandError(
+                    "Couldn't find installer resources directory "
+                    f"{installer_resources}."
+                )
+            if pre_uninstall:
+                self.console.warning(
+                    "macOS PKG installers do not support pre-uninstall scripts; "
+                    f"the pre_uninstall_script setting ({pre_uninstall}) "
+                    "will be ignored."
+                )
+        else:
+            installer = app.packaging_format.upper()
+            if post_install:
+                self.console.warning(
+                    f"macOS {installer} installers do not support post-install "
+                    f"scripts; the post_install_script setting "
+                    f"({post_install}) will be ignored."
+                )
+            if pre_uninstall:
+                self.console.warning(
+                    f"macOS {installer} installers do not support pre-uninstall "
+                    f"scripts; the pre_uninstall_script setting "
+                    f"({pre_uninstall}) will be ignored."
+                )
+            if installer_resources:
+                self.console.warning(
+                    f"macOS {installer} installers do not support additional "
+                    f"resources; the installer_resources setting "
+                    f"({installer_resources}) will be ignored."
+                )
+
+    def can_resume(self, app, submission_id=None, **options):
+        """Determine if notarization can be resumed.
+
+        Checks for an explicit submission ID or a notarization request marker.
+        If either exists, verifies that the notarization artefact is present.
+        Raises `BriefcaseCommandError` if the marker/submission ID exists but
+        the artefact is missing.
 
         :param app: The app being packaged.
-        :param submission_id: The notarization submission being resumed.
-        :param options: Any additional arguments passed to the package command.
+        :param submission_id: The notarization submission ID to resume (if any).
+        :param options: Any additional arguments.
+        :returns: `True` if notarization can be resumed.
         """
-        if options.get("submission_id") or self.notarization_request_path(app).exists():
+        self.verify_app_packaging_format(app)
+        if bool(submission_id) or self.notarization_request_path(app).exists():
             if not self.notarization_path(app).exists():
                 raise BriefcaseCommandError(
                     "Notarization cannot be resumed, as the notarization artefact "
@@ -1050,14 +1123,8 @@ class macOSPackageMixin(macOSSigningMixin):
                     f"({self.notarization_path(app).relative_to(self.base_path)}) "
                     "does not exist."
                 )
-
-            # If the packaging format is zip, the distribution artefact is created
-            # *after* completion of notarization. If there's an existing distribution
-            # artefact, it must be from a previous notarization/stapling attempt.
-            if app.packaging_format == "zip":
-                super().clean_dist_folder(app, **options)
-        else:
-            super().clean_dist_folder(app, **options)
+            return True
+        return False
 
     def ditto_archive(
         self,
@@ -1097,6 +1164,7 @@ class macOSPackageMixin(macOSSigningMixin):
         app: FinalizedAppConfig,
         identity: SigningIdentity,
         installer_identity: SigningIdentity | None = None,
+        wait: bool = True,
     ):
         """Submit a file for notarization, and wait for that notarization to be
         completed.
@@ -1105,6 +1173,8 @@ class macOSPackageMixin(macOSSigningMixin):
         :param identity: The code signing used to notarize the app.
         :param installer_identity: The signing identity to use when signing the
             installer. Optional unless the packaging format is ``pkg``.
+        :param wait: If `True`, wait for notarization to complete. If `False`,
+            submit the app and return without finalizing.
         """
         # Determine the arguments that would be needed to reproduce this notarization
         if installer_identity:
@@ -1122,7 +1192,14 @@ class macOSPackageMixin(macOSSigningMixin):
             installer_identity=installer_identity,
         )
 
-        self.console.warning("""
+        if not wait:
+            self.console.info(
+                f"{app.formal_name} as been submitted to Apple for notarization. "
+                "You'll need to run briefcase package at some point in the future "
+                "to finalize the notarization."
+            )
+        else:
+            self.console.warning("""
 Briefcase will now wait for Apple to approve the notarization request.
 This can take some time - in some cases, hours.
 
@@ -1132,11 +1209,11 @@ resume it.
 
 """)
 
-        self.finalize_notarization(
-            app,
-            identity=notarization_identity,
-            submission_id=submission_id,
-        )
+            self.finalize_notarization(
+                app,
+                identity=notarization_identity,
+                submission_id=submission_id,
+            )
 
     def submit_notarization(self, app, identity: SigningIdentity) -> str:
         """Submit a file for notarization, returning the ID of the notarizatzion task.
@@ -1302,6 +1379,7 @@ password:
         app: FinalizedAppConfig,
         identity: SigningIdentity,
         submission_id: str,
+        wait: bool = True,
     ):
         """Finalize a notarization task.
 
@@ -1311,9 +1389,16 @@ password:
         :param app: The app to notarize.
         :param identity: The code signing identity to use.
         :param submission_id: The submission ID of the notarization task to finalize.
+        :param wait: If `True`, poll until notarization completes. If `False`,
+            check the status once and raise an error if it is not yet complete.
         """
         try:
-            with self.console.wait_bar("Waiting for notarization acceptance..."):
+            label = (
+                "Waiting for notarization acceptance..."
+                if wait
+                else "Checking notarization status..."
+            )
+            with self.console.wait_bar(label):
                 accepted = False
                 while not accepted:
                     try:
@@ -1355,8 +1440,15 @@ password:
                             # Error code 69 (nice) indicates the server can't give a log
                             # response for the provided submission ID. We've already
                             # validated that it's a valid submission ID, so that means
-                            # notarization isn't complete yet. Try again in 10 seconds.
-                            time.sleep(10)
+                            # notarization isn't complete yet.
+                            if not wait:
+                                raise BriefcaseCommandError(
+                                    "Apple has not completed notarising the app; "
+                                    "try again later"
+                                ) from e
+                            else:
+                                # Try again in 10 seconds.
+                                time.sleep(10)
                         else:
                             self.tools.subprocess.output_error(e)
                             raise BriefcaseCommandError(
@@ -1400,6 +1492,7 @@ password:
         sign_installer=True,
         installer_identity=None,
         submission_id=None,
+        wait=True,
         **kwargs,
     ):
         """Package an app bundle.
@@ -1419,6 +1512,8 @@ password:
         :param installer_identity: The signing identity to use when signing the
             installer. Ignored unless the packaging format is ``pkg``.
         :param submission_id: The submission ID of the notarization task to resume.
+        :param wait: Should briefcase wait for notarization to complete?
+            Default: ``True``.
         """
         # Confirm the project isn't currently on an iCloud synced drive.
         self.verify_not_on_icloud(app)
@@ -1495,6 +1590,7 @@ password:
                 app,
                 identity=notarization_identity,
                 submission_id=submission_id,
+                wait=wait,
             )
             return
 
@@ -1539,6 +1635,7 @@ password:
                 app,
                 notarize_app=notarize_app,
                 identity=identity,
+                wait=wait,
             )
 
         elif app.packaging_format == "pkg":
@@ -1558,6 +1655,7 @@ password:
                 notarize_app=notarize_app,
                 identity=identity,
                 installer_identity=installer_identity,
+                wait=wait,
             )
 
         else:  # Default packaging format is DMG
@@ -1565,6 +1663,7 @@ password:
                 app,
                 notarize_app=notarize_app,
                 identity=identity,
+                wait=wait,
             )
 
     def package_zip(
@@ -1572,6 +1671,7 @@ password:
         app: FinalizedAppConfig,
         notarize_app: bool,
         identity: SigningIdentity,
+        wait: bool = True,
     ):
         """Package an .app bundle in a zip file.
 
@@ -1585,7 +1685,7 @@ password:
                 f"Notarizing app using team ID {identity.team_id}...",
                 prefix=app.app_name,
             )
-            self.notarize(app, identity=identity)
+            self.notarize(app, identity=identity, wait=wait)
         else:
             self.finalize_package_zip(app)
 
@@ -1597,12 +1697,68 @@ password:
         ):
             self.ditto_archive(self.package_path(app), self.distribution_path(app))
 
+    def build_pkg_scripts(self, app: FinalizedAppConfig, installer_path: Path) -> Path:
+        """Assemble the scripts directory passed to `pkgbuild --scripts`.
+
+        pkgbuild runs the templated postinstall script after unpacking the app; that
+        script invokes a sibling `_postinstall` script if one is present. The configured
+        post-install script is copied in under that name, so it runs as its own process
+        with its own interpreter. The directory is rebuilt from scratch each time.
+
+        :param app: The config object for the app
+        :param installer_path: The path to the installer bundle
+        :returns: The scripts directory to pass to pkgbuild
+        """
+        scripts_path = installer_path / "final_scripts"
+
+        # Start from a clean copy of the templated scripts directory.
+        self.tools.shutil.rmtree(scripts_path, ignore_errors=True)
+        self.tools.shutil.copytree(installer_path / "scripts", scripts_path)
+
+        # Add the configured script as the `_postinstall` that the templated
+        # postinstall script invokes.
+        post_install = scripts_path / "_postinstall"
+        self.tools.shutil.copyfile(
+            self.base_path / app.post_install_script, post_install
+        )
+        self.tools.os.chmod(post_install, 0o755)
+
+        return scripts_path
+
+    def build_pkg_resources(
+        self, app: FinalizedAppConfig, installer_path: Path
+    ) -> Path:
+        """Assemble the resources directory passed to `productbuild --resources`.
+
+        Starts from the templated installer resources (welcome screen and license),
+        then overlays the user-provided `installer_resources` directory. The directory
+        is rebuilt from scratch each time, so resources from a previous build aren't
+        retained.
+
+        :param app: The config object for the app
+        :param installer_path: The path to the installer bundle
+        :returns: The resources directory to pass to productbuild
+        """
+        resources_path = installer_path / "final_resources"
+
+        # Start from a clean directory so resources from a previous build don't leak in.
+        self.tools.shutil.rmtree(resources_path, ignore_errors=True)
+        self.tools.shutil.copytree(installer_path / "resources", resources_path)
+        self.tools.shutil.copytree(
+            self.base_path / app.installer_resources,
+            resources_path,
+            dirs_exist_ok=True,
+        )
+
+        return resources_path
+
     def package_pkg(
         self,
         app: FinalizedAppConfig,
         notarize_app: bool,
         identity: SigningIdentity,
         installer_identity: SigningIdentity | None,
+        wait: bool = True,
     ):
         """Package the app as an installer."""
         dist_path: Path = self.distribution_path(app)
@@ -1657,18 +1813,32 @@ password:
                 components_plist,
             )
 
-        # Console apps are installed in /Library/Formal Name, and include the
-        # post-install scripts. Normal apps are installed in /Applications, and don't
-        # include the scripts.
+        # Console apps are installed in /Library/Formal Name; normal apps are
+        # installed in /Applications.
         if app.console_app:
-            install_args = [
-                "--install-location",
-                f"/Library/{app.formal_name}",
-                "--scripts",
-                installer_path / "scripts",
-            ]
+            install_args = ["--install-location", f"/Library/{app.formal_name}"]
         else:
             install_args = ["--install-location", "/Applications"]
+
+        # Console apps always have a post-install script (it symlinks the binary onto
+        # the PATH); any app can also configure its own. If a custom script is
+        # configured, assemble a dedicated scripts directory for it.
+        if post_install := getattr(app, "post_install_script", None):
+            with self.console.wait_bar("Installing post-install script..."):
+                scripts_path = self.build_pkg_scripts(app, installer_path)
+        else:
+            scripts_path = installer_path / "scripts"
+
+        if app.console_app or post_install:
+            install_args += ["--scripts", scripts_path]
+
+        # Assemble the installer resources. If the user has supplied additional
+        # resources, overlay them onto the templated resources in a clean directory.
+        if getattr(app, "installer_resources", None):
+            with self.console.wait_bar("Installing additional installer resources..."):
+                resources_path = self.build_pkg_resources(app, installer_path)
+        else:
+            resources_path = installer_path / "resources"
 
         with self.console.wait_bar("Building app package..."):
             installer_packages_path = installer_path / "packages"
@@ -1704,7 +1874,7 @@ password:
                     "--package-path",
                     installer_path / "packages",
                     "--resources",
-                    installer_path / "resources",
+                    resources_path,
                     *signing_options,
                     dist_path,
                 ],
@@ -1720,6 +1890,7 @@ password:
                 app,
                 identity=identity,
                 installer_identity=installer_identity,
+                wait=wait,
             )
 
     def package_dmg(
@@ -1727,6 +1898,7 @@ password:
         app: FinalizedAppConfig,
         notarize_app: bool,
         identity: SigningIdentity,
+        wait: bool = True,
     ):
         """Package an app as a DMG installer."""
         dist_path: Path = self.distribution_path(app)
@@ -1796,4 +1968,4 @@ password:
                 f"Notarizing DMG with team ID {identity.team_id}...",
                 prefix=app.app_name,
             )
-            self.notarize(app, identity=identity)
+            self.notarize(app, identity=identity, wait=wait)

@@ -19,6 +19,7 @@ from briefcase.commands import (
     UpdateCommand,
 )
 from briefcase.config import FinalizedAppConfig
+from briefcase.console import Console
 from briefcase.debuggers.base import AppPackagesPathMappings
 from briefcase.exceptions import (
     BriefcaseCommandError,
@@ -57,24 +58,23 @@ class iOSXcodePassiveMixin(iOSMixin):
     def distribution_path(self, app):
         # This path won't ever be *generated*, as distribution artefacts
         # can't be generated on iOS.
-        raise NoDistributionArtefact("""
-*************************************************************************
-** WARNING: No distributable artefact has been generated               **
-*************************************************************************
+        raise NoDistributionArtefact(
+            Console.format_warning_banner(
+                title="No distributable artefact has been generated",
+                message="""\
+                    Briefcase has not generated a standalone iOS artefact, as
+                    iOS apps must be published through Xcode.
 
-    Briefcase has not generated a standalone iOS artefact, as iOS apps
-    must be published through Xcode.
+                    To open Xcode for your iOS project, run:
 
-    To open Xcode for your iOS project, run:
+                        briefcase open iOS
 
-        briefcase open iOS
+                    and use Xcode's app distribution workflow described at:
 
-    and use Xcode's app distribution workflow described at:
-
-        https://briefcase.readthedocs.io/en/stable/reference/platforms/iOS/xcode.html#ios-deploy
-
-*************************************************************************
-""")
+                        https://briefcase.readthedocs.io/en/stable/reference/platforms/iOS/xcode.html#ios-deploy
+                """,
+            )
+        )
 
 
 class iOSXcodeMixin(iOSXcodePassiveMixin):
