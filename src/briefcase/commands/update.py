@@ -63,9 +63,13 @@ class UpdateCommand(CreateCommand):
         self.console.info("Updating application code...", prefix=app.app_name)
         self.install_app_code(app=app)
 
-        venv = self.app_environment(app=app)
+        venv = self.create_app_environment(
+            app=app,
+            recreate=update_requirements,
+        )
 
-        if update_support:
+        # If the environment provides python, `update_support` is a no-op
+        if update_support and not venv.provides_python:
             self.console.info("Updating application support...", prefix=app.app_name)
             self.cleanup_app_support_package(app=app)
             self.install_app_support_package(app=app)
@@ -77,6 +81,12 @@ class UpdateCommand(CreateCommand):
         if update_resources:
             self.console.info("Updating application resources...", prefix=app.app_name)
             self.install_app_resources(app=app)
+
+        if venv.provides_python:
+            self.console.info(
+                "Updating managed Python environment...", prefix=app.app_name
+            )
+            self.install_managed_python_env(app=app, venv=venv)
 
         if update_stub:
             try:

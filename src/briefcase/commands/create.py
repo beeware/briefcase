@@ -291,6 +291,7 @@ class CreateCommand(BaseCommand):
         self,
         app: FinalizedAppConfig,
         host_arch: str | None = None,
+        recreate: bool = True,
     ) -> VirtualEnvironment:
         """Create an isolated virtual environment in which the app can be built."""
         if host_arch is None:
@@ -303,7 +304,7 @@ class CreateCommand(BaseCommand):
             platform=self.platform,
             arch=host_arch,
         )
-        venv.prepare(recreate=True)
+        venv.prepare(recreate=recreate)
         return venv
 
     def _unpack_support_package(self, support_file_path, support_path):
