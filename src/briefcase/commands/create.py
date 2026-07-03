@@ -287,11 +287,11 @@ class CreateCommand(BaseCommand):
             extra_context=extra_context,
         )
 
-    def app_environment(
+    def create_app_environment(
         self,
         app: FinalizedAppConfig,
         host_arch: str | None = None,
-    ) -> dict[str, VirtualEnvironment]:
+    ) -> VirtualEnvironment:
         """Create an isolated virtual environment in which the app can be built."""
         if host_arch is None:
             host_arch = self.tools.host_arch
@@ -941,7 +941,7 @@ class CreateCommand(BaseCommand):
             )
         else:
             self.console.info("Creating app environment...", prefix=app.app_name)
-            venv = self.app_environment(app=app)
+            venv = self.create_app_environment(app=app)
 
             if not venv.provides_python:
                 self.console.info("Installing support package...", prefix=app.app_name)

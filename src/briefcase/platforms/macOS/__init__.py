@@ -359,7 +359,7 @@ is not available.
                 self.console.info(
                     f"Creating {other_arch} app environment...", prefix=app.app_name
                 )
-                other_venv = self.app_environment(app, host_arch=other_arch)
+                other_venv = self.create_app_environment(app, host_arch=other_arch)
                 with self.console.wait_bar(
                     f"Installing binary app requirements for {other_arch}..."
                 ):
