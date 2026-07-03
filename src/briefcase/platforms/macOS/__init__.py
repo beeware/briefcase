@@ -240,6 +240,14 @@ class macOSCreateMixin(AppPackagesMergeMixin):
         **kwargs,
     ):
         if venv.provides_python:
+            if getattr(app, "universal_build", True):
+                raise BriefcaseCommandError(
+                    "Briefcase doesn't support creating universal apps "
+                    "when the environment is providing Python"
+                )
+
+            # Read the minimum supported macOS version from the environment's
+            # Python package metadata.
             python_record = next((venv.venv_path / "conda-meta").glob("python-*.json"))
             depends = json.loads(python_record.read_text())["depends"]
             support_min_version = next(
