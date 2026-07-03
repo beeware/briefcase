@@ -148,6 +148,18 @@ Install a 64bit version of Python and run Briefcase again.
 
 
 class WindowsCreateCommand(CreateCommand):
+    def stub_binary_filename(
+        self,
+        support_revision: str,
+        app: FinalizedAppConfig,
+    ) -> str:
+        """The filename for the stub binary."""
+        stub_type = "Console" if app.console_app else "GUI"
+        return (
+            f"{stub_type}-Stub-{self.python_version_tag}-{self.tools.host_arch.lower()}"
+            f"-b{support_revision}.zip"
+        )
+
     def support_package_filename(self, support_revision):
         arch = self.tools.host_arch.lower()
         return f"python-{self.python_version_tag}.{support_revision}-embed-{arch}.zip"

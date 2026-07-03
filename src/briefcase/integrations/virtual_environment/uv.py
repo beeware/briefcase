@@ -147,17 +147,21 @@ class UvVirtualEnvironment(VirtualEnvironment):
             that can be displayed to the user.
         """
         uv_deps = []
+        has_source_deps = False
         for req in requires:
             # Any requirement that is a local path, but *not* a reference to an archive
             # file (zip, tgz, etc) or wheel can be installed editable. If in doubt,
             # install non-editable.
             if (
-                allow_editable
-                and self.tools.file.is_local_path(req)
+                self.tools.file.is_local_path(req)
                 and not self.tools.file.is_archive(req)
                 and Path(req).suffix != ".whl"
             ):
-                uv_deps.extend(["--no-binary", req, "-e", req])
+                has_source_deps = True
+                if allow_editable:
+                    uv_deps.extend(["-e", req])
+                else:
+                    uv_deps.append(req)
             else:
                 uv_deps.append(req)
 
@@ -172,7 +176,10 @@ class UvVirtualEnvironment(VirtualEnvironment):
                     if min_os_version and self.platform == "darwin":
                         env = {"MACOSX_DEPLOYMENT_TARGET": min_os_version}
 
-            if require_binary:
+            if require_binary and not has_source_deps:
+                # uv can't install a local directory if `--only-binary` is specified.
+                # --only-binary is *required* for normal pip when --platform is used;
+                # but it's not required for uv when using `--python-platform`.
                 install_args.extend(["--only-binary", ":all:"])
 
             if not include_deps:

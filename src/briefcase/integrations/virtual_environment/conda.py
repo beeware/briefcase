@@ -19,9 +19,7 @@ class CondaVirtualEnvironment(VirtualEnvironment):
     (prepending the environment's binary directory to ``PATH``).
     """
 
-    @property
-    def provides_python(self) -> bool:
-        return False
+    provides_python: bool = True
 
     @property
     def python_version(self) -> str:
@@ -71,12 +69,15 @@ class CondaVirtualEnvironment(VirtualEnvironment):
                 )
                 if self.platform:
                     match self.platform, self.arch:
-                        case "darwin", "arm64":
+                        case "macOS", "arm64":
                             conda_subdir = "osx-arm64"
-                        case "darwin", "x86_64":
+                        case "macOS", "x86_64":
                             conda_subdir = "osx-64"
                         case _, _:
-                            raise BriefcaseCommandError("Unsupported platform")
+                            raise BriefcaseCommandError(
+                                "Briefcase cannot create a Conda environment "
+                                f"for {self.platform} {self.arch}"
+                            )
 
                     self.tools.subprocess.run(
                         [

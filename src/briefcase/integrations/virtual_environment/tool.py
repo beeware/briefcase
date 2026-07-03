@@ -1,5 +1,3 @@
-from pathlib import Path
-
 from briefcase.config import EnvManagerT
 from briefcase.integrations.base import Tool, ToolCache
 from briefcase.integrations.virtual_environment.base import VirtualEnvironment
@@ -24,15 +22,10 @@ class VirtualEnvironmentManager(Tool):
         tools.virtual_environment = VirtualEnvironmentManager(tools=tools)
         return tools.virtual_environment
 
-    def __call__(
+    def __getitem__(
         self,
-        venv_path: Path,
-        *,
-        isolated: bool = True,
-        platform: str | None = None,
-        arch: str | None = None,
-        env_manager: EnvManagerT = "venv",
-    ) -> VirtualEnvironment:
+        env_manager: EnvManagerT | None = "venv",
+    ) -> type[VirtualEnvironment]:
         """Construct and return a `VirtualEnvironment` for the requested mode.
 
         The constructor of the returned object performs the lifecycle work
@@ -52,19 +45,10 @@ class VirtualEnvironmentManager(Tool):
         :raises BriefcaseCommandError: if the environment cannot be created or
             initialised.
         """
-        if not isolated:
-            env_manager = None
-
-        venv: VirtualEnvironment = {
+        return {
             None: NoOpVirtualEnvironment,
             "uv": UvVirtualEnvironment,
+            "venv": VenvVirtualEnvironment,
             "conda": CondaVirtualEnvironment,
             "pixi": PixiVirtualEnvironment,
-        }.get(env_manager, VenvVirtualEnvironment)(
-            self.tools,
-            venv_path,
-            platform=platform,
-            arch=arch,
-        )
-
-        return venv
+        }[env_manager]

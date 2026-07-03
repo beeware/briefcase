@@ -156,7 +156,7 @@ class BaseCommand(ABC):
     def __init__(
         self,
         console: Console,
-        tools: ToolCache = None,
+        tools: ToolCache | None = None,
         apps: dict[str, AppConfig] | None = None,
         base_path: Path | None = None,
         data_path: Path | None = None,
@@ -725,15 +725,6 @@ Move the project to a path that does not container this character.
         """
         return
 
-    def verify_env_manager(self, app: AppConfig):
-        """Verify that the requested environment manager can be used."""
-        if app.env_manager not in self.supported_env_managers:
-            raise BriefcaseConfigError(
-                f"{app.app_name!r} declares the use of a {app.env_manager!r} "
-                f"environment, but {self.platform} {self.output_format} "
-                f"projects do not support environments of that type."
-            )
-
     def finalize_app_config(self, app: DraftAppConfig, **kwargs) -> FinalizedAppConfig:
         """Finalize the application config.
 
@@ -746,14 +737,21 @@ Move the project to a path that does not container this character.
         configuration, and performs any other app-specific platform configuration and
         verification that is required as a result of command-line arguments.
 
-        Platform overrides should call ``super().finalize_app_config(app, **kwargs)``
-        to construct the ``FinalizedAppConfig``.
+        Platform overrides should call `super().finalize_app_config(app, **kwargs)`
+        to construct the `FinalizedAppConfig`.
 
         :param app: The app configuration to finalize.
         :param kwargs: Runtime attributes forwarded to the FinalizedAppConfig
-            constructor (``test_mode``, ``debugger``, etc.).
+            constructor (`test_mode`, `debugger`, etc.).
         :returns: The finalized app configuration.
         """
+        if app.env_manager not in self.supported_env_managers:
+            raise BriefcaseConfigError(
+                f"{app.app_name!r} declares the use of a {app.env_manager!r} "
+                f"environment, but {self.platform} {self.output_format} "
+                f"projects do not support environments of that type."
+            )
+
         return FinalizedAppConfig(app, **kwargs)
 
     def resolve_apps(
@@ -809,8 +807,6 @@ Move the project to a path that does not container this character.
         finalized: dict[str, FinalizedAppConfig] = {}
         for app in apps:
             if not isinstance(app, FinalizedAppConfig):
-                self.verify_env_manager(app)
-
                 app = self.finalize_app_config(
                     app,
                     test_mode=test_mode,

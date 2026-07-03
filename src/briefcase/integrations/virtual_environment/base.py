@@ -11,6 +11,8 @@ from briefcase.integrations.subprocess import SubprocessArgsT
 class VirtualEnvironment(ABC):
     """A managed Python environment."""
 
+    provides_python: bool = False
+
     def __init__(
         self,
         tools: ToolCache,
@@ -32,10 +34,6 @@ class VirtualEnvironment(ABC):
         self.venv_path = venv_path
         self.platform = platform
         self.arch = arch
-
-    @property
-    def provides_python(self) -> bool:
-        return False
 
     @property
     def bin_dir(self) -> Path:

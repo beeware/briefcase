@@ -19,9 +19,7 @@ class PixiVirtualEnvironment(VirtualEnvironment):
     directory and Python executable are resolved relative to that location.
     """
 
-    @property
-    def provides_python(self) -> bool:
-        return False
+    provides_python: bool = True
 
     @property
     def python_version(self) -> str:

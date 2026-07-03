@@ -120,26 +120,22 @@ class CreateCommand(BaseCommand):
             f"{self.support_package_filename(support_revision)}"
         )
 
-    def stub_binary_filename(self, support_revision: str, is_console_app: bool) -> str:
+    def stub_binary_filename(
+        self,
+        support_revision: str,
+        app: FinalizedAppConfig,
+    ) -> str:
         """The filename for the stub binary."""
-        stub_type = "Console" if is_console_app else "GUI"
-        win_suffix = (
-            f"-{self.tools.host_arch.lower()}"
-            if self.tools.host_os == "Windows"
-            else ""
-        )
-        return (
-            f"{stub_type}-Stub-{self.python_version_tag}{win_suffix}"
-            f"-b{support_revision}.zip"
-        )
+        stub_type = "Console" if app.console_app else "GUI"
+        return f"{stub_type}-Stub-{self.python_version_tag}-b{support_revision}.zip"
 
-    def stub_binary_url(self, support_revision: str, is_console_app: bool) -> str:
+    def stub_binary_url(self, support_revision: str, app: FinalizedAppConfig) -> str:
         """The URL of the stub binary to use for apps of this type."""
         return (
             "https://briefcase-support.s3.amazonaws.com/python/"
             f"{self.python_version_tag}/"
             f"{self.platform}/"
-            f"{self.stub_binary_filename(support_revision, is_console_app)}"
+            f"{self.stub_binary_filename(support_revision, app)}"
         )
 
     def icon_targets(self, app: FinalizedAppConfig):
@@ -296,15 +292,14 @@ class CreateCommand(BaseCommand):
         app: FinalizedAppConfig,
         host_arch: str | None = None,
     ) -> dict[str, VirtualEnvironment]:
-        """Create an isolated virtual environment for the."""
+        """Create an isolated virtual environment in which the app can be built."""
         if host_arch is None:
             host_arch = self.tools.host_arch
 
-        env_name = f"{app.env_manager}-{self.tools.host_os}-{self.tools.host_arch}"
-        venv = self.tools.virtual_environment(
-            env_manager=app.env_manager,
+        env_name = f"{app.env_manager}-{self.platform}-{self.tools.host_arch}"
+        venv = self.tools.virtual_environment[app.env_manager](
+            tools=self.tools,
             venv_path=self.base_path / ".briefcase/" / app.app_name / env_name,
-            isolated=True,
             platform=self.platform,
             arch=host_arch,
         )
@@ -510,9 +505,7 @@ class CreateCommand(BaseCommand):
                 except AttributeError:
                     stub_binary_revision = self.stub_binary_revision(app)
 
-                stub_binary_url = self.stub_binary_url(
-                    stub_binary_revision, app.console_app
-                )
+                stub_binary_url = self.stub_binary_url(stub_binary_revision, app=app)
                 custom_stub_binary = False
                 self.console.info(f"Using stub binary {stub_binary_url}")
 
@@ -947,6 +940,7 @@ class CreateCommand(BaseCommand):
                 prefix=app.app_name,
             )
         else:
+            self.console.info("Creating app environment...", prefix=app.app_name)
             venv = self.app_environment(app=app)
 
             if not venv.provides_python:
@@ -983,7 +977,7 @@ class CreateCommand(BaseCommand):
                 self.console.info(
                     "Installing managed Python environment...", prefix=app.app_name
                 )
-                self.install_managed_python_env(app=app)
+                self.install_managed_python_env(app=app, venv=venv)
 
             self.console.info("Removing unneeded app content...", prefix=app.app_name)
             self.cleanup_app_content(app=app)

@@ -206,6 +206,31 @@ class macOSCreateMixin(AppPackagesMergeMixin):
         # picked up on the next run of any Briefcase command).
         self.verify_not_on_icloud(app, cleanup=True)
 
+    def output_format_template_context(self, app: FinalizedAppConfig):
+        """Additional template context required by the output format.
+
+        :param app: The config object for the app
+        """
+        # If the environment manager provides Python, it will be in `libPython3.X`
+        # format, rather than Python.XCframework format.
+        venv_class = self.tools.virtual_environment[app.env_manager]
+        return {
+            "use_framework": not venv_class.provides_python,
+        }
+
+    def stub_binary_filename(
+        self,
+        support_revision: str,
+        app: FinalizedAppConfig,
+    ) -> str:
+        """The filename for the stub binary."""
+        stub_type = "Console" if app.console_app else "GUI"
+        venv_class = self.tools.virtual_environment[app.env_manager]
+        if self.tools.host_os == "Darwin" and venv_class.provides_python:
+            stub_type = f"L{stub_type}"
+
+        return f"{stub_type}-Stub-{self.python_version_tag}-b{support_revision}.zip"
+
     def _install_app_requirements(
         self,
         app: FinalizedAppConfig,
@@ -331,6 +356,9 @@ is not available.
                 other_suffix=f"_{other_arch}",
             )
             if binary_packages:
+                self.console.info(
+                    f"Creating {other_arch} app environment...", prefix=app.app_name
+                )
                 other_venv = self.app_environment(app, host_arch=other_arch)
                 with self.console.wait_bar(
                     f"Installing binary app requirements for {other_arch}..."
