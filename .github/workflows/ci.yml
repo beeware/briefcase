@@ -227,7 +227,7 @@ jobs:
   verify-projects:
     name: Verify project
     needs: [ package, unit-tests ]
-    uses: beeware/.github/.github/workflows/app-create-verify.yml@main
+    uses: rmartin16/.github-beeware/.github/workflows/app-create-verify.yml@build-app-debian-trixie
     with:
       runner-os: ${{ matrix.runner-os }}
       framework: ${{ matrix.framework }}
@@ -240,7 +240,7 @@ jobs:
   verify-apps:
     name: Build app
     needs: [ package, unit-tests ]
-    uses: beeware/.github/.github/workflows/app-build-verify.yml@main
+    uses: rmartin16/.github-beeware/.github/workflows/app-build-verify.yml@build-app-debian-trixie
     with:
       # Builds on Linux must use System Python; otherwise, fall back to version all GUI toolkits support
       python-version: ${{ startsWith(matrix.runner-os, 'ubuntu') && 'system' || '3.12' }}
