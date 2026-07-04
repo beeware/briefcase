@@ -80,14 +80,14 @@ requires = [
 system_requires = [
     # Needed to compile pycairo wheel
     "libcairo2-dev",
-    # Following enforcement of pygobject>=3.55.1, only libgirepository 2.0 is supported now
+    # Following enforcement of pygobject>=3.55.1, only libgirepository 2.0 is supported
     "libgirepository-2.0-dev",
 ]
 
 system_runtime_requires = [
     # Needed to provide GTK and its GI bindings
     "gir1.2-gtk-3.0",
-    # Following enforcement of pygobject>=3.55.1, only libgirepository 2.0 is supported now
+    # Following enforcement of pygobject>=3.55.1, only libgirepository 2.0 is supported
     "libgirepository-2.0-0",
     # Dependencies that GTK looks for at runtime
     "libcanberra-gtk3-module",
