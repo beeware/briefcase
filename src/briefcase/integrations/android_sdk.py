@@ -227,8 +227,19 @@ class AndroidSDK(ManagedTool):
         return "pixel_7_pro"
 
     @property
+    def DEFAULT_API_LEVEL(self) -> str:
+        return "android-31"
+
+    @property
+    def DEFAULT_TAG(self) -> str:
+        return "default"
+
+    @property
     def DEFAULT_SYSTEM_IMAGE(self) -> str:
-        return f"system-images;android-31;default;{self.emulator_abi}"
+        return (
+            f"system-images;{self.DEFAULT_API_LEVEL}"
+            f";{self.DEFAULT_TAG};{self.emulator_abi}"
+        )
 
     @classmethod
     def sdk_path_from_env(cls, tools: ToolCache) -> tuple[str | None, str | None]:
@@ -1223,7 +1234,7 @@ architecture. Check your network connection and re-run `briefcase run android`.
             intro="Select the API level for the emulator:",
             description="API level",
             options=api_levels,
-            default="android-31",
+            default=self.DEFAULT_API_LEVEL,
         )
 
         # Ask the user to select a tag for the chosen API level.
@@ -1235,7 +1246,7 @@ architecture. Check your network connection and re-run `briefcase run android`.
             intro="Select the system image tag:",
             description="Tag",
             options=tags,
-            default=tags[0],
+            default=self.DEFAULT_TAG,
         )
 
         system_image = f"system-images;{api_level};{tag};{self.emulator_abi}"
