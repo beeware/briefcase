@@ -72,22 +72,18 @@ requires = [
         "pyproject_table_linux": """\
 requires = [
     "toga-gtk~=0.5.0",
-    # Toga now enforces minimum version 3.55.1 (see beeware/briefcase#2919)
-    "pygobject >= 3.55.1",
 ]
 """,
         "pyproject_table_linux_system_debian": """\
 system_requires = [
     # Needed to compile pycairo wheel
     "libcairo2-dev",
-    # Following enforcement of pygobject>=3.55.1, only libgirepository 2.0 is supported
     "libgirepository-2.0-dev",
 ]
 
 system_runtime_requires = [
     # Needed to provide GTK and its GI bindings
     "gir1.2-gtk-3.0",
-    # Following enforcement of pygobject>=3.55.1, only libgirepository 2.0 is supported
     "libgirepository-2.0-0",
     # Dependencies that GTK looks for at runtime
     "libcanberra-gtk3-module",
