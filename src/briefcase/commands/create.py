@@ -618,13 +618,14 @@ class CreateCommand(BaseCommand):
     def _install_app_requirements(
         self,
         app: FinalizedAppConfig,
+        venv: VirtualEnvironment,
         requires: list[str],
-        venv,
         app_packages_path: Path,
     ):
         """Install requirements for the app.
 
         :param app: The app configuration
+        :param venv: The virtual environment where requirements should be installed
         :param requires: The list of requirements to install
         :param app_packages_path: The full path of the app_packages folder into which
             requirements should be installed.
@@ -641,7 +642,9 @@ class CreateCommand(BaseCommand):
             )
 
     def install_app_requirements(
-        self, app: FinalizedAppConfig, venv: VirtualEnvironment
+        self,
+        app: FinalizedAppConfig,
+        venv: VirtualEnvironment,
     ):
         """Handle requirements for the app.
 
@@ -708,7 +711,7 @@ class CreateCommand(BaseCommand):
         app_path = self.app_path(app)
         if app_path.exists():
             self.tools.shutil.rmtree(app_path)
-        self.tools.os.mkdir(app_path)
+        app_path.mkdir(parents=True)
 
         sources = app.all_sources()
 

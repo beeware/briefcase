@@ -111,14 +111,17 @@ class UvVirtualEnvironment(VirtualEnvironment):
         if platform is None:
             platform = {
                 "Darwin": "macOS",
+                "Windows": "windows",
             }.get(self.tools.host_os)
 
-        if platform == "macOS":
-            arch = self.arch or self.tools.platform.machine()
-            if arch == "arm64":
-                arch = "aarch64"
+        arch = self.arch or self.tools.platform.machine()
+        if arch.lower() == "arm64":
+            arch = "aarch64"
 
+        if platform == "macOS":
             return f"{arch}-apple-darwin"
+        elif platform == "windows":
+            return f"{arch}-pc-windows-msvc"
         else:
             raise NotImplementedError()
 

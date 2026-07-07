@@ -1,4 +1,3 @@
-import os
 import subprocess
 from abc import ABC, abstractmethod
 from pathlib import Path
@@ -38,12 +37,16 @@ class VirtualEnvironment(ABC):
     @property
     def bin_dir(self) -> Path:
         """The venv's binary directory (`bin` on POSIX, `Scripts` on Windows)."""
-        return self.venv_path / ("Scripts" if os.name == "nt" else "bin")
+        return self.venv_path / (
+            "Scripts" if self.tools.host_os == "Windows" else "bin"
+        )
 
     @property
     def executable(self) -> Path:
         """Path to the Python executable inside the venv."""
-        return self.bin_dir / ("python.exe" if os.name == "nt" else "python")
+        return self.bin_dir / (
+            "python.exe" if self.tools.host_os == "Windows" else "python"
+        )
 
     @abstractmethod
     def exists(self) -> bool:
@@ -74,12 +77,15 @@ class VirtualEnvironment(ABC):
         if platform is None:
             platform = {
                 "Darwin": "macOS",
+                "Windows": "windows",
             }[self.tools.host_os]
 
+        arch = self.arch or self.tools.platform.machine()
         if platform == "macOS":
-            arch = self.arch or self.tools.platform.machine()
             min_os_tag = (min_os_version or "11.0").replace(".", "_")
             return f"macosx_{min_os_tag}_{arch}"
+        elif platform == "windows":
+            return f"win_{arch.lower()}"
         else:
             raise NotImplementedError()
 
