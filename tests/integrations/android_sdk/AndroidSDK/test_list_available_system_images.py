@@ -24,7 +24,7 @@ def test_list_available_system_images(mock_tools, android_sdk):
         "  -------                                     | ------- | -------\n"
         "  system-images;android-34;default;x86_64     | 7       | Intel x86_64 Atom System Image\n"
         "  system-images;android-31;default;x86_64     | 5       | Intel x86_64 Atom System Image\n"
-        "  system-images;android-25;default;x86_64     | 3       | Intel x86_64 Atom System Image\n"
+        "  system-images;android-23;default;x86_64     | 3       | Intel x86_64 Atom System Image\n"
         "  emulator                                    | 35.4.9  | Android Emulator\n"
     )
 
@@ -32,7 +32,7 @@ def test_list_available_system_images(mock_tools, android_sdk):
         min_api_level=ANDROID_MIN_OS_VERSION
     )
 
-    # android-25 is filtered out (below minimum version)
+    # android-23 is filtered out (below minimum API level 24)
     assert result == [
         "system-images;android-31;default;x86_64",
         "system-images;android-34;default;x86_64",
@@ -92,8 +92,8 @@ def test_list_available_system_images_dotted_version_below_minimum(
         "Available Packages:\n"
         "  Path                                         | Version | Description\n"
         "  -------                                      | ------- | -------\n"
-        "  system-images;android-25.1;default;x86_64    | 1       | Intel x86_64 Atom System Image\n"
-        "  system-images;android-25.1;default;arm64-v8a | 1       | arm64 System Image\n"
+        "  system-images;android-23.1;default;x86_64    | 1       | Intel x86_64 Atom System Image\n"
+        "  system-images;android-23.1;default;arm64-v8a | 1       | arm64 System Image\n"
         "  system-images;android-31;default;x86_64      | 5       | Intel x86_64 Atom System Image\n"
         "  system-images;android-31;default;arm64-v8a   | 5       | arm64 System Image\n"
         "  emulator                                     | 35.4.9  | Android Emulator\n"
@@ -103,7 +103,7 @@ def test_list_available_system_images_dotted_version_below_minimum(
         min_api_level=ANDROID_MIN_OS_VERSION
     )
 
-    # android-25.1 is filtered out (below minimum version 26)
+    # android-23.1 is filtered out (below minimum API level 24)
     assert result == [
         "system-images;android-31;default;x86_64",
     ]
