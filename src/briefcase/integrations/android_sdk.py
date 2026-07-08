@@ -1246,7 +1246,7 @@ architecture. Check your network connection and re-run `briefcase run android`.
             intro="Select the system image tag:",
             description="Tag",
             options=tags,
-            default=self.DEFAULT_TAG,
+            default=self.DEFAULT_TAG if self.DEFAULT_TAG in tags else tags[0],
         )
 
         system_image = f"system-images;{api_level};{tag};{self.emulator_abi}"
