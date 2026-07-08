@@ -209,3 +209,26 @@ def test_no_available_system_images(mock_tools, android_sdk, tmp_path):
     # No system image detected
     with pytest.raises(BriefcaseCommandError):
         android_sdk.create_emulator(app)
+
+
+def test_create_emulator_with_min_os_version(mock_tools, android_sdk, tmp_path):
+    """create_emulator passes app's min_os_version to list_available_system_images."""
+    mock_tools.console.values = [
+        "new-emulator",  # emulator name
+        "2",  # API level selection (android-34)
+        "1",  # tag selection (default)
+    ]
+    # Mock the initial output of an AVD config file.
+    avd_config_path = tmp_path / "home/.android/avd/new-emulator.avd/config.ini"
+    avd_config_path.parent.mkdir(parents=True)
+    with avd_config_path.open("w", encoding="utf-8") as f:
+        f.write("hw.device.name=pixel\n")
+    # Mock the internal emulator creation method
+    android_sdk._create_emulator = MagicMock()
+    # Create a mock app with min_os_version explicitly set
+    app = MagicMock()
+    app.min_os_version = 28
+    # Create the emulator
+    android_sdk.create_emulator(app)
+    # Verify list_available_system_images was called with the app's min_os_version
+    android_sdk.list_available_system_images.assert_called_once_with(min_api_level=28)
