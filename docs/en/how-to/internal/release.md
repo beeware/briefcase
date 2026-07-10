@@ -41,7 +41,6 @@ The procedure for cutting a new release is as follows:
 
 4. Ensure that there is a version branch for the new Briefcase version in every template that Briefcase will use at runtime:
 
-
     - `briefcase-template`
     - `briefcase-macOS-app-template`
     - `briefcase-macOS-Xcode-template`

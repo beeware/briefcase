@@ -50,10 +50,10 @@ Briefcase is part of the [BeeWare suite](https://beeware.org). You can talk to t
 - [Discord](https://beeware.org/bee/chat/)
 - The Briefcase [GitHub Discussions forum](https://github.com/beeware/briefcase/discussions)
 
-We foster a welcoming and respectful community as described in our [BeeWare Community Code of Conduct](https://beeware.org/community/behavior/).
+We foster a welcoming and respectful community as described in our [BeeWare Community Code of Conduct](https://beeware.org/community/code-of-conduct/).
 
 ## Contributing
 
-If you experience problems with Briefcase, [log them on GitHub](https://github.com/beeware/briefcase/issues).
+If you experience problems with Briefcase, [log them on GitHub](https://briefcase.beeware.org/en/latest/how-to/contribute/how/new-issue/).
 
 If you'd like to contribute to Briefcase development, our [contribution guide](https://briefcase.beeware.org/en/latest/how-to/contribute) details how to set up a development environment, and other requirements we have as part of our contribution process.

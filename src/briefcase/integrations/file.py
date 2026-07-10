@@ -23,6 +23,48 @@ from briefcase.exceptions import (
 from briefcase.integrations.base import Tool, ToolCache
 
 
+def _has_url(requirement):
+    """Determine if the requirement is defined as a URL.
+
+    Detects any of the URL schemes supported by pip
+    (https://pip.pypa.io/en/stable/topics/vcs-support/).
+
+    :param requirement: The requirement to check
+    :returns: True if the requirement is a URL supported by pip.
+    """
+    return any(
+        f"{scheme}:" in requirement
+        for scheme in (
+            "http",
+            "https",
+            "file",
+            "ftp",
+            "git+file",
+            "git+https",
+            "git+ssh",
+            "git+http",
+            "git+git",
+            "git",
+            "hg+file",
+            "hg+http",
+            "hg+https",
+            "hg+ssh",
+            "hg+static-http",
+            "svn",
+            "svn+svn",
+            "svn+http",
+            "svn+https",
+            "svn+ssh",
+            "bzr+http",
+            "bzr+https",
+            "bzr+ssh",
+            "bzr+sftp",
+            "bzr+ftp",
+            "bzr+lp",
+        )
+    )
+
+
 class File(Tool):
     name = "file"
     full_name = "File"
@@ -105,6 +147,19 @@ class File(Tool):
             self._ssl_context = truststore.SSLContext(ssl.PROTOCOL_TLS_CLIENT)
 
             return self._ssl_context
+
+    def is_local_path(self, reference: str | os.PathLike) -> bool:
+        """Determine if the reference is a local file path.
+
+        :param reference: The reference to check
+        :returns: True if the reference is a local file path
+        """
+        # Windows allows both / and \ as a path separator in references.
+        separators = [os.sep]
+        if os.altsep:
+            separators.append(os.altsep)
+
+        return any(sep in reference for sep in separators) and (not _has_url(reference))
 
     def is_archive(self, filename: str | os.PathLike) -> bool:
         """Can a file be unpacked via `shutil.unpack_archive()`?

@@ -14,7 +14,7 @@ from collections.abc import Callable, Iterator, Mapping, Sequence
 from functools import wraps
 from pathlib import Path
 from subprocess import CompletedProcess
-from typing import TypeVar
+from typing import Any, TypeVar
 
 import psutil
 
@@ -299,7 +299,7 @@ class Subprocess(Tool):
         # This is a no-op; the native subprocess environment is ready-to-use.
 
     @contextlib.contextmanager
-    def run_app_context(self, subprocess_kwargs: dict[str, ...]) -> dict[str, ...]:
+    def run_app_context(self, subprocess_kwargs: dict[str, Any]) -> dict[str, Any]:
         """A manager to wrap subprocess calls to run a Briefcase project app.
 
         :param subprocess_kwargs: initialized keyword arguments for subprocess calls

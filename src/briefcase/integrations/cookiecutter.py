@@ -23,6 +23,10 @@ class PythonVersionExtension(Extension):
             """A Python version library tag (311)"""
             return "".join(obj.split(".")[:2])
 
+        def minor_version(obj):
+            """The Python minor version, as an integer (e.g., 11)"""
+            return int(obj.split(".")[1])
+
         def nuget_version(obj):
             """A Python version in Nuget format (3.14.0-rc1)."""
             parts = obj.split(".")[:3]
@@ -32,6 +36,7 @@ class PythonVersionExtension(Extension):
 
         environment.filters["py_tag"] = py_tag
         environment.filters["py_libtag"] = py_libtag
+        environment.filters["minor_version"] = minor_version
         environment.filters["nuget_version"] = nuget_version
 
 

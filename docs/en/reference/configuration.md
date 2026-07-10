@@ -48,7 +48,7 @@ The base `[tool.briefcase]` section declares settings that project specific, or 
 
 Configuration options for a specific application.
 
-`<app name>` must adhere to a valid Python distribution name as specified in [PEP508](https://peps.python.org/pep-0508/#names). The app name must also *not* be a reserved word in Python, Java or JavaScript (i.e., app names like `switch` or `pass` would not be valid); and it may not include any of the [filenames prohibited by Windows](https://learn.microsoft.com/en-us/windows/win32/fileio/naming-a-file#naming-conventions) (i.e., `CON`, `PRN`, or `LPT1`).
+`<app name>` (with all of its hyphens replaced with underscores) must be a valid Python identifier, and adhere to a valid Python distribution name as specified in [PEP508](https://peps.python.org/pep-0508/#names). The app name must also *not* be a reserved word in Python, Java or JavaScript (i.e., app names like `switch` or `pass` would not be valid); and it may not include any of the [filenames prohibited by Windows](https://learn.microsoft.com/en-us/windows/win32/fileio/naming-a-file#naming-conventions) (i.e., `CON`, `PRN`, or `LPT1`).
 
 ### `[tool.briefcase.app.<app name>.<platform>]`
 
@@ -224,7 +224,7 @@ The application name as it should be displayed to humans. This name may contain 
 
 A path, relative to the directory where the `pyproject.toml` file is located, to an image to use as the icon for the application. The path should *exclude* the extension; Briefcase will append a platform appropriate extension when configuring the application. For example, an icon specification of `icon = "resources/icon"` will use `resources/icon.icns` on macOS, and `resources/icon.ico` on Windows.
 
-Some platforms require multiple icons, at different sizes; these will be handled by appending the required size to the provided icon name. For example, iOS requires multiple icon sizes (ranging from 20px to 1024px); Briefcase will look for `resources/icon-20.png`, `resources/icon-1024.png`, and so on. The sizes that are required are determined by the platform template.
+Some platforms require multiple icons, at different sizes; these will be handled by appending the required size to the provided icon name. For example, iOS requires multiple icon sizes (ranging from 20px to 1024px); Briefcase will look for `resources/icon-20.png`, `resources/icon-1024.png`, and so on. The sizes that are required are determined by the platform template. See the documentation for each platform for the required icon sizes.
 
 #### `install_launcher`
 
@@ -234,11 +234,15 @@ This setting is only used on Windows.
 
 #### `installer_icon`
 
-A path, relative to the directory where the `pyproject.toml` file is located, to an image to use as the icon for the installer. As with [`icon`][], the path should *exclude* the extension, and a platform-appropriate extension will be appended when the application is built.
+A path, relative to the directory where the `pyproject.toml` file is located, to an image to use as the icon for the installer. As with [`icon`][], the path should *exclude* the extension, and a platform-appropriate extension will be appended when the application is built. See the documentation for each platform for how the installer image will be used, and the required icon sizes.
 
 #### `installer_background`
 
-A path, relative to the directory where the `pyproject.toml` file is located, to an image to use as the background for the installer. The path should *exclude* the extension, and a platform-appropriate extension will be appended when the application is built.
+A path, relative to the directory where the `pyproject.toml` file is located, to an image to use as the background for the installer. The path should *exclude* the extension, and a platform-appropriate extension will be appended when the application is built. See the documentation for each platform for how the installer image will be used, and the required image size.
+
+#### `installer_banner`
+
+A path, relative to the directory where the `pyproject.toml` file is located, to an image to use as a banner for installer dialogs. The path should *exclude* the extension, and a platform-appropriate extension will be appended when the application is built. See the documentation for each platform for how the installer image will be used, and the required image size.
 
 #### `long_description`
 

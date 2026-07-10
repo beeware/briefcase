@@ -52,7 +52,7 @@ from briefcase.exceptions import (
 from briefcase.integrations.base import ToolCache
 from briefcase.integrations.file import File
 from briefcase.integrations.subprocess import Subprocess
-from briefcase.integrations.virtual_environment import VirtualEnvironment
+from briefcase.integrations.virtual_environment import VirtualEnvironmentManager
 from briefcase.platforms import get_output_formats, get_platforms
 
 
@@ -183,18 +183,19 @@ class BaseCommand(ABC):
             console=console,
             base_path=self.data_path / "tools",
         )
+        self.validate_base_path()
         self.validate_python_version()
 
         # Immediately add tools that must be always available
         Subprocess.verify(tools=self.tools)
-        VirtualEnvironment.verify(tools=self.tools)
+        VirtualEnvironmentManager.verify(tools=self.tools)
         File.verify(tools=self.tools)
 
         if not is_clone:
             self.validate_locale()
 
         self.global_config = None
-        self._briefcase_toml: dict[AppConfig, dict[str, ...]] = {}
+        self._briefcase_toml: dict[AppConfig, dict[str, Any]] = {}
 
     @property
     def console(self):
@@ -280,26 +281,74 @@ a custom location for Briefcase's tools.
 
         return Path(data_path)
 
+    def validate_base_path(self):
+        """Validate the Briefcase project path for known third-party tool issues."""
+        base_path = os.fsdecode(self.base_path)
+
+        if "," in base_path:
+            raise BriefcaseCommandError(
+                f"""
+The location of your Briefcase project:
+
+    {base_path}
+
+contains a comma. This will cause problems with some tools, preventing
+you from building and packaging applications.
+
+Move the project to a path that does not contain commas.
+
+"""
+            )
+
+        if (
+            platform.system() == "Windows"  # pragma: no-cover-if-not-windows
+            and "\u200e" in base_path
+        ):
+            raise BriefcaseCommandError(
+                f"""
+The location of your Briefcase project:
+
+    {base_path}
+
+contains a left-to-right mark character. This will cause problems with some
+tools on Windows, preventing you from building and packaging applications.
+
+Move the project to a path that does not container this character.
+
+"""
+            )
+
+        if " " in base_path:
+            self.console.warning_banner(
+                "Project path contains spaces",
+                f"""
+                    The location of your Briefcase project:
+
+                        {base_path}
+
+                    contains spaces. This can cause problems with some tools,
+                    preventing you from building and packaging applications.
+                    If you experience problems building or running the app,
+                    move the project to a path that doesn't contain spaces.
+                """,
+            )
+
     def validate_locale(self):
         """Validate the system's locale is compatible."""
         if self.tools.host_os == "Linux" and self.tools.system_encoding != "UTF-8":
-            self.console.warning(
+            self.console.warning_banner(
+                "Default system encoding is not supported",
                 f"""
-*************************************************************************
-** WARNING: Default system encoding is not supported                   **
-*************************************************************************
+                    Briefcase and the third-party tools it uses only support UTF-8.
 
-    Briefcase and the third-party tools it uses only support UTF-8.
+                    The detected default system encoding is
+                    {self.tools.system_encoding}.
 
-    The detected default system encoding is {self.tools.system_encoding}.
+                    Briefcase will proceed but some console output could be corrupted
+                    and created files or artifacts may contain corrupted text.
 
-    Briefcase will proceed but some console output could be corrupted and
-    created files or artefacts may contain corrupted text.
-
-    Update your system's encoding to UTF-8 to avoid issues.
-
-*************************************************************************
-"""
+                    Update your system's encoding to UTF-8 to avoid issues.
+                """,
             )
 
     def validate_python_version(self) -> bool:
@@ -312,21 +361,16 @@ a custom location for Briefcase's tools.
         # same yearly cadence, the EOL for Python 3.x is October of 2024 + (x - 8)
         EOL_year = 2024 + (sys.version_info.minor - 8)
         if datetime.today() > datetime(EOL_year, 10, 1):
-            self.console.warning(
+            self.console.warning_banner(
+                "Your Python version is unsupported!",
                 f"""
-*************************************************************************
-** WARNING: Your Python version is unsupported!                        **
-*************************************************************************
+                    The version of Python you are using ({platform.python_version()})
+                    is past its end of life. As a result, it is highly likely
+                    your Briefcase version is also out of date.
 
-    The version of Python you are using ({platform.python_version()}) is past its
-    end of life. As a result, it is highly likely your Briefcase
-    version is also out of date.
-
-    See https://devguide.python.org/versions/ for details on currently
-    supported Python versions.
-
-*************************************************************************
-"""
+                    See https://devguide.python.org/versions/ for details on currently
+                    supported Python versions.
+                """,
             )
             return False
 
@@ -504,7 +548,7 @@ a custom location for Briefcase's tools.
         else:
             return self.bundle_package_executable_path(app)
 
-    def briefcase_toml(self, app: FinalizedAppConfig) -> dict[str, ...]:
+    def briefcase_toml(self, app: FinalizedAppConfig) -> dict[str, Any]:
         """Load the ``briefcase.toml`` file provided by the app template.
 
         :param app: The config object for the app
@@ -1234,18 +1278,13 @@ Did you run Briefcase in a project directory that contains {filename.name!r}?"""
                     # repo. It's OK to continue; but capture the error in the log and
                     # warn the user that the template may be stale.
                     self.console.debug(str(e))
-                    self.console.warning(
+                    self.console.warning_banner(
+                        "Unable to update template",
                         """
-*************************************************************************
-** WARNING: Unable to update template                                  **
-*************************************************************************
-
-    Briefcase is unable the update the application template. This
-    may be because your computer is currently offline. Briefcase will
-    use existing template without updating.
-
-*************************************************************************
-"""
+                            Briefcase is unable to update the application template.
+                            This may be because your computer is currently offline.
+                            Briefcase will use the existing template without updating.
+                        """,
                     )
 
                 try:

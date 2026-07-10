@@ -5,7 +5,7 @@ import pytest
 from briefcase.commands import DevCommand
 from briefcase.commands.base import full_options
 from briefcase.exceptions import BriefcaseCommandError, RequirementsInstallError
-from briefcase.integrations.virtual_environment import VenvContext
+from briefcase.integrations.virtual_environment import VirtualEnvironment
 
 
 class DummyDevCommand(DevCommand):
@@ -25,7 +25,7 @@ class DummyDevCommand(DevCommand):
         self.actions = []
         self.env = {"a": 1, "b": 2, "c": 3}
 
-        self.tools.virtual_environment.create = mock.MagicMock(
+        self.tools.virtual_environment = mock.MagicMock(
             side_effect=self.virtual_environment
         )
         # Track which venvs exist for this command instance
@@ -33,7 +33,7 @@ class DummyDevCommand(DevCommand):
 
     def simulate_existing_venv(self, appname, isolated=True):
         """Mark a venv as already existing (for testing installed apps)."""
-        mock_venv_context = mock.MagicMock(spec=VenvContext)
+        mock_venv_context = mock.MagicMock(spec=VirtualEnvironment)
         mock_venv_context.created = False
         self.venvs[(appname, isolated)] = mock_venv_context
         return mock_venv_context
@@ -71,7 +71,7 @@ class DummyDevCommand(DevCommand):
             mock_venv_context.created = recreate
         except KeyError:
             # First time creating this venv
-            mock_venv_context = mock.MagicMock(spec=VenvContext)
+            mock_venv_context = mock.MagicMock(spec=VirtualEnvironment)
             mock_venv_context.created = True
             self.venvs[venv_key] = mock_venv_context
 

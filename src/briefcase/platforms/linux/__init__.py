@@ -7,7 +7,6 @@ import sys
 from pathlib import Path
 from typing import TYPE_CHECKING
 
-from briefcase.commands.create import _is_local_path
 from briefcase.commands.open import OpenCommand
 from briefcase.config import FinalizedAppConfig
 from briefcase.exceptions import BriefcaseCommandError, ParseError
@@ -168,7 +167,7 @@ class LocalRequirementsMixin(_MixinBase):  # pragma: no-cover-if-is-windows
         # Iterate over every requirement, looking for local references
         localized_requires = []
         for requirement in requires:
-            if _is_local_path(requirement):
+            if self.tools.file.is_local_path(requirement):
                 parts = requirement.rsplit("[", 1)
                 req_name = parts[0]
                 try:

@@ -22,7 +22,7 @@ from briefcase.config import AppConfig, DraftAppConfig, FinalizedAppConfig, merg
 from briefcase.exceptions import BriefcaseCommandError, UnsupportedHostError
 from briefcase.integrations.docker import Docker, DockerAppContext
 from briefcase.integrations.subprocess import NativeAppContext
-from briefcase.integrations.virtual_environment import VenvContext
+from briefcase.integrations.virtual_environment import VirtualEnvironment
 from briefcase.platforms.linux import (
     ARCH,
     DEBIAN,
@@ -394,18 +394,15 @@ class LinuxSystemMixin(LinuxMixin):
         ) = self._system_requirement_tools(app)
 
         if not (system_verify and self.tools.shutil.which(system_verify[0])):
-            self.console.warning("""
-*************************************************************************
-** WARNING: Can't verify system packages                               **
-*************************************************************************
-
-    Briefcase doesn't know how to verify the installation of system
-    packages on your Linux distribution. If you have any problems
-    building this app, ensure that the packages listed in the app's
-    `system_requires` setting have been installed.
-
-*************************************************************************
-""")
+            self.tools.console.warning_banner(
+                "Can't verify system packages",
+                """
+                    Briefcase doesn't know how to verify the installation of system
+                    packages on your Linux distribution. If you have any problems
+                    building this app, ensure that the packages listed in the app's
+                    `system_requires` setting have been installed.
+                """,
+            )
             return
 
         # Run a check for each package listed in the app's system_requires,
@@ -677,19 +674,17 @@ Install Docker Engine and try again or run Briefcase on an Arch host system.
             self.tools.sys.version_info.major,
             self.tools.sys.version_info.minor,
         ):
-            self.console.warning(f"""
-*************************************************************************
-** WARNING: Python version mismatch!                                   **
-*************************************************************************
+            self.tools.console.warning_banner(
+                "Python version mismatch!",
+                f"""
+                    The system python3 provided by {app.target_image}
+                    is {app.python_version_tag}. This is not the same as your local
+                    system ({self.python_version_tag}).
 
-    The system python3 provided by {app.target_image} is {app.python_version_tag}.
-    This is not the same as your local system ({self.python_version_tag}).
-
-    Ensure you have tested for Python version compatibility before
-    releasing this app.
-
-*************************************************************************
-""")
+                    Ensure you have tested for Python version compatibility before
+                    releasing this app.
+                """,
+            )
 
     def verify_system_python(self):
         """Verify that the Python being used to run Briefcase is the default system
@@ -709,7 +704,11 @@ Install Docker Engine and try again or run Briefcase on an Arch host system.
 
         running_version = self.tools.sys.version
         system_version = self.tools.subprocess.check_output(
-            [system_python_bin, "-c", "import sys; print(sys.version)"]
+            [
+                system_python_bin,
+                "-c",
+                "import sys; print(sys.version)",
+            ]
         ).strip()
 
         if system_version != running_version:
@@ -905,19 +904,27 @@ no extension).
         man_folder.mkdir(parents=True, exist_ok=True)
 
         with self.console.wait_bar("Installing man page..."):
-            manpage_source = self.bundle_path(app) / f"{app.app_name}.1"
-            if manpage_source.is_file():
-                with manpage_source.open(encoding="utf-8") as infile:
-                    outfile = gzip.GzipFile(
-                        man_folder / f"{app.app_name}.1.gz", mode="wb", mtime=0
+            man_page = getattr(app, "man_page", None)
+            if man_page:
+                manpage_source = self.base_path / man_page
+                if not manpage_source.is_file():
+                    raise BriefcaseCommandError(
+                        f"The man page source file '{man_page}' does not exist."
                     )
-                    outfile.write(infile.read().encode("utf-8"))
-                    outfile.close()
             else:
-                raise BriefcaseCommandError(
-                    "Template does not provide a manpage source file "
-                    f"`{app.app_name}.1`"
+                manpage_source = self.bundle_path(app) / f"{app.app_name}.1"
+                if not manpage_source.is_file():
+                    raise BriefcaseCommandError(
+                        "Template does not provide a manpage source file "
+                        f"`{app.app_name}.1`"
+                    )
+
+            with manpage_source.open(encoding="utf-8") as infile:
+                outfile = gzip.GzipFile(
+                    man_folder / f"{app.app_name}.1.gz", mode="wb", mtime=0
                 )
+                outfile.write(infile.read().encode("utf-8"))
+                outfile.close()
 
         self.console.verbose("Update file permissions...")
         with self.console.wait_bar("Updating file permissions..."):
@@ -1002,7 +1009,7 @@ class LinuxSystemDevCommand(LinuxSystemMixin, DevCommand):
     def install_dev_requirements(
         self,
         app: FinalizedAppConfig,
-        venv: VenvContext,
+        venv: VirtualEnvironment,
         **options,
     ):
         """Install the requirements into the dev environment.

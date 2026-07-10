@@ -192,18 +192,27 @@ class RunAppMixin:
                             "Test suite didn't report a result."
                         )
                     else:
-                        self.console.error("Test suite failed!", prefix=app.app_name)
+                        self.console.error(
+                            f"Test suite failed! (return code {log_filter.returncode})",
+                            prefix=app.app_name,
+                        )
                         raise BriefcaseTestSuiteFailure()
             elif log_stream:
                 # If we're monitoring a log stream, and the log stream reported a
                 # non-zero exit code, surface that error to the user.
                 if log_filter.returncode is not None and log_filter.returncode != 0:
-                    raise BriefcaseCommandError(f"Problem running app {app.app_name}.")
+                    raise BriefcaseCommandError(
+                        f"Problem running app {app.app_name} "
+                        f"(log stream return code {log_filter.returncode})."
+                    )
             else:
                 # If we're monitoring an actual app (not just a log stream),
                 # and the app didn't exit cleanly, surface the error to the user.
-                if popen.poll() != 0:
-                    raise BriefcaseCommandError(f"Problem running app {app.app_name}.")
+                if (status_code := popen.poll()) != 0:
+                    raise BriefcaseCommandError(
+                        f"Problem running app {app.app_name} "
+                        f"(return code {status_code})."
+                    )
 
         except KeyboardInterrupt:
             pass  # Catch CTRL-C to exit normally

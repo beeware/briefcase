@@ -14,6 +14,30 @@ Of note, a certificate for code signing is different from a certificate for othe
 
 Additionally, it is possible to create a code signing certificate directly within Windows. However, when you create a certificate yourself, it will likely be considered "self-signed". Using such a certificate to code sign an application will not imbue it with the trust that a certificate from a Certificate Authority provides. Therefore, a self-signed certificate should not be used to code sign applications for distribution.
 
+### Creating a self-signed certificate
+
+Although a self-signed certificate is not suitable for distribution, it can be useful for testing the code signing process. The following commands, issued at a PowerShell prompt, will create a self-signed code signing certificate and install it in the `Personal` certificate store of `Current User`:
+
+```pwsh-session
+PS C:\> $cert = New-SelfSignedCertificate -Subject "My self-signed certificate" -Type CodeSigningCert -Certstorelocation Cert:\CurrentUser\My
+PS C:\> Export-Certificate -Cert $cert -FilePath my-self-signed-certificate.crt
+```
+
+Once you've done this, you can get the identity of the certificate by running:
+
+```pwsh-session
+PS C:\> $cert.Thumbprint
+```
+
+This will output the 40-character hexadecimal identity that is used by Briefcase to identify the certificate.
+
+The certificate can be converted into a password-protected PFX file using:
+
+```pwsh-session
+PS C:\> $password = ConvertTo-SecureString -String "<your password>" -Force -AsPlainText
+PS C:\> Export-PfxCertificate -Cert "Cert:\CurrentUser\My\$($cert.Thumbprint)" -FilePath my-self-signed-certificate.pfx -Password $password
+```
+
 ## Install the Certificate
 
 Once a code signing certificate is requested, Certificate Authorities may vary is how the certificate is actually delivered to you. In general, though, you'll likely receive an encrypted file containing both the certificate and its private key. Depending on the exact nature of the file format, Windows provides several commands to import certificates in to one of its certificate stores.

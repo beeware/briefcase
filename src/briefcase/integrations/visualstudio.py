@@ -18,7 +18,8 @@ class VisualStudio(Tool):
       - Default packages
     * Desktop Development with C++
       - Default packages; plus
-      - C++/CLI support for v143 build tools
+      - MSVC v143 VS 2022 C++ x64 build tools (if using x86-64)
+      - MSVC v143 VS 2022 C++ ARM64 build tools (if using ARM64)
 """
 
     def __init__(

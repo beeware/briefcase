@@ -88,27 +88,37 @@ class WindowsMixin(_MixinBase):
         suffix = "zip" if app.packaging_format == "zip" else "msi"
         return self.dist_path / f"{app.formal_name}-{app.version}.{suffix}"
 
+    @property
+    def vscode_platform(self):
+        return "ARM64" if self.tools.host_arch == "ARM64" else "x64"
+
     def verify_host(self):
         super().verify_host()
-        # The stub app only supports x86-64 right now, and our VisualStudio and WiX code
-        # is the same (#1887). However, we can package an external x86-64 app on any
-        # build machine.
-        if self.tools.host_arch != "AMD64":
+        if (
+            self.tools.host_arch == "ARM64"
+            and "AMD64" in self.tools.platform.python_compiler()
+        ):
+            raise UnsupportedHostError(
+                "The Python interpreter that is being used to run Briefcase has been "
+                "compiled for x86_64, and is running in emulation mode on ARM64 "
+                "hardware. You must use a Python interpreter that has been "
+                "compiled for ARM64."
+            )
+
+        if self.tools.host_arch not in ("AMD64", "ARM64"):
             if all(app.external_package_path for app in self.apps.values()):
                 if not self.is_clone:
-                    self.console.warning(f"""
-*************************************************************************
-** WARNING: Possible architecture mismatch                             **
-*************************************************************************
+                    self.tools.console.warning_banner(
+                        "Possible architecture mismatch",
+                        f"""
+                            The build machine is {self.tools.host_arch}, but Briefcase
+                            on Windows only supports x86-64 and ARM64 installers.
 
-The build machine is {self.tools.host_arch}, but Briefcase on Windows currently only
-supports x86-64 installers.
-
-You are responsible for ensuring that the content of external_package_path
-is compatible with x86-64.
-
-*************************************************************************
-""")
+                            You are responsible for ensuring that the content of
+                            external_package_path is compatible with supported
+                            platforms.
+                        """,
+                    )
             else:
                 raise UnsupportedHostError(
                     "Windows applications cannot be built on an "
@@ -124,10 +134,23 @@ Windows applications cannot be built using a 32bit version of Python.
 Install a 64bit version of Python and run Briefcase again.
 """)
 
+    def target_windows_build(self, app: FinalizedAppConfig) -> int | None:
+        """The minimum supported Windows build number for the app from
+        ``briefcase.toml``.
+
+        :param app: The config object for the app
+        :return: version or None if one isn't specified
+        """
+        try:
+            return self.briefcase_toml(app)["briefcase"]["target_windows_build"]
+        except KeyError:
+            return None
+
 
 class WindowsCreateCommand(CreateCommand):
     def support_package_filename(self, support_revision):
-        return f"python-{self.python_version_tag}.{support_revision}-embed-amd64.zip"
+        arch = self.tools.host_arch.lower()
+        return f"python-{self.python_version_tag}.{support_revision}-embed-{arch}.zip"
 
     def support_package_url(self, support_revision):
         micro = re.match(r"\d+", str(support_revision)).group(0)
@@ -191,34 +214,66 @@ class WindowsCreateCommand(CreateCommand):
             # system_installer not defined in config; default to asking the user
             install_scope = "perUserOrMachine"
 
+        installer_images = {}
+        try:
+            installer_images["background"] = str(
+                (self.base_path / app.installer_background).with_suffix(".bmp")
+            )
+        except AttributeError:
+            installer_images["background"] = ""
+        try:
+            installer_images["banner"] = str(
+                (self.base_path / app.installer_banner).with_suffix(".bmp")
+            )
+        except AttributeError:
+            installer_images["banner"] = ""
+
         return {
             "version_triple": version_triple,
             "guid": str(guid),
             "install_scope": install_scope,
             "package_path": str(self.package_path(app)),
             "binary_path": self.package_executable_path(app),
+            "installer_images": installer_images,
         }
 
     def _cleanup_app_support_package(self, support_path):
         # On Windows, the support path is co-mingled with app content.
         # This means updating the support package is imperfect.
         # Warn the user that there could be problems.
-        self.console.warning("""
-*************************************************************************
-** WARNING: Support package update may be imperfect                    **
-*************************************************************************
+        self.tools.console.warning_banner(
+            "Support package update may be imperfect",
+            """
+                Support packages in Windows apps are overlaid with app content,
+                so it isn't possible to remove all old support files before
+                installing new ones.
 
-    Support packages in Windows apps are overlaid with app content,
-    so it isn't possible to remove all old support files before
-    installing new ones.
+                Briefcase will unpack the new support package without cleaning up
+                existing support package content. This *should* work; however,
+                ensure a reproducible release artefacts, it is advisable to
+                perform a clean app build before release.
+            """,
+        )
 
-    Briefcase will unpack the new support package without cleaning up
-    existing support package content. This *should* work; however,
-    ensure a reproducible release artefacts, it is advisable to
-    perform a clean app build before release.
+    def _install_app_requirements(
+        self,
+        app: FinalizedAppConfig,
+        requires: list[str],
+        app_packages_path: Path,
+        **kwargs,
+    ):
+        if template_min_version := self.target_windows_build(app):
+            min_version = int(getattr(app, "min_os_version", template_min_version))
+            if min_version < int(template_min_version):
+                raise BriefcaseCommandError(
+                    "Your Windows app specifies a minimum build number of "
+                    f"{min_version}, but the app template only supports "
+                    f"{template_min_version}"
+                )
 
-*************************************************************************
-""")
+        return super()._install_app_requirements(
+            app, requires, app_packages_path, **kwargs
+        )
 
     def install_license(self, app: FinalizedAppConfig):
         """Install the license for the project as a single RTF document.
@@ -546,17 +601,14 @@ class WindowsPackageCommand(PackageCommand):
             sign_app = True
         else:
             sign_app = False
-            self.console.warning("""
-*************************************************************************
-** WARNING: No signing identity provided                               **
-*************************************************************************
-
-    Briefcase will not sign the app. To provide a signing identity,
-    use the `--identity` option; or, to explicitly disable signing,
-    use `--adhoc-sign`.
-
-*************************************************************************
-""")
+            self.tools.console.warning_banner(
+                "No signing identity provided",
+                """
+                    Briefcase will not sign the app. To provide a signing identity,
+                    use the `--identity` option; or, to explicitly disable signing,
+                    use `--adhoc-sign`.
+                """,
+            )
 
         if sign_app:
             self.console.info("Signing App...", prefix=app.app_name)
@@ -593,8 +645,12 @@ class WindowsPackageCommand(PackageCommand):
                         "build",
                         "-ext",
                         self.tools.wix.ext_path("UI"),
+                        "-ext",
+                        self.tools.wix.ext_path("Netfx"),
+                        "-ext",
+                        self.tools.wix.ext_path("Util"),
                         "-arch",
-                        "x64",  # Default is x86, regardless of the build machine.
+                        self.vscode_platform.lower(),
                         f"{app.app_name}.wxs",
                         "-loc",
                         "unicode.wxl",
