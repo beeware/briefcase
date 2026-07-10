@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import itertools
 import os
+import re
 import shutil
 import ssl
 import sys
@@ -21,6 +22,8 @@ from briefcase.exceptions import (
     NetworkFailure,
 )
 from briefcase.integrations.base import Tool, ToolCache
+
+RELATIVE_PATH_RE = re.compile(r"^\.{1,2}[\\/]")
 
 
 def _has_url(requirement):
@@ -181,6 +184,27 @@ class File(Tool):
             filename.suffix,
         }
         return not file_extensions.isdisjoint(self.supported_archive_extensions)
+
+    def resolve_relative_args(self, args: list[str]) -> list[str]:
+        """Convert a list of arguments so that all relative file path references are
+        converted into resolved paths relative to the base path.
+
+        An argument is only converted if:
+        1. It "looks" like a relative path (i.e., it starts with a . or ..)
+        2. The path referenced actually exists
+
+        :param args: The initial list of arguments
+        :returns: The resolved list of arguments.
+        """
+        resolved_args: list[str] = []
+        for arg in args:
+            if RELATIVE_PATH_RE.match(arg) and self.tools.file.is_local_path(arg):
+                abs_path = (self.tools.base_path / arg).resolve()
+                if abs_path.exists():
+                    arg = abs_path
+
+            resolved_args.append(arg)
+        return resolved_args
 
     @property
     def supported_archive_extensions(self) -> set[str]:

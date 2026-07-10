@@ -4,7 +4,6 @@ import argparse
 import hashlib
 import os
 import platform
-import re
 import shutil
 from collections.abc import Collection
 from datetime import date, datetime
@@ -27,8 +26,6 @@ from briefcase.integrations.subprocess import NativeAppContext
 from briefcase.integrations.virtual_environment import VirtualEnvironment
 
 from .base import BaseCommand, full_options
-
-relative_path_matcher = re.compile(r"^\.{1,2}[\\/]")
 
 
 def cookiecutter_cache_path(template):
@@ -290,19 +287,35 @@ class CreateCommand(BaseCommand):
     def create_app_environment(
         self,
         app: FinalizedAppConfig,
-        host_arch: str | None = None,
+        platform: str | None = None,
+        arch: str | None = None,
+        env: dict[str, str | None] | None = None,
         recreate: bool = True,
     ) -> VirtualEnvironment:
-        """Create an isolated virtual environment in which the app can be built."""
-        if host_arch is None:
-            host_arch = self.tools.host_arch
+        """Create an isolated virtual environment in which the app can be built.
+
+        :param app: The config object for the app
+        :param platform: The platform being targeted. Defaults to the command's
+            platform.
+        :param arch: The architecture for the environment. Defaults to the host
+            architecture.
+        :param env: Any environment variables that should be enforced in the
+            environment.
+        :param recreate: If the environment already exists, should it be re-created?
+            Defaults to True (i.e., recreate by default).
+        """
+        if platform is None:
+            platform = self.platform
+        if arch is None:
+            arch = self.tools.host_arch
 
         env_name = f"{app.env_manager}-{self.platform}-{self.tools.host_arch}"
         venv = self.tools.virtual_environment[app.env_manager](
             tools=self.tools,
             venv_path=self.base_path / ".briefcase/" / app.app_name / env_name,
-            platform=self.platform,
-            arch=host_arch,
+            platform=platform,
+            arch=arch,
+            env=env,
         )
         venv.prepare(recreate=recreate)
         return venv
@@ -581,39 +594,14 @@ class CreateCommand(BaseCommand):
                         f.write(f"{requirement}\n")
 
             if requirement_installer_args_path:
-                pip_args = "\n".join(self._extra_pip_args(app))
+                pip_args = "\n".join(
+                    self.tools.file.resolve_relative_args(
+                        app.requirement_installer_args
+                    )
+                )
                 requirement_installer_args_path.write_text(
                     f"{pip_args}\n", encoding="utf-8"
                 )
-
-    def _pip_requires(self, app: FinalizedAppConfig, requires: list[str]):
-        """Convert the list of requirements to be passed to pip into its final form.
-
-        :param app: The app configuration
-        :param requires: The user-specified list of app requirements
-        :returns: The final list of requirement arguments to pass to pip
-        """
-        return requires
-
-    def _extra_pip_args(self, app: FinalizedAppConfig):
-        """Any additional arguments that must be passed to pip when installing packages.
-
-        :param app: The app configuration
-        :returns: A list of additional arguments
-        """
-        args: list[str] = []
-        for argument in app.requirement_installer_args:
-            to_append = argument
-            if relative_path_matcher.match(argument) and self.tools.file.is_local_path(
-                argument
-            ):
-                abs_path = os.path.abspath(self.base_path / argument)
-                if Path(abs_path).exists():
-                    to_append = abs_path
-
-            args.append(to_append)
-
-        return args
 
     def _install_app_requirements(
         self,

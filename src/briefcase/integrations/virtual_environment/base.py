@@ -19,6 +19,7 @@ class VirtualEnvironment(ABC):
         *,
         platform: str | None = None,
         arch: str | None = None,
+        env: dict[str, str | None] | None = None,
     ):
         """Initialise the virtual environment on a specific path.
 
@@ -28,11 +29,13 @@ class VirtualEnvironment(ABC):
             environment, it is the directory used for the marker file.
         :param platform: TODO
         :param arch: TODO
+        :param env: TODO
         """
         self.tools = tools
         self.venv_path = venv_path
         self.platform = platform
         self.arch = arch
+        self.env = env
 
     @property
     def bin_dir(self) -> Path:
@@ -86,6 +89,9 @@ class VirtualEnvironment(ABC):
             return f"macosx_{min_os_tag}_{arch}"
         elif platform == "windows":
             return f"win_{arch.lower()}"
+        elif platform in {"iphoneos", "iphonesimulator"}:
+            min_os_tag = (min_os_version or "13.0").replace(".", "_")
+            return f"ios_{min_os_tag}_{arch}_{platform}"
         else:
             raise NotImplementedError()
 
@@ -116,7 +122,7 @@ class VirtualEnvironment(ABC):
         :param install_hint: If an install fails, an additional context-specific hint
             that can be displayed to the user.
         """
-        install_args = []
+        install_reqs = []
         for req in requires:
             # Any requirement that is a local path, but *not* a reference to an archive
             # file (zip, tgz, etc) or wheel can be installed editable. If in doubt,
@@ -127,11 +133,12 @@ class VirtualEnvironment(ABC):
                 and not self.tools.file.is_archive(req)
                 and Path(req).suffix != ".whl"
             ):
-                install_args.extend(["-e", req])
+                install_reqs.extend(["-e", req])
             else:
-                install_args.append(req)
+                install_reqs.append(req)
 
         try:
+            install_args = []
             if install_path:
                 install_args.append(f"--target={install_path}")
                 if platform_tag := self.platform_tag(min_os_version):
@@ -143,8 +150,19 @@ class VirtualEnvironment(ABC):
             if not include_deps:
                 install_args.append("--no-deps")
 
+            # Platforms that need the BeeWare repo
+            if self.platform in {"iphoneos", "iphonesimulator"}:
+                install_args.extend(
+                    [
+                        "--extra-index-url",
+                        "https://pypi.anaconda.org/beeware/simple",
+                    ]
+                )
+
             if extra_installer_args:
-                install_args.extend(extra_installer_args)
+                install_args.extend(
+                    self.tools.file.resolve_relative_args(extra_installer_args)
+                )
 
             self.run(
                 [
@@ -158,6 +176,7 @@ class VirtualEnvironment(ABC):
                     "--upgrade",
                     *(["-vv"] if self.tools.console.is_deep_debug else []),
                     *install_args,
+                    *install_reqs,
                 ],
                 check=True,
                 encoding="UTF-8",

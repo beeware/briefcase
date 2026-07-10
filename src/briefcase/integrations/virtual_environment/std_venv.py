@@ -92,6 +92,8 @@ class VenvVirtualEnvironment(VirtualEnvironment):
         """
         env = dict(overrides) if overrides else {}
 
+        if self.env:
+            env.update(self.env)
         old_path = env.get("PATH") or os.environ.get("PATH", "")
         env["PATH"] = os.fspath(self.bin_dir) + (
             os.pathsep + old_path if old_path else ""
