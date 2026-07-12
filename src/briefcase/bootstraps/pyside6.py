@@ -140,6 +140,22 @@ linuxdeploy_plugins = [
 flatpak_runtime = "org.kde.Platform"
 flatpak_runtime_version = "6.9"
 flatpak_sdk = "org.kde.Sdk"
+
+# PySide6.QtWebEngineWidgets requires Kerberos libraries that are not included
+# in the KDE Flatpak runtime. Uncomment this module to build them into the app.
+# modules_extra_content = '''
+#   - name: mit-krb5
+#     buildsystem: simple
+#     sources:
+#       - type: archive
+#         url: https://kerberos.org/dist/krb5/1.21/krb5-1.21.3.tar.gz
+#         sha256: b7a4cd5ead67fb08b980b21abd150ff7217e85ea320c9ed0c6dadd304840ad35
+#     build-commands:
+#       - cd src && autoreconf -i
+#       - cd src && ./configure --prefix=/app --disable-static --enable-shared
+#       - cd src && make -j$(nproc)
+#       - cd src && make install
+# '''
 """
 
     def pyproject_table_windows(self):
