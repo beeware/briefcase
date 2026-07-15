@@ -80,16 +80,13 @@ dependencies = [
     # provides no basis for determining API stability.
     #
     "cookiecutter >= 2.6.0, < 3.0",
-    # See psf/requests#7219. Requests 2.32.5 (a transitive dependency of cookiecutter)
-    # has a runtime warning about the use of chardet 6+, which our test suite turns into
-    # a full error. Requests has already increased the pin; the next requests release
-    # should remove the need for this pin.
+    # chardet is a dependency of requests, which is a dependency of cookiecutter. Requests
+    # has a runtime warning that verifies "tested" chardet versions, but *doesn't* enforce
+    # a version pin. We need to enforce the implied requests warning.
     "chardet < 8.0",
     # See binaryornot/binaryornot#642 and binaryornot/binaryornot#649. binaryornot is
-    # transitive dependency of cookiecutter; v0.5.0 introduced #642, preventing correct
-    # detection of PNG content (#642). v0.6.0 (released a few days later) fixes #642,
-    # but introduced #649, and the presence of warnings causes catastrophic failures
-    # when running under dev mode.
+    # transitive dependency of cookiecutter; v0.5.0 introduced #642, v0.6.0 (released
+    # a few days later) fixes #642, but introduced #649.
     "binaryornot < 0.5.0",
     "dmgbuild >= 1.6.4, < 2.0; sys_platform == 'darwin'",
     "GitPython >= 3.1, < 4.0",
