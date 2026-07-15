@@ -29,6 +29,7 @@ def test_package_zip(
     package_command.notarize.assert_called_once_with(
         first_app_with_binaries,
         identity=sekrit_identity,
+        wait=True,
     )
 
     # No dmg was built.
@@ -118,6 +119,7 @@ def test_external_app(
     package_command.notarize.assert_called_once_with(
         external_first_app,
         identity=sekrit_identity,
+        wait=True,
     )
 
     # No dmg was built.

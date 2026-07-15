@@ -1,24 +1,13 @@
+import os
 import plistlib
 from unittest import mock
 
-import pytest
-
-from briefcase.exceptions import BriefcaseCommandError
-
 from .....utils import create_file
-
-
-@pytest.fixture
-def license_file(tmp_path):
-    path = tmp_path / "base_path/LICENSE"
-    create_file(path, "You can take license with this.")
-    return path
 
 
 def test_gui_app(
     package_command,
     first_app_with_binaries,
-    license_file,
     sekrit_identity,
     sekrit_installer_identity,
     tmp_path,
@@ -82,7 +71,7 @@ def test_gui_app(
     # The license has been updated.
     assert (bundle_path / "installer/resources/LICENSE").read_text(
         encoding="utf-8"
-    ) == "You can take license with this."
+    ) == "The Actual First App License"
 
     # The component list has been updated.
     with (bundle_path / "installer/components.plist").open("rb") as f:
@@ -134,13 +123,13 @@ def test_gui_app(
         first_app_with_binaries,
         identity=sekrit_identity,
         installer_identity=sekrit_installer_identity,
+        wait=True,
     )
 
 
 def test_gui_app_adhoc_identity(
     package_command,
     first_app_with_binaries,
-    license_file,
     adhoc_identity,
     tmp_path,
 ):
@@ -188,7 +177,7 @@ def test_gui_app_adhoc_identity(
     # The license has been updated.
     assert (bundle_path / "installer/resources/LICENSE").read_text(
         encoding="utf-8"
-    ) == "You can take license with this."
+    ) == "The Actual First App License"
 
     # The component list has been updated.
     with (bundle_path / "installer/components.plist").open("rb") as f:
@@ -240,7 +229,6 @@ def test_gui_app_adhoc_identity(
 def test_console_app(
     package_command,
     first_app_with_binaries,
-    license_file,
     sekrit_identity,
     sekrit_installer_identity,
     tmp_path,
@@ -281,7 +269,7 @@ def test_console_app(
     # The license has been installed
     assert (bundle_path / "installer/resources/LICENSE").read_text(
         encoding="utf-8"
-    ) == "You can take license with this."
+    ) == "The Actual First App License"
 
     # The component list has been updated.
     with (bundle_path / "installer/components.plist").open("rb") as f:
@@ -335,13 +323,13 @@ def test_console_app(
         first_app_with_binaries,
         identity=sekrit_identity,
         installer_identity=sekrit_installer_identity,
+        wait=True,
     )
 
 
 def test_console_app_adhoc_signed(
     package_command,
     first_app_with_binaries,
-    license_file,
     adhoc_identity,
     tmp_path,
 ):
@@ -372,7 +360,7 @@ def test_console_app_adhoc_signed(
     # The license has been installed
     assert (bundle_path / "installer/resources/LICENSE").read_text(
         encoding="utf-8"
-    ) == "You can take license with this."
+    ) == "The Actual First App License"
 
     # The component list has been updated.
     with (bundle_path / "installer/components.plist").open("rb") as f:
@@ -423,38 +411,241 @@ def test_console_app_adhoc_signed(
     package_command.notarize.assert_not_called()
 
 
-def test_no_license(package_command, first_app_with_binaries, adhoc_identity, tmp_path):
-    """If the project has no license file, an error is raised."""
+def test_post_install_script(package_command, first_app_with_binaries, tmp_path):
+    """A custom post-install script is installed as an executable `_postinstall`."""
     first_app_with_binaries.packaging_format = "pkg"
+    first_app_with_binaries.post_install_script = "scripts/post_install.sh"
 
-    with pytest.raises(
-        BriefcaseCommandError,
-        match=r"Your project does not contain a LICENSE file",
-    ):
-        package_command.package_app(
-            first_app_with_binaries,
-            adhoc_sign=True,
-        )
+    package_command.notarize = mock.Mock()
+    # Spy on chmod; the executable bit can't be checked via the file mode on Windows.
+    package_command.tools.os = mock.MagicMock(spec_set=os)
+    bundle_path = tmp_path / "base_path/build/first-app/macos/app"
 
-    # The app will be signed
-    package_command.sign_app.assert_called_once_with(
-        app=first_app_with_binaries,
-        identity=adhoc_identity,
+    # The templated scripts directory; its postinstall invokes `_postinstall`.
+    POSTINSTALL_BODY = "#!/bin/sh\nhook\n"
+    create_file(bundle_path / "installer/scripts/postinstall", POSTINSTALL_BODY)
+    # The user's script keeps its own interpreter.
+    USER_POSTINSTALL_BODY = "#!/usr/bin/env python3\nprint('custom')\n"
+    create_file(tmp_path / "base_path/scripts/post_install.sh", USER_POSTINSTALL_BODY)
+
+    package_command.package_app(first_app_with_binaries, adhoc_sign=True)
+
+    pkg_scripts = bundle_path / "installer/final_scripts"
+    # The templated postinstall is carried over unchanged...
+    assert (pkg_scripts / "postinstall").read_text(encoding="utf-8") == POSTINSTALL_BODY
+    # ...and the user's script is installed verbatim as an executable `_postinstall`.
+    assert (pkg_scripts / "_postinstall").read_text(encoding="utf-8") == (
+        USER_POSTINSTALL_BODY
+    )
+    package_command.tools.os.chmod.assert_called_once_with(
+        pkg_scripts / "_postinstall", 0o755
     )
 
-    # Component manifest hasn't been written
-    assert not (
-        tmp_path / "base_path/build/first-app/macos/app/installer/components.plist"
-    ).exists()
+    # pkgbuild was given the generated scripts directory.
+    assert package_command.tools.subprocess.run.mock_calls == [
+        mock.call(
+            [
+                "pkgbuild",
+                "--root",
+                bundle_path / "installer/root",
+                "--component-plist",
+                bundle_path / "installer/components.plist",
+                "--install-location",
+                "/Applications",
+                "--scripts",
+                bundle_path / "installer/final_scripts",
+                bundle_path / "installer/packages/first-app.pkg",
+            ],
+            check=True,
+        ),
+        mock.call(
+            [
+                "productbuild",
+                "--distribution",
+                bundle_path / "installer/Distribution.xml",
+                "--package-path",
+                bundle_path / "installer/packages",
+                "--resources",
+                bundle_path / "installer/resources",
+                tmp_path / "base_path/dist/First App-0.0.1.pkg",
+            ],
+            check=True,
+        ),
+    ]
 
-    # No calls made to pkgbuild/productbuild
-    package_command.tools.subprocess.run.assert_not_called()
+
+def test_installer_resources(package_command, first_app_with_binaries, tmp_path):
+    """User installer resources are merged with the templated installer resources."""
+    first_app_with_binaries.packaging_format = "pkg"
+    first_app_with_binaries.installer_resources = "installer_extras"
+
+    package_command.notarize = mock.Mock()
+    bundle_path = tmp_path / "base_path/build/first-app/macos/app"
+
+    create_file(bundle_path / "installer/resources/welcome.html", "<html>")
+    create_file(bundle_path / "installer/final_resources/stale.txt", "stale")
+    create_file(tmp_path / "base_path/installer_extras/helper.dat", "payload")
+
+    package_command.package_app(first_app_with_binaries, adhoc_sign=True)
+
+    final = bundle_path / "installer/final_resources"
+    assert (final / "welcome.html").is_file()
+    assert (final / "LICENSE").read_text(encoding="utf-8") == (
+        "The Actual First App License"
+    )
+    assert (final / "helper.dat").read_text(encoding="utf-8") == "payload"
+    assert not (final / "stale.txt").exists()
+
+    # The packaging calls got the custom resources directory
+    assert package_command.tools.subprocess.run.mock_calls == [
+        mock.call(
+            [
+                "pkgbuild",
+                "--root",
+                bundle_path / "installer/root",
+                "--component-plist",
+                bundle_path / "installer/components.plist",
+                "--install-location",
+                "/Applications",
+                bundle_path / "installer/packages/first-app.pkg",
+            ],
+            check=True,
+        ),
+        mock.call(
+            [
+                "productbuild",
+                "--distribution",
+                bundle_path / "installer/Distribution.xml",
+                "--package-path",
+                bundle_path / "installer/packages",
+                "--resources",
+                bundle_path / "installer/final_resources",
+                tmp_path / "base_path/dist/First App-0.0.1.pkg",
+            ],
+            check=True,
+        ),
+    ]
+
+
+def test_no_license(
+    package_command,
+    first_app_with_binaries,
+    sekrit_identity,
+    sekrit_installer_identity,
+    tmp_path,
+):
+    """If the project has no license file, an error is raised."""
+    # Reset license files list
+    first_app_with_binaries.license_files = []
+    first_app_with_binaries.packaging_format = "pkg"
+
+    # Select a codesigning identity
+    package_command.select_identity.side_effect = [
+        sekrit_identity,
+        sekrit_installer_identity,
+    ]
+
+    # Mock the notarization process
+    package_command.notarize = mock.Mock()
+
+    bundle_path = tmp_path / "base_path/build/first-app/macos/app"
+
+    # Create a pre-existing app bundle.
+    create_file(
+        bundle_path / "installer/root/First App.app/original",
+        "Original app",
+    )
+
+    # Create a pre-existing package bundle.
+    create_file(
+        bundle_path / "installer/packages/first-app.pkg",
+        "Original package",
+    )
+
+    # Re-package the app
+    package_command.package_app(first_app_with_binaries)
+
+    # Two signing identities were selected; the second is an installer identity
+    assert package_command.select_identity.mock_calls == [
+        mock.call(identity=None),
+        mock.call(identity=None, app_identity=sekrit_identity),
+    ]
+
+    # The app has been signed
+    package_command.sign_app.assert_called_once_with(
+        app=first_app_with_binaries,
+        identity=sekrit_identity,
+    )
+
+    # App content has been copied into place.
+    assert (bundle_path / "installer/root/First App.app/Contents/Info.plist").is_file()
+
+    # When duplicating the app, symlinks have been preserved
+    assert (
+        bundle_path
+        / "installer/root/First App.app/Contents/Frameworks/Extras.framework/Extras"
+    ).is_symlink()
+
+    # There are no license files in the resources directory
+    assert list((bundle_path / "installer/resources").iterdir()) == []
+
+    # The component list has been updated.
+    with (bundle_path / "installer/components.plist").open("rb") as f:
+        components = plistlib.load(f)
+
+        assert components == [
+            {
+                "BundleHasStrictIdentifier": True,
+                "BundleIsRelocatable": False,
+                "BundleIsVersionChecked": True,
+                "BundleOverwriteAction": "upgrade",
+                "RootRelativeBundlePath": "First App.app",
+            }
+        ]
+
+    assert package_command.tools.subprocess.run.mock_calls == [
+        mock.call(
+            [
+                "pkgbuild",
+                "--root",
+                bundle_path / "installer/root",
+                "--component-plist",
+                bundle_path / "installer/components.plist",
+                "--install-location",
+                "/Applications",
+                bundle_path / "installer/packages/first-app.pkg",
+            ],
+            check=True,
+        ),
+        mock.call(
+            [
+                "productbuild",
+                "--distribution",
+                bundle_path / "installer/Distribution.xml",
+                "--package-path",
+                bundle_path / "installer/packages",
+                "--resources",
+                bundle_path / "installer/resources",
+                "--sign",
+                "CAFEFACE",
+                tmp_path / "base_path/dist/First App-0.0.1.pkg",
+            ],
+            check=True,
+        ),
+    ]
+
+    # Notarization was performed with the installer identity
+    package_command.notarize.assert_called_once_with(
+        first_app_with_binaries,
+        identity=sekrit_identity,
+        installer_identity=sekrit_installer_identity,
+        wait=True,
+    )
 
 
 def test_package_pkg_previously_built(
     package_command,
     first_app_with_binaries,
-    license_file,
     adhoc_identity,
     tmp_path,
 ):
@@ -505,7 +696,7 @@ def test_package_pkg_previously_built(
     # The license has been updated.
     assert (bundle_path / "installer/resources/LICENSE").read_text(
         encoding="utf-8"
-    ) == "You can take license with this."
+    ) == "The Actual First App License"
 
     # The component list has been updated.
     with (bundle_path / "installer/components.plist").open("rb") as f:
@@ -554,7 +745,6 @@ def test_package_pkg_previously_built(
 def test_external_app(
     package_command,
     external_first_app,
-    license_file,
     sekrit_identity,
     sekrit_installer_identity,
     tmp_path,
@@ -618,7 +808,7 @@ def test_external_app(
     # The license has been updated.
     assert (bundle_path / "installer/resources/LICENSE").read_text(
         encoding="utf-8"
-    ) == "You can take license with this."
+    ) == "The Actual First App License"
 
     # The component list has been updated.
     with (bundle_path / "installer/components.plist").open("rb") as f:
@@ -670,4 +860,5 @@ def test_external_app(
         external_first_app,
         identity=sekrit_identity,
         installer_identity=sekrit_installer_identity,
+        wait=True,
     )

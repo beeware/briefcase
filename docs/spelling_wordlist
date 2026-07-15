@@ -5,6 +5,7 @@ allowlist
 AlmaLinux
 amongst
 APIs
+ABIs
 APK
 appimage
 AppImage
@@ -24,6 +25,7 @@ beeware
 BeeWare
 BeeWare's
 blobless
+BMP
 breakpoint
 Bugfix
 Bugfixes
@@ -43,6 +45,7 @@ cookiecutter
 Cookiecutter
 cryptographic
 CTRL
+CVE
 customizations
 datetime
 DBus
@@ -111,9 +114,12 @@ Manjaro
 manylinux
 MkDocs
 MSI
+MSIs
 Namespace
 Napari
 natively
+NET's
+NDK
 NFS
 NSIS
 NumPy
@@ -166,6 +172,7 @@ RGB
 RHEL
 rpmbuild
 rst
+RTF
 rumdl
 runtime
 Runtime
@@ -201,6 +208,7 @@ Toolset
 towncrier
 tox
 triaged
+troff
 Triaging
 TrustedPeople
 TrustedPublisher
@@ -220,6 +228,7 @@ UTI
 UTIs
 UTTypeConformsTo
 vendored
+Ventura
 verbing
 visionOS
 VM
@@ -229,8 +238,10 @@ Wayland
 WearOS
 WebKit
 WiX
+WPF
 Wunjo
 Xauth
 Xcode
 Xr
 Xs
+MSVC

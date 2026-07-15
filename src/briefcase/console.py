@@ -9,12 +9,12 @@ import sys
 import textwrap
 import time
 import traceback
-from collections.abc import Callable, Collection, Iterable, Mapping
+from collections.abc import Callable, Generator, Iterable, Mapping, Sequence
 from contextlib import contextmanager
 from datetime import datetime
 from enum import IntEnum
 from pathlib import Path
-from typing import Any
+from typing import Any, ClassVar
 
 from rich.console import Console as RichConsole
 from rich.control import strip_control_codes
@@ -31,7 +31,7 @@ from rich.traceback import Trace, Traceback
 
 from briefcase import __version__
 from briefcase.config import parse_boolean
-from briefcase.exceptions import InputDisabled
+from briefcase.exceptions import BriefcaseError, InputDisabled
 
 # Max width for printing to console; matches argparse's default width
 MAX_TEXT_WIDTH = max(min(shutil.get_terminal_size().columns, 80) - 2, 20)
@@ -69,8 +69,8 @@ class RichConsoleHighlighter(RegexHighlighter):
     consistent with a default HTML stylesheet, but otherwise renders content as-is.
     """
 
-    base_style = "repr."
-    highlights: Collection[str] = [
+    base_style: ClassVar[str] = "repr."
+    highlights: ClassVar[Sequence[str]] = [
         r"(?P<url>(file|https|http|ws|wss)://[-0-9a-zA-Z$_+!`(),.?/;:&=%#~]*)"
     ]
 
@@ -207,8 +207,9 @@ class Console:
         self.is_console_controlled = False
 
     def close(self):
-        self._dev_null.close()
-        self._dev_null = None
+        if self._dev_null:
+            self._dev_null.close()
+            self._dev_null = None
 
     def __del__(self):
         if self._dev_null:
@@ -249,6 +250,121 @@ class Console:
     def export_log(self):
         """Export the text of the entire log; the log is also cleared."""
         return self._log_impl.export_text()
+
+    @staticmethod
+    def _dedent_and_wrap(text, wrap_width, border=0):
+        """Dedent text, split text into paragraphs and wrap to a width.
+
+        If a border is specified, that border width will be preserved on the left *and
+        right* of the text. The right hand side won't be printed, but it will be
+        accommodated in any line wrapping.
+
+        Text that is already indented relative to the rest of the text will have that
+        indentation preserved.
+
+        If text is indented, it will *not* undergo line breaks on spaces and hyphens, on
+        the assumption that it will be an environment variable or command line.
+        """
+        # Dedent and remove common leading empty lines
+        text = textwrap.dedent(text).strip("\n")
+
+        # Split text into text lines
+        input_lines = text.split("\n")
+
+        # Create paragraphs from lines. Use "None" for a paragraph break.
+        # Preserve any line that starts with spaces as-is. Any other line
+        # is accumulated into the last paragraph
+        paragraphs = []
+        for line in input_lines:
+            if not line:
+                # Preserve an empty line as a paragraph break
+                paragraphs.append(None)
+            elif line[0] == " ":
+                # If the line starts with indentation, preserve it
+                paragraphs.append(line.rstrip())
+            elif not (paragraphs and paragraphs[-1] and paragraphs[-1][0] != " "):
+                # This is either the first paragraph, or the current last paragraph is
+                # either a paragraph break, or indented literal paragraph. This means
+                # the current line is the start of a new paragraph.
+                paragraphs.append(line.strip())
+            else:
+                # Accumulate onto the most recent paragraph.
+                paragraphs[-1] = f"{paragraphs[-1]} {line.strip()}"
+
+        # Wrap each paragraph to lines
+        output_lines = []
+        for p in paragraphs:
+            if p:
+                if p[0] == " ":
+                    # Preserve an indented line as a literal
+                    output_lines.append(f"{' ' * border}{p}")
+                else:
+                    # Break the paragraph into lines.
+                    output_lines.extend(
+                        f"{' ' * border}{line}"
+                        for line in textwrap.wrap(p, width=wrap_width - (border * 2))
+                    )
+            else:
+                # Insert a paragraph break.
+                output_lines.append("")
+
+        return output_lines
+
+    @staticmethod
+    def format_warning_banner(
+        title: str | None = None,
+        message: str | None = None,
+        width: int = 80,
+    ) -> str:
+        """Format a warning banner and return it as a string.
+
+        The title or message can be provided as a single or as multiline string. Any
+        common leading whitespace from each line will be removed.
+
+        To separate text into paragraphs you can use:
+        - blank line;
+        - relative indentation.
+        Lines with zero relative indentation will be merged to upper paragraph.
+
+        :param title: The title of the box. If provided, appears centered at the top.
+        :param message: The message to format inside the box.
+        :param width: The total width of the box in characters. Defaults to 80.
+        :returns: The formatted warning banner as a string.
+        """
+        BORDER_LINE = "*" * width
+        lines_array = ["", BORDER_LINE]
+
+        if title:
+            # Remove 6 from the width to allow for "** " and " **" wrappers
+            title_lines = Console._dedent_and_wrap(f"WARNING: {title}", width - 6)
+
+            # Center each line of the title and add to the box
+            for line in title_lines:
+                line = line.center(width - 6)
+                lines_array.append(f"** {line} **")
+
+            lines_array.append(BORDER_LINE)
+
+        if message:
+            msg_lines = Console._dedent_and_wrap(message, width, border=2)
+
+            lines_array.extend(["", *msg_lines, "", BORDER_LINE, ""])
+
+        return "\n".join(lines_array)
+
+    def warning_banner(
+        self,
+        title: str | None = None,
+        message: str | None = None,
+        width: int = 80,
+    ) -> None:
+        """Format a warning banner and print it to the console.
+
+        :param title: The title of the box. If provided, appears centered at the top.
+        :param message: The message to format inside the box.
+        :param width: The total width of the box in characters. Defaults to 80.
+        """
+        self.warning(self.format_warning_banner(title, message, width))
 
     #################################################################
     # Logging controls
@@ -414,13 +530,20 @@ class Console:
         :param label: An identifying label for the thread that has raised the
             stacktrace. Defaults to the main thread.
         """
-        exc_info = sys.exc_info()
-        try:
-            self.skip_log = exc_info[1].skip_logfile
-        except AttributeError:
-            pass
+        exc_type, exc_value, exc_trace = sys.exc_info()
+        if exc_value is None:
+            return
 
-        self.stacktraces.append((label, Traceback.extract(*exc_info, show_locals=True)))
+        if isinstance(exc_value, BriefcaseError):
+            self.skip_log = exc_value.skip_logfile
+
+        trace = Traceback.extract(
+            exc_type,  # ty:ignore[invalid-argument-type]
+            exc_value,
+            exc_trace,
+            show_locals=True,
+        )
+        self.stacktraces.append((label, trace))
 
     def add_log_file_extra(self, func: Callable[[], object]):
         """Register a function to be called in the event that a log file is written.
@@ -562,7 +685,7 @@ class Console:
         should be specifically disabled in non-interactive sessions.
         """
         # `sys.__stdout__` is used because Rich captures and redirects `sys.stdout`
-        return os.isatty(sys.__stdout__.fileno())
+        return sys.__stdout__ is not None and os.isatty(sys.__stdout__.fileno())
 
     @property
     def is_color_enabled(self):
@@ -599,7 +722,7 @@ class Console:
         *,
         transient: bool = False,
         markup: bool = False,
-    ) -> NotDeadYet:
+    ) -> Generator[NotDeadYet]:
         """Activates the Wait Bar as a context manager.
 
         If the Wait Bar is already active, then its message is updated for the new
@@ -674,7 +797,9 @@ class Console:
         """
         # Preserve current console state
         is_output_controlled = self.is_console_controlled
-        is_wait_bar_running = self._wait_bar and self._wait_bar.live.is_started
+        is_wait_bar_running = (
+            self._wait_bar is not None and self._wait_bar.live.is_started
+        )
 
         # Stop any active dynamic console elements
         if is_wait_bar_running:
@@ -742,7 +867,7 @@ class Console:
 
         return input_value
 
-    def input_boolean(self, question: str, default: bool = False) -> bool:
+    def input_boolean(self, question: str, default: bool | None = False) -> bool:
         """Get a boolean input from user, in the form of y/n.
 
         The user might press "y" for true or "n" for false. If input is disabled,
@@ -880,7 +1005,7 @@ class Console:
         :param validator: (optional) A validator function; accepts a single input (the
             candidate response), returns True if the answer is valid, or raises
             ValueError() with a debugging message if the candidate value isn't valid.
-        :param override_value: A pre-selected answer for the question. This can be used
+        :param override_value: A preselected answer for the question. This can be used
             to shortcut asking the question, such as when a command line option provides
             a value. If provided and valid, the header bar will be displayed, but the
             intro paragraph and option list will not.
@@ -933,7 +1058,7 @@ class Console:
         :param default: The default option for empty user input. The options for the
             user start numbering at 1; so, to default to the first item, this should be
             "1".
-        :param override_value: A pre-selected answer for the question. This can be used
+        :param override_value: A preselected answer for the question. This can be used
             to shortcut asking the question, such as when a command line option provides
             a value. If provided and valid, the header bar will be displayed, but the
             intro paragraph and option list will not.
@@ -973,6 +1098,8 @@ class Console:
         self.prompt()
 
         choices = [str(index) for index in range(1, len(ordered) + 1)]
+        if len(ordered) == 1:
+            default = "1"
         index = self.input_selection(
             prompt=f"{description} [{default}]: " if default else f"{description}: ",
             choices=choices,
@@ -995,7 +1122,7 @@ class Console:
             is used in prompts and a header bar prefacing the question.
         :param intro: An introductory paragraph explaining the question being asked.
         :param default: The default option for empty user input.
-        :param override_value: A pre-selected answer for the question. This can be used
+        :param override_value: A preselected answer for the question. This can be used
             to shortcut asking the question, such as when a command line option provides
             a value. If provided and valid, the header bar will be displayed, but the
             intro paragraph and option list will not. Will take the provided string and

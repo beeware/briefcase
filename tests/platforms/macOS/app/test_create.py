@@ -1266,7 +1266,7 @@ def test_install_app_requirements_error_adds_install_hint_missing_x86_64_wheel(
     # Check that _install_app_requirements raises a RequirementsInstallError with an install hint
     with pytest.raises(
         RequirementsInstallError,
-        match=r"x86_64 wheel that is compatible with a minimum\nmacOS version of 12.0",
+        match=r"x86_64 wheel that is compatible with\nPython 3\.\d+ and a minimum macOS version of 12.0",
     ):
         create_command._install_app_requirements(
             app=first_app_templated,
@@ -1303,7 +1303,7 @@ def test_install_app_requirements_error_adds_install_hint_missing_arm64_wheel(
     # Check that _install_app_requirements raises a RequirementsInstallError with an install hint
     with pytest.raises(
         RequirementsInstallError,
-        match=r"arm64 wheel that is compatible with a minimum\nmacOS version of 12.0",
+        match=r"arm64 wheel that is compatible with\nPython 3\.\d+ and a minimum macOS version of 12.0",
     ):
         create_command._install_app_requirements(
             app=first_app_templated,

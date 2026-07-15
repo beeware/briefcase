@@ -41,7 +41,7 @@
 <td></td>
 <td></td>
 <td colspan="2">{{ ci_tested }}</td>
-<td colspan="2"></td>
+<td colspan="2">{{ ci_tested }}</td>
 <td></td>
 <td></td>
 <td></td>
@@ -74,7 +74,7 @@ Briefcase uses the [WiX Toolset](https://www.firegiant.com/wixtoolset/) to build
 
 ## Icon format
 
-Windows apps installers use multi-format `.ico` icons; these icons should contain images in the following sizes:
+Windows apps use multi-format `.ico` icons; these icons should contain images in the following sizes:
 
 - 16px
 - 32px
@@ -82,7 +82,13 @@ Windows apps installers use multi-format `.ico` icons; these icons should contai
 - 64px
 - 256px
 
-Windows Apps do not support splash screens or installer images.
+This icon will also be used for the entry in the Windows launcher menu, if required.
+
+If provided, the `installer_background` should be a 493x312px BMP image. It will be shown on the first page of an MSI installer.
+
+If provided, the `installer_banner` should be a 493x58px BMP image. It will be shown at the top of every page of an MSI installer *except* the first page.
+
+Windows apps do not support splash screens or custom installer icons.
 
 ## Additional options
 
@@ -123,10 +129,41 @@ The digest algorithm to request the Timestamp Authority server uses for the time
 
 The following options can be added to the `tool.briefcase.app.<appname>.windows` section of your `pyproject.toml` file.
 
+#### `min_os_version`
+
+The minimum [Windows build number](https://en.wikipedia.org/wiki/List_of_Microsoft_Windows_versions) that the app will support.
+This is used by MSI installers to block installation on unsupported versions.
+
+#### `dotnet_version`  { #dotnet-version }
+
+The minimum .NET runtime version required by the application, as a version string (e.g., `"10.0.0"`). This is used by MSI installers to verify that the required runtime is installed before installing the app. If this value is not set, no .NET runtime check is performed.
+
+#### `dotnet_runtime_type`
+
+The type of .NET runtime required. Defaults to `"Desktop"` for GUI apps, and `"Core"` for console apps. Valid values are:
+
+* `"Core"` - The base .NET runtime (`Microsoft.NETCore.App`).
+* `"Desktop"` -The .NET Windows Desktop runtime (`Microsoft.WindowsDesktop.App`), which includes WPF and Windows Forms support.
+* `"AspNet"` - The ASP.NET Core runtime (`Microsoft.AspNetCore.App`).
+
+This value will be ignored unless [`dotnet_version`][dotnet-version] is set.
+
+#### `dotnet_rollforward`
+
+The version roll-forward policy used when checking for compatible runtimes. Defaults to `"LatestMinor"`. This maps directly to .NET's [roll-forward behavior](https://learn.microsoft.com/en-us/dotnet/core/versions/selection#control-roll-forward-behavior). Valid values are:
+
+* `"Minor"` - Roll forward to the lowest higher minor version, if the requested minor version is missing.
+* `"Major"` - Roll forward to the lowest higher major version, and lowest minor version, if the requested major version is missing.
+* `"LatestPatch"` - Roll forward to the highest patch version. This disables minor version roll forward.
+* `"LatestMinor"` - Roll forward to the highest minor version, even if the requested minor version is present.
+* `"LatestMajor"` - Roll forward to the highest major and highest minor version, even if the requested major is present.
+* `"Disable"` - Do not roll forward. Only bind to the specified version. This policy is not recommended for general use because it disables the ability to roll forward to the latest patches.
+
+This value will be ignored unless [`dotnet_version`][dotnet-version] is set.
+
 ### `installer_path`
 
-The name of a directory in the package bundle that can be used to store post-install and
-pre-uninstall scripts. Defaults to `_installer`.
+The name of a directory in the package bundle that can be used to store post-install and pre-uninstall scripts. Defaults to `_installer`.
 
 ### `post_install_script`
 
@@ -165,6 +202,10 @@ Briefcase will attempt to convert your [`version`][] into a valid MSI value by e
 
 However, if you need to override this default value, you can define [`version_triple`][] in your app settings. If provided, this value will be used in the MSI configuration file instead of the auto-generated value.
 
+### `create_desktop_shortcut`
+
+Whether the installer should default to creating a desktop shortcut. Defaults to `False`.
+
 ## Installer/uninstaller options
 
 Windows MSI installers are able to present a panel of optional features to the user as part of the installation or uninstallation process. These features are binary flags which can then be used by a [post-install script][post_install_script] to perform additional installation behaviors, or by a [pre-uninstall script][pre_uninstall_script] to perform additional uninstallation behaviors.
@@ -191,7 +232,12 @@ A Boolean describing the initial value of the option in the GUI. If not provided
 
 When an installer option is defined, the value of the option will be made available to the post-install or pre-uninstall script as an environment variable. For example, if you define an option with a name of `foo`, an environment variable of `OPTION_FOO` will be defined, with a value of 1 if the option has been selected by the user, and 0 if the option has not been selected.
 
-In the post-install script, the `ALLUSERS` environment variable will be set; its value will be 1 if the app has been installed for all users, or 0 if it has only been installed for the current user. The `INSTALLER_PATH` environment variable will be set to the path of the MSI file.
+In addition, the post-install script environment will have a number of variables set describing the conditions of the installation:
+* `ALLUSERS` will be set to 1 if the app has been installed for all users, or 0 if it has only been installed for the current user;
+* `INSTALLER_PATH` will be set to the path of the MSI file; and
+* `INSTALLER_UNATTENDED` will be set to 1 if the MSI has been installed in "quiet mode" (i.e., if the `/qn` option has been passed to `msiexec`).
+
+The post-uninstall script will have the `INSTALLER_UNATTENDED` variable set.
 
 If a user uninstalls software by clicking "uninstall" through the Windows "Remove software" interface, the uninstall options will not be displayed to the user. The pre-uninstall script *will* be executed, but the uninstall options will assume their default values. The uninstall GUI is only displayed if the user re-runs the installer manually, or if the user specifies the "Modify" option in the Windows "Remove software" interface. This is a quirk of the Windows uninstall tooling.
 

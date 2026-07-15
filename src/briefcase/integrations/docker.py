@@ -8,10 +8,11 @@ import sys
 from collections.abc import Iterable, Mapping
 from functools import cache
 from pathlib import Path, PosixPath, PurePosixPath
+from typing import Any
 
 from packaging.version import InvalidVersion, Version
 
-from briefcase.config import AppConfig
+from briefcase.config import FinalizedAppConfig
 from briefcase.exceptions import BriefcaseCommandError
 from briefcase.integrations.base import Tool, ToolCache
 from briefcase.integrations.subprocess import SubprocessArgsT
@@ -34,48 +35,6 @@ version {docker_version}. Visit:
     {install_url}
 
 to download and install an updated version of Docker.
-"""
-    UNKNOWN_DOCKER_VERSION_WARNING = """
-*************************************************************************
-** WARNING: Unable to determine the version of Docker                  **
-*************************************************************************
-
-    Briefcase will proceed, assuming everything is OK. If you
-    experience problems, this is almost certainly the cause of those
-    problems.
-
-    Please report this as a bug at:
-
-      https://github.com/beeware/briefcase/issues/new
-
-    In your report, please including the output from running:
-
-      $ docker --version
-
-    from the command prompt.
-
-*************************************************************************
-"""
-    DOCKER_INSTALLATION_STATUS_UNKNOWN_WARNING = """
-*************************************************************************
-** WARNING: Unable to determine if Docker is installed                 **
-*************************************************************************
-
-    Briefcase will proceed, assuming everything is OK. If you
-    experience problems, this is almost certainly the cause of those
-    problems.
-
-    Please report this as a bug at:
-
-      https://github.com/beeware/briefcase/issues/new
-
-    In your report, please including the output from running:
-
-      $ docker --version
-
-    from the command prompt.
-
-*************************************************************************
 """
     DOCKER_NOT_INSTALLED_ERROR = """\
 Briefcase requires Docker, but it is not installed (or is not on your PATH).
@@ -186,9 +145,43 @@ See https://docs.docker.com/go/buildx/ to install the buildx plugin.
                     )
                 )
         except (InvalidVersion, IndexError):
-            tools.console.warning(cls.UNKNOWN_DOCKER_VERSION_WARNING)
+            tools.console.warning_banner(
+                "Unable to determine the version of Docker",
+                """
+                    Briefcase will proceed, assuming everything is OK. If you
+                    experience problems, this is almost certainly the cause of those
+                    problems.
+
+                    Please report this as a bug at:
+
+                        https://github.com/beeware/briefcase/issues/new
+
+                    In your report, please including the output from running:
+
+                        $ docker --version
+
+                    from the command prompt.
+                """,
+            )
         except subprocess.CalledProcessError:
-            tools.console.warning(cls.DOCKER_INSTALLATION_STATUS_UNKNOWN_WARNING)
+            tools.console.warning_banner(
+                "Unable to determine if Docker is installed",
+                """
+                    Briefcase will proceed, assuming everything is OK. If you
+                    experience problems, this is almost certainly the cause of those
+                    problems.
+
+                    Please report this as a bug at:
+
+                        https://github.com/beeware/briefcase/issues/new
+
+                    In your report, please including the output from running:
+
+                        $ docker --version
+
+                    from the command prompt.
+                """,
+            )
         except OSError as e:
             # Docker executable doesn't exist
             raise BriefcaseCommandError(
@@ -428,7 +421,7 @@ Delete this file and run Briefcase again.
         cwd: str | os.PathLike | None = None,
         add_hosts: Iterable[tuple[str, str]] | None = None,
         **subprocess_kwargs,
-    ) -> dict[str, ...]:  # pragma: no-cover-if-is-windows
+    ) -> dict[str, Any]:  # pragma: no-cover-if-is-windows
         """Convert arguments and environment into a Docker-compatible form.
 
         Converts an argument and environment specification into a form that can be used
@@ -522,8 +515,8 @@ Delete this file and run Briefcase again.
 
     @contextlib.contextmanager
     def x11_passthrough(
-        self, subprocess_kwargs: dict[str, ...]
-    ) -> dict[str, ...]:  # pragma: no-cover-if-is-windows
+        self, subprocess_kwargs: dict[str, Any]
+    ) -> dict[str, Any]:  # pragma: no-cover-if-is-windows
         """Manager to expose the host's X11 server to a container.
 
         This allows Docker containers to use the host's X11 server with the
@@ -822,9 +815,9 @@ class DockerAppContext(Tool):
     name = "docker_app_context"
     full_name = "Docker"
 
-    def __init__(self, tools: ToolCache, app: AppConfig):
+    def __init__(self, tools: ToolCache, app: FinalizedAppConfig):
         super().__init__(tools=tools)
-        self.app: AppConfig = app
+        self.app: FinalizedAppConfig = app
         self.app_base_path: Path
         self.host_bundle_path: Path
         self.host_data_path: Path
@@ -840,7 +833,7 @@ class DockerAppContext(Tool):
     def verify_install(
         cls,
         tools: ToolCache,
-        app: AppConfig,
+        app: FinalizedAppConfig,
         image_tag: str,
         dockerfile_path: Path,
         app_base_path: Path,
@@ -945,7 +938,7 @@ class DockerAppContext(Tool):
                     ) from e
 
     @contextlib.contextmanager
-    def run_app_context(self, subprocess_kwargs: dict[str, ...]) -> dict[str, ...]:
+    def run_app_context(self, subprocess_kwargs: dict[str, Any]) -> dict[str, Any]:
         """Manager to run a Briefcase project app in a container.
 
         :returns: context manager to wrap the call to Popen/run/check_output()
@@ -979,7 +972,7 @@ class DockerAppContext(Tool):
 
     def _dockerize_args(
         self, args: SubprocessArgsT, **kwargs
-    ) -> dict[str, ...]:  # pragma: no-cover-if-is-windows
+    ) -> dict[str, Any]:  # pragma: no-cover-if-is-windows
         """App-specific wrapper for Docker.dockerize_args().
 
         Uses the app's dedicated Docker image to run the container.

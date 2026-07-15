@@ -2,7 +2,7 @@ import pytest
 
 from briefcase.commands import PackageCommand
 from briefcase.commands.base import full_options
-from briefcase.config import AppConfig
+from briefcase.config import DraftAppConfig
 
 from ...utils import create_file
 
@@ -72,9 +72,10 @@ class DummyPackageCommand(PackageCommand):
         super().verify_tools()
         self.actions.append(("verify-tools",))
 
-    def finalize_app_config(self, app):
-        super().finalize_app_config(app=app)
+    def finalize_app_config(self, app, **kwargs):
+        app = super().finalize_app_config(app=app, **kwargs)
         self.actions.append(("finalize-app-config", app.app_name))
+        return app
 
     def verify_app_template(self, app):
         super().verify_app_template(app=app)
@@ -126,7 +127,7 @@ def package_command(dummy_console, tmp_path):
 
 @pytest.fixture
 def first_app_config():
-    return AppConfig(
+    return DraftAppConfig(
         app_name="first",
         bundle="com.example",
         version="0.0.1",
@@ -162,7 +163,7 @@ def first_app(first_app_unbuilt, tmp_path):
 
 @pytest.fixture
 def second_app_config():
-    return AppConfig(
+    return DraftAppConfig(
         app_name="second",
         bundle="com.example",
         version="0.0.2",

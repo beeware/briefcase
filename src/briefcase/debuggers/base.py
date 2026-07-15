@@ -13,7 +13,7 @@ import briefcase
 if TYPE_CHECKING:
     # avoid circular imports
     from briefcase.commands.run import RunCommand
-    from briefcase.config import AppConfig
+    from briefcase.config import FinalizedAppConfig
 
 
 def _is_editable_pep610(dist_name: str) -> bool:
@@ -108,7 +108,7 @@ class BaseDebugger(ABC):
     def get_env_config(
         self,
         cmd: RunCommand,
-        app: AppConfig,
+        app: FinalizedAppConfig,
     ) -> str:
         """Get the environment config to start the debugger.
 

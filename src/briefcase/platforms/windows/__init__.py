@@ -5,45 +5,68 @@ import subprocess
 import uuid
 from collections.abc import Collection
 from pathlib import Path, PurePath
+from typing import TYPE_CHECKING
 from zipfile import ZIP_DEFLATED, ZipFile
 
 from briefcase.commands import CreateCommand, PackageCommand, RunCommand
-from briefcase.config import AppConfig
-from briefcase.exceptions import BriefcaseCommandError, UnsupportedHostError
+from briefcase.config import FinalizedAppConfig
+from briefcase.exceptions import (
+    BriefcaseCommandError,
+    BriefcaseConfigError,
+    UnsupportedHostError,
+)
 from briefcase.integrations.windows_sdk import WindowsSDK
 from briefcase.integrations.wix import WiX
+
+if TYPE_CHECKING:
+    from briefcase.commands.base import BaseCommand
+
+    _MixinBase = BaseCommand
+else:
+    _MixinBase = object
 
 DEFAULT_OUTPUT_FORMAT = "app"
 
 
-def txt_to_rtf(txt):
-    """A very simple TXT to RTF converter.
+def txt_to_rtf(txt: str | list[str]) -> str:
+    """Convert plain text to a full RTF document.
 
     The entire document is rendered in Courier. Any blank line is interpreted as a
     paragraph marker; any line starting with a * is rendered as a bullet. Everything
     else is rendered verbatim in the RTF document.
 
-    :param text: The original text.
-    :returns: The text in RTF format.
+    If a list of strings is provided, each string is converted to an RTF body section
+    and the sections are joined with an RTF horizontal-rule separator.
+
+    :param txt: The original plain text, either as a single string or a list of strings.
+    :returns: A complete RTF document string.
     """
-    rtf = ["{\\rtf1\\ansi\\deff0 {\\fonttbl {\\f0 Courier;}}"]
-    for line in txt.split("\n"):
-        if line.lstrip().startswith("*"):
-            rtf.append(f"\\bullet{line[line.index('*') + 1 :]} ")
-        elif line:
-            # Add a space at the end to ensure multi-line paragraphs
-            # have a word break. Strip whitespace to ensure that
-            # indented bullet paragraphs don't have extra space.
-            rtf.append(line.strip() + " ")
-        else:
-            # A blank line is a paragraph+line break.
-            rtf.append("\\par\\line")
-    rtf.append("}")
+    RTF_HEADER = "{\\rtf1\\ansi\\deff0 {\\fonttbl {\\f0 Courier;}}"
+    RTF_SEPARATOR = "\\par\\line\\brdrb\\brdrs\\brdrw10\\brsp20\\par\\line"
 
-    return "\n".join(rtf)
+    texts = [txt] if isinstance(txt, str) else txt
+
+    bodies = []
+    for text in texts:
+        rtf = []
+        for line in text.split("\n"):
+            if line.lstrip().startswith("*"):
+                rtf.append(f"\\bullet{line[line.index('*') + 1 :]} ")
+            elif line:
+                # Add a space at the end to ensure multi-line paragraphs
+                # have a word break. Strip whitespace to ensure that
+                # indented bullet paragraphs don't have extra space.
+                rtf.append(line.strip() + " ")
+            else:
+                # A blank line is a paragraph+line break.
+                rtf.append("\\par\\line")
+        bodies.append("\n".join(rtf))
+
+    separator = f"\n{RTF_SEPARATOR}\n"
+    return f"{RTF_HEADER}\n{separator.join(bodies)}\n}}"
 
 
-class WindowsMixin:
+class WindowsMixin(_MixinBase):
     platform = "windows"
     supported_host_os: Collection[str] = {"Windows"}
     supported_host_os_reason = "Windows applications can only be built on Windows."
@@ -65,27 +88,37 @@ class WindowsMixin:
         suffix = "zip" if app.packaging_format == "zip" else "msi"
         return self.dist_path / f"{app.formal_name}-{app.version}.{suffix}"
 
+    @property
+    def vscode_platform(self):
+        return "ARM64" if self.tools.host_arch == "ARM64" else "x64"
+
     def verify_host(self):
         super().verify_host()
-        # The stub app only supports x86-64 right now, and our VisualStudio and WiX code
-        # is the same (#1887). However, we can package an external x86-64 app on any
-        # build machine.
-        if self.tools.host_arch != "AMD64":
+        if (
+            self.tools.host_arch == "ARM64"
+            and "AMD64" in self.tools.platform.python_compiler()
+        ):
+            raise UnsupportedHostError(
+                "The Python interpreter that is being used to run Briefcase has been "
+                "compiled for x86_64, and is running in emulation mode on ARM64 "
+                "hardware. You must use a Python interpreter that has been "
+                "compiled for ARM64."
+            )
+
+        if self.tools.host_arch not in ("AMD64", "ARM64"):
             if all(app.external_package_path for app in self.apps.values()):
                 if not self.is_clone:
-                    self.console.warning(f"""
-*************************************************************************
-** WARNING: Possible architecture mismatch                             **
-*************************************************************************
+                    self.tools.console.warning_banner(
+                        "Possible architecture mismatch",
+                        f"""
+                            The build machine is {self.tools.host_arch}, but Briefcase
+                            on Windows only supports x86-64 and ARM64 installers.
 
-The build machine is {self.tools.host_arch}, but Briefcase on Windows currently only
-supports x86-64 installers.
-
-You are responsible for ensuring that the content of external_package_path
-is compatible with x86-64.
-
-*************************************************************************
-""")
+                            You are responsible for ensuring that the content of
+                            external_package_path is compatible with supported
+                            platforms.
+                        """,
+                    )
             else:
                 raise UnsupportedHostError(
                     "Windows applications cannot be built on an "
@@ -101,10 +134,23 @@ Windows applications cannot be built using a 32bit version of Python.
 Install a 64bit version of Python and run Briefcase again.
 """)
 
+    def target_windows_build(self, app: FinalizedAppConfig) -> int | None:
+        """The minimum supported Windows build number for the app from
+        ``briefcase.toml``.
+
+        :param app: The config object for the app
+        :return: version or None if one isn't specified
+        """
+        try:
+            return self.briefcase_toml(app)["briefcase"]["target_windows_build"]
+        except KeyError:
+            return None
+
 
 class WindowsCreateCommand(CreateCommand):
     def support_package_filename(self, support_revision):
-        return f"python-{self.python_version_tag}.{support_revision}-embed-amd64.zip"
+        arch = self.tools.host_arch.lower()
+        return f"python-{self.python_version_tag}.{support_revision}-embed-{arch}.zip"
 
     def support_package_url(self, support_revision):
         micro = re.match(r"\d+", str(support_revision)).group(0)
@@ -114,7 +160,7 @@ class WindowsCreateCommand(CreateCommand):
             f"{self.support_package_filename(support_revision)}"
         )
 
-    def extras_path(self, app: AppConfig) -> Path:
+    def extras_path(self, app: FinalizedAppConfig) -> Path:
         """Obtain the path for extra installer content.
 
         Extra installer content is content that needs to be inserted into the installer,
@@ -133,7 +179,7 @@ class WindowsCreateCommand(CreateCommand):
 
         return self.bundle_path(app) / extras_path
 
-    def output_format_template_context(self, app: AppConfig):
+    def output_format_template_context(self, app: FinalizedAppConfig):
         """Additional template context required by the output format.
 
         :param app: The config object for the app
@@ -168,96 +214,126 @@ class WindowsCreateCommand(CreateCommand):
             # system_installer not defined in config; default to asking the user
             install_scope = "perUserOrMachine"
 
+        installer_images = {}
+        try:
+            installer_images["background"] = str(
+                (self.base_path / app.installer_background).with_suffix(".bmp")
+            )
+        except AttributeError:
+            installer_images["background"] = ""
+        try:
+            installer_images["banner"] = str(
+                (self.base_path / app.installer_banner).with_suffix(".bmp")
+            )
+        except AttributeError:
+            installer_images["banner"] = ""
+
         return {
             "version_triple": version_triple,
             "guid": str(guid),
             "install_scope": install_scope,
             "package_path": str(self.package_path(app)),
             "binary_path": self.package_executable_path(app),
+            "installer_images": installer_images,
         }
 
     def _cleanup_app_support_package(self, support_path):
         # On Windows, the support path is co-mingled with app content.
         # This means updating the support package is imperfect.
         # Warn the user that there could be problems.
-        self.console.warning("""
-*************************************************************************
-** WARNING: Support package update may be imperfect                    **
-*************************************************************************
+        self.tools.console.warning_banner(
+            "Support package update may be imperfect",
+            """
+                Support packages in Windows apps are overlaid with app content,
+                so it isn't possible to remove all old support files before
+                installing new ones.
 
-    Support packages in Windows apps are overlaid with app content,
-    so it isn't possible to remove all old support files before
-    installing new ones.
+                Briefcase will unpack the new support package without cleaning up
+                existing support package content. This *should* work; however,
+                ensure a reproducible release artefacts, it is advisable to
+                perform a clean app build before release.
+            """,
+        )
 
-    Briefcase will unpack the new support package without cleaning up
-    existing support package content. This *should* work; however,
-    ensure a reproducible release artefacts, it is advisable to
-    perform a clean app build before release.
+    def _install_app_requirements(
+        self,
+        app: FinalizedAppConfig,
+        requires: list[str],
+        app_packages_path: Path,
+        **kwargs,
+    ):
+        if template_min_version := self.target_windows_build(app):
+            min_version = int(getattr(app, "min_os_version", template_min_version))
+            if min_version < int(template_min_version):
+                raise BriefcaseCommandError(
+                    "Your Windows app specifies a minimum build number of "
+                    f"{min_version}, but the app template only supports "
+                    f"{template_min_version}"
+                )
 
-*************************************************************************
-""")
+        return super()._install_app_requirements(
+            app, requires, app_packages_path, **kwargs
+        )
 
-    def install_license(self, app: AppConfig):
-        """Install the license for the project as RTF content.
+    def install_license(self, app: FinalizedAppConfig):
+        """Install the license for the project as a single RTF document.
 
-        Currently assumes PEP621 format for `license`:
-        * If `license.file` is an RTF file, it is used verbatim
-        * If `license.file` is any other file, it is converted to RTF
-          using a simple text->RTF conversion.
-        * If `license.text` is provided, that text is converted to
-          RTF; with a warning for the case where `license.text` is
-          a one-line license name/description.
+        The following cases are handled:
 
-        If no `license` field is defined, or it points at a file that
-        doesn't exist an error is raised.
-
-        When PEP639 support is added, we will need to adapt this method.
+        - Single ``.rtf`` file: copied directly without any transformation.
+        - Single non-``.rtf`` file: converted to RTF via ``txt_to_rtf()``.
+        - Multiple files, all non-``.rtf``: converted and merged with a
+          separator via ``txt_to_rtf()``.
+        - Multiple files where any is ``.rtf``, or a mix of ``.rtf`` and
+          non-``.rtf``: raises ``BriefcaseConfigError``.
 
         :param app: The config object for the app
         """
         installed_license = self.bundle_path(app) / "LICENSE.rtf"
 
-        if license_file := app.license.get("file"):
-            license_file = self.base_path / license_file
-            if license_file.is_file():
-                if license_file.suffix == ".rtf":
-                    self.tools.shutil.copy(license_file, installed_license)
-                    license_text = None
-                else:
-                    license_text = license_file.read_text(encoding="utf-8")
-                    installed_license.write_text(
-                        txt_to_rtf(license_text), encoding="utf-8"
-                    )
-            else:
-                raise BriefcaseCommandError(
-                    "Your `pyproject.toml` specifies a license file of "
-                    f"{str(license_file.relative_to(self.base_path))!r}.\n"
-                    "However, this file does not exist."
-                    "\n\n"
-                    "Ensure you have correctly spelled the filename in your "
-                    "`license.file` setting."
-                )
-        elif license_text := app.license.get("text"):
-            if len(license_text.splitlines()) <= 1:
-                self.console.warning("""
-Your app specifies a license using `license.text`, but the value doesn't appear
-to be a full license. Briefcase will generate a `LICENSE.rtf` file for your
-project; you should ensure that the contents of this file is adequate.
-""")
-            installed_license.write_text(
-                txt_to_rtf(license_text),
-                encoding="utf-8",
-            )
-        else:
+        rtf_files = [
+            p for p in app.license_files if (self.base_path / p).suffix == ".rtf"
+        ]
+
+        if len(app.license_files) == 0:
             raise BriefcaseCommandError("""\
-Your project does not contain a `license` definition.
+Your project does not include any license files.
 
-Create a file named `LICENSE` in the same directory as your `pyproject.toml`
-with your app's licensing terms, and set `license.file = 'LICENSE'` in your
-app's configuration.
+Ensure your `pyproject.toml` is in PEP 639 format and specifies at least
+one file in the `license-files` setting.
+""")
+        elif len(app.license_files) == 1:
+            license_file = self.base_path / app.license_files[0]
+            if license_file.suffix == ".rtf":
+                # Single RTF file: copy directly.
+                self.tools.shutil.copy(license_file, installed_license)
+                return
+            else:
+                # Single text file: convert to full RTF document.
+                installed_license.write_text(
+                    txt_to_rtf(license_file.read_text(encoding="utf-8")),
+                    encoding="utf-8",
+                )
+                return
+
+        # Multiple files.
+        if rtf_files:
+            raise BriefcaseConfigError(f"""\
+The license configuration for {app.app_name!r} contains multiple
+license files, and at least one is an RTF file. Briefcase cannot
+automatically merge RTF license files.
+
+Either provide a single RTF file, or provide only plain-text license
+files that Briefcase can convert and merge automatically.
 """)
 
-    def install_app_resources(self, app: AppConfig):
+        # Multiple non-RTF files: convert each and merge via txt_to_rtf().
+        texts = [
+            (self.base_path / p).read_text(encoding="utf-8") for p in app.license_files
+        ]
+        installed_license.write_text(txt_to_rtf(texts), encoding="utf-8")
+
+    def install_app_resources(self, app: FinalizedAppConfig):
         """Install Windows-specific app resources.
 
         This includes any post-install or pre-uninstall scripts, plus converting the
@@ -321,7 +397,7 @@ class WindowsRunCommand(RunCommand):
 
     def run_app(
         self,
-        app: AppConfig,
+        app: FinalizedAppConfig,
         passthrough: list[str],
         **kwargs,
     ):
@@ -442,7 +518,7 @@ class WindowsPackageCommand(PackageCommand):
 
     def sign_file(
         self,
-        app: AppConfig,
+        app: FinalizedAppConfig,
         filepath: Path,
         identity: str,
         file_digest: str,
@@ -492,7 +568,7 @@ class WindowsPackageCommand(PackageCommand):
 
     def package_app(
         self,
-        app: AppConfig,
+        app: FinalizedAppConfig,
         identity: str | None = None,
         adhoc_sign: bool = False,
         file_digest: str | None = None,
@@ -525,17 +601,14 @@ class WindowsPackageCommand(PackageCommand):
             sign_app = True
         else:
             sign_app = False
-            self.console.warning("""
-*************************************************************************
-** WARNING: No signing identity provided                               **
-*************************************************************************
-
-    Briefcase will not sign the app. To provide a signing identity,
-    use the `--identity` option; or, to explicitly disable signing,
-    use `--adhoc-sign`.
-
-*************************************************************************
-""")
+            self.tools.console.warning_banner(
+                "No signing identity provided",
+                """
+                    Briefcase will not sign the app. To provide a signing identity,
+                    use the `--identity` option; or, to explicitly disable signing,
+                    use `--adhoc-sign`.
+                """,
+            )
 
         if sign_app:
             self.console.info("Signing App...", prefix=app.app_name)
@@ -572,8 +645,12 @@ class WindowsPackageCommand(PackageCommand):
                         "build",
                         "-ext",
                         self.tools.wix.ext_path("UI"),
+                        "-ext",
+                        self.tools.wix.ext_path("Netfx"),
+                        "-ext",
+                        self.tools.wix.ext_path("Util"),
                         "-arch",
-                        "x64",  # Default is x86, regardless of the build machine.
+                        self.vscode_platform.lower(),
                         f"{app.app_name}.wxs",
                         "-loc",
                         "unicode.wxl",

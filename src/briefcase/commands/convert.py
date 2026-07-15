@@ -10,7 +10,7 @@ from urllib.parse import urlparse
 
 from packaging.utils import canonicalize_name
 
-from ..config import is_valid_app_name
+from ..config import get_license_from_text, is_valid_app_name
 from .new import LICENSE_OPTIONS, NewCommand, parse_project_overrides
 
 if sys.version_info >= (3, 11):  # pragma: no-cover-if-lt-py311
@@ -19,7 +19,7 @@ else:  # pragma: no-cover-if-gte-py311
     import tomli as tomllib
 
 from briefcase.bootstraps import EmptyBootstrap
-from briefcase.config import make_class_name, validate_url
+from briefcase.config import APP_NAME_SPEC, make_class_name, validate_url
 from briefcase.exceptions import BriefcaseCommandError
 
 
@@ -108,31 +108,40 @@ class ConvertCommand(NewCommand):
         """
         intro = (
             "We need a name that can serve as a machine-readable Python package name "
-            "for your application. This name must be PEP508-compliant - that means the "
-            "name may only contain letters, numbers, hyphens and underscores; it can't "
-            "contain spaces or punctuation, and it can't start with a hyphen or "
-            "underscore."
+            f"for your application. {APP_NAME_SPEC}"
         )
 
         default = "hello-world"
-        if (
-            "name" in self.pep621_data
-            and is_valid_app_name(self.pep621_data["name"])
-            and override_value is None
-        ):
-            app_name = canonicalize_name(self.pep621_data["name"])
+
+        project_name = self.pep621_data.get("name")
+        if project_name and is_valid_app_name(project_name) and override_value is None:
+            # Project name is usable as-is (e.g., "foobar", "foo-bar")
             self.console.divider(title="App name")
             self.console.prompt()
             self.console.prompt(
-                f"Using value from PEP621 formatted pyproject.toml {app_name!r}"
+                f"Using value from PEP621 formatted pyproject.toml {project_name!r}"
             )
-            return app_name
-
-        if is_valid_app_name(self.base_path.name):  # Directory name is normalised
-            default = canonicalize_name(self.base_path.name)
+            return project_name
+        elif project_name and is_valid_app_name(
+            canonicalized_name := canonicalize_name(project_name)
+        ):
+            # Canonicalized project name is valid
+            # (e.g., "test.name" -> "test-name", "test-app_name" -> "test-app-name")
+            intro += (
+                "\n\nBased on the project name from your PEP621 formatted "
+                f"pyproject.toml, we suggest an app name of '{canonicalized_name}', "
+                "but you can use another name if you want."
+            )
+            default = canonicalized_name
+        elif is_valid_app_name(
+            canonicalized_name := canonicalize_name(self.base_path.name)
+        ):
+            # Canonicalized project name isn't valid
+            # Fall back to canonicalized directory name
+            default = canonicalized_name
             intro += (
                 "\n\n"
-                f"Based on your PEP508 formatted directory name, we suggest an "
+                f"Based on your canonicalized directory name, we suggest an "
                 f"app name of '{default}', but you can use another name if you want."
             )
 
@@ -478,47 +487,6 @@ class ConvertCommand(NewCommand):
 
         return author_email
 
-    def get_license_from_text(self, license_text: str) -> str:
-        """Infer the license from the license file."""
-        # The order here is quite important. If we have GPLvX+ after GPLvX, then it will
-        # never be matched if the license text is GPLvX+, since it will already have
-        # matched GPLvX. We search for MIT last, because words like PERMITTED and
-        # LIMITED will generate a false match.
-
-        hint_patterns = {
-            "Apache-2.0": ["Apache"],
-            "BSD-3-Clause": [
-                "Redistribution and use in source and binary forms",
-                "BSD",
-            ],
-            "GPL-2.0+": [
-                "Free Software Foundation, either version 2 of the License",
-                "GPLv2+",
-            ],
-            "GPL-2.0": [
-                "version 2 of the GNU General Public License",
-                "GPLv2",
-            ],
-            "GPL-3.0+": [
-                "either version 3 of the License",
-                "GPLv3+",
-            ],
-            "GPL-3.0": [
-                "version 3 of the GNU General Public License",
-                "GPLv3",
-            ],
-            "MIT": [
-                "Permission is hereby granted, free of charge",
-                "MIT",
-            ],
-        }
-        for license_id, license_patterns in hint_patterns.items():
-            for license_pattern in license_patterns:
-                if license_pattern.lower() in license_text.lower():
-                    return license_id
-
-        return "Other"
-
     def get_license_hint(self) -> tuple[str | None, str]:
         """Get hint for project license, either by reading pyproject.toml or the license
         file.
@@ -532,21 +500,23 @@ class ConvertCommand(NewCommand):
         # If there is license information in the pyproject.toml file, use that,
         # otherwise check the license file
         if "text" in self.pep621_data.get("license", {}):
-            default = self.get_license_from_text(self.pep621_data["license"]["text"])
+            default = get_license_from_text(
+                self.pep621_data["license"]["text"], default="Other"
+            )
             default_source = "the PEP621 formatted pyproject.toml"
         elif "file" in self.pep621_data.get("license", {}):
             license_text = (
                 self.base_path / self.pep621_data["license"]["file"]
             ).read_text(encoding="utf-8")
-            default = self.get_license_from_text(license_text)
+            default = get_license_from_text(license_text, default="Other")
             default_source = "the license file"
         elif (self.base_path / "LICENSE").exists():
             license_text = (self.base_path / "LICENSE").read_text(encoding="utf-8")
-            default = self.get_license_from_text(license_text)
+            default = get_license_from_text(license_text, default="Other")
             default_source = "the license file"
         elif (self.base_path / "LICENCE").exists():
             license_text = (self.base_path / "LICENCE").read_text(encoding="utf-8")
-            default = self.get_license_from_text(license_text)
+            default = get_license_from_text(license_text, default="Other")
             default_source = "the license file"
         else:
             return None, intro

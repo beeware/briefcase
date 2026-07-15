@@ -1,13 +1,21 @@
 from __future__ import annotations
 
 from collections.abc import Collection
+from typing import TYPE_CHECKING
 
 from briefcase.integrations.xcode import Xcode
+
+if TYPE_CHECKING:
+    from briefcase.commands.base import BaseCommand
+
+    _MixinBase = BaseCommand
+else:
+    _MixinBase = object
 
 DEFAULT_OUTPUT_FORMAT = "Xcode"
 
 
-class iOSMixin:
+class iOSMixin(_MixinBase):
     platform = "iOS"
     supported_host_os: Collection[str] = {"Darwin"}
     supported_host_os_reason = (

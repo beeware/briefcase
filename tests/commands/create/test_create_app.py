@@ -1,6 +1,6 @@
 import pytest
 
-from briefcase.config import AppConfig
+from briefcase.config import DraftAppConfig
 from briefcase.exceptions import UnsupportedPlatform
 
 
@@ -166,7 +166,7 @@ def test_create_app_not_supported(tracking_create_command, tmp_path):
 
     with pytest.raises(UnsupportedPlatform):
         tracking_create_command.create_app(
-            AppConfig(
+            DraftAppConfig(
                 app_name="third",
                 bundle="com.example",
                 version="0.0.3",

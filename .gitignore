@@ -23,6 +23,7 @@ venv*
 .eggs/
 .tox/
 /local
+__pycache__/
 .ruff_cache/
 
 /pip-wheel-metadata
@@ -42,3 +43,18 @@ venv*
 
 tests/apps/verify-*/
 logs/
+
+# AI tooling (SpecKit v0.8.0)
+.opencode/
+.specify/scripts
+.specify/templates
+.specify/extensions.yml
+.specify/extensions
+.specify/feature.json
+.specify/init-options.json
+.specify/integration.json
+.specify/integrations
+.specify/workflows
+.specify/workflow.yml
+/specs/
+/docs/superpowers/

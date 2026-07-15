@@ -26,6 +26,8 @@ def test_build(build_command, first_app_config, tmp_path):
     first_app_config.flatpak_runtime = "org.beeware.Platform"
     first_app_config.flatpak_runtime_version = "37.42"
     first_app_config.flatpak_sdk = "org.beeware.SDK"
+    first_app_config.flatpak_base = "org.beeware.flatpak.BaseApp"
+    first_app_config.flatpak_base_version = "1.0"
 
     build_command.build_app(first_app_config)
 
@@ -41,6 +43,8 @@ def test_build(build_command, first_app_config, tmp_path):
         runtime="org.beeware.Platform",
         runtime_version="37.42",
         sdk="org.beeware.SDK",
+        base="org.beeware.flatpak.BaseApp",
+        base_version="1.0",
     )
 
     # The build is invoked
@@ -51,6 +55,30 @@ def test_build(build_command, first_app_config, tmp_path):
     )
 
 
+def test_missing_base_config(build_command, first_app_config):
+    """The build does not fail if an optional Flatpak base is not defined."""
+
+    build_command.tools.flatpak = MagicMock(spec_set=Flatpak)
+
+    first_app_config.flatpak_runtime_repo_url = "https://example.com/flatpak/repo"
+    first_app_config.flatpak_runtime_repo_alias = "custom-repo"
+
+    first_app_config.flatpak_runtime = "org.beeware.Platform"
+    first_app_config.flatpak_runtime_version = "37.42"
+    first_app_config.flatpak_sdk = "org.beeware.SDK"
+
+    build_command.build_app(first_app_config)
+
+    build_command.tools.flatpak.verify_runtime.assert_called_once_with(
+        repo_alias="custom-repo",
+        runtime="org.beeware.Platform",
+        runtime_version="37.42",
+        sdk="org.beeware.SDK",
+        base=None,
+        base_version=None,
+    )
+
+
 def test_missing_runtime_config(build_command, first_app_config):
     """The app build errors is a Flatpak runtime is not defined."""
     build_command.tools.flatpak = MagicMock(spec_set=Flatpak)
@@ -58,5 +86,25 @@ def test_missing_runtime_config(build_command, first_app_config):
     with pytest.raises(
         BriefcaseConfigError,
         match="Briefcase configuration error: The App does not specify the Flatpak runtime to use",
+    ):
+        build_command.build_app(first_app_config)
+
+
+def test_missing_base_version_config(build_command, first_app_config):
+    """The build fails if an optional Flatpak base is defined but without a version."""
+
+    build_command.tools.flatpak = MagicMock(spec_set=Flatpak)
+
+    first_app_config.flatpak_runtime_repo_url = "https://example.com/flatpak/repo"
+    first_app_config.flatpak_runtime_repo_alias = "custom-repo"
+
+    first_app_config.flatpak_runtime = "org.beeware.Platform"
+    first_app_config.flatpak_runtime_version = "37.42"
+    first_app_config.flatpak_sdk = "org.beeware.SDK"
+    first_app_config.flatpak_base = "org.beeware.flatpak.BaseApp"
+
+    with pytest.raises(
+        BriefcaseConfigError,
+        match=r"Briefcase configuration error: The App specifies a Flatpak base without a version.",
     ):
         build_command.build_app(first_app_config)

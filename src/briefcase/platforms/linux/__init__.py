@@ -1,13 +1,22 @@
+from __future__ import annotations
+
 import ast
 import re
 import subprocess
 import sys
 from pathlib import Path
+from typing import TYPE_CHECKING
 
-from briefcase.commands.create import _is_local_path
 from briefcase.commands.open import OpenCommand
-from briefcase.config import AppConfig
+from briefcase.config import FinalizedAppConfig
 from briefcase.exceptions import BriefcaseCommandError, ParseError
+
+if TYPE_CHECKING:
+    from briefcase.commands.base import BaseCommand
+
+    _MixinBase = BaseCommand
+else:
+    _MixinBase = object
 
 DEFAULT_OUTPUT_FORMAT = "system"
 
@@ -53,7 +62,7 @@ def parse_freedesktop_os_release(content):
     return values
 
 
-class LinuxMixin:
+class LinuxMixin(_MixinBase):
     platform = "linux"
 
     def support_package_url(self, support_revision):
@@ -122,7 +131,7 @@ class LinuxMixin:
         return vendor, codename, vendor_base
 
 
-class LocalRequirementsMixin:  # pragma: no-cover-if-is-windows
+class LocalRequirementsMixin(_MixinBase):  # pragma: no-cover-if-is-windows
     # A mixin that captures the process of compiling requirements that are specified
     # as local file references into sdists, and then installing those requirements
     # from the sdist.
@@ -132,7 +141,7 @@ class LocalRequirementsMixin:  # pragma: no-cover-if-is-windows
 
     def _install_app_requirements(
         self,
-        app: AppConfig,
+        app: FinalizedAppConfig,
         requires: list[str],
         app_packages_path: Path,
         **kwargs,
@@ -158,7 +167,7 @@ class LocalRequirementsMixin:  # pragma: no-cover-if-is-windows
         # Iterate over every requirement, looking for local references
         localized_requires = []
         for requirement in requires:
-            if _is_local_path(requirement):
+            if self.tools.file.is_local_path(requirement):
                 parts = requirement.rsplit("[", 1)
                 req_name = parts[0]
                 try:
@@ -236,7 +245,7 @@ class DockerOpenCommand(OpenCommand):  # pragma: no-cover-if-is-windows
     # if Docker is being used. Relies on the final command to provide
     # verification that Docker is available, and verify the app context.
 
-    def _open_app(self, app: AppConfig):
+    def _open_app(self, app: FinalizedAppConfig):
         # If we're using Docker, open an interactive shell in the container.
         # Rely on the default CMD statement in the image's Dockerfile to
         # define a default shell.

@@ -18,7 +18,8 @@ from briefcase.commands import (
     RunCommand,
     UpdateCommand,
 )
-from briefcase.config import AppConfig
+from briefcase.config import FinalizedAppConfig
+from briefcase.console import Console
 from briefcase.debuggers.base import AppPackagesPathMappings
 from briefcase.exceptions import (
     BriefcaseCommandError,
@@ -57,24 +58,23 @@ class iOSXcodePassiveMixin(iOSMixin):
     def distribution_path(self, app):
         # This path won't ever be *generated*, as distribution artefacts
         # can't be generated on iOS.
-        raise NoDistributionArtefact("""
-*************************************************************************
-** WARNING: No distributable artefact has been generated               **
-*************************************************************************
+        raise NoDistributionArtefact(
+            Console.format_warning_banner(
+                title="No distributable artefact has been generated",
+                message="""\
+                    Briefcase has not generated a standalone iOS artefact, as
+                    iOS apps must be published through Xcode.
 
-    Briefcase has not generated a standalone iOS artefact, as iOS apps
-    must be published through Xcode.
+                    To open Xcode for your iOS project, run:
 
-    To open Xcode for your iOS project, run:
+                        briefcase open iOS
 
-        briefcase open iOS
+                    and use Xcode's app distribution workflow described at:
 
-    and use Xcode's app distribution workflow described at:
-
-        https://briefcase.readthedocs.io/en/stable/reference/platforms/iOS/xcode.html#ios-deploy
-
-*************************************************************************
-""")
+                        https://briefcase.readthedocs.io/en/stable/reference/platforms/iOS/xcode.html#ios-deploy
+                """,
+            )
+        )
 
 
 class iOSXcodeMixin(iOSXcodePassiveMixin):
@@ -258,7 +258,11 @@ or:
 class iOSXcodeCreateCommand(iOSXcodePassiveMixin, CreateCommand):
     description = "Create and populate a iOS Xcode project."
 
-    def permissions_context(self, app: AppConfig, x_permissions: dict[str, str]):
+    def permissions_context(
+        self,
+        app: FinalizedAppConfig,
+        x_permissions: dict[str, str],
+    ):
         """Additional template context for permissions.
 
         :param app: The config object for the app
@@ -305,7 +309,7 @@ class iOSXcodeCreateCommand(iOSXcodePassiveMixin, CreateCommand):
             "info": info,
         }
 
-    def _extra_pip_args(self, app: AppConfig):
+    def _extra_pip_args(self, app: FinalizedAppConfig):
         """Any additional arguments that must be passed to pip when installing packages.
 
         :param app: The app configuration
@@ -320,7 +324,7 @@ class iOSXcodeCreateCommand(iOSXcodePassiveMixin, CreateCommand):
 
     def _install_app_requirements(
         self,
-        app: AppConfig,
+        app: FinalizedAppConfig,
         requires: list[str],
         app_packages_path: Path,
         **kwargs,
@@ -405,7 +409,7 @@ class iOSXcodeCreateCommand(iOSXcodePassiveMixin, CreateCommand):
             install_hint=f"""
 
 This may be because the `iphoneos` wheels that are available are not compatible
-with a minimum iOS version of {ios_min_version}.
+with Python {self.python_version_tag} and a minimum iOS version of {ios_min_version}.
 """,
         )
 
@@ -429,8 +433,8 @@ with a minimum iOS version of {ios_min_version}.
 
 This may indicate that an `iphoneos` wheel could be found, but an
 `iphonesimulator` wheel could not be found; or that the `iphonesimulator`
-binary wheels that are available are not compatible with a minimum iOS
-version of {ios_min_version}.
+binary wheels that are available are not compatible with
+Python {self.python_version_tag} and a minimum iOS version of {ios_min_version}.
 """,
         )
 
@@ -448,7 +452,7 @@ class iOSXcodeBuildCommand(iOSXcodePassiveMixin, BuildCommand):
     description = "Build an iOS Xcode project."
     supports_debugger = True
 
-    def info_plist_path(self, app: AppConfig):
+    def info_plist_path(self, app: FinalizedAppConfig):
         """Obtain the path to the application's plist file.
 
         :param app: The config object for the app
@@ -456,7 +460,7 @@ class iOSXcodeBuildCommand(iOSXcodePassiveMixin, BuildCommand):
         """
         return self.bundle_path(app) / self.path_index(app, "info_plist_path")
 
-    def update_app_metadata(self, app: AppConfig):
+    def update_app_metadata(self, app: FinalizedAppConfig):
         with self.console.wait_bar("Setting main module..."):
             # Load the original plist
             with self.info_plist_path(app).open("rb") as f:
@@ -470,7 +474,7 @@ class iOSXcodeBuildCommand(iOSXcodePassiveMixin, BuildCommand):
             with self.info_plist_path(app).open("wb") as f:
                 plistlib.dump(info_plist, f)
 
-    def build_app(self, app: AppConfig, **kwargs):
+    def build_app(self, app: FinalizedAppConfig, **kwargs):
         """Build the Xcode project for the application.
 
         :param app: The application to build
@@ -518,7 +522,8 @@ class iOSXcodeRunCommand(iOSXcodeMixin, RunCommand):
         self.get_device_state = get_device_state
 
     def debugger_app_packages_path_mapping(
-        self, app: AppConfig
+        self,
+        app: FinalizedAppConfig,
     ) -> AppPackagesPathMappings:
         """Get the path mappings for the app packages.
 
@@ -534,7 +539,7 @@ class iOSXcodeRunCommand(iOSXcodeMixin, RunCommand):
 
     def run_app(
         self,
-        app: AppConfig,
+        app: FinalizedAppConfig,
         *,
         passthrough: list[str],
         udid=None,
@@ -620,7 +625,13 @@ class iOSXcodeRunCommand(iOSXcodeMixin, RunCommand):
                 "Uninstalling any existing app version..."
             ) as keep_alive,
             self.tools.subprocess.Popen(
-                ["xcrun", "simctl", "uninstall", udid, app.bundle_identifier]
+                [
+                    "xcrun",
+                    "simctl",
+                    "uninstall",
+                    udid,
+                    app.bundle_identifier,
+                ]
             ) as uninstall_popen,
         ):
             while (ret_code := uninstall_popen.poll()) is None:
@@ -636,7 +647,13 @@ class iOSXcodeRunCommand(iOSXcodeMixin, RunCommand):
         with (
             self.console.wait_bar(f"Installing new {label} version...") as keep_alive,
             self.tools.subprocess.Popen(
-                ["xcrun", "simctl", "install", udid, self.binary_path(app)]
+                [
+                    "xcrun",
+                    "simctl",
+                    "install",
+                    udid,
+                    self.binary_path(app),
+                ]
             ) as install_popen,
         ):
             while (ret_code := install_popen.poll()) is None:
@@ -656,7 +673,8 @@ class iOSXcodeRunCommand(iOSXcodeMixin, RunCommand):
         #   and for native NSLog() calls in the bootstrap binary
         # Case (2) works when the standard library is dynamically linked,
         #   and ctypes (which handles the NSLog integration) is an
-        #   extension module.
+        #   extension module. It also catches the case for the CPython
+        #   builtin behavior of redirecting to the system log.
         # It's not enough to filter on *just* the processImagePath,
         # as the process will generate lots of system-level messages.
         # We can't filter on *just* the senderImagePath, because other
@@ -674,10 +692,13 @@ class iOSXcodeRunCommand(iOSXcodeMixin, RunCommand):
                 "--predicate",
                 (
                     f'senderImagePath ENDSWITH "/{app.formal_name}"'
-                    f' OR (processImagePath ENDSWITH "/{app.formal_name}"'
-                    ' AND (senderImagePath ENDSWITH "-iphonesimulator.so"'
-                    ' OR senderImagePath ENDSWITH "-iphonesimulator.dylib"'
-                    ' OR senderImagePath ENDSWITH "_ctypes.framework/_ctypes"))'
+                    f'OR (processImagePath ENDSWITH "/{app.formal_name}"'
+                    '  AND (senderImagePath ENDSWITH "-iphonesimulator.so"'
+                    '    OR senderImagePath ENDSWITH "-iphonesimulator.dylib"'
+                    '    OR senderImagePath ENDSWITH "_ctypes.framework/_ctypes"'
+                    '    OR senderImagePath ENDSWITH "/Python"'
+                    "  )"
+                    ")"
                 ),
             ],
             stdout=subprocess.PIPE,

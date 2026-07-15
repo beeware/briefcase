@@ -2,6 +2,7 @@ from unittest.mock import MagicMock
 
 import pytest
 
+from briefcase.debuggers.pdb import PdbDebugger
 from briefcase.exceptions import BriefcaseCommandError
 from briefcase.platforms.linux import parse_freedesktop_os_release
 from briefcase.platforms.linux.system import LinuxSystemRunCommand
@@ -24,13 +25,13 @@ def test_docker(create_command, first_app_config):
     )
 
     # Finalize the app config
-    create_command.finalize_app_config(first_app_config)
+    finalized_config = create_command.finalize_app_config(first_app_config)
 
     # The app's image, vendor and codename have been constructed from the target image
-    assert first_app_config.target_image == "somevendor:surprising"
-    assert first_app_config.target_vendor == "somevendor"
-    assert first_app_config.target_codename == "surprising"
-    assert first_app_config.target_vendor_base == "debian"
+    assert finalized_config.target_image == "somevendor:surprising"
+    assert finalized_config.target_vendor == "somevendor"
+    assert finalized_config.target_codename == "surprising"
+    assert finalized_config.target_vendor_base == "debian"
 
     # For tests of other properties merged in finalization, see
     # test_properties
@@ -54,13 +55,13 @@ def test_nodocker(create_command, first_app_config, tmp_path):
     )
 
     # Finalize the app config
-    create_command.finalize_app_config(first_app_config)
+    finalized_config = create_command.finalize_app_config(first_app_config)
 
     # The app's image, vendor and codename have been constructed from the target image
-    assert first_app_config.target_image == "somevendor:surprising"
-    assert first_app_config.target_vendor == "somevendor"
-    assert first_app_config.target_codename == "surprising"
-    assert first_app_config.target_vendor_base == "debian"
+    assert finalized_config.target_image == "somevendor:surprising"
+    assert finalized_config.target_vendor == "somevendor"
+    assert finalized_config.target_codename == "surprising"
+    assert finalized_config.target_vendor_base == "debian"
 
     # For tests of other properties merged in finalization, see
     # test_properties
@@ -130,13 +131,13 @@ def test_docker_arch_with_user_mapping_macOS(
     )
 
     # Finalize the app config
-    create_command.finalize_app_config(first_app_config)
+    finalized_config = create_command.finalize_app_config(first_app_config)
 
     # The app's image, vendor and codename have been constructed from the target image
-    assert first_app_config.target_image == "somearch:surprising"
-    assert first_app_config.target_vendor == "arch"
-    assert first_app_config.target_codename == "20230625"
-    assert first_app_config.target_vendor_base == "arch"
+    assert finalized_config.target_image == "somearch:surprising"
+    assert finalized_config.target_vendor == "arch"
+    assert finalized_config.target_codename == "20230625"
+    assert finalized_config.target_vendor_base == "arch"
 
 
 def test_docker_arch_without_user_mapping(create_command, first_app_config, tmp_path):
@@ -158,13 +159,13 @@ def test_docker_arch_without_user_mapping(create_command, first_app_config, tmp_
     )
 
     # Finalize the app config
-    create_command.finalize_app_config(first_app_config)
+    finalized_config = create_command.finalize_app_config(first_app_config)
 
     # The app's image, vendor and codename have been constructed from the target image
-    assert first_app_config.target_image == "somearch:surprising"
-    assert first_app_config.target_vendor == "arch"
-    assert first_app_config.target_codename == "20230625"
-    assert first_app_config.target_vendor_base == "arch"
+    assert finalized_config.target_image == "somearch:surprising"
+    assert finalized_config.target_vendor == "arch"
+    assert finalized_config.target_codename == "20230625"
+    assert finalized_config.target_vendor_base == "arch"
 
 
 def test_properties(create_command, first_app_config):
@@ -218,30 +219,30 @@ def test_properties(create_command, first_app_config):
         },
     }
 
-    create_command.finalize_app_config(first_app_config)
+    finalized_config = create_command.finalize_app_config(first_app_config)
 
     # The target's config attributes have been merged into the app
     # Base app properties that aren't overwritten persist
-    assert first_app_config.surprise_0 == "AAAA"
+    assert finalized_config.surprise_0 == "AAAA"
     # Properties can be overwritten at the base vendor level
-    assert first_app_config.surprise_1 == "1111"
+    assert finalized_config.surprise_1 == "1111"
     # Properties can be overwritten at the vendor level
-    assert first_app_config.surprise_2 == "2222"
+    assert finalized_config.surprise_2 == "2222"
     # Properties can be overwritten at the version level
-    assert first_app_config.surprise_3 == "3333"
+    assert finalized_config.surprise_3 == "3333"
 
     # New properties can be defined at the base vendor level
-    assert first_app_config.surprise_4 == "1114"
+    assert finalized_config.surprise_4 == "1114"
     # New properties can be defined at the vendor level
-    assert first_app_config.surprise_5 == "2225"
+    assert finalized_config.surprise_5 == "2225"
     # New properties can be defined at the version level
-    assert first_app_config.surprise_6 == "3336"
+    assert finalized_config.surprise_6 == "3336"
 
     # The glibc version was determined
-    assert first_app_config.glibc_version == "2.42"
+    assert finalized_config.glibc_version == "2.42"
 
     # Since it's system python, the python version is 3
-    assert first_app_config.python_version_tag == "3"
+    assert finalized_config.python_version_tag == "3"
 
 
 def test_properties_unknown_basevendor(create_command, first_app_config):
@@ -287,22 +288,22 @@ def test_properties_unknown_basevendor(create_command, first_app_config):
         },
     }
 
-    create_command.finalize_app_config(first_app_config)
+    finalized_config = create_command.finalize_app_config(first_app_config)
 
     # The target's config attributes have been merged into the app
     # Base app properties that aren't overwritten persist
-    assert first_app_config.surprise_0 == "AAAA"
-    assert first_app_config.surprise_1 == "BBBB"
+    assert finalized_config.surprise_0 == "AAAA"
+    assert finalized_config.surprise_1 == "BBBB"
     # Properties can be overwritten at the vendor level
-    assert first_app_config.surprise_2 == "2222"
+    assert finalized_config.surprise_2 == "2222"
     # Properties can be overwritten at the version level
-    assert first_app_config.surprise_3 == "3333"
+    assert finalized_config.surprise_3 == "3333"
 
     # The glibc version was determined
-    assert first_app_config.glibc_version == "2.42"
+    assert finalized_config.glibc_version == "2.42"
 
     # Since it's system python, the python version is 3
-    assert first_app_config.python_version_tag == "3"
+    assert finalized_config.python_version_tag == "3"
 
 
 def test_properties_no_basevendor_config(create_command, first_app_config):
@@ -349,22 +350,22 @@ def test_properties_no_basevendor_config(create_command, first_app_config):
         },
     }
 
-    create_command.finalize_app_config(first_app_config)
+    finalized_config = create_command.finalize_app_config(first_app_config)
 
     # The target's config attributes have been merged into the app
     # Base app properties that aren't overwritten persist
-    assert first_app_config.surprise_0 == "AAAA"
-    assert first_app_config.surprise_1 == "BBBB"
+    assert finalized_config.surprise_0 == "AAAA"
+    assert finalized_config.surprise_1 == "BBBB"
     # Properties can be overwritten at the vendor level
-    assert first_app_config.surprise_2 == "2222"
+    assert finalized_config.surprise_2 == "2222"
     # Properties can be overwritten at the version level
-    assert first_app_config.surprise_3 == "3333"
+    assert finalized_config.surprise_3 == "3333"
 
     # The glibc version was determined
-    assert first_app_config.glibc_version == "2.42"
+    assert finalized_config.glibc_version == "2.42"
 
     # Since it's system python, the python version is 3
-    assert first_app_config.python_version_tag == "3"
+    assert finalized_config.python_version_tag == "3"
 
 
 def test_properties_no_vendor(create_command, first_app_config):
@@ -402,21 +403,21 @@ def test_properties_no_vendor(create_command, first_app_config):
         },
     }
 
-    create_command.finalize_app_config(first_app_config)
+    finalized_config = create_command.finalize_app_config(first_app_config)
 
     # The target's config attributes have been merged into the app
     # Base app properties that aren't overwritten persist
-    assert first_app_config.surprise_0 == "AAAA"
+    assert finalized_config.surprise_0 == "AAAA"
     # Properties can be overwritten at the base vendor level
-    assert first_app_config.surprise_1 == "1111"
-    assert first_app_config.surprise_2 == "1112"
-    assert first_app_config.surprise_3 == "1113"
+    assert finalized_config.surprise_1 == "1111"
+    assert finalized_config.surprise_2 == "1112"
+    assert finalized_config.surprise_3 == "1113"
 
     # The glibc version was determined
-    assert first_app_config.glibc_version == "2.42"
+    assert finalized_config.glibc_version == "2.42"
 
     # Since it's system python, the python version is 3
-    assert first_app_config.python_version_tag == "3"
+    assert finalized_config.python_version_tag == "3"
 
 
 def test_properties_no_version(create_command, first_app_config):
@@ -462,22 +463,22 @@ def test_properties_no_version(create_command, first_app_config):
         },
     }
 
-    create_command.finalize_app_config(first_app_config)
+    finalized_config = create_command.finalize_app_config(first_app_config)
 
     # The target's config attributes have been merged into the app
     # Base app properties that aren't overwritten persist
-    assert first_app_config.surprise_0 == "AAAA"
+    assert finalized_config.surprise_0 == "AAAA"
     # Properties can be overwritten at the base vendor level
-    assert first_app_config.surprise_1 == "1111"
+    assert finalized_config.surprise_1 == "1111"
     # Properties can be overwritten at the vendor level
-    assert first_app_config.surprise_2 == "2222"
-    assert first_app_config.surprise_3 == "2223"
+    assert finalized_config.surprise_2 == "2222"
+    assert finalized_config.surprise_3 == "2223"
 
     # The glibc version was determined
-    assert first_app_config.glibc_version == "2.42"
+    assert finalized_config.glibc_version == "2.42"
 
     # Since it's system python, the python version is 3
-    assert first_app_config.python_version_tag == "3"
+    assert finalized_config.python_version_tag == "3"
 
 
 def test_passive_mixin(dummy_console, first_app_config, tmp_path):
@@ -504,13 +505,13 @@ def test_passive_mixin(dummy_console, first_app_config, tmp_path):
     )
 
     # Finalize the app config
-    run_command.finalize_app_config(first_app_config)
+    finalized_config = run_command.finalize_app_config(first_app_config)
 
     # The app's image, vendor and codename have been constructed from the target image
-    assert first_app_config.target_image == "somevendor:surprising"
-    assert first_app_config.target_vendor == "somevendor"
-    assert first_app_config.target_codename == "surprising"
-    assert first_app_config.target_vendor_base == "debian"
+    assert finalized_config.target_image == "somevendor:surprising"
+    assert finalized_config.target_vendor == "somevendor"
+    assert finalized_config.target_codename == "surprising"
+    assert finalized_config.target_vendor_base == "debian"
 
     # For tests of other properties merged in finalization, see
     # test_properties
@@ -546,13 +547,13 @@ def test_cascading_distribution_properties(create_command, first_app_config):
         "permission": {"prop1": "vendor level prop 1"},
     }
 
-    create_command.finalize_app_config(first_app_config)
+    finalized_config = create_command.finalize_app_config(first_app_config)
 
     # The target's config attributes have been merged into the app
     # List properties should be accumulated
-    assert first_app_config.requires == ["debian level prop", "vendor level prop"]
+    assert finalized_config.requires == ["debian level prop", "vendor level prop"]
     # Dictionary properties should overwrite higher-level ones and accumulate
-    assert first_app_config.permission == {
+    assert finalized_config.permission == {
         "prop1": "vendor level prop 1",
         "prop2": "debian level prop 2",
     }
@@ -587,3 +588,46 @@ def test_external_docker(create_command, first_app_config):
         ),
     ):
         create_command.finalize_app_config(first_app_config)
+
+
+def test_finalized_attrs(create_command, first_app_config):
+    """Additional finalized attributes are preserved by Linux finalization."""
+    # Build the app without docker
+    create_command.target_image = None
+    create_command.target_glibc_version = MagicMock(return_value="2.42")
+
+    os_release = "\n".join(
+        [
+            "ID=somevendor",
+            "VERSION_CODENAME=surprising",
+            "ID_LIKE=debian",
+        ]
+    )
+    create_command.tools.platform.freedesktop_os_release = MagicMock(
+        return_value=parse_freedesktop_os_release(os_release)
+    )
+
+    # Create a debugger for finalization testing.
+    debugger = PdbDebugger()
+
+    # Finalize the app config with some additional finalization properties
+    finalized_config = create_command.finalize_app_config(
+        first_app_config,
+        test_mode=True,
+        debugger=debugger,
+        debugger_host="some-host",
+        debugger_port=8765,
+    )
+
+    # The app's image, vendor and codename have been constructed from the target image
+    assert finalized_config.target_image == "somevendor:surprising"
+    assert finalized_config.target_vendor == "somevendor"
+    assert finalized_config.target_codename == "surprising"
+    assert finalized_config.target_vendor_base == "debian"
+
+    # Assert the additional finalization properties have been included
+    # on the finalized configuration.
+    assert finalized_config.test_mode
+    assert finalized_config.debugger is debugger
+    assert finalized_config.debugger_host == "some-host"
+    assert finalized_config.debugger_port == 8765

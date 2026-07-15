@@ -3,7 +3,7 @@ from __future__ import annotations
 import argparse
 from abc import abstractmethod
 
-from briefcase.config import AppConfig
+from briefcase.config import AppConfig, FinalizedAppConfig
 from briefcase.exceptions import BriefcaseCommandError
 
 from .base import BaseCommand, full_options
@@ -57,7 +57,31 @@ class PackageCommand(BaseCommand):
             # Ensure the dist folder exists.
             self.dist_path.mkdir(exist_ok=True)
 
-    def package_app(self, app: AppConfig, **options):
+    def can_resume(self, app, **options):
+        """Determine if we can resume a packaging operation.
+
+        The default backend does not support resume; subclasses that support
+        resumable operations (e.g., notarization) should override this method.
+
+        :param app: The app being packaged
+        :returns: `True` if packaging can be resumed; `False` otherwise.
+        """
+        return False
+
+    def verify_resume_app(self, app, **options):
+        """Verify the app for a resumed packaging operation.
+
+        Called instead of `verify_app` when `can_resume()` returns
+        `True`. Verifies that tools are available and the required Python
+        version is present, but skips template and app-level checks that
+        were validated during the initial packaging pass.
+
+        :param app: app configuration
+        """
+        self.verify_app_tools(app)
+        self.verify_required_python(app)
+
+    def package_app(self, app: FinalizedAppConfig, **options):
         """Package an application.
 
         :param app: The application to package
@@ -66,7 +90,7 @@ class PackageCommand(BaseCommand):
 
     def _package_app(
         self,
-        app: AppConfig,
+        app: FinalizedAppConfig,
         update: bool,
         packaging_format: str,
         **options,
@@ -79,10 +103,15 @@ class PackageCommand(BaseCommand):
         :param update: Should the application be updated (and rebuilt) first?
         :param packaging_format: The format of the packaging artefact to create.
         """
-        template_file = self.bundle_path(app)
-        binary_file = self.binary_path(app)
+        # Annotate the packaging format onto the app so that distribution path
+        # resolution works correctly during the resume check.
+        app.packaging_format = packaging_format
 
-        if app.external_package_path:
+        resume = self.can_resume(app, **options)
+
+        if resume:
+            state = None
+        elif app.external_package_path:
             if not self.supports_external_packaging:
                 raise BriefcaseCommandError(
                     f"Briefcase cannot package external {self.platform} apps "
@@ -99,36 +128,35 @@ class PackageCommand(BaseCommand):
             # packaging metadata is up-to-date. If the app has been packaged before,
             # it will be necessary to confirm deletion of the old folder.
             state = self.create_command(app, **options)
-        elif not template_file.exists():
-            state = self.create_command(app, **options)
-            state = self.build_command(app, **full_options(state, options))
-        elif update:
-            # If we're updating for packaging, update everything.
-            # This ensures everything in the packaged artefact is up to date,
-            # and is in a production state
-            state = self.update_command(
-                app,
-                update_resources=True,
-                update_requirements=True,
-                update_support=True,
-                **options,
-            )
-            state = self.build_command(app, **full_options(state, options))
-        elif not binary_file.exists():
-            state = self.build_command(app, **options)
         else:
-            state = None
+            template_file = self.bundle_path(app)
+            binary_file = self.binary_path(app)
 
-        # Annotate the packaging format onto the app
-        app.packaging_format = packaging_format
+            if not template_file.exists():
+                state = self.create_command(app, **options)
+                state = self.build_command(app, **full_options(state, options))
+            elif update:
+                # If we're updating for packaging, update everything.
+                # This ensures everything in the packaged artefact is up to date,
+                # and is in a production state
+                state = self.update_command(
+                    app,
+                    update_resources=True,
+                    update_requirements=True,
+                    update_support=True,
+                    **options,
+                )
+                state = self.build_command(app, **full_options(state, options))
+            elif not binary_file.exists():
+                state = self.build_command(app, **options)
+            else:
+                state = None
 
-        # Verify the app, which will do final confirmation that we can
-        # package in the requested format.
-        self.verify_app(app)
-
-        # Make sure the dist folder exists, and doesn't contain an existing artefact for
-        # this app.
-        self.clean_dist_folder(app, **options)
+        if resume:
+            self.verify_resume_app(app, **options)
+        else:
+            self.verify_app(app)
+            self.clean_dist_folder(app, **options)
 
         # Package the app
         state = self.package_app(app, **full_options(state, options))
@@ -187,10 +215,10 @@ class PackageCommand(BaseCommand):
 
         # Confirm host compatibility, that all required tools are available,
         # and that the app configuration is finalized.
-        self.finalize(apps=apps_to_package.values())
+        finalized_apps = self.finalize(apps=apps_to_package.values())
 
         state = None
-        for _, app_obj in sorted(apps_to_package.items()):
+        for _, app_obj in sorted(finalized_apps.items()):
             state = self._package_app(
                 app_obj,
                 update=update,

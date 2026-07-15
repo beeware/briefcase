@@ -13,6 +13,7 @@ from pathlib import Path
 
 import httpx
 import truststore
+from tenacity import retry, retry_if_exception_type, stop_after_attempt, wait_fixed
 
 from briefcase.exceptions import (
     BadNetworkResourceError,
@@ -20,6 +21,48 @@ from briefcase.exceptions import (
     NetworkFailure,
 )
 from briefcase.integrations.base import Tool, ToolCache
+
+
+def _has_url(requirement):
+    """Determine if the requirement is defined as a URL.
+
+    Detects any of the URL schemes supported by pip
+    (https://pip.pypa.io/en/stable/topics/vcs-support/).
+
+    :param requirement: The requirement to check
+    :returns: True if the requirement is a URL supported by pip.
+    """
+    return any(
+        f"{scheme}:" in requirement
+        for scheme in (
+            "http",
+            "https",
+            "file",
+            "ftp",
+            "git+file",
+            "git+https",
+            "git+ssh",
+            "git+http",
+            "git+git",
+            "git",
+            "hg+file",
+            "hg+http",
+            "hg+https",
+            "hg+ssh",
+            "hg+static-http",
+            "svn",
+            "svn+svn",
+            "svn+http",
+            "svn+https",
+            "svn+ssh",
+            "bzr+http",
+            "bzr+https",
+            "bzr+ssh",
+            "bzr+sftp",
+            "bzr+ftp",
+            "bzr+lp",
+        )
+    )
 
 
 class File(Tool):
@@ -104,6 +147,19 @@ class File(Tool):
             self._ssl_context = truststore.SSLContext(ssl.PROTOCOL_TLS_CLIENT)
 
             return self._ssl_context
+
+    def is_local_path(self, reference: str | os.PathLike) -> bool:
+        """Determine if the reference is a local file path.
+
+        :param reference: The reference to check
+        :returns: True if the reference is a local file path
+        """
+        # Windows allows both / and \ as a path separator in references.
+        separators = [os.sep]
+        if os.altsep:
+            separators.append(os.altsep)
+
+        return any(sep in reference for sep in separators) and (not _has_url(reference))
 
     def is_archive(self, filename: str | os.PathLike) -> bool:
         """Can a file be unpacked via `shutil.unpack_archive()`?
@@ -337,3 +393,17 @@ class File(Tool):
             # exist if the download fails or the user sends CTRL+C.
             with suppress(FileNotFoundError):
                 self.tools.os.remove(temp_file.name)
+
+    @retry(
+        retry=retry_if_exception_type(PermissionError),
+        wait=wait_fixed(0.2),
+        stop=stop_after_attempt(25),
+    )
+    def rename(self, old_path: Path, new_path: object):
+        """Using tenacity for a retry policy on pathlib rename.
+
+        Windows does not like renaming a dir in a path with an opened file, raising a
+        PermissionError. Only that error is retried; other errors (e.g.
+        FileNotFoundError) are surfaced immediately.
+        """
+        old_path.rename(new_path)

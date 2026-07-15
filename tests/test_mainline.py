@@ -27,7 +27,8 @@ requires = ["briefcase"]
 project_name = "Hello World"
 bundle = "com.example"
 version = "0.0.1"
-license.file = "LICENSE"
+license = "MIT"
+license-files = ["LICENSE"]
 
 [tool.briefcase.app.myapp]
 description = "My first application"
@@ -35,6 +36,7 @@ sources = ["myapp"]
 
     """,
     )
+    create_file(tmp_path / "LICENSE", "MIT License")
 
 
 def test_help(monkeypatch, tmp_path, capsys):

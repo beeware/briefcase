@@ -109,7 +109,7 @@
 <td>{{ ci_tested }}</td>
 </tr>
 <tr>
-<td rowspan="2">macOS</td>
+<td rowspan="2"><a href="./macOS/">macOS</a></td>
 <td><a href="./macOS/app"><strong>.app bundle</strong></a></td>
 <td>{{ ci_tested }}</td>
 <td>{{ ci_tested }}</td>
@@ -147,13 +147,13 @@
 <td>{{ ci_tested }}</td>
 </tr>
 <tr>
-<td class="target-app-format-windows" rowspan="2">Windows</td>
+<td class="target-app-format-windows" rowspan="2"><a href="./windows/">Windows</a></td>
 <td><a href="./windows/app"><strong>Windows app</strong></a></td>
 <td></td>
 <td></td>
 <td></td>
 <td colspan="2">{{ ci_tested }}</td>
-<td colspan="2"></td>
+<td colspan="2">{{ ci_tested }}</td>
 <td></td>
 <td></td>
 <td></td>
@@ -165,7 +165,7 @@
 <td></td>
 <td></td>
 <td colspan="2">{{ ci_tested }}</td>
-<td colspan="2"></td>
+<td colspan="2">{{ ci_tested }}</td>
 <td></td>
 <td></td>
 <td></td>

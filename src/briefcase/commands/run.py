@@ -6,7 +6,7 @@ from abc import abstractmethod
 from contextlib import suppress
 from pathlib import Path
 
-from briefcase.config import AppConfig
+from briefcase.config import FinalizedAppConfig
 from briefcase.debuggers.base import (
     AppPackagesPathMappings,
     AppPathMappings,
@@ -134,7 +134,7 @@ class RunAppMixin:
 
     def _stream_app_logs(
         self,
-        app: AppConfig,
+        app: FinalizedAppConfig,
         popen,
         clean_filter=None,
         clean_output=False,
@@ -192,18 +192,27 @@ class RunAppMixin:
                             "Test suite didn't report a result."
                         )
                     else:
-                        self.console.error("Test suite failed!", prefix=app.app_name)
+                        self.console.error(
+                            f"Test suite failed! (return code {log_filter.returncode})",
+                            prefix=app.app_name,
+                        )
                         raise BriefcaseTestSuiteFailure()
             elif log_stream:
                 # If we're monitoring a log stream, and the log stream reported a
                 # non-zero exit code, surface that error to the user.
                 if log_filter.returncode is not None and log_filter.returncode != 0:
-                    raise BriefcaseCommandError(f"Problem running app {app.app_name}.")
+                    raise BriefcaseCommandError(
+                        f"Problem running app {app.app_name} "
+                        f"(log stream return code {log_filter.returncode})."
+                    )
             else:
                 # If we're monitoring an actual app (not just a log stream),
                 # and the app didn't exit cleanly, surface the error to the user.
-                if popen.poll() != 0:
-                    raise BriefcaseCommandError(f"Problem running app {app.app_name}.")
+                if (status_code := popen.poll()) != 0:
+                    raise BriefcaseCommandError(
+                        f"Problem running app {app.app_name} "
+                        f"(return code {status_code})."
+                    )
 
         except KeyboardInterrupt:
             pass  # Catch CTRL-C to exit normally
@@ -227,7 +236,7 @@ class RunCommand(RunAppMixin, BaseCommand):
         if self.supports_debugger:
             self._add_debug_options(parser, context_label="Run", run_cmd=True)
 
-    def debugger_app_path_mappings(self, app: AppConfig) -> AppPathMappings:
+    def debugger_app_path_mappings(self, app: FinalizedAppConfig) -> AppPathMappings:
         """Get the path mappings for the app code.
 
         :param app: The config object for the app
@@ -247,7 +256,7 @@ class RunCommand(RunAppMixin, BaseCommand):
 
     def debugger_app_packages_path_mapping(
         self,
-        app: AppConfig,
+        app: FinalizedAppConfig,
     ) -> AppPackagesPathMappings:
         """Get the path mappings for the app packages.
 
@@ -260,7 +269,7 @@ class RunCommand(RunAppMixin, BaseCommand):
 
     def _prepare_app_kwargs(
         self,
-        app: AppConfig,
+        app: FinalizedAppConfig,
     ):
         """Prepare the kwargs for running an app as a log stream.
 
@@ -298,7 +307,7 @@ class RunCommand(RunAppMixin, BaseCommand):
     @abstractmethod
     def run_app(
         self,
-        app: AppConfig,
+        app: FinalizedAppConfig,
         *,
         passthrough: list[str],
         **options,
@@ -371,13 +380,14 @@ class RunCommand(RunAppMixin, BaseCommand):
 
         # Confirm host compatibility, that all required tools are available,
         # and that the app configuration is finalized.
-        self.finalize(
+        finalized = self.finalize(
             apps=[app],
             test_mode=test_mode,
             debugger=debugger,
             debugger_host=debugger_host,
             debugger_port=debugger_port,
         )
+        app = finalized[app.app_name]
 
         template_file = self.bundle_path(app)
         exec_file = self.binary_executable_path(app)

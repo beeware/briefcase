@@ -12,7 +12,7 @@ from briefcase.commands import (
     RunCommand,
     UpdateCommand,
 )
-from briefcase.config import AppConfig
+from briefcase.config import FinalizedAppConfig
 from briefcase.exceptions import BriefcaseConfigError
 from briefcase.integrations.flatpak import Flatpak
 from briefcase.platforms.linux import LinuxMixin
@@ -97,20 +97,41 @@ Your application configuration must provide values for
 `flatpak_sdk`, `flatpak_runtime`, and `flatpak_runtime_version`.
 """) from e
 
+    def flatpak_base(self, app):
+        return getattr(app, "flatpak_base", None)
+
+    def flatpak_base_version(self, app):
+        try:
+            return app.flatpak_base_version
+        except AttributeError as e:
+            if self.flatpak_base(app) is not None:
+                raise BriefcaseConfigError("""\
+The App specifies a Flatpak base without a version.
+
+Your application configuration must provide a value for `flatpak_base_version`
+if `flatpak_base` is defined.
+""") from e
+
 
 class LinuxFlatpakCreateCommand(LinuxFlatpakMixin, CreateCommand):
     description = "Create and populate a Linux Flatpak."
     hidden_app_properties: Collection[str] = {"permission", "finish_arg"}
 
-    def output_format_template_context(self, app: AppConfig):
+    def output_format_template_context(self, app: FinalizedAppConfig):
         """Add flatpak runtime/SDK details to the app template."""
         return {
             "flatpak_runtime": self.flatpak_runtime(app),
             "flatpak_runtime_version": self.flatpak_runtime_version(app),
             "flatpak_sdk": self.flatpak_sdk(app),
+            "flatpak_base": self.flatpak_base(app),
+            "flatpak_base_version": self.flatpak_base_version(app),
         }
 
-    def permissions_context(self, app: AppConfig, x_permissions: dict[str, str]):
+    def permissions_context(
+        self,
+        app: FinalizedAppConfig,
+        x_permissions: dict[str, str],
+    ):
         """Additional template context for permissions.
 
         :param app: The config object for the app
@@ -156,7 +177,7 @@ class LinuxFlatpakOpenCommand(LinuxFlatpakMixin, OpenCommand):
 class LinuxFlatpakBuildCommand(LinuxFlatpakMixin, BuildCommand):
     description = "Build a Linux Flatpak."
 
-    def build_app(self, app: AppConfig, **kwargs):
+    def build_app(self, app: FinalizedAppConfig, **kwargs):
         """Build an application.
 
         :param app: The application to build
@@ -181,6 +202,8 @@ class LinuxFlatpakBuildCommand(LinuxFlatpakMixin, BuildCommand):
             runtime=self.flatpak_runtime(app),
             runtime_version=self.flatpak_runtime_version(app),
             sdk=self.flatpak_sdk(app),
+            base=self.flatpak_base(app),
+            base_version=self.flatpak_base_version(app),
         )
 
         self.console.info("Building Flatpak...", prefix=app.app_name)
@@ -197,7 +220,7 @@ class LinuxFlatpakRunCommand(LinuxFlatpakMixin, RunCommand):
 
     def run_app(
         self,
-        app: AppConfig,
+        app: FinalizedAppConfig,
         passthrough: list[str],
         **kwargs,
     ):
@@ -244,7 +267,7 @@ class LinuxFlatpakDevCommand(LinuxFlatpakMixin, DevCommand):
 class LinuxFlatpakPackageCommand(LinuxFlatpakMixin, PackageCommand):
     description = "Package a Linux Flatpak for distribution."
 
-    def package_app(self, app: AppConfig, **kwargs):
+    def package_app(self, app: FinalizedAppConfig, **kwargs):
         """Start the application.
 
         :param app: The config object for the app

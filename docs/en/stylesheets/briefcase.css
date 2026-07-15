@@ -33,6 +33,12 @@ table.platform-support-table tbody tr td {
     padding: 0.05em 0 0.05em 0.25em;
 }
 
+table.platform-support-table thead tr th,
+table.platform-support-table tbody tr td,
+table.platform-support-table tbody tr td a {
+    word-break: normal;
+}
+
 table.platform-support-table tbody tr td.target-app-format-windows {
     padding-right: 0.2em;
 }

@@ -6,7 +6,7 @@ from unittest.mock import ANY, MagicMock
 
 import pytest
 
-from briefcase.config import AppConfig
+from briefcase.config import DraftAppConfig
 
 from .utils import DummyConsole, create_file
 
@@ -91,14 +91,16 @@ def sub_stream_kw(sub_kw):
 
 
 @pytest.fixture
-def first_app_config():
-    return AppConfig(
+def first_app_config(tmp_path):
+    create_file(tmp_path / "base_path" / "LICENSE", "MIT License")
+    return DraftAppConfig(
         app_name="first",
         bundle="com.example",
         version="0.0.1",
         description="The first simple app",
         sources=["src/first"],
-        license={"file": "LICENSE"},
+        license="MIT",
+        license_files=["LICENSE"],
     )
 
 

@@ -13,7 +13,7 @@ from briefcase.commands import (
     RunCommand,
     UpdateCommand,
 )
-from briefcase.config import AppConfig
+from briefcase.config import DraftAppConfig, FinalizedAppConfig
 from briefcase.exceptions import (
     BriefcaseCommandError,
     BriefcaseConfigError,
@@ -92,36 +92,30 @@ class LinuxAppImagePassiveMixin(LinuxMixin):
         self.use_docker = command.use_docker
         self.extra_docker_build_args = command.extra_docker_build_args
 
-    def finalize_app_config(self, app: AppConfig):
+    def finalize_app_config(self, app: DraftAppConfig, **kwargs) -> FinalizedAppConfig:
         """If we're *not* using Docker, warn the user about portability."""
         if not self.use_docker:
-            self.console.warning("""\
-*************************************************************************
-** WARNING: Building a Local AppImage!                                 **
-*************************************************************************
+            self.tools.console.warning_banner(
+                "Building a Local AppImage!",
+                """
+                    You are building an AppImage outside Docker. The resulting AppImage
+                    will work, but will not be as portable as a Docker-based AppImage.
+                    Any `manylinux` setting will be ignored.
+                """,
+            )
+        self.tools.console.warning_banner(
+            "Use of AppImage is not recommended!",
+            """
+                Briefcase supports AppImage in a best-effort capacity. It has proven
+                to be highly unreliable as a distribution platform. AppImages cannot
+                use pre-compiled binary wheels, and has significant problems with
+                most commonly used GUI toolkits (including GTK and PySide).
 
-    You are building an AppImage outside Docker. The resulting AppImage
-    will work, but will not be as portable as a Docker-based AppImage.
-    Any `manylinux` setting will be ignored.
-
-*************************************************************************
-""")
-
-        self.console.warning("""\
-*************************************************************************
-** WARNING: Use of AppImage is not recommended!                        **
-*************************************************************************
-
-    Briefcase supports AppImage in a best-effort capacity. It has proven
-    to be highly unreliable as a distribution platform. AppImages cannot
-    use pre-compiled binary wheels, and has significant problems with
-    most commonly used GUI toolkits (including GTK and PySide).
-
-    Consider using system packages or Flatpak for Linux app
-    distribution.
-
-*************************************************************************
-""")
+                Consider using system packages or Flatpak for Linux app
+                distribution.
+            """,
+        )
+        return super().finalize_app_config(app, **kwargs)
 
 
 class LinuxAppImageMostlyPassiveMixin(LinuxAppImagePassiveMixin):
@@ -140,7 +134,7 @@ class LinuxAppImageMostlyPassiveMixin(LinuxAppImagePassiveMixin):
         if self.use_docker:
             Docker.verify(tools=self.tools)
 
-    def verify_app_tools(self, app: AppConfig):
+    def verify_app_tools(self, app: FinalizedAppConfig):
         """Verify App environment is prepared and available.
 
         When Docker is used, create or update a Docker image for the App. Without
@@ -182,7 +176,7 @@ class LinuxAppImageCreateCommand(
 ):
     description = "Create and populate a Linux AppImage."
 
-    def output_format_template_context(self, app: AppConfig):
+    def output_format_template_context(self, app: FinalizedAppConfig):
         context = super().output_format_template_context(app)
 
         try:
@@ -224,22 +218,19 @@ class LinuxAppImageCreateCommand(
         # On Windows, the support path is co-mingled with app content.
         # This means updating the support package is imperfect.
         # Warn the user that there could be problems.
-        self.console.warning("""
-*************************************************************************
-** WARNING: Support package update may be imperfect                    **
-*************************************************************************
+        self.tools.console.warning_banner(
+            "Support package update may be imperfect",
+            """
+                Support packages in Linux AppImages are overlaid with app content,
+                so it isn't possible to remove all old support files before
+                installing new ones.
 
-    Support packages in Linux AppImages are overlaid with app content,
-    so it isn't possible to remove all old support files before
-    installing new ones.
-
-    Briefcase will unpack the new support package without cleaning up
-    existing support package content. This *should* work; however,
-    ensure a reproducible release artefacts, it is advisable to
-    perform a clean app build before release.
-
-*************************************************************************
-""")
+                Briefcase will unpack the new support package without cleaning up
+                existing support package content. This *should* work; however,
+                ensure a reproducible release artefacts, it is advisable to perform
+                a clean app build before release.
+            """,
+        )
 
 
 class LinuxAppImageUpdateCommand(LinuxAppImageCreateCommand, UpdateCommand):
@@ -255,7 +246,11 @@ class LinuxAppImageOpenCommand(LinuxAppImageMostlyPassiveMixin, DockerOpenComman
 class LinuxAppImageBuildCommand(LinuxAppImageMixin, BuildCommand):
     description = "Build a Linux AppImage."
 
-    def build_app(self, app: AppConfig, **kwargs):  # pragma: no-cover-if-is-windows
+    def build_app(
+        self,
+        app: FinalizedAppConfig,
+        **kwargs,
+    ):  # pragma: no-cover-if-is-windows
         """Build an application.
 
         :param app: The application to build
@@ -364,7 +359,7 @@ class LinuxAppImageRunCommand(LinuxAppImagePassiveMixin, RunCommand):
 
     def run_app(
         self,
-        app: AppConfig,
+        app: FinalizedAppConfig,
         passthrough: list[str],
         **kwargs,
     ):
@@ -414,7 +409,7 @@ class LinuxAppImageDevCommand(LinuxAppImageMixin, DevCommand):
 class LinuxAppImagePackageCommand(LinuxAppImageMixin, PackageCommand):
     description = "Package a Linux AppImage."
 
-    def package_app(self, app: AppConfig, **kwargs):
+    def package_app(self, app: FinalizedAppConfig, **kwargs):
         """Package an AppImage.
 
         :param app: The application to package

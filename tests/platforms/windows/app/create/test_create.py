@@ -1,9 +1,12 @@
+import platform
 import sys
+from unittest.mock import MagicMock
 
 import pytest
 from packaging.version import Version
 
-from briefcase.exceptions import UnsupportedHostError
+from briefcase.exceptions import BriefcaseCommandError, UnsupportedHostError
+from briefcase.integrations.subprocess import Subprocess
 from briefcase.platforms.windows.app import WindowsAppCreateCommand
 
 
@@ -28,9 +31,9 @@ def test_unsupported_host_os(create_command, host_os):
         create_command()
 
 
-@pytest.mark.parametrize("host_arch", ["i686", "ARM64", "wonky"])
+@pytest.mark.parametrize("host_arch", ["i686", "wonky"])
 def test_unsupported_arch(create_command, host_arch, first_app_config):
-    """Internal apps can only be developed on x86-64."""
+    """Internal apps can only be developed on x86-64 and ARM64."""
     create_command.tools.host_os = "Windows"
     create_command.tools.host_arch = host_arch
     create_command.apps["first"] = first_app_config
@@ -42,7 +45,7 @@ def test_unsupported_arch(create_command, host_arch, first_app_config):
         create_command.verify_host()
 
 
-@pytest.mark.parametrize("host_arch", ["i686", "ARM64", "wonky"])
+@pytest.mark.parametrize("host_arch", ["i686", "wonky"])
 def test_unsupported_arch_external(create_command, host_arch, first_app_config, capsys):
     """External apps can be built on a different architecture, with a warning."""
     create_command.tools.host_os = "Windows"
@@ -82,12 +85,38 @@ def test_unsupported_32bit_python(create_command):
         create_command()
 
 
+def test_verify_windows_cpu_arch(create_command):
+    """Running through x86_64 emulation on Windows ARM64 will raise an error."""
+
+    # Create a Mock object for the platform module
+    create_command.tools.platform = MagicMock(spec_set=platform)
+
+    # Simulate that Mock platform is running on Windows ARM64 with an x86_64 Python interpreter
+    create_command.tools.host_os = "Windows"
+    create_command.tools.host_arch = "ARM64"
+    create_command.tools.platform.python_compiler = MagicMock(
+        return_value="MSV v.1950 64 bit (AMD64)"
+    )
+
+    with pytest.raises(
+        UnsupportedHostError,
+        match=(
+            r"The Python interpreter that is being used to run Briefcase has been "
+            r"compiled for x86_64, and is running in emulation mode on ARM64 "
+            r"hardware. You must use a Python interpreter that has been "
+            r"compiled for ARM64."
+        ),
+    ):
+        create_command.verify_host()
+
+
 def test_context(create_command, first_app_config):
     context = create_command.output_format_template_context(first_app_config)
     assert sorted(context.keys()) == [
         "binary_path",
         "guid",
         "install_scope",
+        "installer_images",
         "package_path",
         "version_triple",
     ]
@@ -142,6 +171,31 @@ def test_explicit_guid(create_command, first_app_config, tmp_path):
     assert context["guid"] == "e822176f-b755-589f-849c-6c6600f7efb1"
 
 
+def test_no_installer_images(create_command, first_app_config, tmp_path):
+    """If no installer images are specified, blank values are used."""
+    context = create_command.output_format_template_context(first_app_config)
+
+    # Installer images have been converted to a full path
+    assert context["installer_images"] == {
+        "background": "",
+        "banner": "",
+    }
+
+
+def test_installer_images(create_command, first_app_config, tmp_path):
+    """If installer images are specified, they are converted and used."""
+    first_app_config.installer_background = "path/to/background"
+    first_app_config.installer_banner = "path/to/banner"
+
+    context = create_command.output_format_template_context(first_app_config)
+
+    # Installer images have been converted to a full path
+    assert context["installer_images"] == {
+        "background": str(tmp_path / "base_path/path/to/background.bmp"),
+        "banner": str(tmp_path / "base_path/path/to/banner.bmp"),
+    }
+
+
 @pytest.mark.parametrize(
     ("revision", "micro"),
     [
@@ -162,7 +216,7 @@ def test_support_package_url(
     expected_link = (
         f"https://www.python.org/ftp/python"
         f"/{sys.version_info.major}.{sys.version_info.minor}.{micro}"
-        f"/python-{sys.version_info.major}.{sys.version_info.minor}.{revision}-embed-amd64.zip"
+        f"/python-{sys.version_info.major}.{sys.version_info.minor}.{revision}-embed-{create_command.tools.host_arch.lower()}.zip"
     )
     assert create_command.support_package_url(revision) == expected_link
 
@@ -206,3 +260,60 @@ def test_external(create_command, external_first_app, tmp_path):
     context = create_command.output_format_template_context(external_first_app)
     assert context["package_path"] == str(tmp_path / "base_path/external/src")
     assert context["binary_path"] == "internal/app.exe"
+
+
+@pytest.mark.parametrize(
+    ("template_version", "app_version", "compatible"),
+    [
+        (10240, 7601, False),
+        (10240, 10240, True),
+        (10240, 17763, True),
+        (None, 10240, True),
+        (10240, None, True),
+        (None, None, True),
+        # Values provided as strings are converted to int
+        ("10240", "7601", False),
+        (10240, "7601", False),
+        ("10240", 7601, False),
+    ],
+)
+def test_min_os_version(
+    create_command,
+    first_app_templated,
+    template_version,
+    app_version,
+    compatible,
+):
+    """If the app defines a min OS version that is incompatible with the app template,
+    an error is raised."""
+    first_app_templated.requires = ["first", "second==1.2.3", "third>=3.2.1"]
+    create_command.target_windows_build = MagicMock(return_value=template_version)
+    if app_version:
+        first_app_templated.min_os_version = app_version
+    create_command.tools[first_app_templated].app_context = MagicMock(
+        spec_set=Subprocess
+    )
+    if not compatible:
+        with pytest.raises(
+            BriefcaseCommandError,
+            match=(
+                f"Your Windows app specifies a minimum build number of {app_version}, "
+                f"but the app template only supports {template_version}"
+            ),
+        ):
+            create_command.install_app_requirements(first_app_templated)
+        create_command.tools[first_app_templated].app_context.run.assert_not_called()
+    else:
+        create_command.install_app_requirements(first_app_templated)
+        create_command.tools[first_app_templated].app_context.run.assert_called()
+
+
+def test_target_windows_build(create_command, first_app_templated):
+    "Test that the target Windows build is returned"
+
+    create_command._briefcase_toml[first_app_templated] = {"briefcase": {}}
+    assert create_command.target_windows_build(first_app_templated) is None
+    create_command._briefcase_toml[first_app_templated] = {
+        "briefcase": {"target_windows_build": 10240}
+    }
+    assert create_command.target_windows_build(first_app_templated) == 10240

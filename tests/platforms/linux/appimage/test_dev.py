@@ -5,7 +5,7 @@ from unittest import mock
 import pytest
 
 from briefcase.integrations.subprocess import Subprocess
-from briefcase.integrations.virtual_environment import VenvContext
+from briefcase.integrations.virtual_environment import VirtualEnvironment
 from briefcase.platforms.linux.appimage import LinuxAppImageDevCommand
 
 
@@ -23,9 +23,9 @@ def dev_command(dummy_console, tmp_path):
 
 
 @pytest.fixture
-def default_venv() -> VenvContext:
+def default_venv() -> VirtualEnvironment:
     """Create a venv mock for tests that require a venv parameter."""
-    mock_venv = mock.MagicMock(spec=VenvContext)
+    mock_venv = mock.MagicMock(spec=VirtualEnvironment)
     mock_venv.run.return_value = mock.MagicMock()
     mock_venv.check_output.return_value = ""
     mock_venv.Popen.return_value = mock.MagicMock()

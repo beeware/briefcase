@@ -3,7 +3,7 @@ from unittest import mock
 import pytest
 
 from briefcase.commands import DevCommand
-from briefcase.config import AppConfig
+from briefcase.config import DraftAppConfig
 from briefcase.integrations.subprocess import Subprocess
 
 
@@ -24,7 +24,7 @@ def first_app_uninstalled(tmp_path):
     with (tmp_path / "src/first/__init__.py").open("w", encoding="UTF-8") as f:
         f.write('print("Hello world")')
 
-    return AppConfig(
+    return DraftAppConfig(
         app_name="first",
         bundle="com.example",
         version="0.0.1",
@@ -52,7 +52,7 @@ def second_app(tmp_path):
     # Create the dist-info folder
     (tmp_path / "src/second.dist-info").mkdir(exist_ok=True)
 
-    return AppConfig(
+    return DraftAppConfig(
         app_name="second",
         bundle="com.example",
         version="0.0.2",
@@ -72,7 +72,7 @@ def third_app(tmp_path):
     # Create the dist-info folder
     (tmp_path / "src/third.dist-info").mkdir(exist_ok=True)
 
-    return AppConfig(
+    return DraftAppConfig(
         app_name="third",
         bundle="com.example",
         version="0.0.2",

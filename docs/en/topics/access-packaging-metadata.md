@@ -37,7 +37,7 @@ The metadata may also contain the following keys, if they have been defined in y
 - **Author** - [`author`][]
 - **Author-email** - [`author_email`][]
 
-For example, the metadata for the app constructed by the [BeeWare Tutorial](https://tutorial.beeware.org/en/latest/tutorial/tutorial-1) would contain:
+For example, the metadata for the app constructed by the [BeeWare Tutorial](https://tutorial.beeware.org/tutorial/tutorial-1/) would contain:
 
 ```python
 Metadata-Version: 2.1

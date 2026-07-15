@@ -1,11 +1,11 @@
 from unittest import mock
 
-from briefcase.config import AppConfig
+from briefcase.config import DraftAppConfig
 
 
 def test_no_resources(create_command):
     """If the template defines no extra targets, none are installed."""
-    myapp = AppConfig(
+    myapp = DraftAppConfig(
         app_name="my-app",
         formal_name="My App",
         bundle="com.example",
@@ -30,7 +30,7 @@ def test_no_resources(create_command):
 
 def test_icon_target(create_command, tmp_path):
     """If the template defines an icon target, it will be installed."""
-    myapp = AppConfig(
+    myapp = DraftAppConfig(
         app_name="my-app",
         formal_name="My App",
         bundle="com.example",
@@ -97,7 +97,7 @@ def test_icon_target(create_command, tmp_path):
 
 def test_icon_variant_target(create_command, tmp_path):
     """If the template defines an icon target with variants, they will be installed."""
-    myapp = AppConfig(
+    myapp = DraftAppConfig(
         app_name="my-app",
         formal_name="My App",
         bundle="com.example",
@@ -185,7 +185,7 @@ def test_icon_variant_target(create_command, tmp_path):
 
 def test_splash_target(create_command, capsys):
     """If the template defines a splash target, a warning will be raised."""
-    myapp = AppConfig(
+    myapp = DraftAppConfig(
         app_name="my-app",
         formal_name="My App",
         bundle="com.example",
@@ -214,7 +214,7 @@ def test_splash_target(create_command, capsys):
 
 def test_splash_variant_target(create_command, capsys):
     """If the template defines a splash target with variants, a warning is raised."""
-    myapp = AppConfig(
+    myapp = DraftAppConfig(
         app_name="my-app",
         formal_name="My App",
         bundle="com.example",
@@ -246,7 +246,7 @@ def test_splash_variant_target(create_command, capsys):
 
 def test_doctype_icon_target(create_command, tmp_path):
     """If the template defines document types, their icons will be installed."""
-    myapp = AppConfig(
+    myapp = DraftAppConfig(
         app_name="my-app",
         formal_name="My App",
         bundle="com.example",

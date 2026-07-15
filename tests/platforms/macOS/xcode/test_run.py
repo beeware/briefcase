@@ -57,9 +57,14 @@ def test_run_app(run_command, first_app_config, sleep_zero, tmp_path, monkeypatc
             "--style",
             "compact",
             "--predicate",
-            f'senderImagePath=="{sender}"'
-            f' OR (processImagePath=="{sender}"'
-            ' AND senderImagePath=="/usr/lib/libffi.dylib")',
+            (
+                f'senderImagePath=="{sender}"'
+                f' OR (processImagePath=="{sender}"'
+                ' AND (senderImagePath=="/usr/lib/libffi.dylib" '
+                '   OR senderImagePath ENDSWITH "/Python" '
+                '   OR senderImagePath ENDSWITH ".abi3.so")'
+                " )"
+            ),
         ],
         stdout=subprocess.PIPE,
         stderr=subprocess.STDOUT,
@@ -118,9 +123,14 @@ def test_run_app_with_passthrough(
             "--style",
             "compact",
             "--predicate",
-            f'senderImagePath=="{sender}"'
-            f' OR (processImagePath=="{sender}"'
-            ' AND senderImagePath=="/usr/lib/libffi.dylib")',
+            (
+                f'senderImagePath=="{sender}"'
+                f' OR (processImagePath=="{sender}"'
+                ' AND (senderImagePath=="/usr/lib/libffi.dylib" '
+                '   OR senderImagePath ENDSWITH "/Python" '
+                '   OR senderImagePath ENDSWITH ".abi3.so")'
+                " )"
+            ),
         ],
         stdout=subprocess.PIPE,
         stderr=subprocess.STDOUT,
@@ -177,9 +187,14 @@ def test_run_app_test_mode(
             "--style",
             "compact",
             "--predicate",
-            f'senderImagePath=="{sender}"'
-            f' OR (processImagePath=="{sender}"'
-            ' AND senderImagePath=="/usr/lib/libffi.dylib")',
+            (
+                f'senderImagePath=="{sender}"'
+                f' OR (processImagePath=="{sender}"'
+                ' AND (senderImagePath=="/usr/lib/libffi.dylib" '
+                '   OR senderImagePath ENDSWITH "/Python" '
+                '   OR senderImagePath ENDSWITH ".abi3.so")'
+                " )"
+            ),
         ],
         stdout=subprocess.PIPE,
         stderr=subprocess.STDOUT,
@@ -241,9 +256,14 @@ def test_run_app_test_mode_with_passthrough(
             "--style",
             "compact",
             "--predicate",
-            f'senderImagePath=="{sender}"'
-            f' OR (processImagePath=="{sender}"'
-            ' AND senderImagePath=="/usr/lib/libffi.dylib")',
+            (
+                f'senderImagePath=="{sender}"'
+                f' OR (processImagePath=="{sender}"'
+                ' AND (senderImagePath=="/usr/lib/libffi.dylib" '
+                '   OR senderImagePath ENDSWITH "/Python" '
+                '   OR senderImagePath ENDSWITH ".abi3.so")'
+                " )"
+            ),
         ],
         stdout=subprocess.PIPE,
         stderr=subprocess.STDOUT,

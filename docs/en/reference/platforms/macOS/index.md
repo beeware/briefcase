@@ -101,9 +101,15 @@ Do not sign the installer. This option can be useful during development and test
 
 Do not submit the application for notarization. By default, apps will be submitted for notarization unless they have been signed with an ad-hoc signing identity.
 
+### `--no-wait`
+
+Submit the application for notarization, but do not wait for notarization to complete. The submission can be finalized later by re-running the `briefcase package` command.
+
 ### `--resume <submission ID>`
 
 Apple's notarization server can take a long time to respond - in some cases, hours. When you submit an app for notarization, the console output of the `package` command will provide you with a submission ID. If the notarization process is interrupted for any reason (including user intervention), you can use this submission ID with the `--resume` option to resume the notarization process for an app.
+
+In general, you won't need to use the `--resume` option. When an interruption occurs, rerunning the same `briefcase package` command will automatically resume the notarization process.
 
 ## Application configuration
 
@@ -152,9 +158,31 @@ will result in an `Info.plist` declaration of:
 
 Any Boolean or string value can be used for an `Info.plist` value.
 
+### `installer_resources`
+
+/// note | Only used for PKG packaging
+///
+
+A path, relative to the project root, to a directory of additional resources to include in the PKG installer. The contents of this directory are added alongside Briefcase's own installer resources (such as the welcome screen and license), and can be referenced by the installer's distribution definition.
+
+These resources are part of the installer itself, they are used while the installer is running, and are not installed onto the target machine.
+
+DMG and ZIP "installers" do not carry resources. If you define `installer_resources` while using one of those formats, the setting will be ignored with a warning.
+
 ### `min_os_version`
 
 The minimum macOS version that the app will support. This controls the value of `MACOSX_DEPLOYMENT_TARGET` used when building the app.
+
+### `post_install_script`
+
+/// note | Only used for PKG packaging
+///
+
+A path, relative to the project root, to a shell script that will be executed during installation, after the installer content has been unpacked. The script must be a valid macOS shell script file with an appropriate shebang line (e.g., `#!/bin/sh`).
+
+For console apps, Briefcase provides a post-install script that creates a symbolic link to the app on the `PATH`; your script will be run *after* that link has been created.
+
+DMG and ZIP "installers" cannot run scripts. if you define a `post_install_script` while using one of those formats, the setting will be ignored with a warning. There is no PKG analog for a pre-uninstall script.
 
 ### `universal_build`
 
@@ -236,9 +264,15 @@ iCloud stores and maintains metadata on some content stored in iCloud-synchroniz
 
 This most commonly affects the <span class="title-ref">Documents</span> and <span class="title-ref">Desktop</span> folders (and subfolders), but can affect other locations if they are synchronized with iCloud.
 
-### Packaging with  { #--adhoc-sign }`
+### Packaging with `--adhoc-sign`
 
 Using the `--adhoc-sign` option on macOS produces an app that will be able to run on your own machine, but won't run on any other computer. In order to distribute your app to other users, you will need to sign the app with a full signing identity.
+
+### App notarization
+
+Apple requires applications are both signed and notarized. While signing can be done locally, notarization is a process that involves sending the application to Apple, and receiving a response.
+
+Briefcase will manage that entire notarization process, but the process can take anywhere from minutes to hours depending on the backlog on Apple's servers. In the event that the process is interrupted, rerunning the same `briefcase package` command will resume the process.
 
 ### Inconsistent content in non-universal wheels
 

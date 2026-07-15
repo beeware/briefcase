@@ -1,8 +1,8 @@
 [build-system]
 requires = [
     # keep versions in sync with automation/pyproject.toml
-    "setuptools==82.0.0",
-    "setuptools_scm==9.2.2",
+    "setuptools==83.0.0",
+    "setuptools_scm==10.2.0",
 ]
 build-backend = "setuptools.build_meta"
 
@@ -85,13 +85,20 @@ dependencies = [
     # a full error. Requests has already increased the pin; the next requests release
     # should remove the need for this pin.
     "chardet < 8.0",
+    # See binaryornot/binaryornot#642 and binaryornot/binaryornot#649. binaryornot is
+    # transitive dependency of cookiecutter; v0.5.0 introduced #642, preventing correct
+    # detection of PNG content (#642). v0.6.0 (released a few days later) fixes #642,
+    # but introduced #649, and the presence of warnings causes catastrophic failures
+    # when running under dev mode.
+    "binaryornot < 0.5.0",
     "dmgbuild >= 1.6.4, < 2.0; sys_platform == 'darwin'",
     "GitPython >= 3.1, < 4.0",
     "platformdirs >= 2.6, < 5.0",
     "psutil >= 5.9, < 8.0",
     "python-dateutil >= 2.9.0.post0",  # transitive dependency (beeware/briefcase#1428)
     "httpx >= 0.20, < 1.0",
-    "rich >= 12.6, < 15.0",
+    "rich >= 12.6, < 16.0",
+    "tenacity >= 8.0, < 10.0",
     "tomli >= 2.0, < 3.0; python_version <= '3.10'",
     "tomli_w >= 1.0, < 2.0",
 ]
@@ -100,11 +107,11 @@ dependencies = [
 # Extras used by developers *of* briefcase are pinned to specific versions to
 # ensure environment consistency.
 pre-commit = [
-    "pre-commit == 4.5.1",
+    "pre-commit == 4.6.0",
 ]
 
 setuptools-scm = [
-    "setuptools_scm == 9.2.2",
+    "setuptools_scm==10.2.0",
 ]
 
 towncrier = [
@@ -112,11 +119,11 @@ towncrier = [
 ]
 
 tox-uv = [
-    "tox-uv == 1.33.0",
+    "tox-uv == 1.35.2",
 ]
 
 ty = [
-    "ty == 0.0.19",
+    "ty == 0.0.56",
 ]
 
 dev = [
@@ -126,10 +133,10 @@ dev = [
 ]
 
 test = [
-    "coverage[toml] == 7.13.4",
+    "coverage[toml] == 7.15.0",
     "coverage-conditional-plugin == 0.9.0",
-    "httpx-retries == 0.4.6",
-    "pytest == 9.0.2",
+    "httpx-retries == 0.5.0",
+    "pytest == 9.1.1",
     "pytest-xdist == 3.8.0",
     {include-group = "setuptools-scm"},
 ]
@@ -137,6 +144,7 @@ test = [
 # and the docs contribution guide.
 docs = [
     "beeware-docs-tools @ git+https://github.com/beeware/beeware-docs-tools",
+    # "beeware-docs-tools @ file://../beeware-docs-tools",
 ]
 
 [project.urls]
@@ -284,11 +292,15 @@ ignore = [
     "SIM108",  # replace if-else with ternary operator (too opinionated)
 ]
 
+[tool.ruff.lint.isort]
+# If you've built a wheel locally, you'll have a build directory.
+# This confuses ruff into thinking build is a first-party Python package.
+known-third-party = ["build"]
+
 [tool.ruff.lint.per-file-ignores]
 # E501: line too long, to be fixed in future changes
 "tests/integrations/*" = ["E501"]
 "tests/platforms/*" = ["E501"]
-
 
 [tool.rumdl]
 flavor = "mkdocs"

@@ -105,7 +105,6 @@ class JDK(ManagedTool):
             return tools.java
 
         java = None
-        install_message = None
 
         if java_home := tools.os.environ.get("JAVA_HOME", ""):
             tools.console.debug("Evaluating JAVA_HOME...", prefix=cls.full_name)
@@ -115,95 +114,79 @@ class JDK(ManagedTool):
                 if version_str.split(".")[0] == cls.JDK_MAJOR_VER:
                     java = JDK(tools, java_home=Path(java_home))
                 else:
-                    install_message = f"""
-*************************************************************************
-** WARNING: JAVA_HOME does not point to a Java {cls.JDK_MAJOR_VER} JDK            **
-*************************************************************************
+                    tools.console.warning_banner(
+                        f"JAVA_HOME does not point to a Java {cls.JDK_MAJOR_VER} JDK",
+                        f"""
+                            Android requires a Java {cls.JDK_MAJOR_VER} JDK, but the
+                            location pointed to by the JAVA_HOME environment variable:
 
-    Android requires a Java {cls.JDK_MAJOR_VER} JDK, but the location pointed to by the
-    JAVA_HOME environment variable:
+                                {java_home}
 
-    {java_home}
+                            isn't a Java {cls.JDK_MAJOR_VER} JDK (it appears to be Java
+                            {version_str}).
 
-    isn't a Java {cls.JDK_MAJOR_VER} JDK (it appears to be Java {version_str}).
-
-    Briefcase will proceed using its own JDK instance.
-
-*************************************************************************
-"""
-
+                            Briefcase will proceed using its own JDK instance.
+                        """,
+                    )
             except OSError:
-                install_message = f"""
-*************************************************************************
-** WARNING: JAVA_HOME does not point to a JDK                          **
-*************************************************************************
+                tools.console.warning_banner(
+                    "JAVA_HOME does not point to a JDK",
+                    f"""
+                        The location pointed to by the JAVA_HOME environment variable:
 
-    The location pointed to by the JAVA_HOME environment variable:
+                            {java_home}
 
-    {java_home}
+                        does not appear to be a JDK. It may be a Java Runtime
+                        Environment.
 
-    does not appear to be a JDK. It may be a Java Runtime Environment.
+                        If JAVA_HOME is a JDK, ensure it is the root directory of the
+                        JDK instance such that $JAVA_HOME/bin/javac is a valid filepath.
 
-    If JAVA_HOME is a JDK, ensure it is the root directory of the JDK
-    instance such that $JAVA_HOME/bin/javac is a valid filepath.
-
-    Briefcase will proceed using its own JDK instance.
-
-*************************************************************************
-"""
-
+                        Briefcase will proceed using its own JDK instance.
+                    """,
+                )
             except subprocess.CalledProcessError:
-                install_message = f"""
-*************************************************************************
-** WARNING: Unable to invoke the Java compiler                         **
-*************************************************************************
+                tools.console.warning_banner(
+                    "Unable to invoke the Java compiler",
+                    f"""
+                        Briefcase received an unexpected error when trying to invoke
+                        javac, the Java compiler, at the location indicated by the
+                        JAVA_HOME environment variable.
 
-    Briefcase received an unexpected error when trying to invoke javac,
-    the Java compiler, at the location indicated by the JAVA_HOME
-    environment variable.
+                        Briefcase will continue by downloading and using its own JDK.
 
-    Briefcase will continue by downloading and using its own JDK.
+                        Please report this as a bug at:
 
-    Please report this as a bug at:
+                            https://github.com/beeware/briefcase/issues/new
 
-        https://github.com/beeware/briefcase/issues/new
+                        In your report, please including the output from running:
 
+                            {java_home}/bin/javac -version
 
-    In your report, please including the output from running:
-
-        {java_home}/bin/javac -version
-
-    from the command prompt.
-
-*************************************************************************
-"""
-
+                        from the command prompt.
+                    """,
+                )
             except IndexError:
-                install_message = f"""
-*************************************************************************
-** WARNING: Unable to determine the version of Java that is installed  **
-*************************************************************************
+                tools.console.warning_banner(
+                    "Unable to determine the version of Java that is installed",
+                    f"""
+                        Briefcase was unable to interpret the version information
+                        returned by the Java compiler at the location indicated by the
+                        JAVA_HOME environment variable.
 
-    Briefcase was unable to interpret the version information returned
-    by the Java compiler at the location indicated by the JAVA_HOME
-    environment variable.
+                        Briefcase will continue by downloading and using its own JDK.
 
-    Briefcase will continue by downloading and using its own JDK.
+                        Please report this as a bug at:
 
-    Please report this as a bug at:
+                            https://github.com/beeware/briefcase/issues/new
 
-        https://github.com/beeware/briefcase/issues/new
+                        In your report, please including the output from running:
 
+                            {java_home}/bin/javac -version
 
-    In your report, please including the output from running:
-
-        {java_home}/bin/javac -version
-
-    from the command prompt.
-
-*************************************************************************
-"""
-
+                        from the command prompt.
+                    """,
+                )
         # macOS has a helpful system utility to determine JAVA_HOME. Try it.
         elif tools.host_os == "Darwin":
             tools.console.debug(
@@ -227,10 +210,6 @@ class JDK(ManagedTool):
                     pass  # do not alert user if macOS found an unqualified JDK
 
         if java is None:
-            # Inform the user if the user-specified JDK wasn't valid
-            if install_message:
-                tools.console.warning(install_message)
-
             # Use the Briefcase JDK install
             java_home = tools.base_path / cls.JDK_INSTALL_DIR_NAME
 
@@ -310,7 +289,10 @@ Delete {jdk_zip_path} and run briefcase again.
             java_unpack_path = (
                 self.tools.base_path / f"jdk-{self.JDK_RELEASE}+{self.JDK_BUILD}"
             )
-            java_unpack_path.rename(self.tools.base_path / self.JDK_INSTALL_DIR_NAME)
+            self.tools.file.rename(
+                java_unpack_path,
+                self.tools.base_path / self.JDK_INSTALL_DIR_NAME,
+            )
 
     def uninstall(self):
         """Uninstall a JDK."""
