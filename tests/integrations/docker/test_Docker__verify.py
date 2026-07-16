@@ -197,16 +197,16 @@ def test_docker_unknown_version(mock_tools, user_mapping_run_calls, capsys):
 
 def test_docker_exists_but_process_lacks_permission_to_use_it(mock_tools):
     """If the docker daemon isn't running, the check fails."""
-    error_message = """
-Client:
- Debug Mode: false
-
-Server:
-ERROR: Got permission denied while trying to connect to the Docker daemon socket at unix:///var/run/docker.sock:
-
-Get http://%2Fvar%2Frun%2Fdocker.sock/v1.40/info: dial unix /var/run/docker.sock: connect: permission denied
-errors pretty printing info"""
-
+    error_message = (
+        "Client:\n"
+        " Debug Mode: false\n"
+        "Server:\n"
+        "ERROR: Got permission denied while trying to connect to the Docker "
+        "daemon socket at unix:///var/run/docker.sock:\n"
+        "Get http://%2Fvar%2Frun%2Fdocker.sock/v1.40/info: dial unix "
+        "/var/run/docker.sock: connect: permission denied\n"
+        "errors pretty printing info"
+    )
     mock_tools.subprocess.check_output.side_effect = [
         VALID_DOCKER_VERSION,
         subprocess.CalledProcessError(
@@ -225,21 +225,22 @@ errors pretty printing info"""
 @pytest.mark.parametrize(
     "error_message",
     [
-        """
-Client:
- Debug Mode: false
-
-Server:
-ERROR: Error response from daemon: dial unix docker.raw.sock: connect: connection refused
-errors pretty printing info
-""",  # this is the error shown on mac
-        """
-Client:
- Debug Mode: false
-
-Server:
-ERROR: Cannot connect to the Docker daemon at unix:///var/run/docker.sock. Is the docker daemon running?
-errors pretty printing info""",  # this is the error show on linux
+        (
+            "Client:\n"
+            " Debug Mode: false\n"
+            "Server:\n"
+            "ERROR: Error response from daemon: dial unix docker.raw.sock: "
+            "connect: connection refused\n"
+            "errors pretty printing info\n"
+        ),
+        (
+            "Client:\n"
+            " Debug Mode: false\n"
+            "Server:\n"
+            "ERROR: Cannot connect to the Docker daemon at "
+            "unix:///var/run/docker.sock. Is the docker daemon running?\n"
+            "errors pretty printing info"
+        ),
     ],
 )
 def test_docker_exists_but_is_not_running(error_message, mock_tools):
@@ -290,7 +291,10 @@ def test_buildx_plugin_not_installed(mock_tools):
 
     with pytest.raises(
         BriefcaseCommandError,
-        match="Docker is installed and available for use but the buildx plugin\nis not installed",
+        match=(
+            "Docker is installed and available for use but the buildx plugin\n"
+            "is not installed"
+        ),
     ):
         Docker.verify(mock_tools)
 
