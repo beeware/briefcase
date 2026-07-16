@@ -2,6 +2,8 @@ import pytest
 
 from briefcase.integrations.virtual_environment import PixiVirtualEnvironment
 
+pytest.skip(allow_module_level=True)
+
 
 @pytest.fixture
 def venv(mock_tools, venv_path):

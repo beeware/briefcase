@@ -2,6 +2,7 @@ import pytest
 
 from briefcase.config import DraftAppConfig
 from briefcase.exceptions import UnsupportedPlatform
+from briefcase.integrations.virtual_environment import VenvVirtualEnvironment
 
 
 def test_create_app(tracking_create_command, tmp_path):
@@ -13,12 +14,13 @@ def test_create_app(tracking_create_command, tmp_path):
 
     # The right sequence of things will be done
     assert tracking_create_command.actions == [
-        ("generate", "first"),
-        ("support", "first"),
         ("verify-app-template", "first"),
         ("verify-app-tools", "first"),
+        ("generate", "first"),
+        ("create-app-env", "first", "Tester", "gothic"),
+        ("support", "first"),
         ("code", "first", False),
-        ("requirements", "first", False, False),
+        ("requirements", "Tester-gothic", "first", False, False),
         ("resources", "first"),
         ("cleanup", "first"),
     ]
@@ -57,12 +59,13 @@ def test_create_existing_app_overwrite(tracking_create_command, tmp_path):
 
     # The right sequence of things will be done
     assert tracking_create_command.actions == [
-        ("generate", "first"),
-        ("support", "first"),
         ("verify-app-template", "first"),
         ("verify-app-tools", "first"),
+        ("generate", "first"),
+        ("create-app-env", "first", "Tester", "gothic"),
+        ("support", "first"),
         ("code", "first", False),
-        ("requirements", "first", False, False),
+        ("requirements", "Tester-gothic", "first", False, False),
         ("resources", "first"),
         ("cleanup", "first"),
     ]
@@ -187,7 +190,10 @@ def test_create_app_with_stub(tracking_create_command, tmp_path):
     first_app = tracking_create_command.apps["first"]
 
     tracking_create_command._briefcase_toml[first_app] = {
-        "paths": {"stub_binary_revision": "b1"}
+        "paths": {
+            "support_path": "path/to/support",
+            "stub_binary_revision": "b1",
+        }
     }
 
     tracking_create_command.create_app(first_app)
@@ -197,13 +203,14 @@ def test_create_app_with_stub(tracking_create_command, tmp_path):
 
     # The right sequence of things will be done
     assert tracking_create_command.actions == [
-        ("generate", "first"),
-        ("support", "first"),
-        ("stub", "first"),
         ("verify-app-template", "first"),
         ("verify-app-tools", "first"),
+        ("generate", "first"),
+        ("create-app-env", "first", "Tester", "gothic"),
+        ("support", "first"),
+        ("stub", "first"),
         ("code", "first", False),
-        ("requirements", "first", False, False),
+        ("requirements", "Tester-gothic", "first", False, False),
         ("resources", "first"),
         ("cleanup", "first"),
     ]
@@ -211,6 +218,39 @@ def test_create_app_with_stub(tracking_create_command, tmp_path):
     # New app content and stub binary has been created
     assert (tmp_path / "base_path/build/first/tester/dummy/new").exists()
     assert (
+        tmp_path
+        / "base_path/build/first/tester/dummy"
+        / tracking_create_command.exe_name("first")
+    ).exists()
+
+
+def test_create_app_managed_python_env(tracking_create_command, tmp_path, monkeypatch):
+    monkeypatch.setattr(VenvVirtualEnvironment, "provides_python", True)
+
+    first_app = tracking_create_command.apps["first"]
+
+    tracking_create_command.create_app(first_app)
+
+    # Input wasn't required by the user
+    assert tracking_create_command.console.prompts == []
+
+    # The right sequence of things will be done
+    assert tracking_create_command.actions == [
+        ("verify-app-template", "first"),
+        ("verify-app-tools", "first"),
+        ("generate", "first"),
+        ("create-app-env", "first", "Tester", "gothic"),
+        ("code", "first", False),
+        ("requirements", "Tester-gothic", "first", False, False),
+        ("resources", "first"),
+        ("install-managed-python-env", "first", "Tester-gothic"),
+        ("cleanup", "first"),
+    ]
+
+    # New app content has been created
+    assert (tmp_path / "base_path/build/first/tester/dummy/new").exists()
+    # A stub binary has *not* been created
+    assert not (
         tmp_path
         / "base_path/build/first/tester/dummy"
         / tracking_create_command.exe_name("first")

@@ -8,9 +8,10 @@ import shutil
 from collections.abc import Collection
 from datetime import date, datetime
 from pathlib import Path
+from typing import Literal
 
 import briefcase
-from briefcase.config import AppConfig, FinalizedAppConfig
+from briefcase.config import AppConfig, EnvManagerT, FinalizedAppConfig
 from briefcase.exceptions import (
     BriefcaseCommandError,
     InvalidStubBinary,
@@ -82,6 +83,7 @@ def write_dist_info(app: FinalizedAppConfig, dist_info_path: Path):
 class CreateCommand(BaseCommand):
     command = "create"
     description = "Create a new app for a target platform."
+    require_binary_installs = False
 
     def add_options(self, parser):
         super().add_options(parser)
@@ -287,35 +289,34 @@ class CreateCommand(BaseCommand):
     def create_app_environment(
         self,
         app: FinalizedAppConfig,
-        platform: str | None = None,
-        arch: str | None = None,
-        env: dict[str, str | None] | None = None,
+        platform: str,
+        arch: str,
+        env_manager: EnvManagerT | None | Literal["noop"] = None,
         recreate: bool = True,
     ) -> VirtualEnvironment:
         """Create an isolated virtual environment in which the app can be built.
 
         :param app: The config object for the app
-        :param platform: The platform being targeted. Defaults to the command's
-            platform.
-        :param arch: The architecture for the environment. Defaults to the host
-            architecture.
-        :param env: Any environment variables that should be enforced in the
-            environment.
+        :param platform: The platform being targeted.
+        :param arch: The architecture for the environment.
+        :param env_manager: An explicit environment manager to use. Defaults to the
+            app's configured environment manager.
         :param recreate: If the environment already exists, should it be re-created?
             Defaults to True (i.e., recreate by default).
         """
-        if platform is None:
-            platform = self.platform
-        if arch is None:
-            arch = self.tools.host_arch
+        if env_manager is None:
+            env_manager = app.env_manager
+        elif env_manager == "noop":
+            env_manager = None
 
-        env_name = f"{app.env_manager}-{self.platform}-{self.tools.host_arch}"
-        venv = self.tools.virtual_environment[app.env_manager](
+        venv = self.tools.virtual_environment[env_manager](
+            app=app,
             tools=self.tools,
-            venv_path=self.base_path / ".briefcase/" / app.app_name / env_name,
+            base_path=self.base_path,
+            name=f"{self.platform}-{self.tools.host_arch}",
+            support_path=self.support_path(app),
             platform=platform,
             arch=arch,
-            env=env,
         )
         venv.prepare(recreate=recreate)
         return venv
@@ -625,8 +626,9 @@ class CreateCommand(BaseCommand):
             venv.install_requirements(
                 requires,
                 allow_editable=False,
-                require_binary=True,
+                require_binary=self.require_binary_installs,
                 install_path=app_packages_path,
+                extra_installer_args=app.requirement_installer_args,
             )
 
     def install_app_requirements(
@@ -699,7 +701,7 @@ class CreateCommand(BaseCommand):
         app_path = self.app_path(app)
         if app_path.exists():
             self.tools.shutil.rmtree(app_path)
-        app_path.mkdir(parents=True)
+        self.tools.os.mkdir(app_path)
 
         sources = app.all_sources()
 
@@ -910,6 +912,9 @@ class CreateCommand(BaseCommand):
             )
             self.tools.shutil.rmtree(bundle_path)
 
+        # Verify that the app configuration is valid.
+        self.verify_app(app)
+
         self.console.info("Generating application template...", prefix=app.app_name)
         self.generate_app_template(app=app)
 
@@ -933,7 +938,11 @@ class CreateCommand(BaseCommand):
             )
         else:
             self.console.info("Creating app environment...", prefix=app.app_name)
-            venv = self.create_app_environment(app=app)
+            venv = self.create_app_environment(
+                app=app,
+                platform=self.platform,
+                arch=self.tools.host_arch,
+            )
 
             if not venv.provides_python:
                 self.console.info("Installing support package...", prefix=app.app_name)
@@ -949,10 +958,6 @@ class CreateCommand(BaseCommand):
             else:
                 self.console.info("Installing stub binary...", prefix=app.app_name)
                 self.install_stub_binary(app=app)
-
-            # Verify the app after the app template and support package
-            # are in place since the app tools may be dependent on them.
-            self.verify_app(app)
 
             self.console.info("Installing application code...", prefix=app.app_name)
             self.install_app_code(app=app)

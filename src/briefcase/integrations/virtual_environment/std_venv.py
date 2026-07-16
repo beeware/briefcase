@@ -1,15 +1,23 @@
 import os
 import shutil
-import subprocess as stdlib_subprocess
+import subprocess
 import sys
 
-from briefcase.exceptions import BriefcaseCommandError
+from briefcase.exceptions import BriefcaseCommandError, RequirementsInstallError
+from briefcase.integrations.base import ToolCache
 from briefcase.integrations.subprocess import SubprocessArgsT
 from briefcase.integrations.virtual_environment.base import VirtualEnvironment
 
 
 class VenvVirtualEnvironment(VirtualEnvironment):
     """An environment manager using the Python standard library module venv."""
+
+    env_type: str = "venv"
+
+    @classmethod
+    def verify(cls, tools: ToolCache):
+        """Verify that the environment manager is available."""
+        # Venv environment management is available in the standard library.
 
     def exists(self) -> bool:
         """`True` iff the venv directory and its `pyvenv.cfg` are present."""
@@ -43,7 +51,7 @@ class VenvVirtualEnvironment(VirtualEnvironment):
                     [sys.executable, "-m", "venv", self.venv_path],
                     check=True,
                 )
-            except stdlib_subprocess.CalledProcessError as e:
+            except subprocess.CalledProcessError as e:
                 raise BriefcaseCommandError(
                     f"Failed to create virtual environment at {self.venv_path}"
                 ) from e
@@ -51,7 +59,7 @@ class VenvVirtualEnvironment(VirtualEnvironment):
             try:
                 # Ensure pip is upgraded in the environment
                 self.install_requirements(["pip"])
-            except Exception as e:
+            except RequirementsInstallError as e:
                 raise BriefcaseCommandError(
                     f"Failed to update core tooling for {self.venv_path}"
                 ) from e
@@ -92,13 +100,24 @@ class VenvVirtualEnvironment(VirtualEnvironment):
         """
         env = dict(overrides) if overrides else {}
 
-        if self.env:
-            env.update(self.env)
         old_path = env.get("PATH") or os.environ.get("PATH", "")
         env["PATH"] = os.fspath(self.bin_dir) + (
             os.pathsep + old_path if old_path else ""
         )
         env["VIRTUAL_ENV"] = os.fspath(self.venv_path)
         env.pop("PYTHONHOME", None)
+
+        # Make the environment a cross-build environment
+        if self.platform == "iOS":
+            env["PYTHONPATH"] = str(
+                self.support_path
+                / "Python.xcframework/ios-arm64/platform-config/arm64-iphoneos"
+            )
+        elif self.platform == "iOS:simulator":
+            env["PYTHONPATH"] = str(
+                self.support_path
+                / "Python.xcframework/ios-arm64_x86_64-simulator/platform-config"
+                / f"{self.arch}-iphonesimulator"
+            )
 
         return env

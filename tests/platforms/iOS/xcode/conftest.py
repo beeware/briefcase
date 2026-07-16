@@ -1,4 +1,8 @@
+from unittest.mock import MagicMock
+
 import pytest
+
+from briefcase.integrations.virtual_environment import VirtualEnvironment
 
 from ....utils import create_file, create_plist_file
 
@@ -60,3 +64,13 @@ def first_app_generated(first_app_config, tmp_path):
     ).mkdir(parents=True)
 
     return first_app_config
+
+
+@pytest.fixture
+def mock_sim_venv(mock_tools):
+    """A mock environment for the "other" architecture in a universal macOS build."""
+    venv = MagicMock(spec=VirtualEnvironment)
+    venv.provides_python = False
+    venv.tools = mock_tools
+
+    return venv

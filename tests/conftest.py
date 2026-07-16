@@ -1,12 +1,19 @@
 import inspect
 import os
+import platform
+import shutil
 import subprocess
+import sys
 import time
 from unittest.mock import ANY, MagicMock
 
 import pytest
 
 from briefcase.config import DraftAppConfig
+from briefcase.integrations.base import ToolCache
+from briefcase.integrations.file import File
+from briefcase.integrations.subprocess import Subprocess
+from briefcase.integrations.virtual_environment import VirtualEnvironment
 
 from .utils import DummyConsole, create_file
 
@@ -132,3 +139,47 @@ def first_app(first_app_unbuilt, tmp_path):
     )
 
     return first_app_unbuilt
+
+
+@pytest.fixture
+def base_venv_path(tmp_path):
+    return tmp_path / "mock_venvs"
+
+
+@pytest.fixture
+def mock_tools(dummy_console, tmp_path) -> ToolCache:
+    mock_tools = ToolCache(
+        console=dummy_console,
+        base_path=tmp_path / "tools",
+        home_path=tmp_path / "home",
+    )
+
+    # Mock stdlib tools
+    mock_tools.os = MagicMock(spec_set=os)
+    mock_tools.platform = MagicMock(spec_set=platform)
+    mock_tools.shutil = MagicMock(spec_set=shutil)
+    mock_tools.sys = MagicMock(spec_set=sys)
+
+    # Mock an empty environment
+    mock_tools.os.environ = {}
+
+    # Create base directories
+    mock_tools.base_path.mkdir(parents=True)
+    mock_tools.home_path.mkdir(parents=True)
+
+    # Make File and Subprocess always available
+    File.verify(tools=mock_tools)
+    Subprocess.verify(tools=mock_tools)
+
+    return mock_tools
+
+
+@pytest.fixture
+def mock_venv(mock_tools, base_venv_path):
+    venv = MagicMock(spec=VirtualEnvironment)
+    venv.provides_python = False
+    venv.tools = mock_tools
+    venv.name = "mock-venv"
+    venv.base_path = base_venv_path
+
+    return venv

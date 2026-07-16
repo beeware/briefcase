@@ -10,6 +10,7 @@ from pathlib import Path
 from briefcase.commands.run import RunAppMixin
 from briefcase.config import FinalizedAppConfig
 from briefcase.exceptions import BriefcaseCommandError
+from briefcase.integrations.subprocess import NativeAppContext
 from briefcase.integrations.virtual_environment import VirtualEnvironment
 
 from .base import BaseCommand
@@ -47,10 +48,6 @@ class DevCommand(RunAppMixin, BaseCommand):
             "win32": "windows",
         }[sys.platform]
 
-    def bundle_path(self, app):
-        """A placeholder; Dev command doesn't have a bundle path."""
-        raise NotImplementedError()
-
     def binary_path(self, app):
         """A placeholder; Dev command doesn't have a binary path."""
         raise NotImplementedError()
@@ -85,6 +82,11 @@ class DevCommand(RunAppMixin, BaseCommand):
             action="store_true",
             help="Run the app in test mode",
         )
+
+    def verify_app_tools(self, app: FinalizedAppConfig):
+        """Verify that tools needed to run the command for this app exist."""
+        super().verify_app_tools(app)
+        NativeAppContext.verify(tools=self.tools, app=app)
 
     def install_dev_requirements(
         self,
@@ -296,11 +298,11 @@ class DevCommand(RunAppMixin, BaseCommand):
             env_manager = None
 
         venv = self.tools.virtual_environment[env_manager](
+            name=self.venv_name,
+            app=app,
             tools=self.tools,
-            venv_path=(
-                self.base_path
-                / f".briefcase/{app.app_name}/{app.env_manager}-{self.venv_name}"
-            ),
+            base_path=self.base_path,
+            support_path=None,
         )
         created = venv.prepare(recreate=update_requirements)
 

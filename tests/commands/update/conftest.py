@@ -1,7 +1,10 @@
+from unittest import mock
+
 import pytest
 
 from briefcase.commands import UpdateCommand
 from briefcase.config import DraftAppConfig
+from briefcase.integrations.subprocess import Subprocess
 
 from ...utils import create_file
 
@@ -21,10 +24,19 @@ class DummyUpdateCommand(UpdateCommand):
         super().__init__(*args, apps=apps, **kwargs)
 
         self.actions = []
+        self.tools.host_arch = "gothic"
+        self.tools.subprocess = mock.MagicMock(spec_set=Subprocess)
 
     def briefcase_toml(self, app):
-        # default any app to an empty `briefcase.toml`
-        return self._briefcase_toml.get(app, {})
+        # default to a barebones configuration
+        return self._briefcase_toml.get(
+            app,
+            {
+                "paths": {
+                    "support_path": "path/to/support",
+                }
+            },
+        )
 
     def binary_path(self, app):
         return self.bundle_path(app) / f"{app.app_name}.bin"
@@ -52,9 +64,15 @@ class DummyUpdateCommand(UpdateCommand):
 
     # Override all the body methods of a UpdateCommand
     # with versions that we can use to track actions performed.
-    def install_app_requirements(self, app):
+    def install_app_requirements(self, app, venv):
         self.actions.append(
-            ("requirements", app.app_name, app.test_mode, app.debugger is not None)
+            (
+                "requirements",
+                venv.name,
+                app.app_name,
+                app.test_mode,
+                app.debugger is not None,
+            )
         )
         create_file(self.bundle_path(app) / "requirements", "app requirements")
 
@@ -69,6 +87,18 @@ class DummyUpdateCommand(UpdateCommand):
     def cleanup_app_support_package(self, app):
         self.actions.append(("cleanup-support", app.app_name))
 
+    def create_app_environment(
+        self, app, platform, arch, env_manager=None, recreate=True
+    ):
+        self.actions.append(("create-app-env", app.app_name, platform, arch, recreate))
+        return super().create_app_environment(
+            app,
+            platform,
+            arch,
+            env_manager=env_manager,
+            recreate=recreate,
+        )
+
     def install_app_support_package(self, app):
         self.actions.append(("support", app.app_name))
         create_file(self.bundle_path(app) / "support/content.txt", "app support")
@@ -82,6 +112,9 @@ class DummyUpdateCommand(UpdateCommand):
 
     def cleanup_app_content(self, app):
         self.actions.append(("cleanup", app.app_name))
+
+    def install_managed_python_env(self, app, venv):
+        self.actions.append(("install-managed-python-env", app.app_name, venv.name))
 
 
 @pytest.fixture

@@ -5,12 +5,37 @@ import sys
 from pathlib import Path
 
 from briefcase.exceptions import BriefcaseCommandError, RequirementsInstallError
+from briefcase.integrations.base import ToolCache
 from briefcase.integrations.subprocess import SubprocessArgsT
 from briefcase.integrations.virtual_environment.base import VirtualEnvironment
 
 
 class UvVirtualEnvironment(VirtualEnvironment):
     """An environment manager using uv."""
+
+    env_type: str = "venv"
+    verified: bool = False
+
+    @classmethod
+    def verify(cls, tools: ToolCache):
+        """Verify that the environment manager is available."""
+        # If uv has already been verified, shortcut the verification process.
+        if cls.verified:
+            return
+
+        try:
+            # Try to get the uv version. We don't actually have a minimum version
+            # requirement; but it's a convenient way to check if uv is available.
+            tools.subprocess.check_output(["uv", "--version"])
+
+        except (FileNotFoundError, subprocess.CalledProcessError) as e:
+            raise BriefcaseCommandError("""\
+Could not find `uv`.
+
+Ensure that you have installed `uv`, and that it is on your path.
+""") from e
+        else:
+            cls.verified = True
 
     def exists(self) -> bool:
         """`True` iff the uv environment directory and its `pyvenv.cfg` are present."""

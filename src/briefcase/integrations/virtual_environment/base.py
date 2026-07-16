@@ -2,6 +2,7 @@ import subprocess
 from abc import ABC, abstractmethod
 from pathlib import Path
 
+from briefcase.config import FinalizedAppConfig
 from briefcase.exceptions import RequirementsInstallError
 from briefcase.integrations.base import ToolCache
 from briefcase.integrations.subprocess import SubprocessArgsT
@@ -10,32 +11,53 @@ from briefcase.integrations.subprocess import SubprocessArgsT
 class VirtualEnvironment(ABC):
     """A managed Python environment."""
 
+    env_type: str = "?"
     provides_python: bool = False
 
     def __init__(
         self,
+        name: str,
+        app: FinalizedAppConfig,
         tools: ToolCache,
-        venv_path: Path,
+        base_path: Path,
+        support_path: Path | None,
         *,
         platform: str | None = None,
         arch: str | None = None,
-        env: dict[str, str | None] | None = None,
     ):
         """Initialise the virtual environment on a specific path.
 
+        :param name: An identifying name for the environment. This will not be
+            the *full* name; the environment will add additional information to
+            disambiguate the app and environment type.
+        :param app: The app configuration
         :param tools: The shared :class:`ToolCache` instance.
-        :param venv_path: The on-disk path associated with this environment.
-            For an isolated venv, this is the venv directory; for a no-op
-            environment, it is the directory used for the marker file.
-        :param platform: TODO
-        :param arch: TODO
-        :param env: TODO
+        :param base_path: The root of the project path.
+        :param platform: The platform for the environment. If this isn't the
+            host OS, the environment will be a cross build environment.
+        :param arch: The architecture for the environment. If this isn't the
+            host OS architeceture, the environment will be a cross build
+            environment.
         """
+        self.name = name
+        self.app = app
         self.tools = tools
-        self.venv_path = venv_path
+        self.base_path = base_path
+        self.support_path = support_path
         self.platform = platform
         self.arch = arch
-        self.env = env
+
+    @property
+    def venv_path(self):
+        return (
+            self.base_path
+            / f".briefcase/{self.app.app_name}/{self.env_type}-{self.name}"
+        )
+
+    @classmethod
+    @abstractmethod
+    def verify(cls, tools: ToolCache):
+        """Verify that the environment manager is available."""
 
     @property
     def bin_dir(self) -> Path:
@@ -81,17 +103,19 @@ class VirtualEnvironment(ABC):
             platform = {
                 "Darwin": "macOS",
                 "Windows": "windows",
+                "Linux": "linux",
             }[self.tools.host_os]
 
         arch = self.arch or self.tools.platform.machine()
         if platform == "macOS":
             min_os_tag = (min_os_version or "11.0").replace(".", "_")
             return f"macosx_{min_os_tag}_{arch}"
-        elif platform == "windows":
-            return f"win_{arch.lower()}"
         elif platform in {"iphoneos", "iphonesimulator"}:
             min_os_tag = (min_os_version or "13.0").replace(".", "_")
             return f"ios_{min_os_tag}_{arch}_{platform}"
+        elif platform in {"windows", "linux"}:
+            # No --platform flag needed for Windows or Linux
+            return None
         else:
             raise NotImplementedError()
 
@@ -173,6 +197,8 @@ class VirtualEnvironment(ABC):
                     "-m",
                     "pip",
                     "install",
+                    "--disable-pip-version-check",
+                    "--no-user",
                     "--upgrade",
                     *(["-vv"] if self.tools.console.is_deep_debug else []),
                     *install_args,
@@ -218,7 +244,7 @@ class VirtualEnvironment(ABC):
         env = self.build_env(user_env)
         if env is not None:
             kwargs["env"] = env
-        return self.tools.subprocess.run(args, **kwargs)
+        return self.tools[self.app].app_context.run(args, **kwargs)
 
     def Popen(self, args: SubprocessArgsT, **kwargs) -> subprocess.Popen:
         """Create a Popen instance for a command in the virtual environment.
@@ -235,7 +261,7 @@ class VirtualEnvironment(ABC):
         env = self.build_env(user_env)
         if env is not None:
             kwargs["env"] = env
-        return self.tools.subprocess.Popen(args, **kwargs)
+        return self.tools[self.app].app_context.Popen(args, **kwargs)
 
     def check_output(self, args: SubprocessArgsT, **kwargs) -> str:
         """Run a command in the virtual environment, return process output.
@@ -253,4 +279,4 @@ class VirtualEnvironment(ABC):
         env = self.build_env(user_env)
         if env is not None:
             kwargs["env"] = env
-        return self.tools.subprocess.check_output(args, **kwargs)
+        return self.tools[self.app].app_context.check_output(args, **kwargs)

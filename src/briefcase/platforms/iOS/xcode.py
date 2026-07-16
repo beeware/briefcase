@@ -310,32 +310,6 @@ class iOSXcodeCreateCommand(iOSXcodePassiveMixin, CreateCommand):
             "info": info,
         }
 
-    def create_app_environment(
-        self,
-        app: FinalizedAppConfig,
-        platform: str | None = None,
-        arch: str | None = None,
-        env: dict[str, str | None] | None = None,
-        recreate: bool = True,
-    ) -> VirtualEnvironment:
-        """Create an isolated virtual environment in which the app can be built."""
-        if platform is None:
-            platform = "iphoneos"
-            env = {
-                "PYTHONPATH": str(
-                    self.support_path(app)
-                    / "Python.xcframework/ios-arm64/platform-config/arm64-iphoneos"
-                ),
-            }
-
-        return super().create_app_environment(
-            app,
-            platform="iphoneos",
-            arch=arch,
-            env=env,
-            recreate=recreate,
-        )
-
     def _install_app_requirements(
         self,
         app: FinalizedAppConfig,
@@ -391,8 +365,8 @@ class iOSXcodeCreateCommand(iOSXcodePassiveMixin, CreateCommand):
                 requires,
                 allow_editable=False,
                 require_binary=True,
-                install_path=app_packages_path.parent / "app_packages.iphoneos",
                 min_os_version=ios_min_version,
+                install_path=app_packages_path.parent / "app_packages.iphoneos",
                 install_hint=f"""
 
 This may be because the `iphoneos` wheels that are available are not compatible
@@ -400,18 +374,12 @@ with Python {self.python_version_tag} and a minimum iOS version of {ios_min_vers
 """,
             )
 
-        # Perform a second install pass targeting the "iphonesimulator" platform for the
+        # Perform a second install pass targeting the iOS simulator platform for the
         # current architecture
         sim_venv = self.create_app_environment(
             app,
-            platform="iphonesimulator",
-            env={
-                "PYTHONPATH": str(
-                    self.support_path(app)
-                    / "Python.xcframework/ios-arm64_x86_64-simulator"
-                    / f"platform-config/{self.tools.host_arch}-iphonesimulator"
-                ),
-            },
+            platform="iOS:simulator",
+            arch=self.tools.host_arch,
         )
         with (
             self.console.wait_bar(
@@ -422,8 +390,8 @@ with Python {self.python_version_tag} and a minimum iOS version of {ios_min_vers
                 requires,
                 allow_editable=False,
                 require_binary=True,
-                install_path=app_packages_path.parent / "app_packages.iphoneos",
                 min_os_version=ios_min_version,
+                install_path=app_packages_path.parent / "app_packages.iphonesimulator",
                 install_hint=f"""
 
 This may indicate that an `iphoneos` wheel could be found, but an

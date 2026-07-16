@@ -65,10 +65,18 @@ class UpdateCommand(CreateCommand):
 
         venv = self.create_app_environment(
             app=app,
-            recreate=update_requirements,
+            platform=self.platform,
+            arch=self.tools.host_arch,
+            recreate=update_requirements or update_support,
         )
 
-        # If the environment provides python, `update_support` is a no-op
+        # If support has been updated and the environment provides Python,
+        # we need to re-install requirements because requirements are stored
+        # in the managed environmebnt.
+        if update_support and venv.provides_python:
+            update_requirements = True
+
+        # If the environment provides python, support is provided by the environment
         if update_support and not venv.provides_python:
             self.console.info("Updating application support...", prefix=app.app_name)
             self.cleanup_app_support_package(app=app)

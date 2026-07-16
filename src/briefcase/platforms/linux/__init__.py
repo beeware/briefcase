@@ -13,6 +13,7 @@ from briefcase.exceptions import BriefcaseCommandError, ParseError
 
 if TYPE_CHECKING:
     from briefcase.commands.base import BaseCommand
+    from briefcase.integrations.virtual_environment import VirtualEnvironment
 
     _MixinBase = BaseCommand
 else:
@@ -136,12 +137,33 @@ class LocalRequirementsMixin(_MixinBase):  # pragma: no-cover-if-is-windows
     # as local file references into sdists, and then installing those requirements
     # from the sdist.
 
+    def create_app_environment(
+        self,
+        app: FinalizedAppConfig,
+        platform: str,
+        arch: str,
+        env_manager: str | None = None,
+        env: dict[str, str | None] | None = None,
+        recreate: bool = True,
+    ) -> VirtualEnvironment:
+        if self.use_docker:
+            env_manager = "noop"
+
+        return super().create_app_environment(
+            app=app,
+            platform=platform,
+            arch=arch,
+            env_manager=env_manager,
+            recreate=recreate,
+        )
+
     def local_requirements_path(self, app):
         return self.bundle_path(app) / "_requirements"
 
     def _install_app_requirements(
         self,
         app: FinalizedAppConfig,
+        venv: VirtualEnvironment,
         requires: list[str],
         app_packages_path: Path,
     ):
@@ -234,6 +256,7 @@ class LocalRequirementsMixin(_MixinBase):  # pragma: no-cover-if-is-windows
         # Continue with the default app requirement handling.
         return super()._install_app_requirements(
             app,
+            venv=venv,
             requires=localized_requires,
             app_packages_path=app_packages_path,
         )

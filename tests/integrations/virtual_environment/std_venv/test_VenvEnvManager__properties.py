@@ -5,19 +5,26 @@ from pathlib import Path
 import pytest
 
 
+def test_venv_path(venv, base_venv_path):
+    """bin_dir returns 'bin' directory on Unix systems."""
+    result = venv.venv_path
+    assert result == base_venv_path / ".briefcase/first-app/venv-myvenv"
+    assert isinstance(result, Path)
+
+
 @pytest.mark.skipif(sys.platform == "win32", reason="Unix specific test")
-def test_bin_dir_unix(venv, venv_path):
+def test_bin_dir_unix(venv):
     """bin_dir returns 'bin' directory on Unix systems."""
     result = venv.bin_dir
-    assert result == venv_path / "bin"
+    assert result == venv.venv_path / "bin"
     assert isinstance(result, Path)
 
 
 @pytest.mark.skipif(sys.platform != "win32", reason="Windows specific test")
-def test_bin_dir_windows(venv, venv_path):
+def test_bin_dir_windows(venv):
     """bin_dir returns 'Scripts' directory on Windows."""
     result = venv.bin_dir
-    assert result == venv_path / "Scripts"
+    assert result == venv.venv_path / "Scripts"
     assert isinstance(result, Path)
 
 

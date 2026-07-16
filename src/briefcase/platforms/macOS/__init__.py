@@ -118,6 +118,27 @@ class macOSMixin(_MixinBase):
 
         super().verify_tools()
 
+    def verify_app(self, app: FinalizedAppConfig):
+        super().verify_app(app)
+
+        # Make sure the package path and formal name match. This will always be
+        # the case for internal apps; they might not be aligned for external apps.
+        if self.package_path(app).name != f"{app.formal_name}.app":
+            raise BriefcaseCommandError(
+                "The app bundle referenced by external_package_path "
+                f"({self.package_path(app).name})\n"
+                f"does not match the formal name of the app ({app.formal_name!r}).\n"
+            )
+
+        # Ensure the environment manager supports universal apps if we're trying
+        # to build one.
+        venv_class = self.tools.virtual_environment[app.env_manager]
+        if venv_class.provides_python and getattr(app, "universal_build", True):
+            raise BriefcaseCommandError(
+                "Briefcase doesn't support creating universal apps "
+                "when the environment provides the Python library"
+            )
+
     def is_icloud_synced(self, path: Path) -> bool:
         """Determine if a path is on an iCloud drive.
 
@@ -181,23 +202,13 @@ that is not synchronized with iCloud, and re-run `briefcase {self.command}`.""")
 
 class macOSCreateMixin(AppPackagesMergeMixin):
     hidden_app_properties: Collection[str] = {"permission", "entitlement"}
+    require_binary_installs = True
 
     def generate_app_template(self, app: FinalizedAppConfig):
         """Create an application bundle.
 
         :param app: The config object for the app
         """
-        # Before we generate the app template, make sure the package path and formal
-        # name match. This will always be the case for internal apps; they might not be
-        # aligned for external apps. We can't do this in verify, because app
-        # verification occurs after the template is generated.
-        if self.package_path(app).name != f"{app.formal_name}.app":
-            raise BriefcaseCommandError(
-                "The app bundle referenced by external_package_path "
-                f"({self.package_path(app).name})\n"
-                f"does not match the formal name of the app ({app.formal_name!r}).\n"
-            )
-
         super().generate_app_template(app=app)
         # If we discover we're on iCloud during app creation, we can clean up the app
         # folder. This *may* return a false negative (i.e., not accurately detect that
@@ -224,12 +235,13 @@ class macOSCreateMixin(AppPackagesMergeMixin):
         app: FinalizedAppConfig,
     ) -> str:
         """The filename for the stub binary."""
-        stub_type = "Console" if app.console_app else "GUI"
         venv_class = self.tools.virtual_environment[app.env_manager]
-        if self.tools.host_os == "Darwin" and venv_class.provides_python:
-            stub_type = f"L{stub_type}"
+        stub_type = "Console" if app.console_app else "GUI"
+        stub_name = "LStub" if venv_class.provides_python else "Stub"
 
-        return f"{stub_type}-Stub-{self.python_version_tag}-b{support_revision}.zip"
+        return (
+            f"{stub_type}-{stub_name}-{self.python_version_tag}-b{support_revision}.zip"
+        )
 
     def _install_app_requirements(
         self,
@@ -240,12 +252,6 @@ class macOSCreateMixin(AppPackagesMergeMixin):
         **kwargs,
     ):
         if venv.provides_python:
-            if getattr(app, "universal_build", True):
-                raise BriefcaseCommandError(
-                    "Briefcase doesn't support creating universal apps "
-                    "when the environment is providing Python"
-                )
-
             # Read the minimum supported macOS version from the environment's
             # Python package metadata.
             python_record = next((venv.venv_path / "conda-meta").glob("python-*.json"))
@@ -292,8 +298,6 @@ class macOSCreateMixin(AppPackagesMergeMixin):
                 f"{support_min_version}"
             )
 
-        macOS_min_tag = macOS_min_version.replace(".", "_")
-
         # Perform the initial install targeting the current platform
         if getattr(app, "universal_build", True):
             host_app_packages_path = (
@@ -331,7 +335,7 @@ class macOSCreateMixin(AppPackagesMergeMixin):
                 requires,
                 allow_editable=False,
                 require_binary=True,
-                min_os_version=macOS_min_tag,
+                min_os_version=macOS_min_version,
                 install_path=host_app_packages_path,
                 install_hint=f"""
 
@@ -367,7 +371,11 @@ is not available.
                 self.console.info(
                     f"Creating {other_arch} app environment...", prefix=app.app_name
                 )
-                other_venv = self.create_app_environment(app, arch=other_arch)
+                other_venv = self.create_app_environment(
+                    app,
+                    platform="macOS",
+                    arch=other_arch,
+                )
                 with self.console.wait_bar(
                     f"Installing binary app requirements for {other_arch}..."
                 ):
@@ -378,6 +386,7 @@ is not available.
                         ],
                         allow_editable=False,
                         require_binary=True,
+                        min_os_version=macOS_min_version,
                         install_path=other_app_packages_path,
                         install_hint=f"""
 

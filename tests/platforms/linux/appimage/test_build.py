@@ -588,6 +588,9 @@ def test_build_appimage_with_support_package_update(
             "DISABLE_COPYRIGHT_FILES_DEPLOYMENT": "1",
             "APPIMAGE_EXTRACT_AND_RUN": "1",
             "ARCH": "x86_64",
+            "VIRTUAL_ENV": str(
+                build_command.base_path / ".briefcase/first-app/venv-linux-x86_64"
+            ),
         },
         cwd=os.fsdecode(tmp_path / "base_path/build/first-app/linux/appimage"),
         **sub_stream_kw,

@@ -4,7 +4,10 @@ import subprocess
 import sys
 from pathlib import Path
 
+from packaging.version import Version
+
 from briefcase.exceptions import BriefcaseCommandError, RequirementsInstallError
+from briefcase.integrations.base import ToolCache
 from briefcase.integrations.subprocess import SubprocessArgsT
 from briefcase.integrations.virtual_environment.base import VirtualEnvironment
 
@@ -12,14 +15,49 @@ from briefcase.integrations.virtual_environment.base import VirtualEnvironment
 class CondaVirtualEnvironment(VirtualEnvironment):
     """An environment manager using conda.
 
-    The environment is created as a prefix-based conda environment (``conda
-    create --prefix <path>``). The Python interpreter installed into the
+    The environment is created as a prefix-based conda environment (`conda
+    create --prefix <path>`). The Python interpreter installed into the
     environment matches the major/minor version of the interpreter running
     Briefcase. Commands are executed against the environment by activating it
     (prepending the environment's binary directory to ``PATH``).
     """
 
+    env_type: str = "conda"
     provides_python: bool = True
+    verified: bool = False
+
+    @classmethod
+    def verify(cls, tools: ToolCache):
+        """Verify that the environment manager is available."""
+        # If conda has already been verified, shortcut the verification process.
+        if cls.verified:
+            return
+
+        try:
+            output = (
+                tools.subprocess.check_output(["conda", "--version"])
+                .strip("\n")
+                .split(" ")
+            )
+            _, conda_version = output
+
+            if Version(conda_version) < Version("26.5"):
+                raise BriefcaseCommandError(f"""\
+Briefcase requires Conda 26.5 (or newer); you have {conda_version}.
+
+To upgrade your Conda version, run:
+
+    conda install --name base 'conda>=26.5'
+""")
+        except (FileNotFoundError, subprocess.CalledProcessError) as e:
+            raise BriefcaseCommandError("""\
+Could not find a Conda installation.
+
+Ensure that you have installed Conda, and you are running Briefcase in an
+active Conda environment.
+""") from e
+        else:
+            cls.verified = True
 
     @property
     def python_version(self) -> str:
@@ -34,7 +72,6 @@ class CondaVirtualEnvironment(VirtualEnvironment):
     @property
     def executable(self) -> Path:
         """Path to the Python executable inside the venv."""
-        breakpoint()
         return (
             self.venv_path / "python.exe"
             if self.tools.host_os == "Windows"

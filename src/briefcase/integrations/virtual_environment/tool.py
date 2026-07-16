@@ -26,29 +26,23 @@ class VirtualEnvironmentManager(Tool):
         self,
         env_manager: EnvManagerT | None = "venv",
     ) -> type[VirtualEnvironment]:
-        """Construct and return a `VirtualEnvironment` for the requested mode.
+        """Verify and return the requested `VirtualEnvironment` class.
 
-        The constructor of the returned object performs the lifecycle work
-        synchronously: by the time this method returns, the venv exists on
-        disk (in isolated mode) or the no-op marker has been checked/written
-        (in passthrough mode), and the returned object's `created` flag
-        reflects whether this invocation produced freshly initialised state.
+        The environment type will be verified; if the tools to support the environment
+        are not available, an error will be raised.
 
-        :param venv_path: Filesystem path associated with the environment. For
-            an isolated venv this is the venv directory; for a no-op
-            environment it is the directory used for the marker file.
-        :param isolated: If `True` (the default), use `VenvVirtualEnvironment`
-            (a real, dedicated venv created via `python -m venv`). If
-            `False`, use `NoOpVirtualEnvironment` (passthrough to the ambient
-            interpreter, with first-use detection via a marker file).
-        :returns: A instance of a Virtual Environment.
-        :raises BriefcaseCommandError: if the environment cannot be created or
-            initialised.
+        :param env_manager: The environment manager type to return
+        :returns: A subclass of VirtualEnvironment
         """
-        return {
+        EnvManagerClass = {
             None: NoOpVirtualEnvironment,
             "uv": UvVirtualEnvironment,
             "venv": VenvVirtualEnvironment,
             "conda": CondaVirtualEnvironment,
             "pixi": PixiVirtualEnvironment,
         }[env_manager]
+
+        # Verify that the environment manager is available.
+        EnvManagerClass.verify(self.tools)
+
+        return EnvManagerClass

@@ -19,6 +19,7 @@ class PixiVirtualEnvironment(VirtualEnvironment):
     directory and Python executable are resolved relative to that location.
     """
 
+    env_type: str = "pixi"
     provides_python: bool = True
 
     @property

@@ -119,3 +119,63 @@ def test_no_system_path(venv, venv_bin_dir, monkeypatch):
     result = venv.build_env(None)
 
     assert result["PATH"] == str(venv.venv_path / venv_bin_dir)
+
+
+@pytest.mark.parametrize(
+    ("platform", "arch", "pythonpath"),
+    [
+        (
+            "iOS",
+            "arm64",
+            "support/Python.xcframework/ios-arm64/platform-config/arm64-iphoneos",
+        ),
+        (
+            "iOS:simulator",
+            "arm64",
+            "support/Python.xcframework/ios-arm64_x86_64-simulator/platform-config/arm64-iphonesimulator",
+        ),
+        (
+            "iOS:simulator",
+            "x86_64",
+            "support/Python.xcframework/ios-arm64_x86_64-simulator/platform-config/x86_64-iphonesimulator",
+        ),
+    ],
+)
+def test_cross_enironments(
+    platform,
+    arch,
+    pythonpath,
+    venv,
+    user_path,
+    system_path,
+    venv_bin_dir,
+    monkeypatch,
+    tmp_path,
+):
+    """An iOS device gets a special PYTHONPATH addition."""
+    # "gothic" isn't a real iOS arch, but it lets us confirm
+    venv.platform = platform
+    venv.arch = arch
+
+    monkeypatch.setenv("PATH", system_path)
+    monkeypatch.setenv("VIRTUAL_ENV", "base-venv-value")
+    monkeypatch.setenv("PYTHONHOME", "base-pythonhome-value")
+    monkeypatch.setenv("BASE", "base-env-value")
+
+    result = venv.build_env(
+        {
+            "PATH": user_path,
+            "VIRTUAL_ENV": "override-venv-value",
+            "PYTHONHOME": "override-pythonhome-value",
+            "OVERRIDE": "override-value",
+        }
+    )
+
+    expected = str(venv.venv_path / venv_bin_dir) + os.pathsep + user_path
+    assert result["PATH"] == expected
+    assert result["VIRTUAL_ENV"] == str(venv.venv_path)
+    assert result["OVERRIDE"] == "override-value"
+    assert "PYTHONHOME" not in result
+
+    # The PYTHONPATH has been set to include the custom additions.
+    assert result["PYTHONPATH"] == str(tmp_path / pythonpath)
