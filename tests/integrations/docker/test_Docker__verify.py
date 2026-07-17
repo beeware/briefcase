@@ -23,8 +23,8 @@ DOCKER_VERIFICATION_CALLS = [
 
 
 def docker_info_result(name):
-    """Load a sample docker info result file from the sample directory, and return
-    the content."""
+    """Load a sample docker info result file from the sample directory, and return the
+    content."""
     samples = Path(__file__).parent / "docker_info"
     with (samples / (name + ".out")).open(encoding="utf-8") as docker_output_file:
         return docker_output_file.read()

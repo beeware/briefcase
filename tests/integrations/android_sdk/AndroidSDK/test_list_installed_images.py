@@ -7,8 +7,7 @@ from briefcase.exceptions import BriefcaseCommandError
 
 
 def sdkmanager_result(name):
-    """Load a sample sdkmanager --list_installed result file, and return the
-    content."""
+    """Load a sample sdkmanager --list_installed result file, and return the content."""
     samples = Path(__file__).parent / "sdkmanager"
     with (samples / (name + ".out")).open(encoding="utf-8") as sdkmanager_output_file:
         return sdkmanager_output_file.read()
