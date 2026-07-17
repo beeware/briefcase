@@ -1,0 +1,6 @@
+
+Client:
+ Debug Mode: false
+Server:
+ERROR: Error response from daemon: dial unix docker.raw.sock: connect: connection refused
+errors pretty printing info

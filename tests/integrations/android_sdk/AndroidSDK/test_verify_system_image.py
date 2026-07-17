@@ -1,9 +1,18 @@
 import platform
+from pathlib import Path
 from subprocess import CalledProcessError
 
 import pytest
 
 from briefcase.exceptions import BriefcaseCommandError
+
+
+def sdkmanager_result(name):
+    """Load a sample sdkmanager --list_installed result file, and return the
+    content."""
+    samples = Path(__file__).parent / "sdkmanager"
+    with (samples / (name + ".out")).open(encoding="utf-8") as sdkmanager_output_file:
+        return sdkmanager_output_file.read()
 
 
 @pytest.mark.parametrize(
@@ -85,11 +94,8 @@ def test_existing_system_image(mock_tools, android_sdk):
     mock_tools.host_arch = "AMD64" if platform.system() == "Windows" else "x86_64"
 
     # Mock sdkmanager reporting the system image as installed
-    mock_tools.subprocess.check_output.return_value = (
-        "Installed packages:\n"
-        "  Path                                    | Version | Description                    | Location\n"  # noqa: E501
-        "  -------                                 | ------- | -------                        | -------\n"  # noqa: E501
-        "  system-images;android-31;default;x86_64 | 5       | Intel x86_64 Atom System Image | system-images/android-31/default/x86_64\n"  # noqa: E501
+    mock_tools.subprocess.check_output.return_value = sdkmanager_result(
+        "system_image_only"
     )
 
     # Verify the system image that we already have
