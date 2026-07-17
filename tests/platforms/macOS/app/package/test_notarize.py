@@ -99,7 +99,7 @@ def test_notarize_app(
 
     # As a result of mocking ditto, the zip archive won't *actually* be created;
     # and as a result of mocking os, it won't *actually* be deleted either - but we can
-    # verify that it *would* have been deleted. ditto will also be called when finalizing,
+    # verify that it *would* have been deleted. ditto will also be called when finalizing,  # noqa: E501
     # to create the actual distribution artefact.
     assert package_command.ditto_archive.mock_calls == [
         mock.call(app_path, archive_path),
@@ -730,7 +730,7 @@ def test_credential_storage_disabled_input_app(
     # The notarization call will fail with an error
     with pytest.raises(
         BriefcaseCommandError,
-        match=r"The keychain does not contain credentials for the profile briefcase-macOS-DEADBEEF.",
+        match=r"The keychain does not contain credentials for the profile briefcase-macOS-DEADBEEF.",  # noqa: E501
     ):
         package_command.notarize(first_app_zip, identity=sekrit_identity)
 
@@ -795,7 +795,7 @@ def test_credential_storage_disabled_input_dmg(
     # The notarization call will fail with an error
     with pytest.raises(
         BriefcaseCommandError,
-        match=r"The keychain does not contain credentials for the profile briefcase-macOS-DEADBEEF.",
+        match=r"The keychain does not contain credentials for the profile briefcase-macOS-DEADBEEF.",  # noqa: E501
     ):
         package_command.notarize(first_app_dmg, identity=sekrit_identity)
 
@@ -941,7 +941,7 @@ def test_app_submit_notarization_failure_with_credentials(
     # The notarization call will fail with an error
     with pytest.raises(
         BriefcaseCommandError,
-        match=r"Unable to submit build[/\\]first-app[/\\]macos[/\\]app[/\\]First App.app for notarization.",
+        match=r"Unable to submit build[/\\]first-app[/\\]macos[/\\]app[/\\]First App.app for notarization.",  # noqa: E501
     ):
         package_command.notarize(first_app_zip, identity=sekrit_identity)
 

@@ -21,7 +21,7 @@ def test_unsupported_abi(mock_tools, android_sdk, host_os, host_arch):
 
     with pytest.raises(
         BriefcaseCommandError,
-        match=f"The Android emulator does not currently support {host_os} {host_arch} hardware",
+        match=f"The Android emulator does not currently support {host_os} {host_arch} hardware",  # noqa: E501
     ):
         android_sdk.verify_system_image("system-images;android-31;default;x86_64")
 
@@ -84,9 +84,9 @@ def test_existing_system_image(mock_tools, android_sdk):
     # Mock sdkmanager reporting the system image as installed
     mock_tools.subprocess.check_output.return_value = (
         "Installed packages:\n"
-        "  Path                                    | Version | Description                    | Location\n"
-        "  -------                                 | ------- | -------                        | -------\n"
-        "  system-images;android-31;default;x86_64 | 5       | Intel x86_64 Atom System Image | system-images/android-31/default/x86_64\n"
+        "  Path                                    | Version | Description                    | Location\n"  # noqa: E501
+        "  -------                                 | ------- | -------                        | -------\n"  # noqa: E501
+        "  system-images;android-31;default;x86_64 | 5       | Intel x86_64 Atom System Image | system-images/android-31/default/x86_64\n"  # noqa: E501
     )
 
     # Verify the system image that we already have
@@ -130,7 +130,7 @@ def test_problem_downloading_system_image(mock_tools, android_sdk):
     # Attempt to verify the system image
     with pytest.raises(
         BriefcaseCommandError,
-        match=r"Error while installing the 'system-images;android-31;default;x86_64' Android system image\.",
+        match=r"Error while installing the 'system-images;android-31;default;x86_64' Android system image\.",  # noqa: E501
     ):
         android_sdk.verify_system_image("system-images;android-31;default;x86_64")
 

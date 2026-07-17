@@ -36,7 +36,7 @@ def test_flatpak_not_installed(mock_tools):
 
     with pytest.raises(
         BriefcaseCommandError,
-        match=r"Briefcase requires the Flatpak toolchain, but it does not appear to be installed.",
+        match=r"Briefcase requires the Flatpak toolchain, but it does not appear to be installed.",  # noqa: E501
     ):
         Flatpak.verify(mock_tools)
 
@@ -98,7 +98,7 @@ def test_flatpak_builder_not_installed(mock_tools):
 
     with pytest.raises(
         BriefcaseCommandError,
-        match=r"Briefcase requires the full Flatpak development toolchain, but flatpak-builder",
+        match=r"Briefcase requires the full Flatpak development toolchain, but flatpak-builder",  # noqa: E501
     ):
         Flatpak.verify(mock_tools)
 

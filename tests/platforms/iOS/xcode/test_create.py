@@ -111,7 +111,7 @@ def test_extra_pip_args(create_command, first_app_generated, tmp_path):
                 "PYTHONPATH": str(
                     tmp_path
                     / "base_path/build/first-app/ios/xcode/Support"
-                    / "Python.xcframework/ios-arm64_x86_64-simulator/platform-config/wonky-iphonesimulator"
+                    / "Python.xcframework/ios-arm64_x86_64-simulator/platform-config/wonky-iphonesimulator"  # noqa: E501
                 ),
                 "PIP_REQUIRE_VIRTUALENV": None,
             },
@@ -416,7 +416,7 @@ def test_incompatible_min_os_version(create_command, first_app_generated, tmp_pa
             {},
             {
                 "info": {
-                    "NSBluetoothAlwaysUsageDescription": "I need to connect to bluetooth device."
+                    "NSBluetoothAlwaysUsageDescription": "I need to connect to bluetooth device."  # noqa: E501
                 },
             },
         ),
@@ -453,7 +453,7 @@ def test_incompatible_min_os_version(create_command, first_app_generated, tmp_pa
             {
                 "info": {
                     "NSLocationDefaultAccuracyReduced": True,
-                    "NSLocationWhenInUseUsageDescription": "I need to know roughly where you are",
+                    "NSLocationWhenInUseUsageDescription": "I need to know roughly where you are",  # noqa: E501
                 }
             },
         ),
@@ -466,7 +466,7 @@ def test_incompatible_min_os_version(create_command, first_app_generated, tmp_pa
             {
                 "info": {
                     "NSLocationDefaultAccuracyReduced": False,
-                    "NSLocationWhenInUseUsageDescription": "I need to know exactly where you are",
+                    "NSLocationWhenInUseUsageDescription": "I need to know exactly where you are",  # noqa: E501
                 }
             },
         ),
@@ -478,8 +478,8 @@ def test_incompatible_min_os_version(create_command, first_app_generated, tmp_pa
             {},
             {
                 "info": {
-                    "NSLocationWhenInUseUsageDescription": "I always need to know where you are",
-                    "NSLocationAlwaysAndWhenInUseUsageDescription": "I always need to know where you are",
+                    "NSLocationWhenInUseUsageDescription": "I always need to know where you are",  # noqa: E501
+                    "NSLocationAlwaysAndWhenInUseUsageDescription": "I always need to know where you are",  # noqa: E501
                     "UIBackgroundModes": ["processing", "location"],
                 }
             },
@@ -494,8 +494,8 @@ def test_incompatible_min_os_version(create_command, first_app_generated, tmp_pa
             {
                 "info": {
                     "NSLocationDefaultAccuracyReduced": True,
-                    "NSLocationWhenInUseUsageDescription": "I need to know roughly where you are",
-                    "NSLocationAlwaysAndWhenInUseUsageDescription": "I always need to know where you are",
+                    "NSLocationWhenInUseUsageDescription": "I need to know roughly where you are",  # noqa: E501
+                    "NSLocationAlwaysAndWhenInUseUsageDescription": "I always need to know where you are",  # noqa: E501
                     "UIBackgroundModes": ["processing", "location"],
                 }
             },
@@ -510,8 +510,8 @@ def test_incompatible_min_os_version(create_command, first_app_generated, tmp_pa
             {
                 "info": {
                     "NSLocationDefaultAccuracyReduced": False,
-                    "NSLocationWhenInUseUsageDescription": "I need to know exactly where you are",
-                    "NSLocationAlwaysAndWhenInUseUsageDescription": "I always need to know where you are",
+                    "NSLocationWhenInUseUsageDescription": "I need to know exactly where you are",  # noqa: E501
+                    "NSLocationAlwaysAndWhenInUseUsageDescription": "I always need to know where you are",  # noqa: E501
                     "UIBackgroundModes": ["processing", "location"],
                 }
             },
@@ -526,7 +526,7 @@ def test_incompatible_min_os_version(create_command, first_app_generated, tmp_pa
             {
                 "info": {
                     "NSLocationDefaultAccuracyReduced": False,
-                    "NSLocationWhenInUseUsageDescription": "I need to know exactly where you are",
+                    "NSLocationWhenInUseUsageDescription": "I need to know exactly where you are",  # noqa: E501
                 }
             },
         ),
@@ -541,8 +541,8 @@ def test_incompatible_min_os_version(create_command, first_app_generated, tmp_pa
             {
                 "info": {
                     "NSLocationDefaultAccuracyReduced": False,
-                    "NSLocationWhenInUseUsageDescription": "I need to know exactly where you are",
-                    "NSLocationAlwaysAndWhenInUseUsageDescription": "I always need to know where you are",
+                    "NSLocationWhenInUseUsageDescription": "I need to know exactly where you are",  # noqa: E501
+                    "NSLocationAlwaysAndWhenInUseUsageDescription": "I always need to know where you are",  # noqa: E501
                     "UIBackgroundModes": ["processing", "location"],
                 }
             },
@@ -602,11 +602,11 @@ def test_install_app_requirements_error_adds_install_hint_missing_iphoneos_wheel
     mock_app_context.run.side_effect = CalledProcessError(returncode=1, cmd="pip")
     create_command.tools[first_app_generated].app_context = mock_app_context
 
-    # Check that _install_app_requirements raises a RequirementsInstallError with an install hint
+    # Check that _install_app_requirements raises a RequirementsInstallError with an install hint  # noqa: E501
     with pytest.raises(
         RequirementsInstallError,
         match=(
-            r"This may be because the `iphoneos` wheels that are available are not compatible\n"
+            r"This may be because the `iphoneos` wheels that are available are not compatible\n"  # noqa: E501
             r"with Python 3\.\d+ and a minimum iOS version of 15\.4\."
         ),
     ):
@@ -637,12 +637,12 @@ def test_install_app_requirements_error_adds_install_hint_missing_iphonesimulato
     ]
     create_command.tools[first_app_generated].app_context = mock_app_context
 
-    # Check that _install_app_requirements raises a RequirementsInstallError with an install hint
+    # Check that _install_app_requirements raises a RequirementsInstallError with an install hint  # noqa: E501
     with pytest.raises(
         RequirementsInstallError,
         match=(
             r"This may indicate that an `iphoneos` wheel could be found, but an\n"
-            r"`iphonesimulator` wheel could not be found; or that the `iphonesimulator`\n"
+            r"`iphonesimulator` wheel could not be found; or that the `iphonesimulator`\n"  # noqa: E501
             r"binary wheels that are available are not compatible with\n"
             r"Python 3\.\d+ and a minimum iOS version of 15\.4\.\n"
         ),

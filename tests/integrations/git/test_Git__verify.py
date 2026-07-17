@@ -76,6 +76,6 @@ def test_git_version_invalid(mock_tools, version, monkeypatch):
 
     with pytest.raises(
         BriefcaseCommandError,
-        match=f"At least Git v2.17.0 is required; however, v{'.'.join(map(str, version))} is installed.",
+        match=f"At least Git v2.17.0 is required; however, v{'.'.join(map(str, version))} is installed.",  # noqa: E501
     ):
         Git.verify(mock_tools)

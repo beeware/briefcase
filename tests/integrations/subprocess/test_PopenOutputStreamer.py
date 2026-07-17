@@ -327,6 +327,6 @@ def test_filter_func_line_unexpected_error(streamer, capsys):
     # Exception
     assert capsys.readouterr().out == (
         "output line 1\n"
-        "Error while streaming output: RuntimeError: Like something totally went wrong\n"
+        "Error while streaming output: RuntimeError: Like something totally went wrong\n"  # noqa: E501
     )
     # fmt: on

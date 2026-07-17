@@ -47,7 +47,7 @@ def test_adhoc_identity():
     assert adhoc.id == "-"
     assert (
         adhoc.name
-        == "Ad-hoc identity. The resulting package will run but cannot be re-distributed."
+        == "Ad-hoc identity. The resulting package will run but cannot be re-distributed."  # noqa: E501
     )
     assert adhoc.is_adhoc
     assert repr(adhoc) == "<AdhocSigningIdentity>"

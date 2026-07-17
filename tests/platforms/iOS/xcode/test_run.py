@@ -164,7 +164,7 @@ def test_run_app_simulator_booted(run_command, first_app_config, tmp_path):
                     "install",
                     "2D3503A3-6EB9-4B37-9B17-C7EFEF2FA32D",
                     tmp_path
-                    / "base_path/build/first-app/ios/xcode/build/Debug-iphonesimulator/First App.app",
+                    / "base_path/build/first-app/ios/xcode/build/Debug-iphonesimulator/First App.app",  # noqa: E501
                 ],
             ),
             mock.call(
@@ -298,7 +298,7 @@ def test_run_app_simulator_booted_underscore(
                     "install",
                     "2D3503A3-6EB9-4B37-9B17-C7EFEF2FA32D",
                     tmp_path
-                    / "base_path/build/first_app/ios/xcode/build/Debug-iphonesimulator/First App.app",
+                    / "base_path/build/first_app/ios/xcode/build/Debug-iphonesimulator/First App.app",  # noqa: E501
                 ],
             ),
             mock.call(
@@ -429,7 +429,7 @@ def test_run_app_with_passthrough(run_command, first_app_config, tmp_path):
                     "install",
                     "2D3503A3-6EB9-4B37-9B17-C7EFEF2FA32D",
                     tmp_path
-                    / "base_path/build/first-app/ios/xcode/build/Debug-iphonesimulator/First App.app",
+                    / "base_path/build/first-app/ios/xcode/build/Debug-iphonesimulator/First App.app",  # noqa: E501
                 ],
             ),
             mock.call(
@@ -567,7 +567,7 @@ def test_run_app_simulator_shut_down(
                     "install",
                     "2D3503A3-6EB9-4B37-9B17-C7EFEF2FA32D",
                     tmp_path
-                    / "base_path/build/first-app/ios/xcode/build/Debug-iphonesimulator/First App.app",
+                    / "base_path/build/first-app/ios/xcode/build/Debug-iphonesimulator/First App.app",  # noqa: E501
                 ],
             ),
             mock.call(
@@ -711,7 +711,7 @@ def test_run_app_simulator_shutting_down(run_command, first_app_config, tmp_path
                     "install",
                     "2D3503A3-6EB9-4B37-9B17-C7EFEF2FA32D",
                     tmp_path
-                    / "base_path/build/first-app/ios/xcode/build/Debug-iphonesimulator/First App.app",
+                    / "base_path/build/first-app/ios/xcode/build/Debug-iphonesimulator/First App.app",  # noqa: E501
                 ],
             ),
             mock.call(
@@ -986,7 +986,7 @@ def test_run_app_simulator_install_failure(run_command, first_app_config, tmp_pa
                     "install",
                     "2D3503A3-6EB9-4B37-9B17-C7EFEF2FA32D",
                     tmp_path
-                    / "base_path/build/first-app/ios/xcode/build/Debug-iphonesimulator/First App.app",
+                    / "base_path/build/first-app/ios/xcode/build/Debug-iphonesimulator/First App.app",  # noqa: E501
                 ],
             ),
         ]
@@ -1090,7 +1090,7 @@ def test_run_app_simulator_launch_failure(run_command, first_app_config, tmp_pat
                     "install",
                     "2D3503A3-6EB9-4B37-9B17-C7EFEF2FA32D",
                     tmp_path
-                    / "base_path/build/first-app/ios/xcode/build/Debug-iphonesimulator/First App.app",
+                    / "base_path/build/first-app/ios/xcode/build/Debug-iphonesimulator/First App.app",  # noqa: E501
                 ],
             ),
             mock.call(
@@ -1214,7 +1214,7 @@ def test_run_app_simulator_no_pid(run_command, first_app_config, tmp_path):
                     "install",
                     "2D3503A3-6EB9-4B37-9B17-C7EFEF2FA32D",
                     tmp_path
-                    / "base_path/build/first-app/ios/xcode/build/Debug-iphonesimulator/First App.app",
+                    / "base_path/build/first-app/ios/xcode/build/Debug-iphonesimulator/First App.app",  # noqa: E501
                 ],
             ),
             mock.call(
@@ -1340,7 +1340,7 @@ def test_run_app_simulator_non_integer_pid(run_command, first_app_config, tmp_pa
                     "install",
                     "2D3503A3-6EB9-4B37-9B17-C7EFEF2FA32D",
                     tmp_path
-                    / "base_path/build/first-app/ios/xcode/build/Debug-iphonesimulator/First App.app",
+                    / "base_path/build/first-app/ios/xcode/build/Debug-iphonesimulator/First App.app",  # noqa: E501
                 ],
             ),
             mock.call(
@@ -1447,7 +1447,7 @@ def test_run_app_test_mode(run_command, first_app_config, tmp_path):
                     "install",
                     "2D3503A3-6EB9-4B37-9B17-C7EFEF2FA32D",
                     tmp_path
-                    / "base_path/build/first-app/ios/xcode/build/Debug-iphonesimulator/First App.app",
+                    / "base_path/build/first-app/ios/xcode/build/Debug-iphonesimulator/First App.app",  # noqa: E501
                 ],
             ),
             mock.call(
@@ -1566,7 +1566,7 @@ def test_run_app_test_mode_with_passthrough(run_command, first_app_config, tmp_p
                     "install",
                     "2D3503A3-6EB9-4B37-9B17-C7EFEF2FA32D",
                     tmp_path
-                    / "base_path/build/first-app/ios/xcode/build/Debug-iphonesimulator/First App.app",
+                    / "base_path/build/first-app/ios/xcode/build/Debug-iphonesimulator/First App.app",  # noqa: E501
                 ],
             ),
             mock.call(
@@ -1677,7 +1677,7 @@ def test_run_app_debugger(run_command, first_app_generated, tmp_path, dummy_debu
                                 "sys_path_regex": "app_packages$",
                                 "host_folder": str(
                                     tmp_path
-                                    / "base_path/build/first-app/ios/xcode/app_packages.iphonesimulator"
+                                    / "base_path/build/first-app/ios/xcode/app_packages.iphonesimulator"  # noqa: E501
                                 ),
                             },
                         }
@@ -1730,7 +1730,7 @@ def test_run_app_debugger(run_command, first_app_generated, tmp_path, dummy_debu
                     "install",
                     "2D3503A3-6EB9-4B37-9B17-C7EFEF2FA32D",
                     tmp_path
-                    / "base_path/build/first-app/ios/xcode/build/Debug-iphonesimulator/First App.app",
+                    / "base_path/build/first-app/ios/xcode/build/Debug-iphonesimulator/First App.app",  # noqa: E501
                 ],
             ),
             mock.call(

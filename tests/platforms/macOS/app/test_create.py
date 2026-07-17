@@ -82,7 +82,7 @@ def create_command(dummy_console, tmp_path, first_app_templated):
             {},
             {
                 "info": {
-                    "NSBluetoothAlwaysUsageDescription": "I need to connect to bluetooth device."
+                    "NSBluetoothAlwaysUsageDescription": "I need to connect to bluetooth device."  # noqa: E501
                 },
                 "entitlements": {
                     "com.apple.security.cs.allow-unsigned-executable-memory": True,
@@ -136,7 +136,7 @@ def create_command(dummy_console, tmp_path, first_app_templated):
             {},
             {
                 "info": {
-                    "NSLocationUsageDescription": "I need to know roughly where you are",
+                    "NSLocationUsageDescription": "I need to know roughly where you are",  # noqa: E501
                 },
                 "entitlements": {
                     "com.apple.security.cs.allow-unsigned-executable-memory": True,
@@ -154,7 +154,7 @@ def create_command(dummy_console, tmp_path, first_app_templated):
             {},
             {
                 "info": {
-                    "NSLocationUsageDescription": "I need to know exactly where you are",
+                    "NSLocationUsageDescription": "I need to know exactly where you are",  # noqa: E501
                 },
                 "entitlements": {
                     "com.apple.security.cs.allow-unsigned-executable-memory": True,
@@ -229,7 +229,7 @@ def create_command(dummy_console, tmp_path, first_app_templated):
             {},
             {
                 "info": {
-                    "NSLocationUsageDescription": "I need to know exactly where you are",
+                    "NSLocationUsageDescription": "I need to know exactly where you are",  # noqa: E501
                 },
                 "entitlements": {
                     "com.apple.security.cs.allow-unsigned-executable-memory": True,
@@ -345,7 +345,7 @@ def test_generate_app_template_formal_name_mismatch(
     with pytest.raises(
         BriefcaseCommandError,
         match=(
-            r"The app bundle referenced by external_package_path \(Unexpected Name.app\)\n"
+            r"The app bundle referenced by external_package_path \(Unexpected Name.app\)\n"  # noqa: E501
             r"does not match the formal name of the app \('First App'\)."
         ),
     ):
@@ -1059,7 +1059,7 @@ def test_install_app_packages_non_universal(
                 "--disable-pip-version-check",
                 "--upgrade",
                 "--no-user",
-                f"--target={bundle_path / 'First App.app' / 'Contents' / 'Resources' / 'app_packages'}",
+                f"--target={bundle_path / 'First App.app' / 'Contents' / 'Resources' / 'app_packages'}",  # noqa: E501
                 "--only-binary",
                 ":all:",
                 "--platform",
@@ -1225,7 +1225,7 @@ def test_install_support_package(
     assert (bundle_path / "support/Python.xcframework/Info.plist").exists()
     assert (
         bundle_path
-        / "support/Python.xcframework/macos-arm64_x86_64/Python.framework/Versions/Current/Python"
+        / "support/Python.xcframework/macos-arm64_x86_64/Python.framework/Versions/Current/Python"  # noqa: E501
     ).is_file()
     assert (
         bundle_path
@@ -1263,10 +1263,10 @@ def test_install_app_requirements_error_adds_install_hint_missing_x86_64_wheel(
     mock_app_context.run.side_effect = CalledProcessError(returncode=1, cmd="pip")
     create_command.tools[first_app_templated].app_context = mock_app_context
 
-    # Check that _install_app_requirements raises a RequirementsInstallError with an install hint
+    # Check that _install_app_requirements raises a RequirementsInstallError with an install hint  # noqa: E501
     with pytest.raises(
         RequirementsInstallError,
-        match=r"x86_64 wheel that is compatible with\nPython 3\.\d+ and a minimum macOS version of 12.0",
+        match=r"x86_64 wheel that is compatible with\nPython 3\.\d+ and a minimum macOS version of 12.0",  # noqa: E501
     ):
         create_command._install_app_requirements(
             app=first_app_templated,
@@ -1300,10 +1300,10 @@ def test_install_app_requirements_error_adds_install_hint_missing_arm64_wheel(
         CalledProcessError(returncode=1, cmd="pip"),
     ]
 
-    # Check that _install_app_requirements raises a RequirementsInstallError with an install hint
+    # Check that _install_app_requirements raises a RequirementsInstallError with an install hint  # noqa: E501
     with pytest.raises(
         RequirementsInstallError,
-        match=r"arm64 wheel that is compatible with\nPython 3\.\d+ and a minimum macOS version of 12.0",
+        match=r"arm64 wheel that is compatible with\nPython 3\.\d+ and a minimum macOS version of 12.0",  # noqa: E501
     ):
         create_command._install_app_requirements(
             app=first_app_templated,

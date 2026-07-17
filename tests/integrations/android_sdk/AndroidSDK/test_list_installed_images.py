@@ -10,10 +10,10 @@ def test_list_installed_system_images(mock_tools, android_sdk):
 
     mock_tools.subprocess.check_output.return_value = (
         "Installed packages:\n"
-        "  Path                                    | Version | Description                    | Location\n"
-        "  -------                                 | ------- | -------                        | -------\n"
-        "  system-images;android-31;default;x86_64 | 5       | Intel x86_64 Atom System Image | system-images/android-31/default/x86_64\n"
-        "  emulator                                | 35.4.9  | Android Emulator               | emulator\n"
+        "  Path                                    | Version | Description                    | Location\n"  # noqa: E501
+        "  -------                                 | ------- | -------                        | -------\n"  # noqa: E501
+        "  system-images;android-31;default;x86_64 | 5       | Intel x86_64 Atom System Image | system-images/android-31/default/x86_64\n"  # noqa: E501
+        "  emulator                                | 35.4.9  | Android Emulator               | emulator\n"  # noqa: E501
     )
 
     result = android_sdk.list_installed_system_images()
@@ -29,9 +29,9 @@ def test_no_installed_system_images(mock_tools, android_sdk):
     """If no system images are installed, an empty set is returned."""
     mock_tools.subprocess.check_output.return_value = (
         "Installed packages:\n"
-        "  Path                                    | Version | Description                    | Location\n"
-        "  -------                                 | ------- | -------                        | -------\n"
-        "  emulator                                | 35.4.9  | Android Emulator               | emulator\n"
+        "  Path                                    | Version | Description                    | Location\n"  # noqa: E501
+        "  -------                                 | ------- | -------                        | -------\n"  # noqa: E501
+        "  emulator                                | 35.4.9  | Android Emulator               | emulator\n"  # noqa: E501
     )
 
     result = android_sdk.list_installed_system_images()
