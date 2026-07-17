@@ -29,14 +29,12 @@ env:
 
 jobs:
   pre-commit:
-    permissions: {}
     name: Pre-commit checks
     uses: beeware/.github/.github/workflows/pre-commit-run.yml@741cc5a311012ee0ee195938889a337449d01eeb  # main
     with:
       pre-commit-source: "--group pre-commit"
 
   ty:
-    permissions: {}
     name: Type check
     runs-on: ubuntu-24.04
     continue-on-error: true
@@ -59,7 +57,6 @@ jobs:
       run: tox -e ty
 
   towncrier:
-    permissions: {}
     name: Check towncrier
     uses: beeware/.github/.github/workflows/towncrier-run.yml@741cc5a311012ee0ee195938889a337449d01eeb  # main
     with:
@@ -83,7 +80,6 @@ jobs:
       attest: ${{ inputs.attest-package }}
 
   docs-lint:
-    permissions: {}
     name: Documentation linting
     needs: [ pre-commit ]
     runs-on: ubuntu-latest
@@ -118,7 +114,6 @@ jobs:
         run: python -m tox -e docs-lint
 
   unit-tests:
-    permissions: {}
     name: Unit tests
     needs: [ pre-commit, towncrier, package ]
     runs-on: ${{ matrix.platform }}
@@ -190,7 +185,6 @@ jobs:
           tox -e py-debugger --installpkg dist/briefcase_debugger-*.whl
 
   coverage:
-    permissions: {}
     name: Project coverage
     runs-on: ubuntu-24.04
     needs: unit-tests
@@ -237,7 +231,6 @@ jobs:
         path: htmlcov
 
   verify-projects:
-    permissions: {}
     name: Verify project
     needs: [ package, unit-tests ]
     uses: beeware/.github/.github/workflows/app-create-verify.yml@741cc5a311012ee0ee195938889a337449d01eeb  # main
@@ -251,7 +244,6 @@ jobs:
         runner-os: [ "macos-15-intel", "macos-latest", "ubuntu-24.04", "ubuntu-24.04-arm", "windows-latest", "windows-11-arm"]
 
   verify-apps:
-    permissions: {}
     name: Build app
     needs: [ package, unit-tests ]
     uses: beeware/.github/.github/workflows/app-build-verify.yml@741cc5a311012ee0ee195938889a337449d01eeb  # main
