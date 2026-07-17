@@ -220,6 +220,6 @@ This is not valid toml.
     # Building the web app raises an error
     with pytest.raises(
         BriefcaseConfigError,
-        match=r"Briefcase configuration error: pyscript.toml content isn't valid TOML: Expected",
+        match=r"Briefcase configuration error: pyscript.toml content isn't valid TOML: Expected",  # noqa: E501
     ):
         build_command.extract_pyscript_config([wheel_path])

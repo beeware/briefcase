@@ -220,6 +220,6 @@ def test_package_unknown_format(package_command, first_app):
     # Package the app
     with pytest.raises(
         BriefcaseCommandError,
-        match=r"Briefcase doesn't currently know how to build system packages in UNKNOWN format.",
+        match=r"Briefcase doesn't currently know how to build system packages in UNKNOWN format.",  # noqa: E501
     ):
         package_command.package_app(first_app)

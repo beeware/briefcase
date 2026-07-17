@@ -13,7 +13,7 @@ from ...utils import create_file
             ["foo/bar/a.txt", "foo/bar/c.txt", "foo/bar/b.txt"],
             ["foo/bar/c.txt", "foo/bar/b.txt", "foo/bar/a.txt"],
         ),
-        # Subfolders are sorted before files in that directory; but sorted lexically in themselves
+        # Subfolders are sorted before files in that directory; but sorted lexically in themselves  # noqa: E501
         (
             [
                 "foo/bar/b",

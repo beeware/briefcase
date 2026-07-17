@@ -1082,7 +1082,7 @@ def test_run_debugger(run_command, first_app_config, tmp_path, debugger):
                         "sys_path_regex": "requirements$",
                         "host_folder": str(
                             tmp_path
-                            / "base_path/build/first-app/android/gradle/app/build/python/pip/debug/common"
+                            / "base_path/build/first-app/android/gradle/app/build/python/pip/debug/common"  # noqa: E501
                         ),
                     },
                 }

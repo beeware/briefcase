@@ -87,7 +87,7 @@ def test_license_file_multi_with_rtf_raises(
     raised."""
     create_file(
         tmp_path / "base_path/LICENSE-A.rtf",
-        "{\\rtf1\\ansi\\deff0 {\\fonttbl {\\f0 Courier;}}Apache License text.\\par\\line}",
+        "{\\rtf1\\ansi\\deff0 {\\fonttbl {\\f0 Courier;}}Apache License text.\\par\\line}",  # noqa: E501
     )
     create_file(tmp_path / "base_path/LICENSE-B", "MIT License text")
     first_app_templated.license = "Apache-2.0 AND MIT"

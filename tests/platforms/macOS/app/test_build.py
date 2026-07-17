@@ -73,7 +73,7 @@ def test_build_app(
             arch="gothic",
         )
 
-    # Verify that a request has been made to sign the app, but only when it is as part of a direct build command
+    # Verify that a request has been made to sign the app, but only when it is as part of a direct build command  # noqa: E501
     if "adhoc_sign" in kwargs:
         # build command was called as part of package command.
         # expect no signing now since it will happen during packaging

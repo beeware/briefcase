@@ -85,7 +85,7 @@ def test_missing_runtime_config(build_command, first_app_config):
 
     with pytest.raises(
         BriefcaseConfigError,
-        match="Briefcase configuration error: The App does not specify the Flatpak runtime to use",
+        match="Briefcase configuration error: The App does not specify the Flatpak runtime to use",  # noqa: E501
     ):
         build_command.build_app(first_app_config)
 
@@ -105,6 +105,6 @@ def test_missing_base_version_config(build_command, first_app_config):
 
     with pytest.raises(
         BriefcaseConfigError,
-        match=r"Briefcase configuration error: The App specifies a Flatpak base without a version.",
+        match=r"Briefcase configuration error: The App specifies a Flatpak base without a version.",  # noqa: E501
     ):
         build_command.build_app(first_app_config)

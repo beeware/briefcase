@@ -41,7 +41,7 @@ def test_verify_repo_fail(flatpak):
 
     with pytest.raises(
         BriefcaseCommandError,
-        match=r"Unable to add Flatpak repo https://example.com/flatpak with alias test-alias.",
+        match=r"Unable to add Flatpak repo https://example.com/flatpak with alias test-alias.",  # noqa: E501
     ):
         flatpak.verify_repo(
             repo_alias="test-alias",

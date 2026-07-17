@@ -66,7 +66,7 @@ def test_binary_path(create_command, first_app_config, tmp_path):
     assert (
         create_command.binary_path(first_app_config)
         == tmp_path
-        / "base_path/build/first-app/somevendor/surprising/first-app-0.0.1/usr/bin/first-app"
+        / "base_path/build/first-app/somevendor/surprising/first-app-0.0.1/usr/bin/first-app"  # noqa: E501
     )
 
 
@@ -117,7 +117,7 @@ def test_distribution_path_unknown(create_command, first_app_config, tmp_path):
 
     with pytest.raises(
         BriefcaseCommandError,
-        match=r"Briefcase doesn't currently know how to build system packages in UNKNOWN format.",
+        match=r"Briefcase doesn't currently know how to build system packages in UNKNOWN format.",  # noqa: E501
     ):
         create_command.distribution_path(first_app_config)
 

@@ -295,7 +295,7 @@ def test_resume_notarize_pkg(
         "distribution file",
     )
 
-    # 2 calls are made to determine identity - the app identity, then the installer identity.
+    # 2 calls are made to determine identity - the app identity, then the installer identity.  # noqa: E501
     package_command.select_identity.side_effect = [
         sekrit_identity,
         sekrit_installer_identity,
@@ -344,7 +344,7 @@ def test_resume_notarize_pkg(
         submission_id=submission_id,
     )
 
-    # Identity selection excluded adhoc identities, but also confirmed notarization identity
+    # Identity selection excluded adhoc identities, but also confirmed notarization identity  # noqa: E501
     assert package_command.select_identity.mock_calls == [
         mock.call(
             identity=sekrit_identity.id,
@@ -550,7 +550,7 @@ def test_resume_notarize_from_marker(
         packaging_format=packaging_format,
     )
 
-    # Identity selection excluded adhoc identities; PKG also resolves an installer identity.
+    # Identity selection excluded adhoc identities; PKG also resolves an installer identity.  # noqa: E501
     if use_installer:
         assert package_command.select_identity.mock_calls == [
             mock.call(
@@ -813,7 +813,7 @@ def test_resume_notarize_from_marker_rejected(
     # The marker exists on disk, ready to be auto-detected.
     assert marker_path.exists()
 
-    # Resume notarization. The marker is auto-detected, but the notarization is rejected.
+    # Resume notarization. The marker is auto-detected, but the notarization is rejected.  # noqa: E501
     with pytest.raises(
         BriefcaseCommandError,
         match=r"Notarization was rejected: Bad mojo",

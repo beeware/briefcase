@@ -456,7 +456,7 @@ def test_notarize_adhoc_signed_via_prompt(
 
     package_command.select_identity.return_value = adhoc_identity
 
-    # Package the app without code signing. Use the base command's interface to ensure the full
+    # Package the app without code signing. Use the base command's interface to ensure the full  # noqa: E501
     # cleanup process is tested.
     with pytest.raises(
         BriefcaseCommandError,

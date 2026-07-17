@@ -11,7 +11,7 @@ def test_verify_macos_cpu_arch(dummy_command):
     # Create a Mock object for the platform module
     dummy_command.tools.platform = MagicMock(spec_set=platform)
 
-    # Simulate that Mock platform is running on Apple Silicon with an x86_64 Python interpreter
+    # Simulate that Mock platform is running on Apple Silicon with an x86_64 Python interpreter  # noqa: E501
     dummy_command.tools.platform.machine = MagicMock(return_value="x86_64")
     dummy_command.tools.platform.version = MagicMock(return_value="ARM64")
 

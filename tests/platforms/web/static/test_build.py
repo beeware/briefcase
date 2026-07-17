@@ -167,7 +167,7 @@ existing-key-2 = 2
                     "        // Hide the splash screen when the page is ready.",
                     '        import { hooks } from "https://pyscript.net/releases/2024.11.1/core.js";',
                     "        hooks.main.onReady.add(() => {",
-                    '            document.getElementById("briefcase-splash").classList.add("hidden");',
+                    '            document.getElementById("briefcase-splash").classList.add("hidden");',  # noqa: E501
                     "        });",
                     "    </script>",
                     "",
@@ -213,7 +213,7 @@ existing-key-2 = 2
                     "  display: None;",
                     "}",
                     "/*******************************************************************",
-                    "******************** Wheel contributed styles ********************/",
+                    "******************** Wheel contributed styles ********************/",  # noqa: E501
                     "/*@@ css:start @@*/",
                     "/**************************************************",
                     " * dependency 1.2.3 (legacy static CSS: style.css)",
@@ -303,7 +303,7 @@ def test_build_app_invalid_extra_pyscript_toml_content(
     # Building the web app raises an error
     with pytest.raises(
         BriefcaseConfigError,
-        match=r"Briefcase configuration error: Extra pyscript.toml content isn't valid TOML: Expected",
+        match=r"Briefcase configuration error: Extra pyscript.toml content isn't valid TOML: Expected",  # noqa: E501
     ):
         build_command.build_app(first_app_generated)
 
@@ -467,7 +467,7 @@ def test_build_app_no_requirements(build_command, first_app_generated, tmp_path)
                     "  display: None;",
                     "}",
                     "/*******************************************************************",
-                    "******************** Wheel contributed styles ********************/",
+                    "******************** Wheel contributed styles ********************/",  # noqa: E501
                     "/*@@ css:start @@*/",
                     "/**************************************************",
                     " * first_app 1.2.3 (legacy static CSS: style.css)",

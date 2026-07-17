@@ -91,7 +91,7 @@ def test_verify_windows_cpu_arch(create_command):
     # Create a Mock object for the platform module
     create_command.tools.platform = MagicMock(spec_set=platform)
 
-    # Simulate that Mock platform is running on Windows ARM64 with an x86_64 Python interpreter
+    # Simulate that Mock platform is running on Windows ARM64 with an x86_64 Python interpreter  # noqa: E501
     create_command.tools.host_os = "Windows"
     create_command.tools.host_arch = "ARM64"
     create_command.tools.platform.python_compiler = MagicMock(
