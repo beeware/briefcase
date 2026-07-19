@@ -523,7 +523,7 @@ class GradleRunCommand(GradleMixin, RunCommand):
 
             # Install the latest APK file onto the device.
             with self.console.wait_bar("Installing new app version..."):
-                adb.install_apk(self.binary_path(app))
+                adb.install_apk(self.binary_path(app), package)
 
             if revoke_permissions:
                 # Revoke specified app permissions to ensure a reproducible

@@ -1481,18 +1481,45 @@ class ADB:
                 raise InvalidDeviceError("device id", self.device) from e
             raise
 
-    def install_apk(self, apk_path: str | Path):
+    def install_apk(self, apk_path: str | Path, package: str):
         """Install an APK file on an Android device.
 
         :param apk_path: The path of the Android APK file to install.
+        :param package: The package name that the Android APK will install.
         :returns: `None` on success; raises an exception on failure.
         """
         try:
             self.run("install", "-r", apk_path)
         except subprocess.CalledProcessError as e:
-            raise BriefcaseCommandError(
-                f"Unable to install APK {apk_path} on {self.device}"
-            ) from e
+            output = e.output or ""
+            if "INSTALL_FAILED_UPDATE_INCOMPATIBLE" in output:
+                raise BriefcaseCommandError(
+                    f"""\
+            Unable to install APK {apk_path} on {self.device}.
+
+            The app currently installed on the device was signed with a different key
+            than this APK (often because it was previously installed from a different
+            computer). To resolve this, uninstall the existing app, then try again:
+
+                $ adb -s {self.device} uninstall {package}
+            """
+                ) from e
+            elif "INSTALL_FAILED_VERSION_DOWNGRADE" in output:
+                raise BriefcaseCommandError(
+                    f"""\
+            Unable to install APK {apk_path} on {self.device}.
+
+            A newer version of this app is already installed, and Android won't install
+            an older version over it. To resolve this, uninstall the existing app, then
+            try again:
+
+                $ adb -s {self.device} uninstall {package}
+            """
+                ) from e
+            else:
+                raise BriefcaseCommandError(
+                    f"Unable to install APK {apk_path} on {self.device}"
+                ) from e
 
     def force_stop_app(self, package: str):
         """Force-stop an app, specified as a package name.
