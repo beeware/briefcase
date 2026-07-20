@@ -54,7 +54,9 @@ When generating an iOS project, Briefcase produces an Xcode project.
 
 ## Icon format
 
-iOS projects use `.png` format icons. An application must provide icons of the following sizes:
+iOS projects use `.png` format icons. Icons must be **square** and **opaque**. iOS applies a squircle mask to square icons so they match the rest of the home screen; if you provide a non-square icon, or a squircle with transparent padding, the transparent regions render as black borders/corners.
+
+An application must provide icons of the following sizes:
 
 * 20px
 * 29px
@@ -73,7 +75,7 @@ iOS projects use `.png` format icons. An application must provide icons of the f
 * 1280px
 * 1920px
 
-The icon will also be used to populate the splash screen. You can specify a background color for the splash screen using the `splash_background_color` configuration setting.
+Only the **640px**, **1280px**, and **1920px** icons are used to populate the splash screen. You can specify a background color for the splash screen using the `splash_background_color` configuration setting.
 
 iOS projects do not support installer images.
 
