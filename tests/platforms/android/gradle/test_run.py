@@ -317,7 +317,8 @@ def test_run_existing_device(run_command, first_app_config):
 
     # The adb wrapper is invoked with the expected arguments
     run_command.tools.mock_adb.install_apk.assert_called_once_with(
-        run_command.binary_path(first_app_config)
+        run_command.binary_path(first_app_config),
+        f"{first_app_config.package_name}.{first_app_config.module_name}",
     )
     run_command.tools.mock_adb.force_stop_app.assert_called_once_with(
         f"{first_app_config.package_name}.{first_app_config.module_name}",
@@ -396,7 +397,8 @@ def test_run_with_passthrough(run_command, first_app_config):
 
     # The adb wrapper is invoked with the expected arguments
     run_command.tools.mock_adb.install_apk.assert_called_once_with(
-        run_command.binary_path(first_app_config)
+        run_command.binary_path(first_app_config),
+        f"{first_app_config.package_name}.{first_app_config.module_name}",
     )
     run_command.tools.mock_adb.force_stop_app.assert_called_once_with(
         f"{first_app_config.package_name}.{first_app_config.module_name}",
@@ -630,7 +632,8 @@ def test_run_created_emulator(run_command, first_app_config):
 
     # The adb wrapper is invoked with the expected arguments
     run_command.tools.mock_adb.install_apk.assert_called_once_with(
-        run_command.binary_path(first_app_config)
+        run_command.binary_path(first_app_config),
+        f"{first_app_config.package_name}.{first_app_config.module_name}",
     )
     run_command.tools.mock_adb.force_stop_app.assert_called_once_with(
         f"{first_app_config.package_name}.{first_app_config.module_name}",
@@ -692,7 +695,8 @@ def test_run_idle_device(run_command, first_app_config):
 
     # The adb wrapper is invoked with the expected arguments
     run_command.tools.mock_adb.install_apk.assert_called_once_with(
-        run_command.binary_path(first_app_config)
+        run_command.binary_path(first_app_config),
+        f"{first_app_config.package_name}.{first_app_config.module_name}",
     )
     run_command.tools.mock_adb.force_stop_app.assert_called_once_with(
         f"{first_app_config.package_name}.{first_app_config.module_name}",
@@ -794,7 +798,8 @@ def test_run_test_mode(run_command, first_app_config):
 
     # The adb wrapper is invoked with the expected arguments
     run_command.tools.mock_adb.install_apk.assert_called_once_with(
-        run_command.binary_path(first_app_config)
+        run_command.binary_path(first_app_config),
+        f"{first_app_config.package_name}.{first_app_config.module_name}",
     )
     run_command.tools.mock_adb.force_stop_app.assert_called_once_with(
         f"{first_app_config.package_name}.{first_app_config.module_name}",
@@ -868,7 +873,8 @@ def test_run_test_mode_with_passthrough(run_command, first_app_config):
 
     # The adb wrapper is invoked with the expected arguments
     run_command.tools.mock_adb.install_apk.assert_called_once_with(
-        run_command.binary_path(first_app_config)
+        run_command.binary_path(first_app_config),
+        f"{first_app_config.package_name}.{first_app_config.module_name}",
     )
     run_command.tools.mock_adb.force_stop_app.assert_called_once_with(
         f"{first_app_config.package_name}.{first_app_config.module_name}",
@@ -946,7 +952,8 @@ def test_run_test_mode_created_emulator(run_command, first_app_config):
 
     # The adb wrapper is invoked with the expected arguments
     run_command.tools.mock_adb.install_apk.assert_called_once_with(
-        run_command.binary_path(first_app_config)
+        run_command.binary_path(first_app_config),
+        f"{first_app_config.package_name}.{first_app_config.module_name}",
     )
     run_command.tools.mock_adb.force_stop_app.assert_called_once_with(
         f"{first_app_config.package_name}.{first_app_config.module_name}",
@@ -1055,7 +1062,8 @@ def test_run_debugger(run_command, first_app_config, tmp_path, debugger):
 
     # The adb wrapper is invoked with the expected arguments
     run_command.tools.mock_adb.install_apk.assert_called_once_with(
-        run_command.binary_path(first_app_config)
+        run_command.binary_path(first_app_config),
+        f"{first_app_config.package_name}.{first_app_config.module_name}",
     )
     run_command.tools.mock_adb.force_stop_app.assert_called_once_with(
         f"{first_app_config.package_name}.{first_app_config.module_name}",
