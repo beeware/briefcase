@@ -22,6 +22,14 @@ DOCKER_VERIFICATION_CALLS = [
 ]
 
 
+def docker_info_result(name):
+    """Load a sample docker info result file from the sample directory, and return the
+    content."""
+    samples = Path(__file__).parent / "docker_info"
+    with (samples / (name + ".out")).open(encoding="utf-8") as docker_output_file:
+        return docker_output_file.read()
+
+
 @pytest.fixture
 def mock_tools(mock_tools) -> ToolCache:
     mock_tools.subprocess = MagicMock(spec_set=Subprocess)
@@ -197,16 +205,7 @@ def test_docker_unknown_version(mock_tools, user_mapping_run_calls, capsys):
 
 def test_docker_exists_but_process_lacks_permission_to_use_it(mock_tools):
     """If the docker daemon isn't running, the check fails."""
-    error_message = """
-Client:
- Debug Mode: false
-
-Server:
-ERROR: Got permission denied while trying to connect to the Docker daemon socket at unix:///var/run/docker.sock:
-
-Get http://%2Fvar%2Frun%2Fdocker.sock/v1.40/info: dial unix /var/run/docker.sock: connect: permission denied
-errors pretty printing info"""
-
+    error_message = docker_info_result("permission_denied")
     mock_tools.subprocess.check_output.side_effect = [
         VALID_DOCKER_VERSION,
         subprocess.CalledProcessError(
@@ -225,21 +224,8 @@ errors pretty printing info"""
 @pytest.mark.parametrize(
     "error_message",
     [
-        """
-Client:
- Debug Mode: false
-
-Server:
-ERROR: Error response from daemon: dial unix docker.raw.sock: connect: connection refused
-errors pretty printing info
-""",  # this is the error shown on mac
-        """
-Client:
- Debug Mode: false
-
-Server:
-ERROR: Cannot connect to the Docker daemon at unix:///var/run/docker.sock. Is the docker daemon running?
-errors pretty printing info""",  # this is the error show on linux
+        docker_info_result("connection_refused"),
+        docker_info_result("daemon_not_running"),
     ],
 )
 def test_docker_exists_but_is_not_running(error_message, mock_tools):
@@ -290,7 +276,10 @@ def test_buildx_plugin_not_installed(mock_tools):
 
     with pytest.raises(
         BriefcaseCommandError,
-        match="Docker is installed and available for use but the buildx plugin\nis not installed",
+        match=(
+            "Docker is installed and available for use but the buildx plugin\n"
+            "is not installed"
+        ),
     ):
         Docker.verify(mock_tools)
 
