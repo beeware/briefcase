@@ -14,7 +14,6 @@ def test_install_requirements(mock_tools, mock_venv):
             "pkg2==1.2.3",
             "../path/to/pkg3",
         ],
-        allow_editable=True,
     )
 
     mock_tools.subprocess.run.assert_called_once_with(
@@ -33,7 +32,6 @@ def test_install_requirements(mock_tools, mock_venv):
             "-vv",
             "pkg1",
             "pkg2==1.2.3",
-            "-e",
             "../path/to/pkg3",
         ],
         check=True,
@@ -130,6 +128,217 @@ def test_install_requirements_path_formats(
             "-vv",
         ]
         + (["-e", requirement] if (editable and allow_editable) else [requirement]),
+        check=True,
+        encoding="UTF-8",
+        env={"VENV": "active"},
+    )
+
+
+@pytest.mark.parametrize(
+    ("platform", "arch", "min_os_version", "args"),
+    [
+        ("macOS", "arm64", None, ["--platform", "macosx_11_0_arm64"]),
+        ("macOS", "arm64", "12.3", ["--platform", "macosx_12_3_arm64"]),
+        ("macOS", "x86_64", None, ["--platform", "macosx_11_0_x86_64"]),
+        ("macOS", "x86_64", "12.3", ["--platform", "macosx_12_3_x86_64"]),
+        (
+            "iphoneos",
+            "arm64",
+            None,
+            [
+                "--platform",
+                "ios_13_0_arm64_iphoneos",
+                "--extra-index-url",
+                "https://pypi.anaconda.org/beeware/simple",
+            ],
+        ),
+        (
+            "iphoneos",
+            "arm64",
+            "16.4",
+            [
+                "--platform",
+                "ios_16_4_arm64_iphoneos",
+                "--extra-index-url",
+                "https://pypi.anaconda.org/beeware/simple",
+            ],
+        ),
+        (
+            "iphonesimulator",
+            "arm64",
+            None,
+            [
+                "--platform",
+                "ios_13_0_arm64_iphonesimulator",
+                "--extra-index-url",
+                "https://pypi.anaconda.org/beeware/simple",
+            ],
+        ),
+        (
+            "iphonesimulator",
+            "arm64",
+            "16.4",
+            [
+                "--platform",
+                "ios_16_4_arm64_iphonesimulator",
+                "--extra-index-url",
+                "https://pypi.anaconda.org/beeware/simple",
+            ],
+        ),
+        ("windows", "x86_64", None, []),
+        ("windows", "ARM64", None, []),
+        ("linux", "x86_64", None, []),
+        ("linux", "aarch64", None, []),
+        ("android", "arm64_v8a", None, []),
+    ],
+)
+def test_install_requirements_with_install_path(
+    mock_tools,
+    mock_venv,
+    tmp_path,
+    platform,
+    arch,
+    min_os_version,
+    args,
+):
+    """If an install path is provided, extra platform tags are included."""
+    mock_venv.platform = platform
+    mock_venv.arch = arch
+
+    mock_venv.install_requirements(
+        [
+            "pkg1",
+            "pkg2==1.2.3",
+        ],
+        install_path=tmp_path / "location",
+        min_os_version=min_os_version,
+    )
+
+    mock_tools.subprocess.run.assert_called_once_with(
+        [
+            "rewrite",
+            mock_venv.executable,
+            "-u",
+            "-X",
+            "utf8",
+            "-m",
+            "pip",
+            "install",
+            "--disable-pip-version-check",
+            "--no-user",
+            "--upgrade",
+            "-vv",
+            f"--target={tmp_path / 'location'}",
+            *args,
+            "pkg1",
+            "pkg2==1.2.3",
+        ],
+        check=True,
+        encoding="UTF-8",
+        env={"VENV": "active"},
+    )
+
+
+def test_require_binary(mock_tools, mock_venv):
+    """The install can require binary installs."""
+    mock_venv.install_requirements(
+        [
+            "pkg1",
+            "pkg2==1.2.3",
+        ],
+        require_binary=True,
+    )
+
+    mock_tools.subprocess.run.assert_called_once_with(
+        [
+            "rewrite",
+            mock_venv.executable,
+            "-u",
+            "-X",
+            "utf8",
+            "-m",
+            "pip",
+            "install",
+            "--disable-pip-version-check",
+            "--no-user",
+            "--upgrade",
+            "-vv",
+            "--only-binary",
+            ":all:",
+            "pkg1",
+            "pkg2==1.2.3",
+        ],
+        check=True,
+        encoding="UTF-8",
+        env={"VENV": "active"},
+    )
+
+
+def test_disable_include_dependencies(mock_tools, mock_venv):
+    """Requirements can be installed without dependencies."""
+    mock_venv.install_requirements(
+        [
+            "pkg1",
+            "pkg2==1.2.3",
+        ],
+        include_deps=False,
+    )
+
+    mock_tools.subprocess.run.assert_called_once_with(
+        [
+            "rewrite",
+            mock_venv.executable,
+            "-u",
+            "-X",
+            "utf8",
+            "-m",
+            "pip",
+            "install",
+            "--disable-pip-version-check",
+            "--no-user",
+            "--upgrade",
+            "-vv",
+            "--no-deps",
+            "pkg1",
+            "pkg2==1.2.3",
+        ],
+        check=True,
+        encoding="UTF-8",
+        env={"VENV": "active"},
+    )
+
+
+def test_extra_installer_args(mock_tools, mock_venv, base_path):
+    """Requirements can be installed with extra installer argugments."""
+    (base_path / "wheels").mkdir(parents=True)
+
+    mock_venv.install_requirements(
+        [
+            "pkg1",
+            "pkg2==1.2.3",
+        ],
+        extra_installer_args=["-f", "./wheels"],
+    )
+
+    mock_tools.subprocess.run.assert_called_once_with(
+        [
+            "rewrite",
+            mock_venv.executable,
+            "-u",
+            "-X",
+            "utf8",
+            "-m",
+            "pip",
+            "install",
+            "--disable-pip-version-check",
+            "--no-user",
+            "--upgrade",
+            "-vv",
+            "-f",
+            base_path / "wheels",
+            "pkg1",
+            "pkg2==1.2.3",
+        ],
         check=True,
         encoding="UTF-8",
         env={"VENV": "active"},

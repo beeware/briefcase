@@ -1,7 +1,6 @@
 from .base import VirtualEnvironment
 from .conda import CondaVirtualEnvironment
 from .noop import NoOpVirtualEnvironment
-from .pixi import PixiVirtualEnvironment
 from .std_venv import VenvVirtualEnvironment
 from .tool import VirtualEnvironmentManager
 from .uv import UvVirtualEnvironment
@@ -9,7 +8,6 @@ from .uv import UvVirtualEnvironment
 __all__ = [
     "CondaVirtualEnvironment",
     "NoOpVirtualEnvironment",
-    "PixiVirtualEnvironment",
     "UvVirtualEnvironment",
     "VenvVirtualEnvironment",
     "VirtualEnvironment",

@@ -389,13 +389,13 @@ def test_install_managed_python_env(
     create_command,
     mock_venv,
     first_app_templated,
-    tmp_path,
+    base_path,
 ):
     """A managed python environment will be copied into the final app."""
     # Create some mock content in the virtual environment
-    create_file(tmp_path / "mock_venvs/mock-venv/base.txt", "Top level file")
-    create_file(tmp_path / "mock_venvs/mock-venv/DLLs/python.dll", "A Python DLL")
-    create_file(tmp_path / "mock_venvs/mock-venv/Lib/site-packages/test.py", "Stdlib")
+    create_file(base_path / "mock-venv/base.txt", "Top level file")
+    create_file(base_path / "mock-venv/DLLs/python.dll", "A Python DLL")
+    create_file(base_path / "mock-venv/Lib/site-packages/test.py", "Stdlib")
 
     # Install the managed Python environment
     create_command.install_managed_python_env(first_app_templated, mock_venv)

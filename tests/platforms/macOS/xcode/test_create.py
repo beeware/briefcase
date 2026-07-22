@@ -31,26 +31,26 @@ def test_install_managed_python_env(
     mock_venv,
     first_app_generated,
     reinstall,
-    tmp_path,
+    base_path,
 ):
     """A managed python environment will be copied into the final app."""
     resource_path = create_command.bundle_path(first_app_generated) / "support/Python"
 
     # Create some mock content in the virtual environment
-    create_file(tmp_path / "mock_venvs/mock-venv/base.txt", "Top level file")
-    create_file(tmp_path / "mock_venvs/mock-venv/lib/libpython.so", "Python lib")
-    create_file(tmp_path / "mock_venvs/mock-venv/lib/site-packages/test.py", "Stdlib")
+    create_file(base_path / "mock-venv/base.txt", "Top level file")
+    create_file(base_path / "mock-venv/lib/libpython.so", "Python lib")
+    create_file(base_path / "mock-venv/lib/site-packages/test.py", "Stdlib")
 
     if reinstall:
         # Create an existing symlink
-        resource_path.symlink_to(tmp_path / "mock_venvs/mock-venv")
+        resource_path.symlink_to(base_path / "mock-venv")
 
     # Install the managed Python environment
     create_command.install_managed_python_env(first_app_generated, mock_venv)
 
     # A symlink to the managed install was created
     assert resource_path.is_symlink()
-    assert resource_path.resolve() == tmp_path / "mock_venvs/mock-venv"
+    assert resource_path.resolve() == base_path / "mock-venv"
 
     # The managed environment was copied to the final app.
     # Deep directory structure is preserved.

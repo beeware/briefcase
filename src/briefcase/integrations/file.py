@@ -26,48 +26,6 @@ from briefcase.integrations.base import Tool, ToolCache
 RELATIVE_PATH_RE = re.compile(r"^\.{1,2}[\\/]")
 
 
-def _has_url(requirement):
-    """Determine if the requirement is defined as a URL.
-
-    Detects any of the URL schemes supported by pip
-    (https://pip.pypa.io/en/stable/topics/vcs-support/).
-
-    :param requirement: The requirement to check
-    :returns: True if the requirement is a URL supported by pip.
-    """
-    return any(
-        f"{scheme}:" in requirement
-        for scheme in (
-            "http",
-            "https",
-            "file",
-            "ftp",
-            "git+file",
-            "git+https",
-            "git+ssh",
-            "git+http",
-            "git+git",
-            "git",
-            "hg+file",
-            "hg+http",
-            "hg+https",
-            "hg+ssh",
-            "hg+static-http",
-            "svn",
-            "svn+svn",
-            "svn+http",
-            "svn+https",
-            "svn+ssh",
-            "bzr+http",
-            "bzr+https",
-            "bzr+ssh",
-            "bzr+sftp",
-            "bzr+ftp",
-            "bzr+lp",
-        )
-    )
-
-
 class File(Tool):
     name = "file"
     full_name = "File"
@@ -151,6 +109,47 @@ class File(Tool):
 
             return self._ssl_context
 
+    def is_scm_url(self, path):
+        """Determine if the requirement is defined as a URL.
+
+        Detects any of the URL schemes supported by pip
+        (https://pip.pypa.io/en/stable/topics/vcs-support/).
+
+        :param requirement: The requirement to check
+        :returns: True if the requirement is a URL supported by pip.
+        """
+        return any(
+            f"{scheme}:" in path
+            for scheme in (
+                "http",
+                "https",
+                "file",
+                "ftp",
+                "git+file",
+                "git+https",
+                "git+ssh",
+                "git+http",
+                "git+git",
+                "git",
+                "hg+file",
+                "hg+http",
+                "hg+https",
+                "hg+ssh",
+                "hg+static-http",
+                "svn",
+                "svn+svn",
+                "svn+http",
+                "svn+https",
+                "svn+ssh",
+                "bzr+http",
+                "bzr+https",
+                "bzr+ssh",
+                "bzr+sftp",
+                "bzr+ftp",
+                "bzr+lp",
+            )
+        )
+
     def is_local_path(self, reference: str | os.PathLike) -> bool:
         """Determine if the reference is a local file path.
 
@@ -162,7 +161,9 @@ class File(Tool):
         if os.altsep:
             separators.append(os.altsep)
 
-        return any(sep in reference for sep in separators) and (not _has_url(reference))
+        return any(sep in reference for sep in separators) and (
+            not self.is_scm_url(reference)
+        )
 
     def is_archive(self, filename: str | os.PathLike) -> bool:
         """Can a file be unpacked via `shutil.unpack_archive()`?
@@ -185,7 +186,7 @@ class File(Tool):
         }
         return not file_extensions.isdisjoint(self.supported_archive_extensions)
 
-    def resolve_relative_args(self, args: list[str]) -> list[str]:
+    def resolve_relative_args(self, args: list[str], base_path: Path) -> list[str]:
         """Convert a list of arguments so that all relative file path references are
         converted into resolved paths relative to the base path.
 
@@ -194,12 +195,13 @@ class File(Tool):
         2. The path referenced actually exists
 
         :param args: The initial list of arguments
+        :param base_path: The base path against which file references should be resolved
         :returns: The resolved list of arguments.
         """
         resolved_args: list[str] = []
         for arg in args:
             if RELATIVE_PATH_RE.match(arg) and self.tools.file.is_local_path(arg):
-                abs_path = (self.tools.base_path / arg).resolve()
+                abs_path = (base_path / arg).resolve()
                 if abs_path.exists():
                     arg = abs_path
 

@@ -4,7 +4,6 @@ from ....utils import create_file
 def test_clean(venv, mock_tools):
     """Clean removes the venv directory tree when it exists."""
     # Create an existing environment marker
-    venv.venv_path.parent.mkdir(parents=True)
     create_file(venv.venv_path / "pyvenv.cfg", "VENV CONFIG")
 
     assert venv.exists()

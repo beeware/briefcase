@@ -1,4 +1,4 @@
-def test_clean(noop_venv, first_app, mock_tools, base_venv_path):
+def test_clean(noop_venv, first_app, mock_tools):
     """The marker file is removed by a clean."""
 
     # a no-ope environment always exists, but the marker file won't

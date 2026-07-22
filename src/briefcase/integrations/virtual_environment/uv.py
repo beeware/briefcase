@@ -13,7 +13,7 @@ from briefcase.integrations.virtual_environment.base import VirtualEnvironment
 class UvVirtualEnvironment(VirtualEnvironment):
     """An environment manager using uv."""
 
-    env_type: str = "venv"
+    env_type: str = "uv"
     verified: bool = False
 
     @classmethod
@@ -132,23 +132,13 @@ Ensure that you have installed `uv`, and that it is on your path.
 
         UV ignores the min_os_version; and uses GNU-style references to ARM64
         """
-        platform = self.platform
-        if platform is None:
-            platform = {
-                "Darwin": "macOS",
-                "Windows": "windows",
-            }.get(self.tools.host_os)
+        if self.arch.lower() == "arm64":
+            self.arch = "aarch64"
 
-        arch = self.arch or self.tools.platform.machine()
-        if arch.lower() == "arm64":
-            arch = "aarch64"
-
-        if platform == "macOS":
-            return f"{arch}-apple-darwin"
-        elif platform == "windows":
-            return f"{arch}-pc-windows-msvc"
+        if self.platform == "macOS":
+            return f"{self.arch}-apple-darwin"
         else:
-            raise NotImplementedError()
+            return None
 
     def install_requirements(
         self,
@@ -199,22 +189,33 @@ Ensure that you have installed `uv`, and that it is on your path.
             if install_path:
                 install_args.append(f"--target={install_path}")
 
-                if self.platform_tag:
-                    install_args.extend(["--python-platform", self.platform_tag])
-                    if min_os_version and self.platform == "darwin":
+                if platform_tag := self.platform_tag:
+                    install_args.extend(["--python-platform", platform_tag])
+                    if min_os_version and self.platform == "macOS":
                         env = {"MACOSX_DEPLOYMENT_TARGET": min_os_version}
 
-            if require_binary and not has_source_deps:
+            if require_binary:
                 # uv can't install a local directory if `--only-binary` is specified.
                 # --only-binary is *required* for normal pip when --platform is used;
                 # but it's not required for uv when using `--python-platform`.
-                install_args.extend(["--only-binary", ":all:"])
+                if has_source_deps:
+                    self.tools.console.warning(
+                        "uv cannot enforce binary dependencies when "
+                        "there are requirements installed from source."
+                    )
+                else:
+                    install_args.extend(["--only-binary", ":all:"])
 
             if not include_deps:
                 install_args.append("--no-deps")
 
             if extra_installer_args:
-                install_args.extend(extra_installer_args)
+                install_args.extend(
+                    self.tools.file.resolve_relative_args(
+                        extra_installer_args,
+                        self.base_path,
+                    )
+                )
 
             self.run(
                 [

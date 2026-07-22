@@ -116,7 +116,7 @@ active Conda environment.
                         self.venv_path,
                         "--yes",
                         *(["--quiet"] if not self.tools.console.is_verbose else []),
-                        f"conda-forge::python={self.python_version}",
+                        f"python={self.python_version}",
                         "pip",
                     ],
                     check=True,
@@ -167,18 +167,21 @@ active Conda environment.
         conda_requires = []
         pip_requires = []
         for req in requires:
-            # Any requirement that is a local path must be installed with pip.
-            if self.tools.file.is_local_path(req):
+            # Any requirement that is a local path or a URL must be installed with pip.
+            if self.tools.file.is_scm_url(req):
+                pip_requires.append(req)
+            elif self.tools.file.is_local_path(req):
                 # If editable installs are allowed, and the requirement is *not* a
-                # reference to an archive file (zip, tgz, etc) or wheel
+                # reference to an archive file (zip, tgz, etc) or wheel, it can be
+                # installed editable.
                 if (
                     allow_editable
                     and not self.tools.file.is_archive(req)
                     and Path(req).suffix != ".whl"
                 ):
-                    pip_requires.extend(["-e", Path(req).resolve()])
+                    pip_requires.extend(["-e", req])
                 else:
-                    pip_requires.append(Path(req).resolve())
+                    pip_requires.append(req)
             else:
                 conda_requires.append(req)
 

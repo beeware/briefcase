@@ -301,6 +301,8 @@ class DevCommand(RunAppMixin, BaseCommand):
             name=self.venv_name,
             app=app,
             tools=self.tools,
+            platform=self.platform,
+            arch=self.tools.host_arch,
             base_path=self.base_path,
         )
         created = venv.prepare(recreate=update_requirements)

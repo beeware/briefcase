@@ -53,7 +53,7 @@ class DummyDevCommand(DevCommand):
     def virtual_environment_class(self, env_manager="venv"):
         # An environment manager that returns mock virtual environments,
         # tracking how they were created.
-        def MockVirtualEnvironmentManager(name, app, tools, base_path):
+        def MockVirtualEnvironmentManager(name, app, tools, base_path, platform, arch):
             venv = mock.MagicMock(spec=VirtualEnvironment)
             venv.name = name
 

@@ -598,7 +598,8 @@ class CreateCommand(BaseCommand):
             if requirement_installer_args_path:
                 pip_args = "\n".join(
                     self.tools.file.resolve_relative_args(
-                        app.requirement_installer_args
+                        app.requirement_installer_args,
+                        self.base_path,
                     )
                 )
                 requirement_installer_args_path.write_text(

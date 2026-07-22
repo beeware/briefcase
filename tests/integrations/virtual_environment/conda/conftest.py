@@ -2,11 +2,12 @@ import pytest
 
 from briefcase.integrations.virtual_environment import CondaVirtualEnvironment
 
-pytest.skip(allow_module_level=True)
-
 
 @pytest.fixture
-def venv(mock_tools, venv_path):
-    env = CondaVirtualEnvironment(mock_tools, venv_path)
-    mock_tools.subprocess.run.reset_mock()
-    return env
+def venv(first_app, mock_tools, base_path):
+    return CondaVirtualEnvironment(
+        name="myenv",
+        app=first_app,
+        tools=mock_tools,
+        base_path=base_path,
+    )

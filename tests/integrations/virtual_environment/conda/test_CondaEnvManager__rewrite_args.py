@@ -22,11 +22,7 @@ def test_rewrite_args_replaces_system_python(venv, args, expected_suffix):
     """The head argument is replaced when it equals sys.executable."""
     result = venv.rewrite_args(args)
     assert result == [
-        "conda",
-        "run",
-        "--prefix",
-        venv.venv_path,
-        Path(sys.executable).name,
+        venv.executable,
         *expected_suffix,
     ]
 
@@ -39,6 +35,7 @@ def test_rewrite_args_non_python(venv):
         "run",
         "--prefix",
         venv.venv_path,
+        "--no-capture-output",
         "pip",
         "install",
         "-U",

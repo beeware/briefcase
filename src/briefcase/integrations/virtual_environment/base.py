@@ -99,26 +99,15 @@ class VirtualEnvironment(ABC):
         """Remove the on-disk state associated with this environment."""
 
     def platform_tag(self, min_os_version: str | None):
-        platform = self.platform
-        if platform is None:
-            platform = {
-                "Darwin": "macOS",
-                "Windows": "windows",
-                "Linux": "linux",
-            }[self.tools.host_os]
-
-        arch = self.arch or self.tools.platform.machine()
-        if platform == "macOS":
+        if self.platform == "macOS":
             min_os_tag = (min_os_version or "11.0").replace(".", "_")
-            return f"macosx_{min_os_tag}_{arch}"
-        elif platform in {"iphoneos", "iphonesimulator"}:
+            return f"macosx_{min_os_tag}_{self.arch}"
+        elif self.platform in {"iphoneos", "iphonesimulator"}:
             min_os_tag = (min_os_version or "13.0").replace(".", "_")
-            return f"ios_{min_os_tag}_{arch}_{platform}"
-        elif platform in {"windows", "linux"}:
-            # No --platform flag needed for Windows or Linux
-            return None
+            return f"ios_{min_os_tag}_{self.arch}_{self.platform}"
         else:
-            raise NotImplementedError()
+            # No --platform flag needed
+            return None
 
     def install_requirements(
         self,
@@ -186,7 +175,10 @@ class VirtualEnvironment(ABC):
 
             if extra_installer_args:
                 install_args.extend(
-                    self.tools.file.resolve_relative_args(extra_installer_args)
+                    self.tools.file.resolve_relative_args(
+                        extra_installer_args,
+                        self.base_path,
+                    )
                 )
 
             self.run(

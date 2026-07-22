@@ -824,7 +824,7 @@ def test_min_os_version_python_provided(
     mock_venv,
     create_command,
     first_app_templated,
-    tmp_path,
+    base_path,
 ):
     """If the environment provides Python, the min OS version can be extracted."""
     create_command.tools.host_arch = "arm64"
@@ -832,7 +832,7 @@ def test_min_os_version_python_provided(
     # Mock a venv that provides python
     mock_venv.provides_python = True
     create_file(
-        tmp_path / "mock_venvs/mock-venv/conda-meta/python-3.X.json",
+        base_path / "mock-venv/conda-meta/python-3.X.json",
         json.dumps(
             {
                 "name": "python",
@@ -846,7 +846,7 @@ def test_min_os_version_python_provided(
         ),
     )
 
-    bundle_path = tmp_path / "base_path/build/first-app/macos/app"
+    bundle_path = base_path / "build/first-app/macos/app"
 
     # Configure a non-universal app with requirements.
     first_app_templated.requires = ["first", "second==1.2.3", "third>=3.2.1"]
@@ -908,7 +908,7 @@ def test_invalid_python_env_metadata(
     mock_venv,
     create_command,
     first_app_templated,
-    tmp_path,
+    base_path,
 ):
     """If the environment provides unparsable metadata an error is raised."""
     create_command.tools.host_arch = "arm64"
@@ -916,7 +916,7 @@ def test_invalid_python_env_metadata(
     # Mock a venv that provides python
     mock_venv.provides_python = True
     create_file(
-        tmp_path / "mock_venvs/mock-venv/conda-meta/python-3.X.json",
+        base_path / "mock-venv/conda-meta/python-3.X.json",
         "Not a valid metadata file",
     )
 
@@ -931,7 +931,7 @@ def test_incomplete_python_env_metadata(
     mock_venv,
     create_command,
     first_app_templated,
-    tmp_path,
+    base_path,
 ):
     """If the environment provides unparsable metadata an error is raised."""
     create_command.tools.host_arch = "arm64"
@@ -940,7 +940,7 @@ def test_incomplete_python_env_metadata(
     # that doesn't specify a minimum macOS version
     mock_venv.provides_python = True
     create_file(
-        tmp_path / "mock_venvs/mock-venv/conda-meta/python-3.X.json",
+        base_path / "mock-venv/conda-meta/python-3.X.json",
         json.dumps(
             {
                 "name": "python",
@@ -974,12 +974,12 @@ def test_install_app_packages_no_binary(
     mock_other_venv,
     create_command,
     first_app_templated,
-    tmp_path,
+    base_path,
     host_arch,
     other_arch,
 ):
     """If there's no binaries in the first pass, the second pass isn't performed."""
-    bundle_path = tmp_path / "base_path/build/first-app/macos/app"
+    bundle_path = base_path / "build/first-app/macos/app"
 
     # Create pre-existing other-arch content
     create_installed_package(bundle_path / f"app_packages.{other_arch}", "legacy")
@@ -1368,7 +1368,7 @@ def test_install_managed_python_env(
     mock_venv,
     first_app_templated,
     reinstall,
-    tmp_path,
+    base_path,
 ):
     """A managed python environment will be copied into the final app."""
     # Make the app's template look like a managed environment app
@@ -1392,9 +1392,9 @@ support_path="First App.app/Contents/Resources/python"
         create_file(resource_path / "other/content.txt", "other file")
 
     # Create some mock content in the virtual environment
-    create_file(tmp_path / "mock_venvs/mock-venv/base.txt", "Top level file")
-    create_file(tmp_path / "mock_venvs/mock-venv/lib/libpython.so", "Python lib")
-    create_file(tmp_path / "mock_venvs/mock-venv/lib/site-packages/test.py", "Stdlib")
+    create_file(base_path / "mock-venv/base.txt", "Top level file")
+    create_file(base_path / "mock-venv/lib/libpython.so", "Python lib")
+    create_file(base_path / "mock-venv/lib/site-packages/test.py", "Stdlib")
 
     # Install the managed Python environment
     create_command.install_managed_python_env(first_app_templated, mock_venv)

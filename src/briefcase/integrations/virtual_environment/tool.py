@@ -3,7 +3,6 @@ from briefcase.integrations.base import Tool, ToolCache
 from briefcase.integrations.virtual_environment.base import VirtualEnvironment
 from briefcase.integrations.virtual_environment.conda import CondaVirtualEnvironment
 from briefcase.integrations.virtual_environment.noop import NoOpVirtualEnvironment
-from briefcase.integrations.virtual_environment.pixi import PixiVirtualEnvironment
 from briefcase.integrations.virtual_environment.std_venv import VenvVirtualEnvironment
 from briefcase.integrations.virtual_environment.uv import UvVirtualEnvironment
 
@@ -39,7 +38,6 @@ class VirtualEnvironmentManager(Tool):
             "uv": UvVirtualEnvironment,
             "venv": VenvVirtualEnvironment,
             "conda": CondaVirtualEnvironment,
-            "pixi": PixiVirtualEnvironment,
         }[env_manager]
 
         # Verify that the environment manager is available.

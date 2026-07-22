@@ -5,10 +5,10 @@ from pathlib import Path
 import pytest
 
 
-def test_venv_path(venv, base_venv_path):
+def test_venv_path(venv, base_path):
     """bin_dir returns 'bin' directory on Unix systems."""
     result = venv.venv_path
-    assert result == base_venv_path / ".briefcase/first-app/venv-myvenv"
+    assert result == base_path / ".briefcase/first-app/venv-myenv"
     assert isinstance(result, Path)
 
 

@@ -27,7 +27,7 @@ from briefcase.platforms import get_output_formats, get_platforms
 from .constants import MIME_TYPE_REGISTRIES, RESERVED_WORDS
 from .exceptions import BriefcaseConfigError, InvalidVersionError
 
-EnvManagerT = Literal["venv", "uv", "conda", "pixi"]
+EnvManagerT = Literal["venv", "uv", "conda"]
 
 # PEP 508 restricts the naming of modules. The PEP defines a regex that uses
 # re.IGNORECASE; but in in practice, packaging uses a version that rolls out the lower
@@ -720,7 +720,7 @@ class DraftAppConfig(AppConfig):
                     f"package named {self.module_name!r}."
                 )
 
-        if env_manager in {"venv", "uv", "conda", "pixi"}:
+        if env_manager in {"venv", "uv", "conda"}:
             self.env_manager = env_manager
         elif env_manager is None:
             self.env_manager = "venv"

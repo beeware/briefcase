@@ -19,12 +19,12 @@ def dummy_console():
 
 
 @pytest.fixture
-def noop_venv(first_app, mock_tools, base_venv_path, tmp_path):
+def noop_venv(first_app, mock_tools, base_path, tmp_path):
     return NoOpVirtualEnvironment(
         "desert",
         app=first_app,
         tools=mock_tools,
-        base_path=base_venv_path,
+        base_path=base_path,
     )
 
 
@@ -74,12 +74,12 @@ class MockVirtualEnvironment(VirtualEnvironment):
 
 
 @pytest.fixture
-def mock_venv(first_app, mock_tools, base_venv_path, tmp_path):
+def mock_venv(first_app, mock_tools, base_path, tmp_path):
     return MockVirtualEnvironment(
         "forest",
         app=first_app,
         tools=mock_tools,
-        base_path=base_venv_path,
+        base_path=base_path,
     )
 
 
