@@ -68,12 +68,14 @@ iOS projects use `.png` format icons. An application must provide icons of the f
 * 152px
 * 167px
 * 180px
-* 640px
+* 640px (for splash screen)
 * 1024px
-* 1280px
-* 1920px
+* 1280px (for splash screen)
+* 1920px (for splash screen)
 
-The icon will also be used to populate the splash screen. You can specify a background color for the splash screen using the `splash_background_color` configuration setting.
+Icons must be square. iOS will automatically apply a mask with rounded corners (a "squircle") to app icons so they match the system icon shape. If you provide non-square icons or icons with transparent regions, the transparent areas will render as black on the device.
+
+The 640px, 1280px and 1920px icons will also be used to populate the splash screen. You can specify a background color for the splash screen using the `splash_background_color` configuration setting. Unlike app icons, splash screen images are *not* automatically masked by iOS — they will be displayed as-is. If you want a particular shape for your splash screen image (such as rounded corners), you must include that shape directly in the image file.
 
 iOS projects do not support installer images.
 
