@@ -114,7 +114,6 @@ The environment manager to use when creating isolated Python environments and in
 * `venv` - The `venv` package provided by the Python standard library
 * `uv` - The [uv](https://docs.astral.sh/uv/) environment manager
 * `conda` - The [Conda](https://docs.conda.io/) environment manager
-* `pixi` - The [Pixi](https://pixi.prefix.dev/) environment manager
 
 Defaults to `venv`.
 

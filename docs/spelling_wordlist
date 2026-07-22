@@ -41,6 +41,7 @@ CLI
 cmd
 CMD
 codebase
+Conda
 cookiecutter
 Cookiecutter
 cryptographic
@@ -227,6 +228,7 @@ UTF
 UTI
 UTIs
 UTTypeConformsTo
+uv
 vendored
 Ventura
 verbing
