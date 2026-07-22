@@ -27,10 +27,13 @@ defaults:
 env:
   FORCE_COLOR: "1"
 
+permissions:
+  contents: read
+
 jobs:
   pre-commit:
     name: Pre-commit checks
-    uses: beeware/.github/.github/workflows/pre-commit-run.yml@main
+    uses: beeware/.github/.github/workflows/pre-commit-run.yml@741cc5a311012ee0ee195938889a337449d01eeb  # main
     with:
       pre-commit-source: "--group pre-commit"
 
@@ -40,10 +43,12 @@ jobs:
     continue-on-error: true
     steps:
     - name: Checkout
-      uses: actions/checkout@v7.0.0
+      uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0  # v7.0.0
+      with:
+        persist-credentials: false
 
     - name: Set up Python
-      uses: actions/setup-python@v6.3.0
+      uses: actions/setup-python@ece7cb06caefa5fff74198d8649806c4678c61a1  # v6.3.0
       with:
         python-version: "3.13"
 
@@ -55,7 +60,7 @@ jobs:
 
   towncrier:
     name: Check towncrier
-    uses: beeware/.github/.github/workflows/towncrier-run.yml@main
+    uses: beeware/.github/.github/workflows/towncrier-run.yml@741cc5a311012ee0ee195938889a337449d01eeb  # main
     with:
       tox-source: "--group tox-uv"
 
@@ -71,7 +76,7 @@ jobs:
         - ""  # root briefcase package
         - "debugger"
         - "automation"
-    uses: beeware/.github/.github/workflows/python-package-create.yml@main
+    uses: beeware/.github/.github/workflows/python-package-create.yml@741cc5a311012ee0ee195938889a337449d01eeb  # main
     with:
       build-subdirectory: ${{ matrix.subdir }}
       attest: ${{ inputs.attest-package }}
@@ -83,12 +88,13 @@ jobs:
     timeout-minutes: 5
     steps:
       - name: Checkout
-        uses: actions/checkout@v7.0.0
+        uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0  # v7.0.0
         with:
+          persist-credentials: false
           fetch-depth: 1
 
       - name: Set up Python
-        uses: actions/setup-python@v6.3.0
+        uses: actions/setup-python@ece7cb06caefa5fff74198d8649806c4678c61a1  # v6.3.0
         with:
           python-version: "3.X"
           cache: pip
@@ -132,18 +138,19 @@ jobs:
           #   experimental: true
     steps:
     - name: Checkout
-      uses: actions/checkout@v7.0.0
+      uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0  # v7.0.0
       with:
+        persist-credentials: false
         fetch-depth: 0
 
     - name: Set up Python
-      uses: actions/setup-python@v6.3.0
+      uses: actions/setup-python@ece7cb06caefa5fff74198d8649806c4678c61a1  # v6.3.0
       with:
         python-version: ${{ matrix.python-version }}
         allow-prereleases: true
 
     - name: Get Packages
-      uses: actions/download-artifact@v8.0.1
+      uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c  # v8.0.1
       with:
         pattern: ${{ format('{0}*', needs.package.outputs.artifact-basename) }}
         merge-multiple: true
@@ -162,7 +169,7 @@ jobs:
 
     - name: Store Coverage Data
       if: always() && contains('success,failure', steps.test.outcome)
-      uses: actions/upload-artifact@v7.0.1
+      uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a  # v7.0.1
       with:
         name: coverage-data-${{ matrix.platform }}-${{ matrix.python-version }}
         path: ".coverage.*"
@@ -186,12 +193,13 @@ jobs:
     if: always() && contains('success,failure', needs.unit-tests.result)
     steps:
     - name: Checkout
-      uses: actions/checkout@v7.0.0
+      uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0  # v7.0.0
       with:
+        persist-credentials: false
         fetch-depth: 0
 
     - name: Setup Python
-      uses: actions/setup-python@v6.3.0
+      uses: actions/setup-python@ece7cb06caefa5fff74198d8649806c4678c61a1  # v6.3.0
       with:
         # Use minimum version of python for coverage to avoid phantom branches
         # https://github.com/nedbat/coveragepy/issues/1572#issuecomment-1522546425
@@ -201,7 +209,7 @@ jobs:
       run: python -m pip install --group tox-uv
 
     - name: Retrieve Coverage Data
-      uses: actions/download-artifact@v8.0.1
+      uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c  # v8.0.1
       with:
         pattern: coverage-data-*
         merge-multiple: true
@@ -219,7 +227,7 @@ jobs:
 
     - name: Upload Project Coverage HTML Report
       if: always() && steps.project-coverage.outcome == 'failure'
-      uses: actions/upload-artifact@v7.0.1
+      uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a  # v7.0.1
       with:
         name: html-coverage-report-project
         path: htmlcov
@@ -227,7 +235,7 @@ jobs:
   verify-projects:
     name: Verify project
     needs: [ package, unit-tests ]
-    uses: beeware/.github/.github/workflows/app-create-verify.yml@main
+    uses: beeware/.github/.github/workflows/app-create-verify.yml@741cc5a311012ee0ee195938889a337449d01eeb  # main
     with:
       runner-os: ${{ matrix.runner-os }}
       framework: ${{ matrix.framework }}
@@ -240,7 +248,7 @@ jobs:
   verify-apps:
     name: Build app
     needs: [ package, unit-tests ]
-    uses: beeware/.github/.github/workflows/app-build-verify.yml@main
+    uses: beeware/.github/.github/workflows/app-build-verify.yml@741cc5a311012ee0ee195938889a337449d01eeb  # main
     with:
       # Builds on Linux must use System Python; otherwise, fall back to version all GUI toolkits support
       python-version: ${{ startsWith(matrix.runner-os, 'ubuntu') && 'system' || '3.12' }}

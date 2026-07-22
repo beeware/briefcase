@@ -1,5 +1,7 @@
 name: Create Release
 
+permissions: {}
+
 on:
   push:
     tags:
@@ -7,15 +9,22 @@ on:
 
 jobs:
   ci:
+    permissions:
+      id-token: write
+      contents: read
+      attestations: write
     name: CI
     uses: ./.github/workflows/ci.yml
     with:
       attest-package: "true"
 
   docs:
+    permissions:
+      contents: read
     name: Verify Docs Build
-    uses: beeware/.github/.github/workflows/docs-build-verify.yml@main
-    secrets: inherit
+    uses: beeware/.github/.github/workflows/docs-build-verify.yml@741cc5a311012ee0ee195938889a337449d01eeb  # main
+    secrets:
+      RTD_API_TOKEN: ${{ secrets.RTD_API_TOKEN }}
     with:
       project-name: "briefcase"
       project-version: ${{ github.ref_name }}
@@ -34,12 +43,12 @@ jobs:
           echo "VERSION=${GITHUB_REF_NAME#v}" | tee -a $GITHUB_ENV
 
       - name: Set up Python
-        uses: actions/setup-python@v6.3.0
+        uses: actions/setup-python@ece7cb06caefa5fff74198d8649806c4678c61a1  # v6.3.0
         with:
           python-version: "3.x"
 
       - name: Get packages
-        uses: actions/download-artifact@v8.0.1
+        uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c  # v8.0.1
         with:
           pattern: ${{ format('{0}*', needs.ci.outputs.artifact-basename) }}
           merge-multiple: true
@@ -59,7 +68,7 @@ jobs:
           test $(briefcase --version) = $VERSION
 
       - name: Create release
-        uses: ncipollo/release-action@v1.21.0
+        uses: ncipollo/release-action@339a81892b84b4eeb0f6e744e4574d79d0d9b8dd  # v1.21.0
         with:
           name: ${{ env.VERSION }}
           draft: true
@@ -67,6 +76,6 @@ jobs:
           artifactErrorsFailBuild: true
 
       - name: Publish release to Test PyPI
-        uses: pypa/gh-action-pypi-publish@release/v1
+        uses: pypa/gh-action-pypi-publish@ba38be9e461d3875417946c167d0b5f3d385a247  # v1.14.0
         with:
           repository-url: https://test.pypi.org/legacy/
