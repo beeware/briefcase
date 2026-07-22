@@ -9,17 +9,22 @@ on:
 
 jobs:
   ci:
-    permissions: {}
+    permissions:
+      id-token: write
+      contents: read
+      attestations: write
     name: CI
     uses: ./.github/workflows/ci.yml
     with:
       attest-package: "true"
 
   docs:
-    permissions: {}
+    permissions:
+      contents: read
     name: Verify Docs Build
     uses: beeware/.github/.github/workflows/docs-build-verify.yml@741cc5a311012ee0ee195938889a337449d01eeb  # main
-    secrets: inherit
+    secrets:
+      RTD_API_TOKEN: ${{ secrets.RTD_API_TOKEN }}
     with:
       project-name: "briefcase"
       project-version: ${{ github.ref_name }}
