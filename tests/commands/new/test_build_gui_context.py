@@ -72,31 +72,19 @@ requires = [
         "pyproject_table_linux": """\
 requires = [
     "toga-gtk~=0.5.0",
-    # PyGObject 3.52.1 enforces a requirement on libgirepository-2.0-dev. This library
-    # isn't available on Debian 12/Ubuntu 22.04. If you don't need to support those (or
-    # older) releases, you can remove this version pin. See beeware/toga#3143.
-    "pygobject < 3.52.1",
 ]
 """,
         "pyproject_table_linux_system_debian": """\
 system_requires = [
     # Needed to compile pycairo wheel
     "libcairo2-dev",
-    # One of the following two packages are needed to compile PyGObject wheel. If you
-    # remove the pygobject pin in the requires list, you should also change to the
-    # version 2.0 of the girepository library. See beeware/toga#3143.
-    "libgirepository1.0-dev",
-    # "libgirepository-2.0-dev",
+    "libgirepository-2.0-dev",
 ]
 
 system_runtime_requires = [
     # Needed to provide GTK and its GI bindings
     "gir1.2-gtk-3.0",
-    # One of the following two packages are needed to use PyGObject at runtime. If you
-    # remove the pygobject pin in the requires list, you should also change to the
-    # version 2.0 of the girepository library. See beeware/toga#3143.
-    "libgirepository-1.0-1",
-    # "libgirepository-2.0-0",
+    "libgirepository-2.0-0",
     # Dependencies that GTK looks for at runtime
     "libcanberra-gtk3-module",
     # Needed to provide WebKit2 at runtime
@@ -476,6 +464,22 @@ linuxdeploy_plugins = [
 flatpak_runtime = "org.kde.Platform"
 flatpak_runtime_version = "6.9"
 flatpak_sdk = "org.kde.Sdk"
+
+# PySide6.QtWebEngineWidgets requires Kerberos libraries that are not included
+# in the KDE Flatpak runtime. Uncomment this module to build them into the app.
+# modules_extra_content = '''
+#   - name: mit-krb5
+#     buildsystem: simple
+#     sources:
+#       - type: archive
+#         url: https://kerberos.org/dist/krb5/1.21/krb5-1.21.3.tar.gz
+#         sha256: b7a4cd5ead67fb08b980b21abd150ff7217e85ea320c9ed0c6dadd304840ad35
+#     build-commands:
+#       - cd src && autoreconf -i
+#       - cd src && ./configure --prefix=/app --disable-static --enable-shared
+#       - cd src && make -j$(nproc)
+#       - cd src && make install
+# '''
 """,
         "pyproject_table_windows": """\
 requires = [

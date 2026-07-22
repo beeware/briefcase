@@ -1,7 +1,7 @@
 [build-system]
 requires = [
     # keep versions in sync with automation/pyproject.toml
-    "setuptools==82.0.1",
+    "setuptools==83.0.0",
     "setuptools_scm==10.2.0",
 ]
 build-backend = "setuptools.build_meta"
@@ -80,17 +80,10 @@ dependencies = [
     # provides no basis for determining API stability.
     #
     "cookiecutter >= 2.6.0, < 3.0",
-    # See psf/requests#7219. Requests 2.32.5 (a transitive dependency of cookiecutter)
-    # has a runtime warning about the use of chardet 6+, which our test suite turns into
-    # a full error. Requests has already increased the pin; the next requests release
-    # should remove the need for this pin.
-    "chardet < 6.0",
-    # See binaryornot/binaryornot#642 and binaryornot/binaryornot#649. binaryornot is
-    # transitive dependency of cookiecutter; v0.5.0 introduced #642, preventing correct
-    # detection of PNG content (#642). v0.6.0 (released a few days later) fixes #642,
-    # but introduced #649, and the presence of warnings causes catastrophic failures
-    # when running under dev mode.
-    "binaryornot < 0.5.0",
+    # chardet is a dependency of requests, which is a dependency of cookiecutter. Requests
+    # has a runtime warning that verifies "tested" chardet versions, but *doesn't* enforce
+    # a version pin. We need to enforce the implied requests warning.
+    "chardet < 8.0",
     "dmgbuild >= 1.6.4, < 2.0; sys_platform == 'darwin'",
     "GitPython >= 3.1, < 4.0",
     "platformdirs >= 2.6, < 5.0",
@@ -123,7 +116,7 @@ tox-uv = [
 ]
 
 ty = [
-    "ty == 0.0.55",
+    "ty == 0.0.61",
 ]
 
 dev = [
@@ -133,9 +126,9 @@ dev = [
 ]
 
 test = [
-    "coverage[toml] == 7.14.3",
+    "coverage[toml] == 7.15.2",
     "coverage-conditional-plugin == 0.9.0",
-    "httpx-retries == 0.5.0",
+    "httpx-retries == 0.6.0",
     "pytest == 9.1.1",
     "pytest-xdist == 3.8.0",
     {include-group = "setuptools-scm"},
@@ -260,6 +253,12 @@ no-cover-if-gte-py311 = "sys_version_info >= (3, 11) and os_environ.get('COVERAG
 testpaths = ["tests"]
 filterwarnings = [
     "error",
+    # See binaryornot#649 - binaryornot opens a file without specifying an
+    # encoding. We run the test suite with -X warn_default_encoding, and
+    # surface warnings as test errors. The problem has been fixed upstream,
+    # and doesn't affect actual operation. binaryornot 0.6.0 is affected;
+    # This rule can be removed once binaryornot releases it's next version.
+    "ignore::EncodingWarning:binaryornot.helpers",
 ]
 
 # need to ensure build directories aren't excluded from recursion

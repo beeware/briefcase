@@ -4,7 +4,7 @@ This guide will walk you through the process of publishing an app to the Apple A
 
 /// note | Note
 
-The Apple App Store makes frequent changes to the workflows and nomenclature associated with publishing apps. As a result, it's very difficult to keep a like this one up to date. If you spot any problems, [let us know](https://github.com/beeware/briefcase/issues/new?assignees=&labels=bug,documentation,apple&projects=&template=bug_report.yml).
+The Apple App Store makes frequent changes to the workflows and nomenclature associated with publishing apps. As a result, it's very difficult to keep a guide like this one up to date. If you spot any problems, [let us know](https://github.com/beeware/briefcase/issues/new?assignees=&labels=bug,documentation,apple&projects=&template=bug_report.yml).
 
 ///
 
