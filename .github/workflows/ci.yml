@@ -27,6 +27,9 @@ defaults:
 env:
   FORCE_COLOR: "1"
 
+permissions:
+  contents: read
+
 jobs:
   pre-commit:
     name: Pre-commit checks
