@@ -204,7 +204,16 @@ However, if you need to override this default value, you can define [`version_tr
 
 ### `create_desktop_shortcut`
 
-Whether the installer should default to creating a desktop shortcut. Defaults to `False`.
+/// note | Only used for MSI packaging
+///
+
+Windows MSI installers are able to provide an option to the user to create a desktop shortcut to start the application.
+
+If this setting is set to `True`, the installer will include a checkbox, enabled by default. The user installing the app can then opt out of creating a desktop shortcut for the app.
+
+If this setting is set to `False`, the installer will include the checkbox, but it will be *disabled* by default. The user installing the app can then opt into creating a desktop shortcut for the app.
+
+If this setting is undefined, or set to an empty string, the installer will not include an option to create a shortcut, and no shortcut will be created.
 
 ## Installer/uninstaller options
 
