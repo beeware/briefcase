@@ -10,6 +10,10 @@ from briefcase.commands import CreateCommand
 from briefcase.exceptions import BriefcaseCommandError
 from briefcase.integrations.docker import Docker, DockerAppContext
 from briefcase.integrations.subprocess import Subprocess
+from briefcase.integrations.virtual_environment import (
+    NoOpVirtualEnvironment,
+    VenvVirtualEnvironment,
+)
 from briefcase.platforms.linux import LocalRequirementsMixin
 
 from ...utils import create_file, create_tgz_file, create_zip_file
@@ -142,6 +146,52 @@ def other_package(create_command, first_app_config):
             ("other.py", "Python source"),
         ],
     )
+
+
+def test_create_app_environment(
+    mock_venv,
+    no_docker_create_command,
+    first_app_config,
+    tmp_path,
+):
+    """A Linux virtual environment can be created."""
+    no_docker_create_command.tools.subprocess = MagicMock()
+    no_docker_create_command.tools[
+        first_app_config
+    ].app_context = no_docker_create_command.tools.subprocess
+
+    # Create the app environment
+    venv = no_docker_create_command.create_app_environment(
+        first_app_config, "Linux", "x86_64", "venv"
+    )
+
+    assert isinstance(venv, VenvVirtualEnvironment)
+    assert venv.platform == "Linux"
+    assert venv.arch == "x86_64"
+
+
+@pytest.mark.skipif(
+    sys.platform == "win32",
+    reason="Windows paths aren't converted in Docker context",
+)
+def test_create_app_environment_in_docker(
+    mock_venv,
+    create_command,
+    first_app_config,
+    tmp_path,
+):
+    """If Docker is used, all venvs are converted to no-ops."""
+    create_command.tools.subprocess = MagicMock()
+    create_command.tools[first_app_config].app_context = create_command.tools.subprocess
+
+    # Create the app environment
+    venv = create_command.create_app_environment(
+        first_app_config, "Linux", "x86_64", "venv"
+    )
+
+    assert isinstance(venv, NoOpVirtualEnvironment)
+    assert venv.platform == "Linux"
+    assert venv.arch == "x86_64"
 
 
 @pytest.mark.skipif(

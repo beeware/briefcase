@@ -122,29 +122,16 @@ def test_no_system_path(venv, venv_bin_dir, monkeypatch):
 
 
 @pytest.mark.parametrize(
-    ("platform", "arch", "pythonpath"),
+    ("platform", "arch"),
     [
-        (
-            "iOS",
-            "arm64",
-            "support/Python.xcframework/ios-arm64/platform-config/arm64-iphoneos",
-        ),
-        (
-            "iOS:simulator",
-            "arm64",
-            "support/Python.xcframework/ios-arm64_x86_64-simulator/platform-config/arm64-iphonesimulator",
-        ),
-        (
-            "iOS:simulator",
-            "x86_64",
-            "support/Python.xcframework/ios-arm64_x86_64-simulator/platform-config/x86_64-iphonesimulator",
-        ),
+        ("iphoneos", "arm64"),
+        ("iphonesimulator", "arm64"),
+        ("iphonesimulator", "x86_64"),
     ],
 )
 def test_cross_enironments(
     platform,
     arch,
-    pythonpath,
     venv,
     user_path,
     system_path,
@@ -153,9 +140,9 @@ def test_cross_enironments(
     tmp_path,
 ):
     """An iOS device gets a special PYTHONPATH addition."""
-    # "gothic" isn't a real iOS arch, but it lets us confirm
     venv.platform = platform
     venv.arch = arch
+    venv.platform_path = tmp_path / "support"
 
     monkeypatch.setenv("PATH", system_path)
     monkeypatch.setenv("VIRTUAL_ENV", "base-venv-value")
@@ -178,4 +165,4 @@ def test_cross_enironments(
     assert "PYTHONHOME" not in result
 
     # The PYTHONPATH has been set to include the custom additions.
-    assert result["PYTHONPATH"] == str(tmp_path / pythonpath)
+    assert result["PYTHONPATH"] == str(tmp_path / "support")

@@ -25,7 +25,6 @@ def noop_venv(first_app, mock_tools, base_venv_path, tmp_path):
         app=first_app,
         tools=mock_tools,
         base_path=base_venv_path,
-        support_path=tmp_path / "support",
     )
 
 
@@ -81,7 +80,6 @@ def mock_venv(first_app, mock_tools, base_venv_path, tmp_path):
         app=first_app,
         tools=mock_tools,
         base_path=base_venv_path,
-        support_path=tmp_path / "support",
     )
 
 

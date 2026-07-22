@@ -181,5 +181,9 @@ def mock_venv(mock_tools, base_venv_path):
     venv.tools = mock_tools
     venv.name = "mock-venv"
     venv.base_path = base_venv_path
+    venv.venv_path = base_venv_path / "mock-venv"
+
+    # create the venv directory
+    venv.venv_path.mkdir(parents=True)
 
     return venv

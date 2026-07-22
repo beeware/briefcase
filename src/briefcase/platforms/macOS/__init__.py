@@ -109,12 +109,23 @@ class macOSMixin(_MixinBase):
             self.tools.platform.machine() == "x86_64"
             and "ARM64" in self.tools.platform.version()
         ):
-            raise BriefcaseCommandError(
-                "The Python interpreter that is being used to run Briefcase has been "
-                "compiled for x86_64, and is running in emulation mode on Apple "
-                "Silicon hardware. You must use a Python interpreter that has been "
-                "compiled for Apple Silicon, or is a Universal binary."
-            )
+            if bool(self.tools.os.getenv("BRIEFCASE_ALLOW_EMULATION", "")):
+                self.console.warning_banner(
+                    "Running in CPU emulation mode",
+                    (
+                        "The Python interpreter that is being used to run Briefcase "
+                        "has been compiled for x86_64, and is running in emulation "
+                        "mode on ARM64 hardware. This configuration should not be used "
+                        "for production apps."
+                    ),
+                )
+            else:
+                raise BriefcaseCommandError(
+                    "The Python interpreter that is being used to run Briefcase has "
+                    "been compiled for x86_64, and is running in emulation mode on "
+                    "Apple Silicon hardware. You must use a Python interpreter that "
+                    "has been compiled for Apple Silicon, or is a Universal binary."
+                )
 
         super().verify_tools()
 
@@ -133,11 +144,17 @@ class macOSMixin(_MixinBase):
         # Ensure the environment manager supports universal apps if we're trying
         # to build one.
         venv_class = self.tools.virtual_environment[app.env_manager]
-        if venv_class.provides_python and getattr(app, "universal_build", True):
-            raise BriefcaseCommandError(
-                "Briefcase doesn't support creating universal apps "
-                "when the environment provides the Python library"
-            )
+        if venv_class.provides_python:
+            if getattr(app, "universal_build", True):
+                raise BriefcaseCommandError(
+                    "Briefcase doesn't support creating universal apps "
+                    "when the environment provides the Python library"
+                )
+            elif self.tools.host_arch == "x86_64":
+                raise BriefcaseCommandError(
+                    "Briefcase doesn't support creating x86_64 apps "
+                    "when the environment provides the Python library"
+                )
 
     def is_icloud_synced(self, path: Path) -> bool:
         """Determine if a path is on an iCloud drive.
@@ -254,11 +271,32 @@ class macOSCreateMixin(AppPackagesMergeMixin):
         if venv.provides_python:
             # Read the minimum supported macOS version from the environment's
             # Python package metadata.
-            python_record = next((venv.venv_path / "conda-meta").glob("python-*.json"))
-            depends = json.loads(python_record.read_text())["depends"]
-            support_min_version = next(
-                dep.split(">=")[1] for dep in depends if dep.startswith("__osx")
-            )
+            try:
+                python_record = next(
+                    (venv.venv_path / "conda-meta").glob("python-*.json")
+                )
+                depends = json.loads(python_record.read_text(encoding="utf-8"))[
+                    "depends"
+                ]
+            except StopIteration:
+                raise BriefcaseCommandError(
+                    "Unable to find Python environment configuration file."
+                ) from None
+            except json.decoder.JSONDecodeError:
+                raise BriefcaseCommandError(
+                    "Unable to parse Python environment configuration file."
+                ) from None
+            else:
+                try:
+                    support_min_version = next(
+                        dep.split(">=")[1] for dep in depends if dep.startswith("__osx")
+                    ).strip()
+                except Exception as e:
+                    raise BriefcaseCommandError(
+                        "Could not extract minimum macOS version from "
+                        "Python environment metadata."
+                    ) from e
+
         else:
             try:
                 # Determine the min macOS version from the framework metadata

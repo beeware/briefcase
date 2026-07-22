@@ -76,7 +76,6 @@ def test_prepare_creates_parent_directory(first_app, mock_tools, tmp_path):
         app=first_app,
         tools=mock_tools,
         base_path=tmp_path / "deep" / "missing" / "venv",
-        support_path=tmp_path / "support",
     )
 
     assert venv.prepare()

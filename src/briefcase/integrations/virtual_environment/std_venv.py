@@ -107,17 +107,8 @@ class VenvVirtualEnvironment(VirtualEnvironment):
         env["VIRTUAL_ENV"] = os.fspath(self.venv_path)
         env.pop("PYTHONHOME", None)
 
-        # Make the environment a cross-build environment
-        if self.platform == "iOS":
-            env["PYTHONPATH"] = str(
-                self.support_path
-                / "Python.xcframework/ios-arm64/platform-config/arm64-iphoneos"
-            )
-        elif self.platform == "iOS:simulator":
-            env["PYTHONPATH"] = str(
-                self.support_path
-                / "Python.xcframework/ios-arm64_x86_64-simulator/platform-config"
-                / f"{self.arch}-iphonesimulator"
-            )
+        # Make the environment an iOS cross-build environment
+        if self.platform in {"iphoneos", "iphonesimulator"}:
+            env["PYTHONPATH"] = str(self.platform_path)
 
         return env

@@ -56,7 +56,10 @@ class macOSXcodeCreateCommand(macOSXcodeMixin, macOSCreateMixin, CreateCommand):
     ):
         """Symlink the managed Python environment into a location where it can be used
         by Xcode."""
-        (self.support_path(app) / "Python").symlink_to(venv.venv_path)
+        python_lib = self.support_path(app) / "Python"
+        if python_lib.exists():
+            python_lib.unlink()
+        python_lib.symlink_to(venv.venv_path)
 
 
 class macOSXcodeOpenCommand(macOSXcodeMixin, OpenCommand):

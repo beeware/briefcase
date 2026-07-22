@@ -5,6 +5,7 @@ import plistlib
 import subprocess
 import time
 from pathlib import Path
+from typing import Literal
 from uuid import UUID
 
 from packaging.version import Version
@@ -18,7 +19,7 @@ from briefcase.commands import (
     RunCommand,
     UpdateCommand,
 )
-from briefcase.config import FinalizedAppConfig
+from briefcase.config import EnvManagerT, FinalizedAppConfig
 from briefcase.console import Console
 from briefcase.debuggers.base import AppPackagesPathMappings
 from briefcase.exceptions import (
@@ -310,6 +311,48 @@ class iOSXcodeCreateCommand(iOSXcodePassiveMixin, CreateCommand):
             "info": info,
         }
 
+    def create_app_environment(
+        self,
+        app: FinalizedAppConfig,
+        platform: str,
+        arch: str,
+        env_manager: EnvManagerT | None | Literal["noop"] = None,
+        recreate: bool = True,
+    ):
+        """Create an isolated iOS virtual environment in which the app can be built.
+
+        :param app: The config object for the app
+        :param platform: The platform being targeted.
+        :param arch: The architecture for the environment.
+        :param env_manager: An explicit environment manager to use. Defaults to the
+            app's configured environment manager.
+        :param recreate: If the environment already exists, should it be re-created?
+            Defaults to True (i.e., recreate by default).
+        """
+        # The default invocation will be with self.platform, which will be "iOS".
+        # Interpret that as the device; interpret all others as simulators.
+        if platform == "iOS":
+            platform = "iphoneos"
+            platform_path = (
+                self.support_path(app)
+                / "Python.xcframework/ios-arm64/platform-config/arm64-iphoneos"
+            )
+        else:
+            platform_path = (
+                self.support_path(app)
+                / "Python.xcframework/ios-arm64_x86_64-simulator/platform-config"
+                / f"{arch}-iphonesimulator"
+            )
+
+        return super().create_app_environment(
+            app=app,
+            platform=platform,
+            arch=arch,
+            env_manager=env_manager,
+            recreate=recreate,
+            platform_path=platform_path,
+        )
+
     def _install_app_requirements(
         self,
         app: FinalizedAppConfig,
@@ -378,7 +421,7 @@ with Python {self.python_version_tag} and a minimum iOS version of {ios_min_vers
         # current architecture
         sim_venv = self.create_app_environment(
             app,
-            platform="iOS:simulator",
+            platform="iphonesimulator",
             arch=self.tools.host_arch,
         )
         with (

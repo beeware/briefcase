@@ -20,10 +20,10 @@ class VirtualEnvironment(ABC):
         app: FinalizedAppConfig,
         tools: ToolCache,
         base_path: Path,
-        support_path: Path | None,
         *,
         platform: str | None = None,
         arch: str | None = None,
+        platform_path: Path | None = None,
     ):
         """Initialise the virtual environment on a specific path.
 
@@ -38,14 +38,15 @@ class VirtualEnvironment(ABC):
         :param arch: The architecture for the environment. If this isn't the
             host OS architeceture, the environment will be a cross build
             environment.
+        :param platform_path: The path where platform details are stored.
         """
         self.name = name
         self.app = app
         self.tools = tools
         self.base_path = base_path
-        self.support_path = support_path
         self.platform = platform
         self.arch = arch
+        self.platform_path = platform_path
 
     @property
     def venv_path(self):

@@ -293,6 +293,7 @@ class CreateCommand(BaseCommand):
         arch: str,
         env_manager: EnvManagerT | None | Literal["noop"] = None,
         recreate: bool = True,
+        **kwargs,
     ) -> VirtualEnvironment:
         """Create an isolated virtual environment in which the app can be built.
 
@@ -313,10 +314,10 @@ class CreateCommand(BaseCommand):
             app=app,
             tools=self.tools,
             base_path=self.base_path,
-            name=f"{self.platform}-{self.tools.host_arch}",
-            support_path=self.support_path(app),
+            name=f"{platform}-{arch}",
             platform=platform,
             arch=arch,
+            **kwargs,
         )
         venv.prepare(recreate=recreate)
         return venv

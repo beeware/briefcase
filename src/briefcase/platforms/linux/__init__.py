@@ -143,9 +143,11 @@ class LocalRequirementsMixin(_MixinBase):  # pragma: no-cover-if-is-windows
         platform: str,
         arch: str,
         env_manager: str | None = None,
-        env: dict[str, str | None] | None = None,
         recreate: bool = True,
+        **kwargs,
     ) -> VirtualEnvironment:
+        # If the app is using Docker, don't use a virtual environment;
+        # the Docker container *is* the environment
         if self.use_docker:
             env_manager = "noop"
 
@@ -155,6 +157,7 @@ class LocalRequirementsMixin(_MixinBase):  # pragma: no-cover-if-is-windows
             arch=arch,
             env_manager=env_manager,
             recreate=recreate,
+            **kwargs,
         )
 
     def local_requirements_path(self, app):

@@ -25,3 +25,23 @@ def test_verify_macos_cpu_arch(dummy_command):
         ),
     ):
         dummy_command.verify_tools()
+
+
+def test_verify_macos_cpu_arch_warning(monkeypatch, dummy_command, capsys):
+    """Rosetta emulation is allowed if you opt in, with a warning."""
+    # Set the environment variable to allow emulation
+    monkeypatch.setenv("BRIEFCASE_ALLOW_EMULATION", "1")
+
+    # Create a Mock object for the platform module
+    dummy_command.tools.platform = MagicMock(spec_set=platform)
+
+    # Simulate that Mock platform is running on Apple Silicon with an x86_64 Python interpreter
+    dummy_command.tools.platform.machine = MagicMock(return_value="x86_64")
+    dummy_command.tools.platform.version = MagicMock(return_value="ARM64")
+
+    dummy_command.verify_tools()
+
+    # A warning was raised, but the app can continue.
+    stdout, stderr = capsys.readouterr()
+    assert "Running in CPU emulation mode" in stdout
+    assert stderr == ""

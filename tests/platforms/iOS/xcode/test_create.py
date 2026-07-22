@@ -39,6 +39,60 @@ def test_unsupported_host_os(create_command, host_os):
         create_command()
 
 
+@pytest.mark.parametrize(
+    ("platform", "arch", "venv_platform", "platform_path"),
+    [
+        (
+            "iOS",
+            "arm64",
+            "iphoneos",
+            "Python.xcframework/ios-arm64/platform-config/arm64-iphoneos",
+        ),
+        (
+            "iphonesimulator",
+            "arm64",
+            "iphonesimulator",
+            "Python.xcframework/ios-arm64_x86_64-simulator/platform-config/arm64-iphonesimulator",
+        ),
+        (
+            "iphonesimulator",
+            "x86_64",
+            "iphonesimulator",
+            "Python.xcframework/ios-arm64_x86_64-simulator/platform-config/x86_64-iphonesimulator",
+        ),
+    ],
+)
+def test_create_app_environment(
+    create_command,
+    first_app_generated,
+    tmp_path,
+    platform,
+    arch,
+    venv_platform,
+    platform_path,
+):
+    """An iOS app can create cross-environments with a platform path."""
+    create_command.tools.subprocess = mock.MagicMock()
+    create_command.tools[
+        first_app_generated
+    ].app_context = create_command.tools.subprocess
+
+    venv = create_command.create_app_environment(
+        first_app_generated,
+        platform,
+        arch,
+        "venv",
+    )
+
+    assert venv.platform == venv_platform
+    assert venv.arch == arch
+    assert venv.name == f"{venv_platform}-{arch}"
+    assert (
+        venv.platform_path
+        == tmp_path / "base_path/build/first-app/ios/xcode/Support" / platform_path
+    )
+
+
 def test_install_requirements(
     create_command,
     mock_venv,

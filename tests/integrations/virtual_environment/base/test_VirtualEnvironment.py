@@ -8,9 +8,9 @@ def test_create(first_app, mock_tools, base_venv_path, tmp_path):
         app=first_app,
         tools=mock_tools,
         base_path=base_venv_path,
-        support_path=tmp_path / "support",
         platform="different",
         arch="gothic",
+        platform_path=tmp_path / "support",
     )
 
     assert not venv.exists()
@@ -20,6 +20,6 @@ def test_create(first_app, mock_tools, base_venv_path, tmp_path):
     assert venv.name == "forest"
     assert venv.base_path == base_venv_path
     assert venv.venv_path == base_venv_path / ".briefcase/first-app/mock_venv-forest"
-    assert venv.support_path == tmp_path / "support"
+    assert venv.platform_path == tmp_path / "support"
     assert venv.arch == "gothic"
     assert venv.platform == "different"

@@ -1,3 +1,4 @@
+import json
 import os
 import shutil
 import sys
@@ -7,6 +8,7 @@ from unittest import mock
 import pytest
 
 from briefcase.exceptions import BriefcaseCommandError, RequirementsInstallError
+from briefcase.integrations.virtual_environment import VenvVirtualEnvironment
 from briefcase.platforms.macOS.app import macOSAppCreateCommand
 
 from ....utils import (
@@ -332,6 +334,51 @@ def test_generate_app_template(create_command, first_app, tmp_path):
     create_command.verify_not_on_icloud.assert_called_once_with(first_app, cleanup=True)
 
 
+def test_universal_managed_python(monkeypatch, create_command, first_app):
+    """If the app is universal but the environment manages python, an error is
+    raised."""
+    # Mock a universal app with an environment that provides Python
+    monkeypatch.setattr(VenvVirtualEnvironment, "provides_python", True)
+    first_app.universal_build = True
+
+    with pytest.raises(
+        BriefcaseCommandError,
+        match=(
+            r"Briefcase doesn't support creating universal apps "
+            r"when the environment provides the Python library"
+        ),
+    ):
+        create_command.verify_app(first_app)
+
+
+def test_x86_64_managed_python(monkeypatch, create_command, first_app):
+    """If the app is x86-64 but the environment manages python, an error is raised."""
+    # Mock a universal app with an environment that provides Python
+    monkeypatch.setattr(VenvVirtualEnvironment, "provides_python", True)
+    first_app.universal_build = False
+    create_command.tools.host_arch = "x86_64"
+
+    with pytest.raises(
+        BriefcaseCommandError,
+        match=(
+            r"Briefcase doesn't support creating x86_64 apps "
+            r"when the environment provides the Python library"
+        ),
+    ):
+        create_command.verify_app(first_app)
+
+
+def test_arm64_managed_python(monkeypatch, create_command, first_app):
+    """If the app is arm64 but the environment manages python, it can validate."""
+    # Mock a universal app with an environment that provides Python
+    monkeypatch.setattr(VenvVirtualEnvironment, "provides_python", True)
+    first_app.universal_build = False
+    create_command.tools.host_arch = "arm64"
+
+    # Validates without error.
+    create_command.verify_app(first_app)
+
+
 def test_generate_app_template_formal_name_mismatch(
     create_command,
     first_app,
@@ -370,6 +417,39 @@ def test_install_app_resources(create_command, first_app_templated, tmp_path):
     assert (
         os.path.getmtime(create_command.binary_path(first_app_templated))
         > initial_timestamp
+    )
+
+
+@pytest.mark.parametrize(
+    ("console_app", "provides_python", "revision", "expected_binary"),
+    [
+        (False, False, "37", "GUI-Stub-3.X-b37.zip"),
+        (True, False, "37", "Console-Stub-3.X-b37.zip"),
+        (False, True, "42", "GUI-LStub-3.X-b42.zip"),
+        (True, True, "42", "Console-LStub-3.X-b42.zip"),
+    ],
+)
+def test_stub_binary_filename(
+    monkeypatch,
+    create_command,
+    first_app_templated,
+    console_app,
+    provides_python,
+    revision,
+    expected_binary,
+):
+    """A valid support package URL is created for a support revision."""
+    first_app_templated.console_app = console_app
+
+    # Mock a universal app with an environment that provides Python
+    monkeypatch.setattr(VenvVirtualEnvironment, "provides_python", provides_python)
+
+    create_command.tools.sys = mock.MagicMock(spec=sys)
+    create_command.tools.sys.version_info = ("3", "X", "Y")
+
+    assert (
+        create_command.stub_binary_filename(revision, first_app_templated)
+        == expected_binary
     )
 
 
@@ -738,6 +818,149 @@ def test_invalid_min_os_version(mock_venv, create_command, first_app_templated):
 
     # No request was made to install requirements
     mock_venv.install_requirements.assert_not_called()
+
+
+def test_min_os_version_python_provided(
+    mock_venv,
+    create_command,
+    first_app_templated,
+    tmp_path,
+):
+    """If the environment provides Python, the min OS version can be extracted."""
+    create_command.tools.host_arch = "arm64"
+
+    # Mock a venv that provides python
+    mock_venv.provides_python = True
+    create_file(
+        tmp_path / "mock_venvs/mock-venv/conda-meta/python-3.X.json",
+        json.dumps(
+            {
+                "name": "python",
+                "version": "3.14.6",
+                "depends": [
+                    "__osx >=12.1",
+                    "bzip2 >=1.0.8,<2.0a0",
+                    "libexpat >=2.8.1,<3.0a0",
+                ],
+            }
+        ),
+    )
+
+    bundle_path = tmp_path / "base_path/build/first-app/macos/app"
+
+    # Configure a non-universal app with requirements.
+    first_app_templated.requires = ["first", "second==1.2.3", "third>=3.2.1"]
+    first_app_templated.universal_build = False
+
+    # Mock the find_binary_packages so we can confirm it was not invoked.
+    create_command.find_binary_packages = mock.Mock()
+
+    # Mock the thin command so we can confirm it was invoked.
+    create_command.thin_app_packages = mock.Mock()
+
+    # Mock the merge command so we can confirm it was not invoked.
+    create_command.merge_app_packages = mock.Mock()
+
+    create_command.install_app_requirements(first_app_templated, mock_venv)
+
+    # A request was made to install requirements on the host arch
+    mock_venv.install_requirements.assert_called_once_with(
+        [
+            "first",
+            "second==1.2.3",
+            "third>=3.2.1",
+        ],
+        allow_editable=False,
+        require_binary=True,
+        min_os_version="12.1",
+        install_path=bundle_path / "First App.app/Contents/Resources/app_packages",
+        install_hint=mock.ANY,
+    )
+
+    # We didn't try to find binary packages
+    create_command.find_binary_packages.assert_not_called()
+
+    # An attempt was made thin the "other" arch packages.
+    create_command.thin_app_packages.assert_called_once_with(
+        bundle_path / "First App.app/Contents/Resources/app_packages",
+        arch="arm64",
+    )
+
+    # An attempt was made to merge packages.
+    create_command.merge_app_packages.assert_not_called()
+
+
+def test_no_python_env_metadata(mock_venv, create_command, first_app_templated):
+    """If the environment doesn't provide metadata an error is raised."""
+    create_command.tools.host_arch = "arm64"
+
+    # Mock a venv that provides python, but no Python metadata file.
+    mock_venv.provides_python = True
+
+    with pytest.raises(
+        BriefcaseCommandError,
+        match=r"Unable to find Python environment configuration file.",
+    ):
+        create_command.install_app_requirements(first_app_templated, mock_venv)
+
+
+def test_invalid_python_env_metadata(
+    mock_venv,
+    create_command,
+    first_app_templated,
+    tmp_path,
+):
+    """If the environment provides unparsable metadata an error is raised."""
+    create_command.tools.host_arch = "arm64"
+
+    # Mock a venv that provides python
+    mock_venv.provides_python = True
+    create_file(
+        tmp_path / "mock_venvs/mock-venv/conda-meta/python-3.X.json",
+        "Not a valid metadata file",
+    )
+
+    with pytest.raises(
+        BriefcaseCommandError,
+        match=r"Unable to parse Python environment configuration file.",
+    ):
+        create_command.install_app_requirements(first_app_templated, mock_venv)
+
+
+def test_incomplete_python_env_metadata(
+    mock_venv,
+    create_command,
+    first_app_templated,
+    tmp_path,
+):
+    """If the environment provides unparsable metadata an error is raised."""
+    create_command.tools.host_arch = "arm64"
+
+    # Mock a venv that provides python, and Python environment metadata
+    # that doesn't specify a minimum macOS version
+    mock_venv.provides_python = True
+    create_file(
+        tmp_path / "mock_venvs/mock-venv/conda-meta/python-3.X.json",
+        json.dumps(
+            {
+                "name": "python",
+                "version": "3.14.6",
+                "depends": [
+                    "bzip2 >=1.0.8,<2.0a0",
+                    "libexpat >=2.8.1,<3.0a0",
+                ],
+            }
+        ),
+    )
+
+    with pytest.raises(
+        BriefcaseCommandError,
+        match=(
+            r"Could not extract minimum macOS version "
+            r"from Python environment metadata."
+        ),
+    ):
+        create_command.install_app_requirements(first_app_templated, mock_venv)
 
 
 @pytest.mark.parametrize(
@@ -1137,3 +1360,51 @@ def test_install_support_package(
 
     # The legacy content has been purged
     assert not (runtime_support_path / "python-stdlib/old-Python").exists()
+
+
+@pytest.mark.parametrize("reinstall", [True, False])
+def test_install_managed_python_env(
+    create_command,
+    mock_venv,
+    first_app_templated,
+    reinstall,
+    tmp_path,
+):
+    """A managed python environment will be copied into the final app."""
+    # Make the app's template look like a managed environment app
+    create_file(
+        create_command.bundle_path(first_app_templated) / "briefcase.toml",
+        """
+[paths]
+support_path="First App.app/Contents/Resources/python"
+""",
+    )
+
+    resource_path = (
+        create_command.bundle_path(first_app_templated)
+        / "First App.app/Contents/Resources/python"
+    )
+
+    if reinstall:
+        # Create some pre-existing managed Python content
+        create_file(resource_path / "lib/libpython.so", "old Python lib")
+        create_file(resource_path / "lib/old.so", "old lib")
+        create_file(resource_path / "other/content.txt", "other file")
+
+    # Create some mock content in the virtual environment
+    create_file(tmp_path / "mock_venvs/mock-venv/base.txt", "Top level file")
+    create_file(tmp_path / "mock_venvs/mock-venv/lib/libpython.so", "Python lib")
+    create_file(tmp_path / "mock_venvs/mock-venv/lib/site-packages/test.py", "Stdlib")
+
+    # Install the managed Python environment
+    create_command.install_managed_python_env(first_app_templated, mock_venv)
+
+    # The managed environment was copied to the final app.
+    # Deep directory structure is preserved.
+    assert (resource_path / "base.txt").exists()
+    assert (resource_path / "lib/libpython.so").exists()
+    assert (resource_path / "lib/site-packages/test.py").exists()
+
+    # Old content no longer exists.
+    assert not (resource_path / "lib/old.so").exists()
+    assert not (resource_path / "other/content.txt").exists()
