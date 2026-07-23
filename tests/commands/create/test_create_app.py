@@ -14,9 +14,9 @@ def test_create_app(tracking_create_command, tmp_path):
 
     # The right sequence of things will be done
     assert tracking_create_command.actions == [
+        ("generate", "first"),
         ("verify-app-template", "first"),
         ("verify-app-tools", "first"),
-        ("generate", "first"),
         ("create-app-env", "first", "Tester", "gothic"),
         ("support", "first"),
         ("code", "first", False),
@@ -59,9 +59,9 @@ def test_create_existing_app_overwrite(tracking_create_command, tmp_path):
 
     # The right sequence of things will be done
     assert tracking_create_command.actions == [
+        ("generate", "first"),
         ("verify-app-template", "first"),
         ("verify-app-tools", "first"),
-        ("generate", "first"),
         ("create-app-env", "first", "Tester", "gothic"),
         ("support", "first"),
         ("code", "first", False),
@@ -203,9 +203,9 @@ def test_create_app_with_stub(tracking_create_command, tmp_path):
 
     # The right sequence of things will be done
     assert tracking_create_command.actions == [
+        ("generate", "first"),
         ("verify-app-template", "first"),
         ("verify-app-tools", "first"),
-        ("generate", "first"),
         ("create-app-env", "first", "Tester", "gothic"),
         ("support", "first"),
         ("stub", "first"),
@@ -236,9 +236,9 @@ def test_create_app_managed_python_env(tracking_create_command, tmp_path, monkey
 
     # The right sequence of things will be done
     assert tracking_create_command.actions == [
+        ("generate", "first"),
         ("verify-app-template", "first"),
         ("verify-app-tools", "first"),
-        ("generate", "first"),
         ("create-app-env", "first", "Tester", "gothic"),
         ("code", "first", False),
         ("requirements", "Tester-gothic", "first", False, False),

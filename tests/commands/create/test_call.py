@@ -34,9 +34,9 @@ def test_create(tracking_create_command, tmp_path):
         ("finalize-app-config", "first"),
         ("finalize-app-config", "second"),
         # Create the first app
+        ("generate", "first"),
         ("verify-app-template", "first"),
         ("verify-app-tools", "first"),
-        ("generate", "first"),
         ("create-app-env", "first", "Tester", "gothic"),
         ("support", "first"),
         ("code", "first", False),
@@ -44,9 +44,9 @@ def test_create(tracking_create_command, tmp_path):
         ("resources", "first"),
         ("cleanup", "first"),
         # Create the second app
+        ("generate", "second"),
         ("verify-app-template", "second"),
         ("verify-app-tools", "second"),
-        ("generate", "second"),
         ("create-app-env", "second", "Tester", "gothic"),
         ("support", "second"),
         ("code", "second", False),
@@ -77,9 +77,9 @@ def test_create_single(tracking_create_command, tmp_path):
         # App config has been finalized
         ("finalize-app-config", "first"),
         # Create the first app
+        ("generate", "first"),
         ("verify-app-template", "first"),
         ("verify-app-tools", "first"),
-        ("generate", "first"),
         ("create-app-env", "first", "Tester", "gothic"),
         ("support", "first"),
         ("code", "first", False),
@@ -116,9 +116,9 @@ def test_create_app_single(tracking_create_command, app_flags):
         # App config has been finalized
         ("finalize-app-config", "first"),
         # Create the selected app
+        ("generate", "first"),
         ("verify-app-template", "first"),
         ("verify-app-tools", "first"),
-        ("generate", "first"),
         ("create-app-env", "first", "Tester", "gothic"),
         ("support", "first"),
         ("code", "first", False),
@@ -181,9 +181,9 @@ def test_create_app_all_flags(tracking_create_command):
         # App config has been finalized
         ("finalize-app-config", "first"),
         # Create the selected app
+        ("generate", "first"),
         ("verify-app-template", "first"),
         ("verify-app-tools", "first"),
-        ("generate", "first"),
         ("create-app-env", "first", "Tester", "gothic"),
         ("support", "first"),
         ("code", "first", False),
@@ -210,11 +210,11 @@ def test_create_external(tracking_create_command, tmp_path):
         ("verify-tools",),
         # App configs have been finalized
         ("finalize-app-config", "first"),
+        # Create the first app
+        ("generate", "first"),
         # Verify app config
         ("verify-app-template", "first"),
         ("verify-app-tools", "first"),
-        # Create the first app
-        ("generate", "first"),
         # Populate resources for the first app
         ("resources", "first"),
     ]
