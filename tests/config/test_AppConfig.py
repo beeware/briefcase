@@ -37,6 +37,7 @@ def test_minimal_AppConfig():
     assert config.formal_name == "myapp"
     assert config.class_name == "myapp"
     assert config.document_types == {}
+    assert config.env_manager == "venv"
 
     # There is no icon of any kind
     assert config.icon is None
@@ -81,6 +82,7 @@ def test_minimal_external_AppConfig():
     assert config.formal_name == "myapp"
     assert config.class_name == "myapp"
     assert config.document_types == {}
+    assert config.env_manager == "venv"
 
     # There is no icon of any kind
     assert config.icon is None
@@ -110,6 +112,7 @@ def test_extra_attrs():
         template="/path/to/template",
         sources=["src/myapp"],
         requires=["first", "second", "third"],
+        env_manager="venv",
         document_type={
             "document": {
                 "icon": "icon",
@@ -133,6 +136,7 @@ def test_extra_attrs():
     assert config.requires == ["first", "second", "third"]
     assert config.license == "MIT"
     assert config.license_files == ["LICENSE"]
+    assert config.env_manager == "venv"
 
     # Properties that are derived by default have been set explicitly
     assert config.formal_name == "My App!"
@@ -561,3 +565,19 @@ def test_capitalization():
 
     # The object has a meaningful REPL
     assert repr(config) == "<org.beeware.myapp v1.2.3 DraftAppConfig>"
+
+
+def test_unknown_env_manager():
+    with pytest.raises(
+        BriefcaseConfigError,
+        match=r"Unknown environment manager 'unknown'",
+    ):
+        DraftAppConfig(
+            app_name="bad-env-manager",
+            version="1.2.3",
+            bundle="org.beeware",
+            description="A simple app",
+            license="MIT",
+            license_files=["LICENSE"],
+            env_manager="unknown",
+        )

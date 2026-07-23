@@ -1,6 +1,7 @@
 import sys
 from pathlib import Path
 
+from briefcase.integrations.base import ToolCache
 from briefcase.integrations.subprocess import SubprocessArgsT
 from briefcase.integrations.virtual_environment.base import VirtualEnvironment
 
@@ -15,6 +16,13 @@ class NoOpVirtualEnvironment(VirtualEnvironment):
     Subprocess invocations forward `args` and `env` unchanged so the
     ambient process environment is preserved.
     """
+
+    env_type: str = "noop"
+
+    @classmethod
+    def verify(cls, tools: ToolCache):
+        """Verify that the environment manager is available."""
+        # No-op environment management is available in the standard library.
 
     @property
     def marker_path(self) -> Path:

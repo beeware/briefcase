@@ -1,14 +1,21 @@
-from briefcase.integrations.virtual_environment import NoOpVirtualEnvironment
-
-
-def test_clean(mock_tools, venv_path):
+def test_clean(noop_venv, first_app, mock_tools):
     """The marker file is removed by a clean."""
-    venv = NoOpVirtualEnvironment(mock_tools, venv_path)
 
-    assert venv.marker_path.exists()
+    # a no-ope environment always exists, but the marker file won't
+    assert noop_venv.exists()
+    assert not noop_venv.marker_path.exists()
 
-    venv.clean()
-    assert not venv.marker_path.exists()
+    # Marker path is created by preparing the environment
+    noop_venv.prepare()
+    assert noop_venv.exists()
+    assert noop_venv.marker_path.exists()
+
+    # Cleaning removes the marker file.
+    noop_venv.clean()
+    assert noop_venv.exists()
+    assert not noop_venv.marker_path.exists()
 
     # Cleaning a second time is a no-op
-    venv.clean()
+    noop_venv.clean()
+    assert noop_venv.exists()
+    assert not noop_venv.marker_path.exists()
