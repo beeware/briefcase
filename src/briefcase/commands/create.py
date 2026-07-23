@@ -914,11 +914,13 @@ class CreateCommand(BaseCommand):
             )
             self.tools.shutil.rmtree(bundle_path)
 
-        # Verify that the app configuration is valid.
-        self.verify_app(app)
-
         self.console.info("Generating application template...", prefix=app.app_name)
         self.generate_app_template(app=app)
+
+        # Verify that the app configuration is valid. This needs to happen *after*
+        # the template is generated, because verification may require files from
+        # the template (such as a Dockerfile).
+        self.verify_app(app)
 
         # External apps (apps that define 'external_package_path') need the packaging
         # metadata from the template, but not the app content, dependencies, support
