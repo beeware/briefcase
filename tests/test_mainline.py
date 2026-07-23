@@ -92,6 +92,10 @@ def test_command_warning(monkeypatch, pyproject_toml, tmp_path, capsys):
     # Set the test command line
     monkeypatch.setattr(sys, "argv", ["briefcase", "create"])
 
+    # Monkeypath app verification; there's some system properties we're
+    # not in a position to verify at this point
+    monkeypatch.setattr(CreateCommand, "verify_app", lambda self, app: None)
+
     # Monkeypatch a warning into the create command
     def sort_of_bad_generate_app_template(self, app):
         raise BriefcaseWarning(error_code=0, msg="This is bad, but not *really* bad")
@@ -135,6 +139,10 @@ def test_unknown_command_error(monkeypatch, pyproject_toml, capsys):
     """A command can raise an unknown error."""
     monkeypatch.setattr(sys, "argv", ["briefcase", "create"])
 
+    # Monkeypatch app verification; there are some system properties we're
+    # not in a position to verify at this point
+    monkeypatch.setattr(CreateCommand, "verify_app", lambda self, app: None)
+
     # Monkeypatch an error into the create command
     def bad_generate_app_template(self, app):
         raise ValueError("Bad value")
@@ -151,6 +159,10 @@ def test_unknown_command_error(monkeypatch, pyproject_toml, capsys):
 def test_interrupted_command(monkeypatch, pyproject_toml, tmp_path, capsys):
     """A command can be interrupted."""
     monkeypatch.setattr(sys, "argv", ["briefcase", "create"])
+
+    # Monkeypatch app verification; there are some system properties we're
+    # not in a position to verify at this point
+    monkeypatch.setattr(CreateCommand, "verify_app", lambda self, app: None)
 
     # Monkeypatch a keyboard interrupt into the create command
     def interrupted_generate_app_template(self, app):
@@ -173,6 +185,10 @@ def test_interrupted_command(monkeypatch, pyproject_toml, tmp_path, capsys):
 def test_interrupted_command_with_log(monkeypatch, pyproject_toml, tmp_path, capsys):
     """A log can be generated when a command is interrupted."""
     monkeypatch.setattr(sys, "argv", ["briefcase", "create", "--log"])
+
+    # Monkeypatch app verification; there are some system properties we're
+    # not in a position to verify at this point
+    monkeypatch.setattr(CreateCommand, "verify_app", lambda self, app: None)
 
     # Monkeypatch a keyboard interrupt into the create command
     def interrupted_generate_app_template(self, app):
