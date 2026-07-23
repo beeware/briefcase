@@ -266,6 +266,8 @@ def test_package_zip(package_command_with_files, first_app_config, kwargs, tmp_p
     assert package_command_with_files.tools.subprocess.run.mock_calls == []
 
     archive_file = tmp_path / "base_path/dist/First App-0.0.1.zip"
+    executable_path = package_command_with_files.binary_path(first_app_config)
+    remote_sources_config = f"{executable_path.name}.config"
     source_folders_and_files = (
         "app/",
         "app/first-app/",
@@ -282,9 +284,8 @@ def test_package_zip(package_command_with_files, first_app_config, kwargs, tmp_p
         "app/first-app-0.0.1.dist-info/top_level.txt",
         "app_packages/clr.py",
         "app_packages/toga_winforms/command.py",
+        remote_sources_config,
     )
-    executable_path = package_command_with_files.binary_path(first_app_config)
-    remote_sources_config = f"{executable_path.name}.config"
 
     # The zip file exists
     assert archive_file.exists()
@@ -292,13 +293,14 @@ def test_package_zip(package_command_with_files, first_app_config, kwargs, tmp_p
     # Check content of zip file
     with ZipFile(archive_file) as archive:
         root = "First App-0.0.1/"
-        expected_archive_members = (*source_folders_and_files, remote_sources_config)
         # All folders and files in the ZIP are expected.
         for name in archive.namelist():
-            assert name[len(root) :] in expected_archive_members
+            assert name[len(root) :] in source_folders_and_files
         # All expected files are in the ZIP.
-        for file in expected_archive_members:
+        for file in source_folders_and_files:
             assert f"{root}{file}" in archive.namelist()
+
+        # The remote source configuration file has the expected content.
         assert archive.read(f"{root}{remote_sources_config}").decode() == (
             '<?xml version="1.0" encoding="utf-8"?>\n'
             "<configuration>\n"
