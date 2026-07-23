@@ -215,10 +215,8 @@ def test_package_msi(
 ):
     """A Windows app can be packaged as an MSI."""
 
-    package_command.package_app(
-        external_first_app if external else first_app_config,
-        **kwargs,
-    )
+    app = external_first_app if external else first_app_config
+    package_command.package_app(app, **kwargs)
 
     assert package_command.tools.subprocess.run.mock_calls == [
         # Compile MSI
@@ -246,6 +244,9 @@ def test_package_msi(
             cwd=tmp_path / "base_path/build/first-app/windows/app",
         ),
     ]
+    # The .NET remote source configuration is only included in ZIP packages.
+    executable_path = package_command.binary_path(app)
+    assert not executable_path.with_name(f"{executable_path.name}.config").exists()
 
 
 @pytest.mark.parametrize(
@@ -282,6 +283,8 @@ def test_package_zip(package_command_with_files, first_app_config, kwargs, tmp_p
         "app_packages/clr.py",
         "app_packages/toga_winforms/command.py",
     )
+    executable_path = package_command_with_files.binary_path(first_app_config)
+    remote_sources_config = f"{executable_path.name}.config"
 
     # The zip file exists
     assert archive_file.exists()
@@ -289,13 +292,24 @@ def test_package_zip(package_command_with_files, first_app_config, kwargs, tmp_p
     # Check content of zip file
     with ZipFile(archive_file) as archive:
         root = "First App-0.0.1/"
-        # All folders and files in zip are from source
+        expected_archive_members = (*source_folders_and_files, remote_sources_config)
+        # All folders and files in the ZIP are expected.
         for name in archive.namelist():
-            # name.removeprefix(f'{root}') will only work in Python > 3.8
-            assert name[len(root) :] in source_folders_and_files
-        # All files from source are in zip
-        for file in source_folders_and_files:
+            assert name[len(root) :] in expected_archive_members
+        # All expected files are in the ZIP.
+        for file in expected_archive_members:
             assert f"{root}{file}" in archive.namelist()
+        assert archive.read(f"{root}{remote_sources_config}").decode() == (
+            '<?xml version="1.0" encoding="utf-8"?>\n'
+            "<configuration>\n"
+            "  <runtime>\n"
+            '    <loadFromRemoteSources enabled="true"/>\n'
+            "  </runtime>\n"
+            "</configuration>\n"
+        )
+
+    # The generated configuration is written directly to the ZIP, not the source tree.
+    assert not executable_path.with_name(remote_sources_config).exists()
 
 
 @pytest.mark.parametrize(
