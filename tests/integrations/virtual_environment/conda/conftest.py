@@ -1,3 +1,5 @@
+import sys
+
 import pytest
 
 from briefcase.integrations.virtual_environment import CondaVirtualEnvironment
@@ -11,3 +13,8 @@ def venv(first_app, mock_tools, base_path):
         tools=mock_tools,
         base_path=base_path,
     )
+
+
+@pytest.fixture
+def conda():
+    return "conda.bat" if sys.platform == "win32" else "conda"

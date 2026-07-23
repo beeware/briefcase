@@ -21,7 +21,7 @@ def test_install_requirements(mock_tools, venv, verbose, tmp_path):
 
     mock_tools.subprocess.run.assert_called_once_with(
         [
-            "conda",
+            venv.conda_exe,
             "install",
             "--prefix",
             venv.venv_path,
@@ -105,7 +105,7 @@ def test_install_requirements_path_formats(
 
     mock_tools.subprocess.run.assert_called_once_with(
         [
-            "conda",
+            venv.conda_exe,
             "run",
             "--prefix",
             venv.venv_path,
@@ -135,7 +135,7 @@ def test_install_mixed_requirements(mock_tools, venv, tmp_path):
     assert mock_tools.subprocess.run.mock_calls == [
         call(
             [
-                "conda",
+                venv.conda_exe,
                 "install",
                 "--prefix",
                 venv.venv_path,
@@ -147,7 +147,7 @@ def test_install_mixed_requirements(mock_tools, venv, tmp_path):
         ),
         call(
             [
-                "conda",
+                venv.conda_exe,
                 "run",
                 "--prefix",
                 venv.venv_path,
@@ -179,7 +179,7 @@ def test_disable_include_dependencies(mock_tools, venv, tmp_path):
     assert mock_tools.subprocess.run.mock_calls == [
         call(
             [
-                "conda",
+                venv.conda_exe,
                 "install",
                 "--prefix",
                 venv.venv_path,
@@ -192,7 +192,7 @@ def test_disable_include_dependencies(mock_tools, venv, tmp_path):
         ),
         call(
             [
-                "conda",
+                venv.conda_exe,
                 "run",
                 "--prefix",
                 venv.venv_path,
@@ -222,7 +222,7 @@ def test_extra_installer_args(mock_tools, venv):
 
     mock_tools.subprocess.run.assert_called_once_with(
         [
-            "conda",
+            venv.conda_exe,
             "install",
             "--prefix",
             venv.venv_path,
@@ -247,7 +247,7 @@ def test_install_no_requirements(mock_tools, venv, requires):
 def test_install_failure(mock_tools, venv):
     """An install failure is reported as a RequirementsInstallError."""
     mock_tools.subprocess.run.side_effect = subprocess.CalledProcessError(
-        cmd="conda", returncode=1
+        cmd=venv.conda_exe, returncode=1
     )
 
     with pytest.raises(RequirementsInstallError):
@@ -255,7 +255,7 @@ def test_install_failure(mock_tools, venv):
 
     mock_tools.subprocess.run.assert_called_once_with(
         [
-            "conda",
+            venv.conda_exe,
             "install",
             "--prefix",
             venv.venv_path,
@@ -269,7 +269,7 @@ def test_install_failure(mock_tools, venv):
 def test_pip_install_failure(mock_tools, venv):
     """An install failure in a local file is reported as a RequirementsInstallError."""
     mock_tools.subprocess.run.side_effect = subprocess.CalledProcessError(
-        cmd="conda", returncode=1
+        cmd=venv.conda_exe, returncode=1
     )
 
     with pytest.raises(RequirementsInstallError):
@@ -277,7 +277,7 @@ def test_pip_install_failure(mock_tools, venv):
 
     mock_tools.subprocess.run.assert_called_once_with(
         [
-            "conda",
+            venv.conda_exe,
             "run",
             "--prefix",
             venv.venv_path,

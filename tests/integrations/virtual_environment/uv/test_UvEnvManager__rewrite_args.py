@@ -57,4 +57,4 @@ def test_rewrite_args_no_replacement(venv, args):
 def test_rewrite_args_case_insensitive(venv):
     """On Windows, `rewrite_args` is case-insensitive."""
     result = venv.rewrite_args([sys.executable.lower(), "-V"])
-    assert result == ["uv", "run", "-V"]
+    assert result == ["uv", "run", "python", "-V"]

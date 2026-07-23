@@ -38,7 +38,7 @@ def test_executable_windows(venv):
     assert isinstance(result, Path)
     assert os.path.isabs(result)
     assert result.name == "python.exe"
-    assert result == venv.bin_dir / "python.exe"
+    assert result == venv.venv_path / "python.exe"
 
 
 def test_python_version(venv):

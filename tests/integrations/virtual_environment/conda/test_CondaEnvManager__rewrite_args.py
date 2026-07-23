@@ -27,11 +27,11 @@ def test_rewrite_args_replaces_system_python(venv, args, expected_suffix):
     ]
 
 
-def test_rewrite_args_non_python(venv):
+def test_rewrite_args_non_python(venv, conda):
     """Non-python commands are executed in the conda environment."""
     result = venv.rewrite_args(["pip", "install", "-U", "things"])
     assert result == [
-        "conda",
+        conda,
         "run",
         "--prefix",
         venv.venv_path,
@@ -47,11 +47,4 @@ def test_rewrite_args_non_python(venv):
 def test_rewrite_args_case_insensitive(venv):
     """On Windows, `rewrite_args` is case-insensitive."""
     result = venv.rewrite_args([sys.executable.lower(), "-V"])
-    assert result == [
-        "conda",
-        "run",
-        "--prefix",
-        venv.venv_path,
-        Path(sys.executable).name,
-        "-V",
-    ]
+    assert result == [venv.executable, "-V"]

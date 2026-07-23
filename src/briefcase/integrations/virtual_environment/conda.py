@@ -26,6 +26,8 @@ class CondaVirtualEnvironment(VirtualEnvironment):
     provides_python: bool = True
     verified: bool = False
 
+    conda_exe: str = "conda.bat" if sys.platform == "win32" else "conda"
+
     @classmethod
     def verify(cls, tools: ToolCache):
         """Verify that the environment manager is available."""
@@ -35,7 +37,7 @@ class CondaVirtualEnvironment(VirtualEnvironment):
 
         try:
             output = (
-                tools.subprocess.check_output(["conda", "--version"])
+                tools.subprocess.check_output([cls.conda_exe, "--version"])
                 .strip("\n")
                 .split(" ")
             )
@@ -77,10 +79,6 @@ active Conda environment.
             if self.tools.host_os == "Windows"
             else self.bin_dir / "python"
         )
-
-    @property
-    def conda_exe(self):
-        return "conda.bat" if self.tools.host_os == "Windows" else "conda"
 
     def prepare(self, recreate=False) -> bool:
         """Prepare a conda environment at the given path.

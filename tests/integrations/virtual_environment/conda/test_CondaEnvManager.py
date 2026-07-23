@@ -29,7 +29,12 @@ def test_manager(mock_tools):
     assert mock_tools.virtual_environment["conda"] == CondaVirtualEnvironment
 
     # The existence of conda was verified.
-    mock_tools.subprocess.check_output.assert_called_once_with(["conda", "--version"])
+    mock_tools.subprocess.check_output.assert_called_once_with(
+        [
+            CondaVirtualEnvironment.conda_exe,
+            "--version",
+        ]
+    )
 
     # Verification only occurs on first use
     # Reset the mock, then get a second conda environment.
@@ -57,7 +62,9 @@ def test_conda_not_available(mock_tools):
         assert mock_tools.virtual_environment["conda"] == CondaVirtualEnvironment
 
     # uv --version was invoked
-    mock_tools.subprocess.check_output.assert_called_once_with(["conda", "--version"])
+    mock_tools.subprocess.check_output.assert_called_once_with(
+        [CondaVirtualEnvironment.conda_exe, "--version"]
+    )
 
 
 def test_conda_too_old(mock_tools):
@@ -76,7 +83,9 @@ def test_conda_too_old(mock_tools):
         assert mock_tools.virtual_environment["conda"] == CondaVirtualEnvironment
 
     # conda --version was invoked
-    mock_tools.subprocess.check_output.assert_called_once_with(["conda", "--version"])
+    mock_tools.subprocess.check_output.assert_called_once_with(
+        [CondaVirtualEnvironment.conda_exe, "--version"]
+    )
 
 
 @pytest.mark.parametrize("recreate", [True, False])
@@ -87,7 +96,7 @@ def test_create(mock_tools, venv, base_path, recreate, verbose):
 
     # Mock a side effect of calling run that creates the pyvenv.cfg marker file.
     def mock_run(cmd, *args, **kwargs):
-        if cmd[:2] == ["conda", "create"]:
+        if cmd[:2] == [CondaVirtualEnvironment.conda_exe, "create"]:
             (Path(cmd[3]) / "conda-meta").mkdir(parents=True)
 
     mock_tools.subprocess.run.side_effect = mock_run
@@ -101,7 +110,7 @@ def test_create(mock_tools, venv, base_path, recreate, verbose):
 
     mock_tools.subprocess.run.assert_called_once_with(
         [
-            "conda",
+            venv.conda_exe,
             "create",
             "--prefix",
             base_path / ".briefcase/first-app/conda-myenv",
@@ -147,7 +156,7 @@ def test_recreate(venv, mock_tools, base_path):
     assert venv.prepare(recreate=True)
     mock_tools.subprocess.run.assert_called_once_with(
         [
-            "conda",
+            venv.conda_exe,
             "create",
             "--prefix",
             base_path / ".briefcase/first-app/conda-myenv",
@@ -173,7 +182,7 @@ def test_venv_failure(venv, mock_tools, base_path):
 
     mock_tools.subprocess.run.assert_called_once_with(
         [
-            "conda",
+            venv.conda_exe,
             "create",
             "--prefix",
             base_path / ".briefcase/first-app/conda-myenv",
