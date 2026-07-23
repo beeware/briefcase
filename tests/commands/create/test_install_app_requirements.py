@@ -230,7 +230,7 @@ def test_app_packages_requirement_installer_args_path_transformed(
             "--no-user",
             f"--target={app_packages_path}",
             "--extra-index-url",
-            os.path.abspath(create_command.base_path / "packages"),
+            (create_command.base_path / "packages").resolve(),
             "package",
         ],
         check=True,

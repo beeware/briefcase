@@ -4,7 +4,6 @@ import argparse
 import hashlib
 import os
 import platform
-import re
 import shutil
 import subprocess
 import sys
@@ -29,8 +28,6 @@ from briefcase.integrations.git import Git
 from briefcase.integrations.subprocess import NativeAppContext
 
 from .base import BaseCommand, full_options
-
-relative_path_matcher = re.compile(r"^\.{1,2}[\\/]")
 
 
 def cookiecutter_cache_path(template):
@@ -569,7 +566,12 @@ class CreateCommand(BaseCommand):
                         f.write(f"{requirement}\n")
 
             if requirement_installer_args_path:
-                pip_args = "\n".join(self._extra_pip_args(app))
+                pip_args = "\n".join(
+                    self.tools.file.resolve_relative_args(
+                        app.requirement_installer_args,
+                        self.base_path,
+                    )
+                )
                 requirement_installer_args_path.write_text(
                     f"{pip_args}\n", encoding="utf-8"
                 )
@@ -589,19 +591,10 @@ class CreateCommand(BaseCommand):
         :param app: The app configuration
         :returns: A list of additional arguments
         """
-        args: list[str] = []
-        for argument in app.requirement_installer_args:
-            to_append = argument
-            if relative_path_matcher.match(argument) and self.tools.file.is_local_path(
-                argument
-            ):
-                abs_path = os.path.abspath(self.base_path / argument)
-                if Path(abs_path).exists():
-                    to_append = abs_path
-
-            args.append(to_append)
-
-        return args
+        return self.tools.file.resolve_relative_args(
+            app.requirement_installer_args,
+            self.base_path,
+        )
 
     def _pip_install(
         self,
