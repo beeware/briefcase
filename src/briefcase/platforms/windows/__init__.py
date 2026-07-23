@@ -98,12 +98,23 @@ class WindowsMixin(_MixinBase):
             self.tools.host_arch == "ARM64"
             and "AMD64" in self.tools.platform.python_compiler()
         ):
-            raise UnsupportedHostError(
-                "The Python interpreter that is being used to run Briefcase has been "
-                "compiled for x86_64, and is running in emulation mode on ARM64 "
-                "hardware. You must use a Python interpreter that has been "
-                "compiled for ARM64."
-            )
+            if bool(self.tools.os.getenv("BRIEFCASE_ALLOW_EMULATION", "")):
+                self.console.warning_banner(
+                    "Running in CPU emulation mode",
+                    (
+                        "The Python interpreter that is being used to run Briefcase "
+                        "has been compiled for x86_64, and is running in emulation "
+                        "mode on ARM64 hardware. This configuration should not be used "
+                        "for production apps."
+                    ),
+                )
+            else:
+                raise UnsupportedHostError(
+                    "The Python interpreter that is being used to run Briefcase has "
+                    "been compiled for x86_64, and is running in emulation mode on "
+                    "ARM64 hardware. You must use a Python interpreter that has been "
+                    "compiled for ARM64."
+                )
 
         if self.tools.host_arch not in ("AMD64", "ARM64"):
             if all(app.external_package_path for app in self.apps.values()):
@@ -148,6 +159,18 @@ Install a 64bit version of Python and run Briefcase again.
 
 
 class WindowsCreateCommand(CreateCommand):
+    def stub_binary_filename(
+        self,
+        support_revision: str,
+        app: FinalizedAppConfig,
+    ) -> str:
+        """The filename for the stub binary."""
+        stub_type = "Console" if app.console_app else "GUI"
+        return (
+            f"{stub_type}-Stub-{self.python_version_tag}-{self.tools.host_arch.lower()}"
+            f"-b{support_revision}.zip"
+        )
+
     def support_package_filename(self, support_revision):
         arch = self.tools.host_arch.lower()
         return f"python-{self.python_version_tag}.{support_revision}-embed-{arch}.zip"
