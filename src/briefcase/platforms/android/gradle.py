@@ -25,7 +25,11 @@ from briefcase.debuggers.base import (
     DebuggerConnectionMode,
 )
 from briefcase.exceptions import BriefcaseCommandError
-from briefcase.integrations.android_sdk import ADB, AndroidSDK
+from briefcase.integrations.android_sdk import (
+    ADB,
+    AndroidSDK,
+    min_api_level,
+)
 from briefcase.integrations.subprocess import SubprocessArgT
 
 if TYPE_CHECKING:
@@ -221,11 +225,14 @@ class GradleCreateCommand(GradleMixin, CreateCommand):
                 "androidx.swiperefreshlayout:swiperefreshlayout:1.1.0",
             ]
 
+        min_os_version = min_api_level(app)
+
         return {
             "version_code": version_code,
             "safe_formal_name": safe_formal_name(app.formal_name),
             "build_gradle_dependencies": {"implementation": dependencies},
             "ndk": {"abi_filters": getattr(app, "android_abis", None)},
+            "min_os_version": min_os_version,
         }
 
     def permissions_context(
@@ -486,7 +493,7 @@ class GradleRunCommand(GradleMixin, RunCommand):
         # then start it.
         if device is None:
             if avd is None:
-                avd = self.tools.android_sdk.create_emulator()
+                avd = self.tools.android_sdk.create_emulator(app)
             else:
                 # Ensure the system image for the requested emulator is available.
                 # This step is only needed if the AVD already existed; you have to

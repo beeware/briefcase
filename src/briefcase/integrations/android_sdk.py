@@ -10,7 +10,7 @@ import time
 from datetime import datetime
 from pathlib import Path
 
-from briefcase.config import PEP508_NAME_RE
+from briefcase.config import PEP508_NAME_RE, FinalizedAppConfig
 from briefcase.exceptions import (
     BriefcaseCommandError,
     IncompatibleToolError,
@@ -23,6 +23,7 @@ from briefcase.integrations.java import JDK
 from briefcase.integrations.subprocess import SubprocessArgT
 
 DEVICE_NOT_FOUND = re.compile(r"^error: device '[^']*' not found")
+ANDROID_MIN_OS_VERSION = 24
 
 
 def create_avd_validator(emulators):
@@ -37,6 +38,49 @@ def create_avd_validator(emulators):
         return True
 
     return _validate_avd_name
+
+
+def _parse_system_image(package: str):
+    """Parse a system image package identifier into its components.
+
+    :param package: e.g. ``"system-images;android-31;default;x86_64"``
+    :returns: A tuple of (api_level, tag, abi) or None if invalid.
+    """
+    parts = package.split(";")
+    if len(parts) != 4 or parts[0] != "system-images":
+        return None
+    return parts[1], parts[2], parts[3]
+
+
+def _api_level_sort_key(api_level: str) -> tuple:
+    """Sort key for API level strings, ordering numeric levels (and their ext suffixes)
+    numerically. Non-numeric levels sort after all numeric ones.
+
+    e.g. "android-34" -> (0, 34.0, 0)      "android-34-ext9" -> (0, 34.0, 9)
+    "android-36.0-Baklava" -> (0, 36.0, 0)      "android-CANARY" -> (1, "android-
+    CANARY")
+    """
+    value = api_level.split("-", 1)[
+        1
+    ]  # "34", "34-ext9", "36.1", "36.0-Baklava", "CANARY"
+    base, _, ext = value.partition("-ext")
+    base = base.split("-", 1)[
+        0
+    ]  # strip trailing "-Name" suffix, e.g. "36.0-Baklava" -> "36.0"
+    try:
+        return 0, float(base), int(ext) if ext else 0
+    except ValueError:
+        return 1, api_level
+
+
+def min_api_level(app: FinalizedAppConfig) -> int:
+    """The minimum API level to use for the app, as an int.
+
+    ``min_os_version`` may be configured as a string or an int, so it's
+    coerced to int here to avoid a TypeError when compared against
+    numeric API levels.
+    """
+    return int(getattr(app, "min_os_version", ANDROID_MIN_OS_VERSION))
 
 
 class AndroidDeviceNotAuthorized(BriefcaseCommandError):
@@ -183,8 +227,19 @@ class AndroidSDK(ManagedTool):
         return "pixel_7_pro"
 
     @property
+    def DEFAULT_API_LEVEL(self) -> str:
+        return "android-31"
+
+    @property
+    def DEFAULT_TAG(self) -> str:
+        return "default"
+
+    @property
     def DEFAULT_SYSTEM_IMAGE(self) -> str:
-        return f"system-images;android-31;default;{self.emulator_abi}"
+        return (
+            f"system-images;{self.DEFAULT_API_LEVEL}"
+            f";{self.DEFAULT_TAG};{self.emulator_abi}"
+        )
 
     @classmethod
     def sdk_path_from_env(cls, tools: ToolCache) -> tuple[str | None, str | None]:
@@ -701,6 +756,44 @@ connection.
         except KeyError:
             self.tools.console.debug(f"Device {avd!r} doesn't define a skin.")
 
+    def list_available_system_images(self, min_api_level: int) -> list[str]:
+        """Returns a sorted list of system image package identifiers available for the
+        current architecture and minimum Android version.
+
+        e.g., ``{"system-images;android-31;default;x86_64"}``
+
+        :param min_api_level: The minimum Android API level to include.
+        """
+
+        try:
+            output = self.tools.subprocess.check_output(
+                [self.sdkmanager_path, "--list"],
+                env=self.env,
+            )
+        except subprocess.CalledProcessError as e:
+            raise BriefcaseCommandError(
+                "Unable to invoke the Android SDK manager"
+            ) from e
+
+        images = []
+        for line in output.splitlines():
+            package = line.split("|")[0].strip()
+            parsed = _parse_system_image(package)
+            if parsed is None:
+                continue
+            api_level, _, abi = parsed
+            if abi != self.emulator_abi:
+                continue
+            api_level_str = api_level.split("-")[1]  # "android-31" -> "31"
+            try:
+                if int(api_level_str.split(".")[0]) < min_api_level:
+                    continue
+            except ValueError:
+                # Non-numeric API level (e.g. CANARY, CinnamonBun) always include.
+                pass
+            images.append(package)
+        return sorted(set(images))
+
     def list_installed_system_images(self) -> set[str]:
         """Returns a set of installed system image package identifiers.
 
@@ -1080,9 +1173,10 @@ In future, you can specify this device by running:
 
         return device, name, avd
 
-    def create_emulator(self) -> str:
+    def create_emulator(self, app: FinalizedAppConfig) -> str:
         """Create a new Android emulator.
 
+        :param app: The config object for the app.
         :returns: The AVD of the newly created emulator.
         """
         # Get the list of existing emulators
@@ -1113,8 +1207,49 @@ a default name '{default_avd}'.
         device_type = self.DEFAULT_DEVICE_TYPE
         skin = self.DEFAULT_DEVICE_SKIN
 
-        # TODO: Provide a list of options for system images.
-        system_image = self.DEFAULT_SYSTEM_IMAGE
+        # Get available images, raise an error if none found.
+        available_images = self.list_available_system_images(
+            min_api_level=min_api_level(app)
+        )
+        if not available_images:
+            raise BriefcaseCommandError(
+                f"""\
+No Android system images are available for your architecture
+({self.emulator_abi}).
+
+This may be caused by a network connectivity issue or an unsupported
+architecture. Check your network connection and re-run `briefcase run android`.
+"""
+            )
+
+        # Parse available images once for use in both selection questions.
+        parsed_images = [_parse_system_image(img) for img in available_images]
+
+        # Ask the user to select an API level.
+        api_levels = sorted(
+            {api_level for api_level, _, abi in parsed_images},
+            key=_api_level_sort_key,
+        )
+        api_level = self.tools.console.selection_question(
+            intro="Select the API level for the emulator:",
+            description="API level",
+            options=api_levels,
+            default=self.DEFAULT_API_LEVEL,
+        )
+
+        # Ask the user to select a tag for the chosen API level.
+        tags = sorted(
+            {tag for level, tag, _ in parsed_images if level == api_level},
+            key=lambda x: (0 if x == "default" else 1, x),
+        )
+        tag = self.tools.console.selection_question(
+            intro="Select the system image tag:",
+            description="Tag",
+            options=tags,
+            default=self.DEFAULT_TAG if self.DEFAULT_TAG in tags else tags[0],
+        )
+
+        system_image = f"system-images;{api_level};{tag};{self.emulator_abi}"
 
         self._create_emulator(
             avd=avd,
