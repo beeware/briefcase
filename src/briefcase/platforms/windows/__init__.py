@@ -27,6 +27,15 @@ else:
 
 DEFAULT_OUTPUT_FORMAT = "app"
 
+LOAD_FROM_REMOTE_SOURCES_CONFIG = """\
+<?xml version="1.0" encoding="utf-8"?>
+<configuration>
+  <runtime>
+    <loadFromRemoteSources enabled="true"/>
+  </runtime>
+</configuration>
+"""
+
 
 def txt_to_rtf(txt: str | list[str]) -> str:
     """Convert plain text to a full RTF document.
@@ -678,3 +687,12 @@ class WindowsPackageCommand(PackageCommand):
                     archive.write(
                         file_path, zip_root / PurePath(file_path).relative_to(source)
                     )
+
+                executable_path = self.binary_path(app)
+                config_path = executable_path.with_name(
+                    f"{executable_path.name}.config"
+                )
+                archive.writestr(
+                    (zip_root / PurePath(config_path).relative_to(source)).as_posix(),
+                    LOAD_FROM_REMOTE_SOURCES_CONFIG,
+                )
