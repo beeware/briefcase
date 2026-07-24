@@ -15,6 +15,7 @@ from briefcase.exceptions import (
     BriefcaseConfigError,
     UnsupportedHostError,
 )
+from briefcase.integrations.virtual_environment import VirtualEnvironment
 from briefcase.integrations.windows_sdk import WindowsSDK
 from briefcase.integrations.wix import WiX
 
@@ -79,6 +80,7 @@ class WindowsMixin(_MixinBase):
     platform = "windows"
     supported_host_os: Collection[str] = {"Windows"}
     supported_host_os_reason = "Windows applications can only be built on Windows."
+    supported_env_managers: Collection[str] = {"venv", "uv", "conda"}
     platform_target_version = "0.3.24"
 
     def bundle_package_executable_path(self, app):
@@ -107,12 +109,23 @@ class WindowsMixin(_MixinBase):
             self.tools.host_arch == "ARM64"
             and "AMD64" in self.tools.platform.python_compiler()
         ):
-            raise UnsupportedHostError(
-                "The Python interpreter that is being used to run Briefcase has been "
-                "compiled for x86_64, and is running in emulation mode on ARM64 "
-                "hardware. You must use a Python interpreter that has been "
-                "compiled for ARM64."
-            )
+            if bool(self.tools.os.getenv("BRIEFCASE_ALLOW_EMULATION", "")):
+                self.console.warning_banner(
+                    "Running in CPU emulation mode",
+                    (
+                        "The Python interpreter that is being used to run Briefcase "
+                        "has been compiled for x86_64, and is running in emulation "
+                        "mode on ARM64 hardware. This configuration should not be used "
+                        "for production apps."
+                    ),
+                )
+            else:
+                raise UnsupportedHostError(
+                    "The Python interpreter that is being used to run Briefcase has "
+                    "been compiled for x86_64, and is running in emulation mode on "
+                    "ARM64 hardware. You must use a Python interpreter that has been "
+                    "compiled for ARM64."
+                )
 
         if self.tools.host_arch not in ("AMD64", "ARM64"):
             if all(app.external_package_path for app in self.apps.values()):
@@ -157,6 +170,20 @@ Install a 64bit version of Python and run Briefcase again.
 
 
 class WindowsCreateCommand(CreateCommand):
+    require_binary_installs = True
+
+    def stub_binary_filename(
+        self,
+        support_revision: str,
+        app: FinalizedAppConfig,
+    ) -> str:
+        """The filename for the stub binary."""
+        stub_type = "Console" if app.console_app else "GUI"
+        return (
+            f"{stub_type}-Stub-{self.python_version_tag}-{self.tools.host_arch.lower()}"
+            f"-b{support_revision}.zip"
+        )
+
     def support_package_filename(self, support_revision):
         arch = self.tools.host_arch.lower()
         return f"python-{self.python_version_tag}.{support_revision}-embed-{arch}.zip"
@@ -267,9 +294,9 @@ class WindowsCreateCommand(CreateCommand):
     def _install_app_requirements(
         self,
         app: FinalizedAppConfig,
+        venv: VirtualEnvironment,
         requires: list[str],
         app_packages_path: Path,
-        **kwargs,
     ):
         if template_min_version := self.target_windows_build(app):
             min_version = int(getattr(app, "min_os_version", template_min_version))
@@ -281,7 +308,10 @@ class WindowsCreateCommand(CreateCommand):
                 )
 
         return super()._install_app_requirements(
-            app, requires, app_packages_path, **kwargs
+            app,
+            venv=venv,
+            requires=requires,
+            app_packages_path=app_packages_path,
         )
 
     def install_license(self, app: FinalizedAppConfig):
@@ -399,6 +429,18 @@ files that Briefcase can convert and merge automatically.
         # Install the license.
         with self.console.wait_bar("Installing license..."):
             self.install_license(app)
+
+    def install_managed_python_env(
+        self,
+        app: FinalizedAppConfig,
+        venv: VirtualEnvironment,
+    ):
+        self.tools.shutil.copytree(
+            venv.venv_path,
+            self.support_path(app),
+            symlinks=True,
+            dirs_exist_ok=True,
+        )
 
 
 class WindowsRunCommand(RunCommand):

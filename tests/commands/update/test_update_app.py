@@ -1,3 +1,6 @@
+from briefcase.integrations.virtual_environment import VenvVirtualEnvironment
+
+
 def test_update_app(update_command, first_app, tmp_path):
     """If the app already exists, it will be updated."""
     update_command.update_app(
@@ -13,6 +16,7 @@ def test_update_app(update_command, first_app, tmp_path):
         ("verify-app-template", "first"),
         ("verify-app-tools", "first"),
         ("code", "first", False),
+        ("create-app-env", "first", "Tester", "gothic", False),
         ("cleanup", "first"),
     ]
 
@@ -63,7 +67,8 @@ def test_update_app_with_requirements(update_command, first_app, tmp_path):
         ("verify-app-template", "first"),
         ("verify-app-tools", "first"),
         ("code", "first", False),
-        ("requirements", "first", False, False),
+        ("create-app-env", "first", "Tester", "gothic", True),
+        ("requirements", "Tester-gothic", "first", False, False),
         ("cleanup", "first"),
     ]
 
@@ -95,6 +100,7 @@ def test_update_app_with_resources(update_command, first_app, tmp_path):
         ("verify-app-template", "first"),
         ("verify-app-tools", "first"),
         ("code", "first", False),
+        ("create-app-env", "first", "Tester", "gothic", False),
         ("resources", "first"),
         ("cleanup", "first"),
     ]
@@ -127,6 +133,7 @@ def test_update_app_with_support_package(update_command, first_app, tmp_path):
         ("verify-app-template", "first"),
         ("verify-app-tools", "first"),
         ("code", "first", False),
+        ("create-app-env", "first", "Tester", "gothic", True),
         ("cleanup-support", "first"),
         ("support", "first"),
         ("cleanup", "first"),
@@ -149,7 +156,10 @@ def test_update_app_with_stub(update_command, first_app, tmp_path):
     """If the user requests an app stub update, it is are updated."""
     # Add an entry to the path index indicating a stub is required
     update_command._briefcase_toml[update_command.apps["first"]] = {
-        "paths": {"stub_binary_revision": "b1"}
+        "paths": {
+            "support_path": "path/to/support",
+            "stub_binary_revision": "b1",
+        }
     }
 
     update_command.update_app(
@@ -165,6 +175,7 @@ def test_update_app_with_stub(update_command, first_app, tmp_path):
         ("verify-app-template", "first"),
         ("verify-app-tools", "first"),
         ("code", "first", False),
+        ("create-app-env", "first", "Tester", "gothic", False),
         ("cleanup-stub", "first"),
         ("stub", "first"),
         ("cleanup", "first"),
@@ -199,6 +210,7 @@ def test_update_app_stub_without_stub(update_command, first_app, tmp_path):
         ("verify-app-template", "first"),
         ("verify-app-tools", "first"),
         ("code", "first", False),
+        ("create-app-env", "first", "Tester", "gothic", False),
         ("cleanup", "first"),
     ]
 
@@ -233,6 +245,7 @@ def test_update_app_test_mode(update_command, first_app, tmp_path):
         ("verify-app-template", "first"),
         ("verify-app-tools", "first"),
         ("code", "first", True),
+        ("create-app-env", "first", "Tester", "gothic", False),
         ("cleanup", "first"),
     ]
 
@@ -267,7 +280,8 @@ def test_update_app_test_mode_requirements(update_command, first_app, tmp_path):
         ("verify-app-template", "first"),
         ("verify-app-tools", "first"),
         ("code", "first", True),
-        ("requirements", "first", True, False),
+        ("create-app-env", "first", "Tester", "gothic", True),
+        ("requirements", "Tester-gothic", "first", True, False),
         ("cleanup", "first"),
     ]
 
@@ -302,6 +316,7 @@ def test_update_app_test_mode_resources(update_command, first_app, tmp_path):
         ("verify-app-template", "first"),
         ("verify-app-tools", "first"),
         ("code", "first", True),
+        ("create-app-env", "first", "Tester", "gothic", False),
         ("resources", "first"),
         ("cleanup", "first"),
     ]
@@ -317,3 +332,86 @@ def test_update_app_test_mode_resources(update_command, first_app, tmp_path):
     assert not (tmp_path / "base_path/build/first/tester/dummy/stub.exe").exists()
     # ... and the app still exists
     assert (tmp_path / "base_path/build/first/tester/dummy/first.bundle").exists()
+
+
+def test_update_app_managed_python_env(
+    update_command, first_app, tmp_path, monkeypatch
+):
+    monkeypatch.setattr(VenvVirtualEnvironment, "provides_python", True)
+
+    update_command.update_app(
+        update_command.apps["first"],
+        update_requirements=False,
+        update_resources=False,
+        update_support=False,
+        update_stub=False,
+    )
+
+    # Input wasn't required by the user
+    assert update_command.console.prompts == []
+
+    # The right sequence of things will be done
+    assert update_command.actions == [
+        ("verify-app-template", "first"),
+        ("verify-app-tools", "first"),
+        ("code", "first", False),
+        ("create-app-env", "first", "Tester", "gothic", False),
+        ("install-managed-python-env", "first", "Tester-gothic"),
+        ("cleanup", "first"),
+    ]
+
+
+def test_update_requirements_managed_python_env(
+    update_command, first_app, tmp_path, monkeypatch
+):
+    monkeypatch.setattr(VenvVirtualEnvironment, "provides_python", True)
+
+    update_command.update_app(
+        update_command.apps["first"],
+        update_requirements=True,
+        update_resources=False,
+        update_support=False,
+        update_stub=False,
+    )
+
+    # Input wasn't required by the user
+    assert update_command.console.prompts == []
+
+    # The right sequence of things will be done
+    assert update_command.actions == [
+        ("verify-app-template", "first"),
+        ("verify-app-tools", "first"),
+        ("code", "first", False),
+        ("create-app-env", "first", "Tester", "gothic", True),
+        ("requirements", "Tester-gothic", "first", False, False),
+        ("install-managed-python-env", "first", "Tester-gothic"),
+        ("cleanup", "first"),
+    ]
+
+
+def test_update_support_app_managed_python_env(
+    update_command, first_app, tmp_path, monkeypatch
+):
+    monkeypatch.setattr(VenvVirtualEnvironment, "provides_python", True)
+
+    update_command.update_app(
+        update_command.apps["first"],
+        update_requirements=False,
+        update_resources=False,
+        update_support=True,
+        update_stub=False,
+    )
+
+    # Input wasn't required by the user
+    assert update_command.console.prompts == []
+
+    # The right sequence of things will be done
+    assert update_command.actions == [
+        ("verify-app-template", "first"),
+        ("verify-app-tools", "first"),
+        ("code", "first", False),
+        ("create-app-env", "first", "Tester", "gothic", True),
+        ("requirements", "Tester-gothic", "first", False, False),
+        ("install-managed-python-env", "first", "Tester-gothic"),
+        ("cleanup", "first"),
+    ]

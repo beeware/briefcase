@@ -1,9 +1,10 @@
-from pathlib import Path
-
+from briefcase.config import EnvManagerT
 from briefcase.integrations.base import Tool, ToolCache
 from briefcase.integrations.virtual_environment.base import VirtualEnvironment
+from briefcase.integrations.virtual_environment.conda import CondaVirtualEnvironment
 from briefcase.integrations.virtual_environment.noop import NoOpVirtualEnvironment
 from briefcase.integrations.virtual_environment.std_venv import VenvVirtualEnvironment
+from briefcase.integrations.virtual_environment.uv import UvVirtualEnvironment
 
 
 class VirtualEnvironmentManager(Tool):
@@ -20,47 +21,26 @@ class VirtualEnvironmentManager(Tool):
         tools.virtual_environment = VirtualEnvironmentManager(tools=tools)
         return tools.virtual_environment
 
-    def __call__(
+    def __getitem__(
         self,
-        venv_path: Path,
-        *,
-        isolated: bool = True,
-        recreate: bool = False,
-    ) -> VirtualEnvironment:
-        """Construct and return a `VirtualEnvironment` for the requested mode.
+        env_manager: EnvManagerT | None = "venv",
+    ) -> type[VirtualEnvironment]:
+        """Verify and return the requested `VirtualEnvironment` class.
 
-        The constructor of the returned object performs the lifecycle work
-        synchronously: by the time this method returns, the venv exists on
-        disk (in isolated mode) or the no-op marker has been checked/written
-        (in passthrough mode), and the returned object's `created` flag
-        reflects whether this invocation produced freshly initialised state.
+        The environment type will be verified; if the tools to support the environment
+        are not available, an error will be raised.
 
-        :param venv_path: Filesystem path associated with the environment. For
-            an isolated venv this is the venv directory; for a no-op
-            environment it is the directory used for the marker file.
-        :param isolated: If `True` (the default), use `VenvVirtualEnvironment`
-            (a real, dedicated venv created via `python -m venv`). If
-            `False`, use `NoOpVirtualEnvironment` (passthrough to the ambient
-            interpreter, with first-use detection via a marker file).
-        :param recreate: If `True`, clean and re-initialise the environment,
-            even if it already exists.
-        :returns: A fully-prepared :class:`VirtualEnvironment`. Use it as a
-            context manager (`with env as venv:`) for scoping; `__enter__`
-            returns `self` and has no side effects.
-        :raises BriefcaseCommandError: if the environment cannot be created or
-            initialised.
+        :param env_manager: The environment manager type to return
+        :returns: A subclass of VirtualEnvironment
         """
-        if isolated:
-            venv: VirtualEnvironment = VenvVirtualEnvironment(
-                self.tools,
-                venv_path,
-                recreate=recreate,
-            )
-        else:
-            venv = NoOpVirtualEnvironment(
-                self.tools,
-                venv_path,
-                recreate=recreate,
-            )
+        EnvManagerClass = {
+            None: NoOpVirtualEnvironment,
+            "uv": UvVirtualEnvironment,
+            "venv": VenvVirtualEnvironment,
+            "conda": CondaVirtualEnvironment,
+        }[env_manager]
 
-        return venv
+        # Verify that the environment manager is available.
+        EnvManagerClass.verify(self.tools)
+
+        return EnvManagerClass

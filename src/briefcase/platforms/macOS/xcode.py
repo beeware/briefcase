@@ -12,8 +12,9 @@ from briefcase.commands import (
     RunCommand,
     UpdateCommand,
 )
-from briefcase.config import BaseConfig
+from briefcase.config import BaseConfig, FinalizedAppConfig
 from briefcase.exceptions import BriefcaseCommandError
+from briefcase.integrations.virtual_environment import VirtualEnvironment
 from briefcase.integrations.xcode import Xcode
 from briefcase.platforms.macOS import (
     macOSCreateMixin,
@@ -47,6 +48,18 @@ class macOSXcodeMixin(macOSMixin):
 
 class macOSXcodeCreateCommand(macOSXcodeMixin, macOSCreateMixin, CreateCommand):
     description = "Create and populate a macOS Xcode project."
+
+    def install_managed_python_env(
+        self,
+        app: FinalizedAppConfig,
+        venv: VirtualEnvironment,
+    ):
+        """Symlink the managed Python environment into a location where it can be used
+        by Xcode."""
+        python_lib = self.support_path(app) / "Python"
+        if python_lib.exists():
+            python_lib.unlink()
+        python_lib.symlink_to(venv.venv_path)
 
 
 class macOSXcodeOpenCommand(macOSXcodeMixin, OpenCommand):

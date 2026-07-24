@@ -119,3 +119,50 @@ def test_no_system_path(venv, venv_bin_dir, monkeypatch):
     result = venv.build_env(None)
 
     assert result["PATH"] == str(venv.venv_path / venv_bin_dir)
+
+
+@pytest.mark.parametrize(
+    ("platform", "arch"),
+    [
+        ("iphoneos", "arm64"),
+        ("iphonesimulator", "arm64"),
+        ("iphonesimulator", "x86_64"),
+    ],
+)
+def test_cross_enironments(
+    platform,
+    arch,
+    venv,
+    user_path,
+    system_path,
+    venv_bin_dir,
+    monkeypatch,
+    tmp_path,
+):
+    """An iOS device gets a special PYTHONPATH addition."""
+    venv.platform = platform
+    venv.arch = arch
+    venv.platform_path = tmp_path / "support"
+
+    monkeypatch.setenv("PATH", system_path)
+    monkeypatch.setenv("VIRTUAL_ENV", "base-venv-value")
+    monkeypatch.setenv("PYTHONHOME", "base-pythonhome-value")
+    monkeypatch.setenv("BASE", "base-env-value")
+
+    result = venv.build_env(
+        {
+            "PATH": user_path,
+            "VIRTUAL_ENV": "override-venv-value",
+            "PYTHONHOME": "override-pythonhome-value",
+            "OVERRIDE": "override-value",
+        }
+    )
+
+    expected = str(venv.venv_path / venv_bin_dir) + os.pathsep + user_path
+    assert result["PATH"] == expected
+    assert result["VIRTUAL_ENV"] == str(venv.venv_path)
+    assert result["OVERRIDE"] == "override-value"
+    assert "PYTHONHOME" not in result
+
+    # The PYTHONPATH has been set to include the custom additions.
+    assert result["PYTHONPATH"] == str(tmp_path / "support")

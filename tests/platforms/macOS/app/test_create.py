@@ -1,16 +1,14 @@
+import json
 import os
 import shutil
-import subprocess
 import sys
 import time
-from pathlib import Path
-from subprocess import CalledProcessError
 from unittest import mock
 
 import pytest
 
 from briefcase.exceptions import BriefcaseCommandError, RequirementsInstallError
-from briefcase.integrations.subprocess import Subprocess
+from briefcase.integrations.virtual_environment import VenvVirtualEnvironment
 from briefcase.platforms.macOS.app import macOSAppCreateCommand
 
 from ....utils import (
@@ -22,17 +20,18 @@ from ....utils import (
 
 
 @pytest.fixture
-def create_command(dummy_console, tmp_path, first_app_templated):
+def create_command(dummy_console, mock_other_venv, tmp_path, first_app_templated):
     command = macOSAppCreateCommand(
         console=dummy_console,
         base_path=tmp_path / "base_path",
         data_path=tmp_path / "briefcase",
     )
 
-    # mock subprocess app context for this app
-    command.tools[first_app_templated].app_context = mock.MagicMock(spec_set=Subprocess)
     command.generate_template = mock.MagicMock()
     command.verify_not_on_icloud = mock.MagicMock()
+    command.create_app_environment = mock.MagicMock(return_value=mock_other_venv)
+    command.tools.sys = mock.MagicMock(spec_set=sys)
+    command.tools.sys.version_info = (3, "X", 0)
 
     return command
 
@@ -335,8 +334,55 @@ def test_generate_app_template(create_command, first_app, tmp_path):
     create_command.verify_not_on_icloud.assert_called_once_with(first_app, cleanup=True)
 
 
+def test_universal_managed_python(monkeypatch, create_command, first_app):
+    """If the app is universal but the environment manages python, an error is
+    raised."""
+    # Mock a universal app with an environment that provides Python
+    monkeypatch.setattr(VenvVirtualEnvironment, "provides_python", True)
+    first_app.universal_build = True
+
+    with pytest.raises(
+        BriefcaseCommandError,
+        match=(
+            r"Briefcase doesn't support creating universal apps "
+            r"when the environment provides the Python library"
+        ),
+    ):
+        create_command.verify_app(first_app)
+
+
+def test_x86_64_managed_python(monkeypatch, create_command, first_app):
+    """If the app is x86-64 but the environment manages python, an error is raised."""
+    # Mock a universal app with an environment that provides Python
+    monkeypatch.setattr(VenvVirtualEnvironment, "provides_python", True)
+    first_app.universal_build = False
+    create_command.tools.host_arch = "x86_64"
+
+    with pytest.raises(
+        BriefcaseCommandError,
+        match=(
+            r"Briefcase doesn't support creating x86_64 apps "
+            r"when the environment provides the Python library"
+        ),
+    ):
+        create_command.verify_app(first_app)
+
+
+def test_arm64_managed_python(monkeypatch, create_command, first_app):
+    """If the app is arm64 but the environment manages python, it can validate."""
+    # Mock a universal app with an environment that provides Python
+    monkeypatch.setattr(VenvVirtualEnvironment, "provides_python", True)
+    first_app.universal_build = False
+    create_command.tools.host_arch = "arm64"
+
+    # Validates without error.
+    create_command.verify_app(first_app)
+
+
 def test_generate_app_template_formal_name_mismatch(
-    create_command, first_app, tmp_path
+    create_command,
+    first_app,
+    tmp_path,
 ):
     """If the app's formal name doesn't match the external package path, an error is
     raised."""
@@ -349,13 +395,7 @@ def test_generate_app_template_formal_name_mismatch(
             r"does not match the formal name of the app \('First App'\)."
         ),
     ):
-        create_command.generate_app_template(first_app)
-
-    # The template was not generated.
-    create_command.generate_template.assert_not_called()
-
-    # iCloud was not verified either.
-    create_command.verify_not_on_icloud.assert_not_called()
+        create_command.verify_app(first_app)
 
 
 def test_install_app_resources(create_command, first_app_templated, tmp_path):
@@ -381,6 +421,39 @@ def test_install_app_resources(create_command, first_app_templated, tmp_path):
 
 
 @pytest.mark.parametrize(
+    ("console_app", "provides_python", "revision", "expected_binary"),
+    [
+        (False, False, "37", "GUI-Stub-3.X-b37.zip"),
+        (True, False, "37", "Console-Stub-3.X-b37.zip"),
+        (False, True, "42", "GUI-LStub-3.X-b42.zip"),
+        (True, True, "42", "Console-LStub-3.X-b42.zip"),
+    ],
+)
+def test_stub_binary_filename(
+    monkeypatch,
+    create_command,
+    first_app_templated,
+    console_app,
+    provides_python,
+    revision,
+    expected_binary,
+):
+    """A valid support package URL is created for a support revision."""
+    first_app_templated.console_app = console_app
+
+    # Mock a universal app with an environment that provides Python
+    monkeypatch.setattr(VenvVirtualEnvironment, "provides_python", provides_python)
+
+    create_command.tools.sys = mock.MagicMock(spec=sys)
+    create_command.tools.sys.version_info = ("3", "X", "Y")
+
+    assert (
+        create_command.stub_binary_filename(revision, first_app_templated)
+        == expected_binary
+    )
+
+
+@pytest.mark.parametrize(
     ("host_arch", "other_arch"),
     [
         ("arm64", "x86_64"),
@@ -388,6 +461,8 @@ def test_install_app_resources(create_command, first_app_templated, tmp_path):
     ],
 )
 def test_install_app_packages(
+    mock_venv,
+    mock_other_venv,
     create_command,
     first_app_templated,
     tmp_path,
@@ -415,7 +490,7 @@ def test_install_app_packages(
     # Mock the merge command so we can confirm it was invoked.
     create_command.merge_app_packages = mock.Mock()
 
-    create_command.install_app_requirements(first_app_templated)
+    create_command.install_app_requirements(first_app_templated, mock_venv)
 
     # We looked for binary packages in the host app_packages
     create_command.find_binary_packages.assert_called_once_with(
@@ -424,59 +499,47 @@ def test_install_app_packages(
         other_suffix=f"_{other_arch}",
     )
 
-    # A request was made to install requirements
-    assert create_command.tools[first_app_templated].app_context.run.mock_calls == [
-        # First call is to install the initial packages on the host arch
-        mock.call(
-            [
-                sys.executable,
-                "-u",
-                "-X",
-                "utf8",
-                "-m",
-                "pip",
-                "install",
-                "--disable-pip-version-check",
-                "--upgrade",
-                "--no-user",
-                f"--target={bundle_path / ('app_packages.' + host_arch)}",
-                "--only-binary",
-                ":all:",
-                "--platform",
-                f"macosx_10_12_{host_arch}",
-                "first",
-                "second==1.2.3",
-                "third>=3.2.1",
-            ],
-            check=True,
-            encoding="UTF-8",
+    # A request was made to install requirements on the host arch
+    mock_venv.install_requirements.assert_called_once_with(
+        [
+            "first",
+            "second==1.2.3",
+            "third>=3.2.1",
+        ],
+        allow_editable=False,
+        require_binary=True,
+        min_os_version="10.12",
+        install_path=bundle_path / f"app_packages.{host_arch}",
+        install_hint=(
+            "\n\n"
+            f"This may be because an {host_arch} wheel that is compatible with\n"
+            "Python 3.X and a minimum macOS version of 10.12\n"
+            "is not available.\n"
         ),
-        # Second call installs the binary packages for the other architecture.
-        mock.call(
-            [
-                sys.executable,
-                "-u",
-                "-X",
-                "utf8",
-                "-m",
-                "pip",
-                "install",
-                "--disable-pip-version-check",
-                "--upgrade",
-                "--no-user",
-                f"--target={bundle_path / ('app_packages.' + other_arch)}",
-                "--no-deps",
-                "--platform",
-                f"macosx_10_12_{other_arch}",
-                "--only-binary",
-                ":all:",
-                "second==1.2.3",
-                "third==3.4.5",
-            ],
-            check=True,
-            encoding="UTF-8",
+    )
+    # A request was made to install requirements on the alternate environment
+    mock_other_venv.install_requirements.assert_called_once_with(
+        [
+            "second==1.2.3",
+            "third==3.4.5",
+        ],
+        allow_editable=False,
+        require_binary=True,
+        min_os_version="10.12",
+        install_path=bundle_path / f"app_packages.{other_arch}",
+        install_hint=(
+            "\n\n"
+            f"This may be because an {other_arch} wheel that is compatible with\n"
+            "Python 3.X and a minimum macOS version of 10.12\n"
+            "is not available.\n"
+            "\n"
+            "You may need to build a non-universal app by setting:\n"
+            "\n"
+            "    universal_build = False\n"
+            "\n"
+            "in the macOS configuration section of your pyproject.toml.\n"
         ),
-    ]
+    )
 
     # The app packages folder has been created. The existence of the target and host
     # versions is validated as a result of the underlying install/merge methods.
@@ -503,7 +566,14 @@ def test_install_app_packages(
 
 
 @pytest.mark.parametrize("old_config", [True, False])
-def test_min_os_version(create_command, first_app_templated, old_config, tmp_path):
+def test_min_os_version(
+    mock_venv,
+    mock_other_venv,
+    create_command,
+    first_app_templated,
+    old_config,
+    tmp_path,
+):
     """If the app specifies a min OS version, it is used for wheel installs."""
     create_command.tools.host_arch = "arm64"
 
@@ -548,7 +618,7 @@ def test_min_os_version(create_command, first_app_templated, old_config, tmp_pat
     # Mock the merge command so we can confirm it was invoked.
     create_command.merge_app_packages = mock.Mock()
 
-    create_command.install_app_requirements(first_app_templated)
+    create_command.install_app_requirements(first_app_templated, mock_venv)
 
     # We looked for binary packages in the host app_packages
     create_command.find_binary_packages.assert_called_once_with(
@@ -557,59 +627,31 @@ def test_min_os_version(create_command, first_app_templated, old_config, tmp_pat
         other_suffix="_x86_64",
     )
 
-    # A request was made to install requirements
-    assert create_command.tools[first_app_templated].app_context.run.mock_calls == [
-        # First call is to install the initial packages on the host arch
-        mock.call(
-            [
-                sys.executable,
-                "-u",
-                "-X",
-                "utf8",
-                "-m",
-                "pip",
-                "install",
-                "--disable-pip-version-check",
-                "--upgrade",
-                "--no-user",
-                f"--target={bundle_path / 'app_packages.arm64'}",
-                "--only-binary",
-                ":all:",
-                "--platform",
-                "macosx_13_2_arm64",
-                "first",
-                "second==1.2.3",
-                "third>=3.2.1",
-            ],
-            check=True,
-            encoding="UTF-8",
-        ),
-        # Second call installs the binary packages for the other architecture.
-        mock.call(
-            [
-                sys.executable,
-                "-u",
-                "-X",
-                "utf8",
-                "-m",
-                "pip",
-                "install",
-                "--disable-pip-version-check",
-                "--upgrade",
-                "--no-user",
-                f"--target={bundle_path / 'app_packages.x86_64'}",
-                "--no-deps",
-                "--platform",
-                "macosx_13_2_x86_64",
-                "--only-binary",
-                ":all:",
-                "second==1.2.3",
-                "third==3.4.5",
-            ],
-            check=True,
-            encoding="UTF-8",
-        ),
-    ]
+    # A request was made to install requirements on the host arch
+    mock_venv.install_requirements.assert_called_once_with(
+        [
+            "first",
+            "second==1.2.3",
+            "third>=3.2.1",
+        ],
+        allow_editable=False,
+        require_binary=True,
+        min_os_version="13.2",
+        install_path=bundle_path / "app_packages.arm64",
+        install_hint=mock.ANY,
+    )
+    # A request was made to install requirements on the alternate environment
+    mock_other_venv.install_requirements.assert_called_once_with(
+        [
+            "second==1.2.3",
+            "third==3.4.5",
+        ],
+        allow_editable=False,
+        require_binary=True,
+        min_os_version="13.2",
+        install_path=bundle_path / "app_packages.x86_64",
+        install_hint=mock.ANY,
+    )
 
     # The app packages folder has been created. The existence of the target and host
     # versions is validated as a result of the underlying install/merge methods.
@@ -637,6 +679,8 @@ def test_min_os_version(create_command, first_app_templated, old_config, tmp_pat
 
 @pytest.mark.parametrize("old_config", [True, False])
 def test_default_min_os_version(
+    mock_venv,
+    mock_other_venv,
     create_command,
     first_app_templated,
     old_config,
@@ -696,7 +740,7 @@ def test_default_min_os_version(
     # Mock the merge command so we can confirm it was invoked.
     create_command.merge_app_packages = mock.Mock()
 
-    create_command.install_app_requirements(first_app_templated)
+    create_command.install_app_requirements(first_app_templated, mock_venv)
 
     # We looked for binary packages in the host app_packages
     create_command.find_binary_packages.assert_called_once_with(
@@ -705,59 +749,31 @@ def test_default_min_os_version(
         other_suffix="_x86_64",
     )
 
-    # A request was made to install requirements
-    assert create_command.tools[first_app_templated].app_context.run.mock_calls == [
-        # First call is to install the initial packages on the host arch
-        mock.call(
-            [
-                sys.executable,
-                "-u",
-                "-X",
-                "utf8",
-                "-m",
-                "pip",
-                "install",
-                "--disable-pip-version-check",
-                "--upgrade",
-                "--no-user",
-                f"--target={bundle_path / 'app_packages.arm64'}",
-                "--only-binary",
-                ":all:",
-                "--platform",
-                "macosx_11_0_arm64",
-                "first",
-                "second==1.2.3",
-                "third>=3.2.1",
-            ],
-            check=True,
-            encoding="UTF-8",
-        ),
-        # Second call installs the binary packages for the other architecture.
-        mock.call(
-            [
-                sys.executable,
-                "-u",
-                "-X",
-                "utf8",
-                "-m",
-                "pip",
-                "install",
-                "--disable-pip-version-check",
-                "--upgrade",
-                "--no-user",
-                f"--target={bundle_path / 'app_packages.x86_64'}",
-                "--no-deps",
-                "--platform",
-                "macosx_11_0_x86_64",
-                "--only-binary",
-                ":all:",
-                "second==1.2.3",
-                "third==3.4.5",
-            ],
-            check=True,
-            encoding="UTF-8",
-        ),
-    ]
+    # A request was made to install requirements on the host arch
+    mock_venv.install_requirements.assert_called_once_with(
+        [
+            "first",
+            "second==1.2.3",
+            "third>=3.2.1",
+        ],
+        allow_editable=False,
+        require_binary=True,
+        min_os_version="11.0",
+        install_path=bundle_path / "app_packages.arm64",
+        install_hint=mock.ANY,
+    )
+    # A request was made to install requirements on the alternate environment
+    mock_other_venv.install_requirements.assert_called_once_with(
+        [
+            "second==1.2.3",
+            "third==3.4.5",
+        ],
+        allow_editable=False,
+        require_binary=True,
+        min_os_version="11.0",
+        install_path=bundle_path / "app_packages.x86_64",
+        install_hint=mock.ANY,
+    )
 
     # The app packages folder has been created. The existence of the target and host
     # versions is validated as a result of the underlying install/merge methods.
@@ -783,7 +799,7 @@ def test_default_min_os_version(
     )
 
 
-def test_invalid_min_os_version(create_command, first_app_templated):
+def test_invalid_min_os_version(mock_venv, create_command, first_app_templated):
     """If the app defines a min OS version that is incompatible with the support
     package, an error is raised."""
     first_app_templated.requires = ["first", "second==1.2.3", "third>=3.2.1"]
@@ -798,10 +814,153 @@ def test_invalid_min_os_version(create_command, first_app_templated):
             r"but the support package only supports 10.12"
         ),
     ):
-        create_command.install_app_requirements(first_app_templated)
+        create_command.install_app_requirements(first_app_templated, mock_venv)
 
     # No request was made to install requirements
-    create_command.tools[first_app_templated].app_context.run.assert_not_called()
+    mock_venv.install_requirements.assert_not_called()
+
+
+def test_min_os_version_python_provided(
+    mock_venv,
+    create_command,
+    first_app_templated,
+    base_path,
+):
+    """If the environment provides Python, the min OS version can be extracted."""
+    create_command.tools.host_arch = "arm64"
+
+    # Mock a venv that provides python
+    mock_venv.provides_python = True
+    create_file(
+        base_path / "mock-venv/conda-meta/python-3.X.json",
+        json.dumps(
+            {
+                "name": "python",
+                "version": "3.14.6",
+                "depends": [
+                    "__osx >=12.1",
+                    "bzip2 >=1.0.8,<2.0a0",
+                    "libexpat >=2.8.1,<3.0a0",
+                ],
+            }
+        ),
+    )
+
+    bundle_path = base_path / "build/first-app/macos/app"
+
+    # Configure a non-universal app with requirements.
+    first_app_templated.requires = ["first", "second==1.2.3", "third>=3.2.1"]
+    first_app_templated.universal_build = False
+
+    # Mock the find_binary_packages so we can confirm it was not invoked.
+    create_command.find_binary_packages = mock.Mock()
+
+    # Mock the thin command so we can confirm it was invoked.
+    create_command.thin_app_packages = mock.Mock()
+
+    # Mock the merge command so we can confirm it was not invoked.
+    create_command.merge_app_packages = mock.Mock()
+
+    create_command.install_app_requirements(first_app_templated, mock_venv)
+
+    # A request was made to install requirements on the host arch
+    mock_venv.install_requirements.assert_called_once_with(
+        [
+            "first",
+            "second==1.2.3",
+            "third>=3.2.1",
+        ],
+        allow_editable=False,
+        require_binary=True,
+        min_os_version="12.1",
+        install_path=bundle_path / "First App.app/Contents/Resources/app_packages",
+        install_hint=mock.ANY,
+    )
+
+    # We didn't try to find binary packages
+    create_command.find_binary_packages.assert_not_called()
+
+    # An attempt was made thin the "other" arch packages.
+    create_command.thin_app_packages.assert_called_once_with(
+        bundle_path / "First App.app/Contents/Resources/app_packages",
+        arch="arm64",
+    )
+
+    # An attempt was made to merge packages.
+    create_command.merge_app_packages.assert_not_called()
+
+
+def test_no_python_env_metadata(mock_venv, create_command, first_app_templated):
+    """If the environment doesn't provide metadata an error is raised."""
+    create_command.tools.host_arch = "arm64"
+
+    # Mock a venv that provides python, but no Python metadata file.
+    mock_venv.provides_python = True
+
+    with pytest.raises(
+        BriefcaseCommandError,
+        match=r"Unable to find Python environment configuration file.",
+    ):
+        create_command.install_app_requirements(first_app_templated, mock_venv)
+
+
+def test_invalid_python_env_metadata(
+    mock_venv,
+    create_command,
+    first_app_templated,
+    base_path,
+):
+    """If the environment provides unparsable metadata an error is raised."""
+    create_command.tools.host_arch = "arm64"
+
+    # Mock a venv that provides python
+    mock_venv.provides_python = True
+    create_file(
+        base_path / "mock-venv/conda-meta/python-3.X.json",
+        "Not a valid metadata file",
+    )
+
+    with pytest.raises(
+        BriefcaseCommandError,
+        match=r"Unable to parse Python environment configuration file.",
+    ):
+        create_command.install_app_requirements(first_app_templated, mock_venv)
+
+
+def test_incomplete_python_env_metadata(
+    mock_venv,
+    create_command,
+    first_app_templated,
+    base_path,
+):
+    """If the environment provides unparsable metadata an error is raised."""
+    create_command.tools.host_arch = "arm64"
+
+    # Mock a venv that provides python, and Python environment metadata
+    # that doesn't specify a minimum macOS version
+    mock_venv.provides_python = True
+    create_file(
+        base_path / "mock-venv/conda-meta/python-3.X.json",
+        json.dumps(
+            {
+                "name": "python",
+                "version": "3.14.6",
+                "depends": [
+                    "bzip2 >=1.0.8,<2.0a0",
+                    "libexpat >=2.8.1,<3.0a0",
+                ],
+            }
+        ),
+    )
+
+    with pytest.raises(
+        BriefcaseCommandError,
+        match=(
+            r"Could not extract minimum macOS version "
+            r"from Python environment metadata."
+        ),
+    ):
+        create_command.install_app_requirements(first_app_templated, mock_venv)
 
 
 @pytest.mark.parametrize(
@@ -811,14 +970,16 @@ def test_invalid_min_os_version(create_command, first_app_templated):
     ],
 )
 def test_install_app_packages_no_binary(
+    mock_venv,
+    mock_other_venv,
     create_command,
     first_app_templated,
-    tmp_path,
+    base_path,
     host_arch,
     other_arch,
 ):
     """If there's no binaries in the first pass, the second pass isn't performed."""
-    bundle_path = tmp_path / "base_path/build/first-app/macos/app"
+    bundle_path = base_path / "build/first-app/macos/app"
 
     # Create pre-existing other-arch content
     create_installed_package(bundle_path / f"app_packages.{other_arch}", "legacy")
@@ -835,7 +996,7 @@ def test_install_app_packages_no_binary(
     # Mock the merge command so we can confirm it was invoked.
     create_command.merge_app_packages = mock.Mock()
 
-    create_command.install_app_requirements(first_app_templated)
+    create_command.install_app_requirements(first_app_templated, mock_venv)
 
     # We looked for binary packages in the host app_packages
     create_command.find_binary_packages.assert_called_once_with(
@@ -844,34 +1005,22 @@ def test_install_app_packages_no_binary(
         other_suffix=f"_{other_arch}",
     )
 
-    # A request was made to install requirements
-    assert create_command.tools[first_app_templated].app_context.run.mock_calls == [
-        # Only call is to install the initial packages on the host arch
-        mock.call(
-            [
-                sys.executable,
-                "-u",
-                "-X",
-                "utf8",
-                "-m",
-                "pip",
-                "install",
-                "--disable-pip-version-check",
-                "--upgrade",
-                "--no-user",
-                f"--target={bundle_path / ('app_packages.' + host_arch)}",
-                "--only-binary",
-                ":all:",
-                "--platform",
-                f"macosx_10_12_{host_arch}",
-                "first",
-                "second==1.2.3",
-                "third>=3.2.1",
-            ],
-            check=True,
-            encoding="UTF-8",
-        ),
-    ]
+    # A request was made to install requirements on the host arch
+    mock_venv.install_requirements.assert_called_once_with(
+        [
+            "first",
+            "second==1.2.3",
+            "third>=3.2.1",
+        ],
+        allow_editable=False,
+        require_binary=True,
+        min_os_version="10.12",
+        install_path=bundle_path / "app_packages.arm64",
+        install_hint=mock.ANY,
+    )
+    # No binary packages means no install request on the other venv.
+    create_command.create_app_environment.assert_not_called()
+    mock_other_venv.install_requirements.assert_not_called()
 
     # The app packages folder for the other architecture has been created, even though
     # it isn't needed. The existence of the target and host versions is validated as a
@@ -896,7 +1045,13 @@ def test_install_app_packages_no_binary(
     )
 
 
-def test_install_app_packages_failure(create_command, first_app_templated, tmp_path):
+def test_install_app_packages_failure(
+    mock_venv,
+    mock_other_venv,
+    create_command,
+    first_app_templated,
+    tmp_path,
+):
     """If the install of other-arch binaries fails, an exception is raised."""
     bundle_path = tmp_path / "base_path/build/first-app/macos/app"
 
@@ -922,10 +1077,7 @@ def test_install_app_packages_failure(create_command, first_app_templated, tmp_p
     create_command.merge_app_packages = mock.Mock()
 
     # Mock a failure on the second install
-    create_command.tools[first_app_templated].app_context.run.side_effect = [
-        None,
-        subprocess.CalledProcessError(returncode=1, cmd="pip"),
-    ]
+    mock_other_venv.install_requirements.side_effect = RequirementsInstallError()
 
     # Install the requirements; this will raise an error
     with pytest.raises(
@@ -936,7 +1088,7 @@ def test_install_app_packages_failure(create_command, first_app_templated, tmp_p
             r"to the PyPI server.\n"
         ),
     ):
-        create_command.install_app_requirements(first_app_templated)
+        create_command.install_app_requirements(first_app_templated, mock_venv)
 
     # We looked for binary packages in the host app_packages
     create_command.find_binary_packages.assert_called_once_with(
@@ -945,60 +1097,31 @@ def test_install_app_packages_failure(create_command, first_app_templated, tmp_p
         other_suffix="_x86_64",
     )
 
-    # A request was made to install requirements
-    assert create_command.tools[first_app_templated].app_context.run.mock_calls == [
-        # First call is to install the initial packages on the host arch
-        mock.call(
-            [
-                sys.executable,
-                "-u",
-                "-X",
-                "utf8",
-                "-m",
-                "pip",
-                "install",
-                "--disable-pip-version-check",
-                "--upgrade",
-                "--no-user",
-                f"--target={bundle_path / 'app_packages.arm64'}",
-                "--only-binary",
-                ":all:",
-                "--platform",
-                "macosx_10_12_arm64",
-                "first",
-                "second==1.2.3",
-                "third>=3.2.1",
-            ],
-            check=True,
-            encoding="UTF-8",
-        ),
-        # Second call installs the binary packages for the other architecture;
-        # this is the call that failed.
-        mock.call(
-            [
-                sys.executable,
-                "-u",
-                "-X",
-                "utf8",
-                "-m",
-                "pip",
-                "install",
-                "--disable-pip-version-check",
-                "--upgrade",
-                "--no-user",
-                f"--target={bundle_path / 'app_packages.x86_64'}",
-                "--no-deps",
-                "--platform",
-                "macosx_10_12_x86_64",
-                "--only-binary",
-                ":all:",
-                "second==1.2.3",
-                "third==3.4.5",
-            ],
-            check=True,
-            encoding="UTF-8",
-        ),
-    ]
+    # A request was made to install requirements on the host arch
+    mock_venv.install_requirements.assert_called_once_with(
+        [
+            "first",
+            "second==1.2.3",
+            "third>=3.2.1",
+        ],
+        allow_editable=False,
+        require_binary=True,
+        min_os_version="10.12",
+        install_path=bundle_path / "app_packages.arm64",
+        install_hint=mock.ANY,
+    )
+    # A request was made to install requirements on the alternate environment
+    mock_other_venv.install_requirements.assert_called_once_with(
+        [
+            "second==1.2.3",
+            "third==3.4.5",
+        ],
+        allow_editable=False,
+        require_binary=True,
+        min_os_version="10.12",
+        install_path=bundle_path / "app_packages.x86_64",
+        install_hint=mock.ANY,
+    )
 
     # The app packages folder for the other architecture has been created, even though
     # it isn't needed. The existence of the target and host versions is validated as a
@@ -1017,6 +1140,8 @@ def test_install_app_packages_failure(create_command, first_app_templated, tmp_p
     ],
 )
 def test_install_app_packages_non_universal(
+    mock_venv,
+    mock_other_venv,
     create_command,
     first_app_templated,
     tmp_path,
@@ -1040,38 +1165,28 @@ def test_install_app_packages_non_universal(
     # Mock the merge command so we can confirm it wasn't invoked.
     create_command.merge_app_packages = mock.Mock()
 
-    create_command.install_app_requirements(first_app_templated)
+    create_command.install_app_requirements(first_app_templated, mock_venv)
 
     # We didn't search for binary packages
     create_command.find_binary_packages.assert_not_called()
 
-    # One request was made to install requirements
-    assert create_command.tools[first_app_templated].app_context.run.mock_calls == [
-        mock.call(
-            [
-                sys.executable,
-                "-u",
-                "-X",
-                "utf8",
-                "-m",
-                "pip",
-                "install",
-                "--disable-pip-version-check",
-                "--upgrade",
-                "--no-user",
-                f"--target={bundle_path / 'First App.app' / 'Contents' / 'Resources' / 'app_packages'}",
-                "--only-binary",
-                ":all:",
-                "--platform",
-                f"macosx_10_12_{host_arch}",
-                "first",
-                "second==1.2.3",
-                "third>=3.2.1",
-            ],
-            check=True,
-            encoding="UTF-8",
-        ),
-    ]
+    # A request was made to install requirements on the host arch,
+    # directly into the final install location.
+    mock_venv.install_requirements.assert_called_once_with(
+        [
+            "first",
+            "second==1.2.3",
+            "third>=3.2.1",
+        ],
+        allow_editable=False,
+        require_binary=True,
+        min_os_version="10.12",
+        install_path=bundle_path / "First App.app/Contents/Resources/app_packages",
+        install_hint=mock.ANY,
+    )
+    # No request was made to create an other environment, or install packages.
+    create_command.create_app_environment.assert_not_called()
+    mock_other_venv.install_requirements.assert_not_called()
 
     # An attempt was made to thin the app packages
     create_command.thin_app_packages.assert_called_once_with(
@@ -1247,69 +1362,49 @@ def test_install_support_package(
     assert not (runtime_support_path / "python-stdlib/old-Python").exists()
 
 
-def test_install_app_requirements_error_adds_install_hint_missing_x86_64_wheel(
-    create_command, first_app_templated
+@pytest.mark.parametrize("reinstall", [True, False])
+def test_install_managed_python_env(
+    create_command,
+    mock_venv,
+    first_app_templated,
+    reinstall,
+    base_path,
 ):
-    """Install_hint (mentioning a missing x86_64 wheel) is added when
-    RequirementsInstallError is raised by _install_app_requirements in the macOS create
-    command."""
-
-    create_command.tools.host_arch = "x86_64"
-    first_app_templated.min_os_version = "12.0"
-    first_app_templated.requires = ["package-one", "package_two", "packagethree"]
-
-    # Mock app_context for the generated app to simulate pip failure
-    mock_app_context = mock.MagicMock(spec=Subprocess)
-    mock_app_context.run.side_effect = CalledProcessError(returncode=1, cmd="pip")
-    create_command.tools[first_app_templated].app_context = mock_app_context
-
-    # Check that _install_app_requirements raises a RequirementsInstallError with an install hint
-    with pytest.raises(
-        RequirementsInstallError,
-        match=r"x86_64 wheel that is compatible with\nPython 3\.\d+ and a minimum macOS version of 12.0",
-    ):
-        create_command._install_app_requirements(
-            app=first_app_templated,
-            requires=first_app_templated.requires,
-            app_packages_path=Path("/test/path"),
-        )
-
-    # Ensure the mocked subprocess was called as expected
-    mock_app_context.run.assert_called_once()
-
-
-def test_install_app_requirements_error_adds_install_hint_missing_arm64_wheel(
-    create_command, first_app_templated
-):
-    """Install_hint (mentioning a missing arm64 wheel) is added when
-    RequirementsInstallError is raised by _install_app_requirements in the macOS create
-    command."""
-
-    create_command.tools.host_arch = "x86_64"
-    first_app_templated.min_os_version = "12.0"
-    first_app_templated.requires = ["package-one", "package_two", "packagethree"]
-
-    # Fake a found binary package (so second install is triggered)
-    create_command.find_binary_packages = mock.Mock(
-        return_value=[("package-one", "1.0")]
+    """A managed python environment will be copied into the final app."""
+    # Make the app's template look like a managed environment app
+    create_file(
+        create_command.bundle_path(first_app_templated) / "briefcase.toml",
+        """
+[paths]
+support_path="First App.app/Contents/Resources/python"
+""",
     )
 
-    # First call (host arch x86_64) succeeds, second (other arch arm64) fails
-    create_command.tools[first_app_templated].app_context.run.side_effect = [
-        None,
-        CalledProcessError(returncode=1, cmd="pip"),
-    ]
+    resource_path = (
+        create_command.bundle_path(first_app_templated)
+        / "First App.app/Contents/Resources/python"
+    )
 
-    # Check that _install_app_requirements raises a RequirementsInstallError with an install hint
-    with pytest.raises(
-        RequirementsInstallError,
-        match=r"arm64 wheel that is compatible with\nPython 3\.\d+ and a minimum macOS version of 12.0",
-    ):
-        create_command._install_app_requirements(
-            app=first_app_templated,
-            requires=first_app_templated.requires,
-            app_packages_path=Path("/test/path"),
-        )
+    if reinstall:
+        # Create some pre-existing managed Python content
+        create_file(resource_path / "lib/libpython.so", "old Python lib")
+        create_file(resource_path / "lib/old.so", "old lib")
+        create_file(resource_path / "other/content.txt", "other file")
 
-    # Ensure the mocked subprocess was called as expected
-    assert create_command.tools[first_app_templated].app_context.run.call_count == 2
+    # Create some mock content in the virtual environment
+    create_file(base_path / "mock-venv/base.txt", "Top level file")
+    create_file(base_path / "mock-venv/lib/libpython.so", "Python lib")
+    create_file(base_path / "mock-venv/lib/site-packages/test.py", "Stdlib")
+
+    # Install the managed Python environment
+    create_command.install_managed_python_env(first_app_templated, mock_venv)
+
+    # The managed environment was copied to the final app.
+    # Deep directory structure is preserved.
+    assert (resource_path / "base.txt").exists()
+    assert (resource_path / "lib/libpython.so").exists()
+    assert (resource_path / "lib/site-packages/test.py").exists()
+
+    # Old content no longer exists.
+    assert not (resource_path / "lib/old.so").exists()
+    assert not (resource_path / "other/content.txt").exists()

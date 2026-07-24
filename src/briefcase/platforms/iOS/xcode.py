@@ -5,6 +5,7 @@ import plistlib
 import subprocess
 import time
 from pathlib import Path
+from typing import Literal
 from uuid import UUID
 
 from packaging.version import Version
@@ -18,7 +19,7 @@ from briefcase.commands import (
     RunCommand,
     UpdateCommand,
 )
-from briefcase.config import FinalizedAppConfig
+from briefcase.config import EnvManagerT, FinalizedAppConfig
 from briefcase.console import Console
 from briefcase.debuggers.base import AppPackagesPathMappings
 from briefcase.exceptions import (
@@ -28,6 +29,7 @@ from briefcase.exceptions import (
     NoDistributionArtefact,
 )
 from briefcase.integrations.subprocess import is_process_dead
+from briefcase.integrations.virtual_environment import VirtualEnvironment
 from briefcase.integrations.xcode import DeviceState, get_device_state, get_simulators
 from briefcase.platforms.iOS import iOSMixin
 from briefcase.platforms.macOS.filters import XcodeBuildFilter, macOS_log_clean_filter
@@ -309,25 +311,54 @@ class iOSXcodeCreateCommand(iOSXcodePassiveMixin, CreateCommand):
             "info": info,
         }
 
-    def _extra_pip_args(self, app: FinalizedAppConfig):
-        """Any additional arguments that must be passed to pip when installing packages.
+    def create_app_environment(
+        self,
+        app: FinalizedAppConfig,
+        platform: str,
+        arch: str,
+        env_manager: EnvManagerT | None | Literal["noop"] = None,
+        recreate: bool = True,
+    ):
+        """Create an isolated iOS virtual environment in which the app can be built.
 
-        :param app: The app configuration
-        :returns: A list of additional arguments
+        :param app: The config object for the app
+        :param platform: The platform being targeted.
+        :param arch: The architecture for the environment.
+        :param env_manager: An explicit environment manager to use. Defaults to the
+            app's configured environment manager.
+        :param recreate: If the environment already exists, should it be re-created?
+            Defaults to True (i.e., recreate by default).
         """
-        return [
-            *super()._extra_pip_args(app),
-            "--only-binary=:all:",
-            "--extra-index-url",
-            "https://pypi.anaconda.org/beeware/simple",
-        ]
+        # The default invocation will be with self.platform, which will be "iOS".
+        # Interpret that as the device; interpret all others as simulators.
+        if platform == "iOS":
+            platform = "iphoneos"
+            platform_path = (
+                self.support_path(app)
+                / "Python.xcframework/ios-arm64/platform-config/arm64-iphoneos"
+            )
+        else:
+            platform_path = (
+                self.support_path(app)
+                / "Python.xcframework/ios-arm64_x86_64-simulator/platform-config"
+                / f"{arch}-iphonesimulator"
+            )
+
+        return super().create_app_environment(
+            app=app,
+            platform=platform,
+            arch=arch,
+            env_manager=env_manager,
+            recreate=recreate,
+            platform_path=platform_path,
+        )
 
     def _install_app_requirements(
         self,
         app: FinalizedAppConfig,
+        venv: VirtualEnvironment,
         requires: list[str],
         app_packages_path: Path,
-        **kwargs,
     ):
         try:
             # Determine the min iOS version from the framework metadata
@@ -369,74 +400,49 @@ class iOSXcodeCreateCommand(iOSXcodePassiveMixin, CreateCommand):
                 f"but the support package only supports {support_min_version}"
             )
 
-        ios_min_tag = ios_min_version.replace(".", "_")
-
-        # Feb 2025: The platform-site was moved into the xcframework as
-        # `platform-config`. Look for the new location; fall back to the old location.
-        device_platform_site = (
-            self.support_path(app)
-            / "Python.xcframework/ios-arm64/platform-config/arm64-iphoneos"
-        )
-        simulator_platform_site = (
-            self.support_path(app)
-            / "Python.xcframework/ios-arm64_x86_64-simulator"
-            / f"platform-config/{self.tools.host_arch}-iphonesimulator"
-        )
-        if not device_platform_site.exists():
-            device_platform_site = (
-                self.support_path(app) / "platform-site/iphoneos.arm64"
-            )
-            simulator_platform_site = (
-                self.support_path(app)
-                / f"platform-site/iphonesimulator.{self.tools.host_arch}"
-            )
-
         # Perform the initial install pass targeting the "iphoneos" platform
-        super()._install_app_requirements(
-            app,
-            requires=requires,
-            app_packages_path=app_packages_path.parent / "app_packages.iphoneos",
-            progress_message="Installing app requirements for iPhone device...",
-            pip_args=[
-                f"--platform=ios_{ios_min_tag}_arm64_iphoneos",
-            ],
-            pip_kwargs={
-                "env": {
-                    "PYTHONPATH": str(device_platform_site),
-                    "PIP_REQUIRE_VIRTUALENV": None,
-                }
-            },
-            install_hint=f"""
+        with (
+            self.console.wait_bar("Installing app requirements for iPhone device..."),
+        ):
+            venv.install_requirements(
+                requires,
+                allow_editable=False,
+                require_binary=True,
+                min_os_version=ios_min_version,
+                install_path=app_packages_path.parent / "app_packages.iphoneos",
+                install_hint=f"""
 
 This may be because the `iphoneos` wheels that are available are not compatible
 with Python {self.python_version_tag} and a minimum iOS version of {ios_min_version}.
 """,
-        )
+            )
 
-        # Perform a second install pass targeting the "iphonesimulator" platform for the
+        # Perform a second install pass targeting the iOS simulator platform for the
         # current architecture
-        super()._install_app_requirements(
+        sim_venv = self.create_app_environment(
             app,
-            requires=requires,
-            app_packages_path=app_packages_path.parent / "app_packages.iphonesimulator",
-            progress_message="Installing app requirements for iPhone simulator...",
-            pip_args=[
-                f"--platform=ios_{ios_min_tag}_{self.tools.host_arch}_iphonesimulator",
-            ],
-            pip_kwargs={
-                "env": {
-                    "PYTHONPATH": str(simulator_platform_site),
-                    "PIP_REQUIRE_VIRTUALENV": None,
-                },
-            },
-            install_hint=f"""
+            platform="iphonesimulator",
+            arch=self.tools.host_arch,
+        )
+        with (
+            self.console.wait_bar(
+                "Installing app requirements for iPhone simulator..."
+            ),
+        ):
+            sim_venv.install_requirements(
+                requires,
+                allow_editable=False,
+                require_binary=True,
+                min_os_version=ios_min_version,
+                install_path=app_packages_path.parent / "app_packages.iphonesimulator",
+                install_hint=f"""
 
 This may indicate that an `iphoneos` wheel could be found, but an
 `iphonesimulator` wheel could not be found; or that the `iphonesimulator`
 binary wheels that are available are not compatible with
 Python {self.python_version_tag} and a minimum iOS version of {ios_min_version}.
 """,
-        )
+            )
 
 
 class iOSXcodeUpdateCommand(iOSXcodeCreateCommand, UpdateCommand):

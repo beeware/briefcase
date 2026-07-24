@@ -13,7 +13,7 @@ from briefcase.config import AppConfig, DraftAppConfig
 from briefcase.integrations.base import Tool
 from briefcase.integrations.subprocess import Subprocess
 
-from ...utils import create_file
+from ...utils import create_file, create_toml_file
 
 
 @pytest.fixture
@@ -143,8 +143,15 @@ class TrackingCreateCommand(DummyCreateCommand):
         self.actions = []
 
     def briefcase_toml(self, app):
-        # default any app to an empty `briefcase.toml`
-        return self._briefcase_toml.get(app, {})
+        # default to a barebones configuration
+        return self._briefcase_toml.get(
+            app,
+            {
+                "paths": {
+                    "support_path": "path/to/support",
+                }
+            },
+        )
 
     def verify_host(self):
         super().verify_host()
@@ -179,12 +186,22 @@ class TrackingCreateCommand(DummyCreateCommand):
             "The packaged app goes here",
         )
 
+    def create_app_environment(self, app, platform, arch, env_manager=None):
+        self.actions.append(("create-app-env", app.app_name, platform, arch))
+        return super().create_app_environment(app, platform, arch, env_manager)
+
     def install_app_support_package(self, app):
         self.actions.append(("support", app.app_name))
 
-    def install_app_requirements(self, app):
+    def install_app_requirements(self, app, venv):
         self.actions.append(
-            ("requirements", app.app_name, app.test_mode, app.debugger is not None)
+            (
+                "requirements",
+                venv.name,
+                app.app_name,
+                app.test_mode,
+                app.debugger is not None,
+            )
         )
 
     def install_app_code(self, app):
@@ -200,6 +217,9 @@ class TrackingCreateCommand(DummyCreateCommand):
 
     def cleanup_app_content(self, app):
         self.actions.append(("cleanup", app.app_name))
+
+    def install_managed_python_env(self, app, venv):
+        self.actions.append(("install-managed-python-env", app.app_name, venv.name))
 
 
 @pytest.fixture
@@ -274,36 +294,39 @@ def bundle_path(myapp, tmp_path):
 @pytest.fixture
 def app_packages_path_index(bundle_path):
     (bundle_path / "path/to/app_packages").mkdir(parents=True, exist_ok=True)
-    with (bundle_path / "briefcase.toml").open("wb") as f:
-        index = {
+    create_toml_file(
+        bundle_path / "briefcase.toml",
+        {
             "paths": {
                 "app_path": "path/to/app",
                 "app_packages_path": "path/to/app_packages",
                 "support_path": "path/to/support",
                 "support_revision": 37,
             }
-        }
-        tomli_w.dump(index, f)
+        },
+    )
 
 
 @pytest.fixture
 def app_requirements_path_index(bundle_path):
-    with (bundle_path / "briefcase.toml").open("wb") as f:
-        index = {
+    create_toml_file(
+        bundle_path / "briefcase.toml",
+        {
             "paths": {
                 "app_path": "path/to/app",
                 "app_requirements_path": "path/to/requirements.txt",
                 "support_path": "path/to/support",
                 "support_revision": 37,
             }
-        }
-        tomli_w.dump(index, f)
+        },
+    )
 
 
 @pytest.fixture
 def app_requirement_installer_args_path_index(bundle_path):
-    with (bundle_path / "briefcase.toml").open("wb") as f:
-        index = {
+    create_toml_file(
+        bundle_path / "briefcase.toml",
+        {
             "paths": {
                 "app_path": "path/to/app",
                 "app_requirements_path": "path/to/requirements.txt",
@@ -311,33 +334,35 @@ def app_requirement_installer_args_path_index(bundle_path):
                 "support_path": "path/to/support",
                 "support_revision": 37,
             }
-        }
-        tomli_w.dump(index, f)
+        },
+    )
 
 
 @pytest.fixture
 def no_support_revision_index(bundle_path):
-    with (bundle_path / "briefcase.toml").open("wb") as f:
-        index = {
+    create_toml_file(
+        bundle_path / "briefcase.toml",
+        {
             "paths": {
                 "app_path": "path/to/app",
                 "app_requirements_path": "path/to/requirements.txt",
                 "support_path": "path/to/support",
             }
-        }
-        tomli_w.dump(index, f)
+        },
+    )
 
 
 @pytest.fixture
 def no_support_path_index(bundle_path):
-    with (bundle_path / "briefcase.toml").open("wb") as f:
-        index = {
+    create_toml_file(
+        bundle_path / "briefcase.toml",
+        {
             "paths": {
                 "app_path": "path/to/app",
                 "app_requirements_path": "path/to/requirements.txt",
             }
-        }
-        tomli_w.dump(index, f)
+        },
+    )
 
 
 @pytest.fixture
