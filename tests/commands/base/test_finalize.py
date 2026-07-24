@@ -196,3 +196,19 @@ def test_binary_path_internal_app(base_command, first_app):
 def test_app_config_eq_non_app(first_app):
     """AppConfig compared to a non-AppConfig returns NotImplemented."""
     assert first_app != "not an app"
+
+
+def test_unsupported_env_manager(base_command, first_app):
+    """If the command doesn't support the app's env manager, an exception is raised."""
+    first_app.env_manager = "conda"
+    base_command.supported_env_managers = {"venv", "uv"}
+
+    with pytest.raises(
+        BriefcaseConfigError,
+        match=(
+            r"'first' declares the use of a 'conda' environment, "
+            r"but Tester Dummy projects do not support environments "
+            r"of that type\."
+        ),
+    ):
+        base_command.finalize(apps=[first_app])

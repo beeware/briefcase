@@ -76,8 +76,12 @@ def test_minimal_GlobalConfig():
     assert config.project_name == "My Project"
     assert config.version == Version("1.2.3")
     assert config.bundle == "org.beeware"
+    assert config.url is None
     assert config.license is None
     assert config.license_files == []
+    assert config.author is None
+    assert config.author_email is None
+    assert config.requires_python is None
 
     assert repr(config) == "<My Project v1.2.3 GlobalConfig>"
 
@@ -95,6 +99,7 @@ def test_extra_attrs():
         second=42,
         license="MIT",
         license_files=["LICENSE"],
+        requires_python=">=3.12",
     )
 
     # The basic properties have been set.
@@ -106,6 +111,7 @@ def test_extra_attrs():
     assert config.author_email == "jane@example.com"
     assert config.license == "MIT"
     assert config.license_files == ["LICENSE"]
+    assert config.requires_python == ">=3.12"
 
     # Explicit additional properties have been set
     assert config.first == "value 1"

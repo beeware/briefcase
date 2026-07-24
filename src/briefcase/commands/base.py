@@ -34,6 +34,7 @@ from briefcase import __version__
 from briefcase.config import (
     AppConfig,
     DraftAppConfig,
+    EnvManagerT,
     FinalizedAppConfig,
     GlobalConfig,
     parse_config,
@@ -136,6 +137,7 @@ class BaseCommand(ABC):
     cmd_line = "briefcase {command} {platform} {output_format}"
     supported_host_os: Collection[str] = {"Darwin", "Linux", "Windows"}
     supported_host_os_reason = f"This command is not supported on {platform.system()}."
+    supported_env_managers: Collection[EnvManagerT] = {"venv"}
 
     # defined by platform-specific subclasses
     command: str
@@ -154,7 +156,7 @@ class BaseCommand(ABC):
     def __init__(
         self,
         console: Console,
-        tools: ToolCache = None,
+        tools: ToolCache | None = None,
         apps: dict[str, AppConfig] | None = None,
         base_path: Path | None = None,
         data_path: Path | None = None,
@@ -735,14 +737,21 @@ Move the project to a path that does not container this character.
         configuration, and performs any other app-specific platform configuration and
         verification that is required as a result of command-line arguments.
 
-        Platform overrides should call ``super().finalize_app_config(app, **kwargs)``
-        to construct the ``FinalizedAppConfig``.
+        Platform overrides should call `super().finalize_app_config(app, **kwargs)`
+        to construct the `FinalizedAppConfig`.
 
         :param app: The app configuration to finalize.
         :param kwargs: Runtime attributes forwarded to the FinalizedAppConfig
-            constructor (``test_mode``, ``debugger``, etc.).
+            constructor (`test_mode`, `debugger`, etc.).
         :returns: The finalized app configuration.
         """
+        if app.env_manager not in self.supported_env_managers:
+            raise BriefcaseConfigError(
+                f"{app.app_name!r} declares the use of a {app.env_manager!r} "
+                f"environment, but {self.platform} {self.output_format} "
+                f"projects do not support environments of that type."
+            )
+
         return FinalizedAppConfig(app, **kwargs)
 
     def resolve_apps(
