@@ -106,12 +106,23 @@ class macOSMixin(_MixinBase):
             self.tools.platform.machine() == "x86_64"
             and "ARM64" in self.tools.platform.version()
         ):
-            raise BriefcaseCommandError(
-                "The Python interpreter that is being used to run Briefcase has been "
-                "compiled for x86_64, and is running in emulation mode on Apple "
-                "Silicon hardware. You must use a Python interpreter that has been "
-                "compiled for Apple Silicon, or is a Universal binary."
-            )
+            if bool(self.tools.os.getenv("BRIEFCASE_ALLOW_EMULATION", "")):
+                self.console.warning_banner(
+                    "Running in CPU emulation mode",
+                    (
+                        "The Python interpreter that is being used to run Briefcase "
+                        "has been compiled for x86_64, and is running in emulation "
+                        "mode on ARM64 hardware. This configuration should not be used "
+                        "for production apps."
+                    ),
+                )
+            else:
+                raise BriefcaseCommandError(
+                    "The Python interpreter that is being used to run Briefcase has "
+                    "been compiled for x86_64, and is running in emulation mode on "
+                    "Apple Silicon hardware. You must use a Python interpreter that "
+                    "has been compiled for Apple Silicon, or is a Universal binary."
+                )
 
         super().verify_tools()
 
