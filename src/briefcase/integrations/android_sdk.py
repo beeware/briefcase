@@ -1495,14 +1495,16 @@ class ADB:
             if "INSTALL_FAILED_UPDATE_INCOMPATIBLE" in output:
                 raise BriefcaseCommandError(
                     f"""\
-            Unable to install APK {apk_path} on {self.device}.
+            Unable to install APK {apk_path} on {self.device}
 
             The app currently installed on the device was signed with a different key
             than this APK (often because it was previously installed from a different
-            computer). To resolve this, uninstall the existing app, then try again:
+            computer). To resolve this, run the following command to uninstall the
+            existing app, then try again:
 
-                $ adb -s {self.device} uninstall {package}
-            """
+                $ "{self.tools.android_sdk.adb_path}" -s {self.device} """
+                    f"""uninstall {package}
+"""
                 ) from e
             elif "INSTALL_FAILED_VERSION_DOWNGRADE" in output:
                 raise BriefcaseCommandError(
@@ -1510,11 +1512,12 @@ class ADB:
             Unable to install APK {apk_path} on {self.device}.
 
             A newer version of this app is already installed, and Android won't install
-            an older version over it. To resolve this, uninstall the existing app, then
-            try again:
+            an older version over it. To resolve this, run the following command to
+            uninstall the existing app, then try again:
 
-                $ adb -s {self.device} uninstall {package}
-            """
+                $ "{self.tools.android_sdk.adb_path}" -s {self.device} """
+                    f"""uninstall {package}
+"""
                 ) from e
             else:
                 raise BriefcaseCommandError(
