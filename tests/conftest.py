@@ -13,6 +13,7 @@ from briefcase.config import DraftAppConfig
 from briefcase.integrations.base import ToolCache
 from briefcase.integrations.file import File
 from briefcase.integrations.subprocess import Subprocess
+from briefcase.integrations.virtual_environment import VirtualEnvironment
 
 from .utils import DummyConsole, create_file
 
@@ -141,6 +142,11 @@ def first_app(first_app_unbuilt, tmp_path):
 
 
 @pytest.fixture
+def base_path(tmp_path):
+    return tmp_path / "base_path"
+
+
+@pytest.fixture
 def mock_tools(dummy_console, tmp_path) -> ToolCache:
     mock_tools = ToolCache(
         console=dummy_console,
@@ -166,3 +172,18 @@ def mock_tools(dummy_console, tmp_path) -> ToolCache:
     Subprocess.verify(tools=mock_tools)
 
     return mock_tools
+
+
+@pytest.fixture
+def mock_venv(mock_tools, base_path):
+    venv = MagicMock(spec=VirtualEnvironment)
+    venv.provides_python = False
+    venv.tools = mock_tools
+    venv.name = "mock-venv"
+    venv.base_path = base_path
+    venv.venv_path = base_path / "mock-venv"
+
+    # create the venv directory
+    venv.venv_path.mkdir(parents=True)
+
+    return venv

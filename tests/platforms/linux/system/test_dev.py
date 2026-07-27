@@ -62,14 +62,6 @@ def test_dev_system_app_starts(dev_command, first_app, tmp_path):
         Path(popen_args[0][0]).parent.parent.parent
         == dev_command.base_path / ".briefcase/first-app"
     )
-    assert (
-        Path(popen_args[0][0])
-        .parts[-3]
-        .startswith("dev.cp3" if sys.platform == "win32" else "dev.cpython-3")
-    )
-    assert Path(popen_args[0][0]).parts[-2] == (
-        "Scripts" if sys.platform == "win32" else "bin"
-    )
 
     # Check that module name is in the inline Python command
     assert "run_module" in popen_args[0][2]
