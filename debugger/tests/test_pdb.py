@@ -30,9 +30,8 @@ def test_no_debugger_verbose(monkeypatch, capsys):
     briefcase_debugger.start_remote_debugger()
 
     captured = capsys.readouterr()
-    assert (
-        captured.out
-        == "No 'BRIEFCASE_DEBUGGER' environment variable found. Debugger not starting.\n"
+    assert captured.out == (
+        "No 'BRIEFCASE_DEBUGGER' environment variable found. Debugger not starting.\n"
     )
     assert captured.err == ""
 
