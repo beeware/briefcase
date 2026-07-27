@@ -10,6 +10,7 @@ from http import HTTPStatus
 from pathlib import Path
 
 import httpx
+import tomli_w
 from httpx_retries import Retry, RetryTransport
 from rich.markup import escape
 
@@ -70,6 +71,23 @@ def create_file(filepath, content, mode="w", chmod=None):
         os.chmod(filepath, chmod)
 
     return filepath
+
+
+def create_toml_file(tomlpath, content):
+    """A test utility to create a TOML file with known content.
+
+    Ensures that the directory for the file exists, and writes a TOML file with specific
+    content.
+
+    :param tomlpath: The path for the TOML file to create.
+    :param content: A dictionary of content that tomllib can use to create the file.
+    :returns: The path to the file that was created.
+    """
+    tomlpath.parent.mkdir(parents=True, exist_ok=True)
+    with tomlpath.open("wb") as f:
+        tomli_w.dump(content, f)
+
+    return tomlpath
 
 
 def create_plist_file(plistpath, content):
