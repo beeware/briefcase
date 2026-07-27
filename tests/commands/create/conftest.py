@@ -13,7 +13,7 @@ from briefcase.config import AppConfig, DraftAppConfig
 from briefcase.integrations.base import Tool
 from briefcase.integrations.subprocess import Subprocess
 
-from ...utils import create_file
+from ...utils import create_file, create_toml_file
 
 
 @pytest.fixture
@@ -274,36 +274,39 @@ def bundle_path(myapp, tmp_path):
 @pytest.fixture
 def app_packages_path_index(bundle_path):
     (bundle_path / "path/to/app_packages").mkdir(parents=True, exist_ok=True)
-    with (bundle_path / "briefcase.toml").open("wb") as f:
-        index = {
+    create_toml_file(
+        bundle_path / "briefcase.toml",
+        {
             "paths": {
                 "app_path": "path/to/app",
                 "app_packages_path": "path/to/app_packages",
                 "support_path": "path/to/support",
                 "support_revision": 37,
             }
-        }
-        tomli_w.dump(index, f)
+        },
+    )
 
 
 @pytest.fixture
 def app_requirements_path_index(bundle_path):
-    with (bundle_path / "briefcase.toml").open("wb") as f:
-        index = {
+    create_toml_file(
+        bundle_path / "briefcase.toml",
+        {
             "paths": {
                 "app_path": "path/to/app",
                 "app_requirements_path": "path/to/requirements.txt",
                 "support_path": "path/to/support",
                 "support_revision": 37,
             }
-        }
-        tomli_w.dump(index, f)
+        },
+    )
 
 
 @pytest.fixture
 def app_requirement_installer_args_path_index(bundle_path):
-    with (bundle_path / "briefcase.toml").open("wb") as f:
-        index = {
+    create_toml_file(
+        bundle_path / "briefcase.toml",
+        {
             "paths": {
                 "app_path": "path/to/app",
                 "app_requirements_path": "path/to/requirements.txt",
@@ -311,33 +314,35 @@ def app_requirement_installer_args_path_index(bundle_path):
                 "support_path": "path/to/support",
                 "support_revision": 37,
             }
-        }
-        tomli_w.dump(index, f)
+        },
+    )
 
 
 @pytest.fixture
 def no_support_revision_index(bundle_path):
-    with (bundle_path / "briefcase.toml").open("wb") as f:
-        index = {
+    create_toml_file(
+        bundle_path / "briefcase.toml",
+        {
             "paths": {
                 "app_path": "path/to/app",
                 "app_requirements_path": "path/to/requirements.txt",
                 "support_path": "path/to/support",
             }
-        }
-        tomli_w.dump(index, f)
+        },
+    )
 
 
 @pytest.fixture
 def no_support_path_index(bundle_path):
-    with (bundle_path / "briefcase.toml").open("wb") as f:
-        index = {
+    create_toml_file(
+        bundle_path / "briefcase.toml",
+        {
             "paths": {
                 "app_path": "path/to/app",
                 "app_requirements_path": "path/to/requirements.txt",
             }
-        }
-        tomli_w.dump(index, f)
+        },
+    )
 
 
 @pytest.fixture
