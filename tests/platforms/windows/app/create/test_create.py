@@ -110,6 +110,29 @@ def test_verify_windows_cpu_arch(create_command):
         create_command.verify_host()
 
 
+def test_verify_windows_cpu_arch_warning(monkeypatch, create_command, capsys):
+    """User can opt into emuluation mode, but they will get a warning."""
+    # Set the environment variable to allow emulation
+    monkeypatch.setenv("BRIEFCASE_ALLOW_EMULATION", "1")
+
+    # Create a Mock object for the platform module
+    create_command.tools.platform = MagicMock(spec_set=platform)
+
+    # Simulate that Mock platform is running on Windows ARM64 with an x86_64 Python interpreter
+    create_command.tools.host_os = "Windows"
+    create_command.tools.host_arch = "ARM64"
+    create_command.tools.platform.python_compiler = MagicMock(
+        return_value="MSV v.1950 64 bit (AMD64)"
+    )
+
+    create_command.verify_host()
+
+    # A warning was raised, but the app can continue.
+    stdout, stderr = capsys.readouterr()
+    assert "Running in CPU emulation mode" in stdout
+    assert stderr == ""
+
+
 def test_context(create_command, first_app_config):
     context = create_command.output_format_template_context(first_app_config)
     assert sorted(context.keys()) == [
@@ -197,6 +220,36 @@ def test_installer_images(create_command, first_app_config, tmp_path):
 
 
 @pytest.mark.parametrize(
+    ("console_app", "arch", "revision", "expected_binary"),
+    [
+        (False, "AMD64", "42", "GUI-Stub-3.X-amd64-b42.zip"),
+        (True, "AMD64", "42", "Console-Stub-3.X-amd64-b42.zip"),
+        (False, "arm64", "37", "GUI-Stub-3.X-arm64-b37.zip"),
+        (True, "arm64", "37", "Console-Stub-3.X-arm64-b37.zip"),
+    ],
+)
+def test_stub_binary_filename(
+    create_command,
+    first_app_config,
+    console_app,
+    arch,
+    revision,
+    expected_binary,
+):
+    """A valid support package URL is created for a support revision."""
+    first_app_config.console_app = console_app
+    create_command.tools.host_arch = arch
+
+    create_command.tools.sys = MagicMock(spec=sys)
+    create_command.tools.sys.version_info = ("3", "X", "Y")
+
+    assert (
+        create_command.stub_binary_filename(revision, first_app_config)
+        == expected_binary
+    )
+
+
+@pytest.mark.parametrize(
     ("revision", "micro"),
     [
         # Numerical revision
@@ -209,9 +262,7 @@ def test_installer_images(create_command, first_app_config, tmp_path):
         ("0rc1", "0"),
     ],
 )
-def test_support_package_url(
-    create_command, revision, micro, first_app_config, tmp_path
-):
+def test_support_package_url(create_command, revision, micro):
     """A valid support package URL is created for a support revision."""
     expected_link = (
         f"https://www.python.org/ftp/python"
