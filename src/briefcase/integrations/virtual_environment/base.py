@@ -36,7 +36,7 @@ class VirtualEnvironment(ABC):
         :param platform: The platform for the environment. If this isn't the
             host OS, the environment will be a cross build environment.
         :param arch: The architecture for the environment. If this isn't the
-            host OS architeceture, the environment will be a cross build
+            host OS architecture, the environment will be a cross build
             environment.
         :param platform_path: The path where cross-platform details are stored.
         """
