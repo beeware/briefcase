@@ -28,15 +28,8 @@ class DummyUpdateCommand(UpdateCommand):
         self.tools.subprocess = mock.MagicMock(spec_set=Subprocess)
 
     def briefcase_toml(self, app):
-        # default to a barebones configuration
-        return self._briefcase_toml.get(
-            app,
-            {
-                "paths": {
-                    "support_path": "path/to/support",
-                }
-            },
-        )
+        # default any app to an empty `briefcase.toml`
+        return self._briefcase_toml.get(app, {})
 
     def binary_path(self, app):
         return self.bundle_path(app) / f"{app.app_name}.bin"

@@ -189,10 +189,7 @@ def test_create_app_with_stub(tracking_create_command, tmp_path):
     first_app = tracking_create_command.apps["first"]
 
     tracking_create_command._briefcase_toml[first_app] = {
-        "paths": {
-            "support_path": "path/to/support",
-            "stub_binary_revision": "b1",
-        }
+        "paths": {"stub_binary_revision": "b1"}
     }
 
     tracking_create_command.create_app(first_app)

@@ -153,10 +153,7 @@ def test_update_app_with_stub(update_command, first_app, tmp_path):
     """If the user requests an app stub update, it is are updated."""
     # Add an entry to the path index indicating a stub is required
     update_command._briefcase_toml[update_command.apps["first"]] = {
-        "paths": {
-            "support_path": "path/to/support",
-            "stub_binary_revision": "b1",
-        }
+        "paths": {"stub_binary_revision": "b1"}
     }
 
     update_command.update_app(
