@@ -32,9 +32,17 @@ Yes! Briefcase uses `pip` to install third-party packages into your app bundle. 
 
 If the package is pure-Python (i.e., it does not contain a binary library), that's all you need to do.
 
-If the package contains a binary component, you'll need to ensure that a binary wheel is available for the platform you're targeting:
+If the package contains a binary component, you'll need to ensure that a binary wheel is available for the platform you are targeting:
 
 - **macOS, Linux, Windows**: Binary wheels are hosted on [PyPI](https://pypi.org).
 - **Android**: See the [Android platform documentation][android-third-party-packages].
 - **iOS**: See the [iOS platform documentation][ios-third-party-packages].
 - **Web**: Binary wheel support is currently limited to [those provided by the Pyodide project](https://pyodide.org/en/stable/usage/packages-in-pyodide.html).
+
+## How do I install and run Briefcase?
+
+See the [How to run Briefcase](../how-to/run-briefcase.md) how-to guide. Briefcase can be installed with `pip` into a virtual environment, or run ad-hoc with `uvx` or `pipx`.
+
+## Can I use uvx or pipx to run Briefcase?
+
+Yes. Both `uvx` and `pipx` create isolated environments for Briefcase so it does not clutter your system Python. See the [How to run Briefcase](../how-to/run-briefcase.md) guide for installation and usage details.

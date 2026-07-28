@@ -4,6 +4,7 @@
 
 - [Tutorial](tutorial/index.md)
 - [How-to guides](how-to/index.md)
+    - [How to run Briefcase](how-to/run-briefcase.md) - Install and invoke Briefcase as an end-user tool.
     - Obtaining a Code Signing identity
         - [Android](how-to/code-signing/android.md)
         - [macOS](how-to/code-signing/macOS.md)
