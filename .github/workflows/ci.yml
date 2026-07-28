@@ -171,7 +171,7 @@ jobs:
           tox -e py-cov --installpkg dist/briefcase-*.whl
 
     - name: Store Coverage Data
-      if: always() && contains('success,failure', steps.test.outcome)
+      if: always() && (steps.test.outcome == 'success' || steps.test.outcome == 'failure')
       uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a  # v7.0.1
       with:
         name: coverage-data-${{ matrix.platform }}-${{ matrix.python-version }}
@@ -181,7 +181,7 @@ jobs:
 
     - name: Report Platform Coverage
       id: coverage
-      if: always() && contains('success,failure', steps.test.outcome)
+      if: always() && (steps.test.outcome == 'success' || steps.test.outcome == 'failure')
       # coverage reporting must use the same Python version used to produce coverage
       run: tox -qe coverage$(tr -dc "0-9" <<< "${{ matrix.python-version }}")
 
@@ -193,7 +193,7 @@ jobs:
     name: Project coverage
     runs-on: ubuntu-24.04
     needs: unit-tests
-    if: always() && contains('success,failure', needs.unit-tests.result)
+    if: always() && (needs.unit-tests.result == 'success' || needs.unit-tests.result == 'failure')
     steps:
     - name: Checkout
       uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1  # v7.0.1
@@ -225,7 +225,7 @@ jobs:
 
     - name: Project Coverage Report
       id: project-coverage
-      if: always() || contains('success,failure', needs.platform-coverage.result)
+      if: always()
       run: tox -qe coverage-ci-project-html
 
     - name: Upload Project Coverage HTML Report
