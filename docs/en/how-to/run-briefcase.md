@@ -81,9 +81,6 @@ You should create and activate a virtual environment before installing Briefcase
 - Browse the [Command reference][commands] for the full list of Briefcase commands.
 - See the [How-to guides index][how-to-index] for packaging, debugging, and publishing tasks.
 
-<!-- Standard reference link for pages that mention Briefcase-version metadata.
-(link target intentionally blank to be filled in by Sphinx; this anchor exists in faq.md) -->
-
 [ Tutorial ]: ../../tutorial/index.md
 [ commands ]: ../../reference/commands.md
 [ how-to-index ]: index.md
