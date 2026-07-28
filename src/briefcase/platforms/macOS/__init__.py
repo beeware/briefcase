@@ -216,20 +216,6 @@ class macOSCreateMixin(AppPackagesMergeMixin):
         # picked up on the next run of any Briefcase command).
         self.verify_not_on_icloud(app, cleanup=True)
 
-    def stub_binary_filename(
-        self,
-        support_revision: str,
-        app: FinalizedAppConfig,
-    ) -> str:
-        """The filename for the stub binary."""
-        venv_class = self.tools.virtual_environment[app.env_manager]
-        stub_type = "Console" if app.console_app else "GUI"
-        stub_name = "LStub" if venv_class.provides_python else "Stub"
-
-        return (
-            f"{stub_type}-{stub_name}-{self.python_version_tag}-b{support_revision}.zip"
-        )
-
     def _install_app_requirements(
         self,
         app: FinalizedAppConfig,

@@ -7,7 +7,6 @@ from unittest import mock
 import pytest
 
 from briefcase.exceptions import BriefcaseCommandError, RequirementsInstallError
-from briefcase.integrations.virtual_environment import VenvVirtualEnvironment
 from briefcase.platforms.macOS.app import macOSAppCreateCommand
 
 from ....utils import (
@@ -373,39 +372,6 @@ def test_install_app_resources(create_command, first_app_templated, tmp_path):
     assert (
         os.path.getmtime(create_command.binary_path(first_app_templated))
         > initial_timestamp
-    )
-
-
-@pytest.mark.parametrize(
-    ("console_app", "provides_python", "revision", "expected_binary"),
-    [
-        (False, False, "37", "GUI-Stub-3.X-b37.zip"),
-        (True, False, "37", "Console-Stub-3.X-b37.zip"),
-        (False, True, "42", "GUI-LStub-3.X-b42.zip"),
-        (True, True, "42", "Console-LStub-3.X-b42.zip"),
-    ],
-)
-def test_stub_binary_filename(
-    monkeypatch,
-    create_command,
-    first_app_templated,
-    console_app,
-    provides_python,
-    revision,
-    expected_binary,
-):
-    """A valid support package URL is created for a support revision."""
-    first_app_templated.console_app = console_app
-
-    # Mock a universal app with an environment that provides Python
-    monkeypatch.setattr(VenvVirtualEnvironment, "provides_python", provides_python)
-
-    create_command.tools.sys = mock.MagicMock(spec=sys)
-    create_command.tools.sys.version_info = ("3", "X", "Y")
-
-    assert (
-        create_command.stub_binary_filename(revision, first_app_templated)
-        == expected_binary
     )
 
 
