@@ -109,7 +109,7 @@ The contact email address for the person or organization responsible for the pro
 
 **EXPERIMENTAL** This is an experimental feature. It is currently only used by developer mode.
 
-The environment manager to use when creating isolated Python environments and installing requirements; one of:
+The environment manager to use when creating isolated Python environments and installing requirements. Must be one of:
 
 * `venv` - The `venv` package provided by the Python standard library
 * `uv` - The [uv](https://docs.astral.sh/uv/) environment manager
@@ -181,7 +181,7 @@ cleanup_paths = [
     "path/to/unneeded_file.txt",
     "path/to/unneeded_directory",
     "path/**/*.exe",
-    "{app.formal_name}/content/extra.doc"
+    "{app.formal_name}/content/extra.doc",
 ]
 ```
 
@@ -332,23 +332,24 @@ Any PEP 508 version specifier is legal. For example:
   ```python
   requires = [
       "pillow==9.1.0",
-      "--no-binary", "pillow",
+      "--no-binary",
+      "pillow",
   ]
   ```
 
 - Git repository:
   ```python
-  requires=["git+https://github.com/beeware/briefcase.git"]
+  requires = ["git+https://github.com/beeware/briefcase.git"]
   ```
 
 - Local directory:
   ```python
-  requires=["mysrc/myapp"]
+  requires = ["mysrc/myapp"]
   ```
 
 - Local wheel file:
   ```python
-  requires=["fullpath/wheelfile.whl"]
+  requires = ["fullpath/wheelfile.whl"]
   ```
 
 #### `revision`

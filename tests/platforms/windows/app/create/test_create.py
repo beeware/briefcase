@@ -263,13 +263,7 @@ def test_stub_binary_filename(
         ("0rc1", "0"),
     ],
 )
-def test_support_package_url(
-    create_command,
-    revision,
-    micro,
-    first_app_config,
-    tmp_path,
-):
+def test_support_package_url(create_command, revision, micro):
     """A valid support package URL is created for a support revision."""
     expected_link = (
         f"https://www.python.org/ftp/python"

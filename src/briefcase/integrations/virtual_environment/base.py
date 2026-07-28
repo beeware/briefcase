@@ -31,14 +31,14 @@ class VirtualEnvironment(ABC):
             the *full* name; the environment will add additional information to
             disambiguate the app and environment type.
         :param app: The app configuration
-        :param tools: The shared :class:`ToolCache` instance.
+        :param tools: The shared `ToolCache` instance.
         :param base_path: The root of the project path.
         :param platform: The platform for the environment. If this isn't the
             host OS, the environment will be a cross build environment.
         :param arch: The architecture for the environment. If this isn't the
-            host OS architeceture, the environment will be a cross build
+            host OS architecture, the environment will be a cross build
             environment.
-        :param platform_path: The path where platform details are stored.
+        :param platform_path: The path where cross-platform details are stored.
         """
         self.name = name
         self.app = app
