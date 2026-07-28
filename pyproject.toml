@@ -116,7 +116,7 @@ tox-uv = [
 ]
 
 ty = [
-    "ty == 0.0.58",
+    "ty == 0.0.61",
 ]
 
 dev = [
@@ -126,7 +126,7 @@ dev = [
 ]
 
 test = [
-    "coverage[toml] == 7.15.0",
+    "coverage[toml] == 7.15.2",
     "coverage-conditional-plugin == 0.9.0",
     "httpx-retries == 0.6.0",
     "pytest == 9.1.1",

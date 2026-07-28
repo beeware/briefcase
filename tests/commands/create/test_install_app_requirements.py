@@ -230,7 +230,7 @@ def test_app_packages_requirement_installer_args_path_transformed(
             "--no-user",
             f"--target={app_packages_path}",
             "--extra-index-url",
-            os.path.abspath(create_command.base_path / "packages"),
+            (create_command.base_path / "packages").resolve(),
             "package",
         ],
         check=True,
@@ -719,7 +719,14 @@ def test_app_requirements_requirement_installer_args_with_template_support(
 ):
     """If an app has requirement install args, a requirements file is still written, and
     requirement installer args file is written if the template supports it."""
-    myapp.requirement_installer_args = ["--no-cache", "-f", "wheels with space"]
+    (create_command.base_path / "packages").mkdir(exist_ok=True)
+    myapp.requirement_installer_args = [
+        "--no-cache",
+        "--extra-index-url",
+        "./packages",
+        "-f",
+        "wheels with space",
+    ]
     myapp.requires = ["my-favourite-package"]
 
     # Install requirements into the bundle
@@ -733,7 +740,16 @@ def test_app_requirements_requirement_installer_args_with_template_support(
     assert app_requirement_installer_args_path.exists()
     assert (
         app_requirement_installer_args_path.read_text(encoding="utf-8")
-        == "--no-cache\n-f\nwheels with space\n"
+        == "\n".join(
+            [
+                "--no-cache",
+                "--extra-index-url",
+                str(create_command.base_path / "packages"),
+                "-f",
+                "wheels with space",
+            ]
+        )
+        + "\n"
     )
 
     # Original app definitions haven't changed

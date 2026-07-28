@@ -4,7 +4,6 @@ import argparse
 import hashlib
 import os
 import platform
-import re
 import shutil
 import subprocess
 import sys
@@ -29,8 +28,6 @@ from briefcase.integrations.git import Git
 from briefcase.integrations.subprocess import NativeAppContext
 
 from .base import BaseCommand, full_options
-
-relative_path_matcher = re.compile(r"^\.{1,2}[\\/]")
 
 
 def cookiecutter_cache_path(template):
@@ -122,26 +119,22 @@ class CreateCommand(BaseCommand):
             f"{self.support_package_filename(support_revision)}"
         )
 
-    def stub_binary_filename(self, support_revision: str, is_console_app: bool) -> str:
+    def stub_binary_filename(
+        self,
+        support_revision: str,
+        app: FinalizedAppConfig,
+    ) -> str:
         """The filename for the stub binary."""
-        stub_type = "Console" if is_console_app else "GUI"
-        win_suffix = (
-            f"-{self.tools.host_arch.lower()}"
-            if self.tools.host_os == "Windows"
-            else ""
-        )
-        return (
-            f"{stub_type}-Stub-{self.python_version_tag}{win_suffix}"
-            f"-b{support_revision}.zip"
-        )
+        stub_type = "Console" if app.console_app else "GUI"
+        return f"{stub_type}-Stub-{self.python_version_tag}-b{support_revision}.zip"
 
-    def stub_binary_url(self, support_revision: str, is_console_app: bool) -> str:
+    def stub_binary_url(self, support_revision: str, app: FinalizedAppConfig) -> str:
         """The URL of the stub binary to use for apps of this type."""
         return (
             "https://briefcase-support.s3.amazonaws.com/python/"
             f"{self.python_version_tag}/"
             f"{self.platform}/"
-            f"{self.stub_binary_filename(support_revision, is_console_app)}"
+            f"{self.stub_binary_filename(support_revision, app)}"
         )
 
     def icon_targets(self, app: FinalizedAppConfig):
@@ -492,9 +485,7 @@ class CreateCommand(BaseCommand):
                 except AttributeError:
                     stub_binary_revision = self.stub_binary_revision(app)
 
-                stub_binary_url = self.stub_binary_url(
-                    stub_binary_revision, app.console_app
-                )
+                stub_binary_url = self.stub_binary_url(stub_binary_revision, app=app)
                 custom_stub_binary = False
                 self.console.info(f"Using stub binary {stub_binary_url}")
 
@@ -569,7 +560,13 @@ class CreateCommand(BaseCommand):
                         f.write(f"{requirement}\n")
 
             if requirement_installer_args_path:
-                pip_args = "\n".join(self._extra_pip_args(app))
+                pip_args = "\n".join(
+                    str(arg)
+                    for arg in self.tools.file.resolve_relative_args(
+                        app.requirement_installer_args,
+                        self.base_path,
+                    )
+                )
                 requirement_installer_args_path.write_text(
                     f"{pip_args}\n", encoding="utf-8"
                 )
@@ -589,19 +586,10 @@ class CreateCommand(BaseCommand):
         :param app: The app configuration
         :returns: A list of additional arguments
         """
-        args: list[str] = []
-        for argument in app.requirement_installer_args:
-            to_append = argument
-            if relative_path_matcher.match(argument) and self.tools.file.is_local_path(
-                argument
-            ):
-                abs_path = os.path.abspath(self.base_path / argument)
-                if Path(abs_path).exists():
-                    to_append = abs_path
-
-            args.append(to_append)
-
-        return args
+        return self.tools.file.resolve_relative_args(
+            app.requirement_installer_args,
+            self.base_path,
+        )
 
     def _pip_install(
         self,
