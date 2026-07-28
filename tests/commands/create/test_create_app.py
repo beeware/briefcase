@@ -14,11 +14,12 @@ def test_create_app(tracking_create_command, tmp_path):
     # The right sequence of things will be done
     assert tracking_create_command.actions == [
         ("generate", "first"),
-        ("support", "first"),
         ("verify-app-template", "first"),
         ("verify-app-tools", "first"),
+        ("create-app-env", "first", "Tester", "gothic"),
+        ("support", "first"),
         ("code", "first", False),
-        ("requirements", "first", False, False),
+        ("requirements", "Tester-gothic", "first", False, False),
         ("resources", "first"),
         ("cleanup", "first"),
     ]
@@ -58,11 +59,12 @@ def test_create_existing_app_overwrite(tracking_create_command, tmp_path):
     # The right sequence of things will be done
     assert tracking_create_command.actions == [
         ("generate", "first"),
-        ("support", "first"),
         ("verify-app-template", "first"),
         ("verify-app-tools", "first"),
+        ("create-app-env", "first", "Tester", "gothic"),
+        ("support", "first"),
         ("code", "first", False),
-        ("requirements", "first", False, False),
+        ("requirements", "Tester-gothic", "first", False, False),
         ("resources", "first"),
         ("cleanup", "first"),
     ]
@@ -187,7 +189,10 @@ def test_create_app_with_stub(tracking_create_command, tmp_path):
     first_app = tracking_create_command.apps["first"]
 
     tracking_create_command._briefcase_toml[first_app] = {
-        "paths": {"stub_binary_revision": "b1"}
+        "paths": {
+            "support_path": "path/to/support",
+            "stub_binary_revision": "b1",
+        }
     }
 
     tracking_create_command.create_app(first_app)
@@ -198,12 +203,13 @@ def test_create_app_with_stub(tracking_create_command, tmp_path):
     # The right sequence of things will be done
     assert tracking_create_command.actions == [
         ("generate", "first"),
-        ("support", "first"),
-        ("stub", "first"),
         ("verify-app-template", "first"),
         ("verify-app-tools", "first"),
+        ("create-app-env", "first", "Tester", "gothic"),
+        ("support", "first"),
+        ("stub", "first"),
         ("code", "first", False),
-        ("requirements", "first", False, False),
+        ("requirements", "Tester-gothic", "first", False, False),
         ("resources", "first"),
         ("cleanup", "first"),
     ]

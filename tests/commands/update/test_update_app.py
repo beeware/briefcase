@@ -13,6 +13,7 @@ def test_update_app(update_command, first_app, tmp_path):
         ("verify-app-template", "first"),
         ("verify-app-tools", "first"),
         ("code", "first", False),
+        ("create-app-env", "first", "Tester", "gothic", False),
         ("cleanup", "first"),
     ]
 
@@ -63,7 +64,8 @@ def test_update_app_with_requirements(update_command, first_app, tmp_path):
         ("verify-app-template", "first"),
         ("verify-app-tools", "first"),
         ("code", "first", False),
-        ("requirements", "first", False, False),
+        ("create-app-env", "first", "Tester", "gothic", True),
+        ("requirements", "Tester-gothic", "first", False, False),
         ("cleanup", "first"),
     ]
 
@@ -95,6 +97,7 @@ def test_update_app_with_resources(update_command, first_app, tmp_path):
         ("verify-app-template", "first"),
         ("verify-app-tools", "first"),
         ("code", "first", False),
+        ("create-app-env", "first", "Tester", "gothic", False),
         ("resources", "first"),
         ("cleanup", "first"),
     ]
@@ -127,6 +130,7 @@ def test_update_app_with_support_package(update_command, first_app, tmp_path):
         ("verify-app-template", "first"),
         ("verify-app-tools", "first"),
         ("code", "first", False),
+        ("create-app-env", "first", "Tester", "gothic", True),
         ("cleanup-support", "first"),
         ("support", "first"),
         ("cleanup", "first"),
@@ -149,7 +153,10 @@ def test_update_app_with_stub(update_command, first_app, tmp_path):
     """If the user requests an app stub update, it is are updated."""
     # Add an entry to the path index indicating a stub is required
     update_command._briefcase_toml[update_command.apps["first"]] = {
-        "paths": {"stub_binary_revision": "b1"}
+        "paths": {
+            "support_path": "path/to/support",
+            "stub_binary_revision": "b1",
+        }
     }
 
     update_command.update_app(
@@ -165,6 +172,7 @@ def test_update_app_with_stub(update_command, first_app, tmp_path):
         ("verify-app-template", "first"),
         ("verify-app-tools", "first"),
         ("code", "first", False),
+        ("create-app-env", "first", "Tester", "gothic", False),
         ("cleanup-stub", "first"),
         ("stub", "first"),
         ("cleanup", "first"),
@@ -199,6 +207,7 @@ def test_update_app_stub_without_stub(update_command, first_app, tmp_path):
         ("verify-app-template", "first"),
         ("verify-app-tools", "first"),
         ("code", "first", False),
+        ("create-app-env", "first", "Tester", "gothic", False),
         ("cleanup", "first"),
     ]
 
@@ -233,6 +242,7 @@ def test_update_app_test_mode(update_command, first_app, tmp_path):
         ("verify-app-template", "first"),
         ("verify-app-tools", "first"),
         ("code", "first", True),
+        ("create-app-env", "first", "Tester", "gothic", False),
         ("cleanup", "first"),
     ]
 
@@ -267,7 +277,8 @@ def test_update_app_test_mode_requirements(update_command, first_app, tmp_path):
         ("verify-app-template", "first"),
         ("verify-app-tools", "first"),
         ("code", "first", True),
-        ("requirements", "first", True, False),
+        ("create-app-env", "first", "Tester", "gothic", True),
+        ("requirements", "Tester-gothic", "first", True, False),
         ("cleanup", "first"),
     ]
 
@@ -302,6 +313,7 @@ def test_update_app_test_mode_resources(update_command, first_app, tmp_path):
         ("verify-app-template", "first"),
         ("verify-app-tools", "first"),
         ("code", "first", True),
+        ("create-app-env", "first", "Tester", "gothic", False),
         ("resources", "first"),
         ("cleanup", "first"),
     ]

@@ -15,6 +15,7 @@ from briefcase.exceptions import (
     BriefcaseConfigError,
     UnsupportedHostError,
 )
+from briefcase.integrations.virtual_environment import VirtualEnvironment
 from briefcase.integrations.windows_sdk import WindowsSDK
 from briefcase.integrations.wix import WiX
 
@@ -168,6 +169,8 @@ Install a 64bit version of Python and run Briefcase again.
 
 
 class WindowsCreateCommand(CreateCommand):
+    require_binary_installs = True
+
     def stub_binary_filename(
         self,
         support_revision: str,
@@ -290,9 +293,9 @@ class WindowsCreateCommand(CreateCommand):
     def _install_app_requirements(
         self,
         app: FinalizedAppConfig,
+        venv: VirtualEnvironment,
         requires: list[str],
         app_packages_path: Path,
-        **kwargs,
     ):
         if template_min_version := self.target_windows_build(app):
             min_version = int(getattr(app, "min_os_version", template_min_version))
@@ -304,7 +307,10 @@ class WindowsCreateCommand(CreateCommand):
                 )
 
         return super()._install_app_requirements(
-            app, requires, app_packages_path, **kwargs
+            app,
+            venv=venv,
+            requires=requires,
+            app_packages_path=app_packages_path,
         )
 
     def install_license(self, app: FinalizedAppConfig):

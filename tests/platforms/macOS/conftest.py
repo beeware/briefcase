@@ -4,6 +4,7 @@ import pytest
 
 from briefcase.commands.base import BaseCommand
 from briefcase.integrations.subprocess import Subprocess
+from briefcase.integrations.virtual_environment import VirtualEnvironment
 from briefcase.platforms.macOS.app import macOSAppMixin, macOSCreateMixin
 from tests.utils import create_file, create_plist_file
 
@@ -93,3 +94,13 @@ entitlements_path="Entitlements.plist"
     first_app_config.packaging_format = "dmg"
 
     return first_app_config
+
+
+@pytest.fixture
+def mock_other_venv(mock_tools):
+    """A mock environment for the "other" architecture in a universal macOS build."""
+    venv = mock.MagicMock(spec=VirtualEnvironment)
+    venv.provides_python = False
+    venv.tools = mock_tools
+
+    return venv

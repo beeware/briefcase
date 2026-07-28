@@ -39,11 +39,13 @@ def test_update(update_command, first_app, second_app):
         ("verify-app-template", "first"),
         ("verify-app-tools", "first"),
         ("code", "first", False),
+        ("create-app-env", "first", "Tester", "gothic", False),
         ("cleanup", "first"),
         # Update the second app
         ("verify-app-template", "second"),
         ("verify-app-tools", "second"),
         ("code", "second", False),
+        ("create-app-env", "second", "Tester", "gothic", False),
         ("cleanup", "second"),
     ]
 
@@ -67,6 +69,7 @@ def test_update_single(update_command, first_app, second_app):
         ("verify-app-template", "first"),
         ("verify-app-tools", "first"),
         ("code", "first", False),
+        ("create-app-env", "first", "Tester", "gothic", False),
         ("cleanup", "first"),
     ]
 
@@ -91,13 +94,15 @@ def test_update_with_requirements(update_command, first_app, second_app):
         ("verify-app-template", "first"),
         ("verify-app-tools", "first"),
         ("code", "first", False),
-        ("requirements", "first", False, False),
+        ("create-app-env", "first", "Tester", "gothic", True),
+        ("requirements", "Tester-gothic", "first", False, False),
         ("cleanup", "first"),
         # Update the second app
         ("verify-app-template", "second"),
         ("verify-app-tools", "second"),
         ("code", "second", False),
-        ("requirements", "second", False, False),
+        ("create-app-env", "second", "Tester", "gothic", True),
+        ("requirements", "Tester-gothic", "second", False, False),
         ("cleanup", "second"),
     ]
 
@@ -122,12 +127,14 @@ def test_update_with_resources(update_command, first_app, second_app):
         ("verify-app-template", "first"),
         ("verify-app-tools", "first"),
         ("code", "first", False),
+        ("create-app-env", "first", "Tester", "gothic", False),
         ("resources", "first"),
         ("cleanup", "first"),
         # Update the second app
         ("verify-app-template", "second"),
         ("verify-app-tools", "second"),
         ("code", "second", False),
+        ("create-app-env", "second", "Tester", "gothic", False),
         ("resources", "second"),
         ("cleanup", "second"),
     ]
@@ -153,6 +160,7 @@ def test_update_with_support(update_command, first_app, second_app):
         ("verify-app-template", "first"),
         ("verify-app-tools", "first"),
         ("code", "first", False),
+        ("create-app-env", "first", "Tester", "gothic", True),
         ("cleanup-support", "first"),
         ("support", "first"),
         ("cleanup", "first"),
@@ -160,6 +168,7 @@ def test_update_with_support(update_command, first_app, second_app):
         ("verify-app-template", "second"),
         ("verify-app-tools", "second"),
         ("code", "second", False),
+        ("create-app-env", "second", "Tester", "gothic", True),
         ("cleanup-support", "second"),
         ("support", "second"),
         ("cleanup", "second"),
@@ -188,6 +197,7 @@ def test_update_app_single(update_command, first_app, second_app, app_flags):
         ("verify-app-template", "first"),
         ("verify-app-tools", "first"),
         ("code", "first", False),
+        ("create-app-env", "first", "Tester", "gothic", False),
         ("cleanup", "first"),
     ]
 
@@ -263,10 +273,11 @@ def test_update_app_all_flags(update_command, first_app, second_app):
         ("verify-app-template", "first"),
         ("verify-app-tools", "first"),
         ("code", "first", False),
-        ("requirements", "first", False, False),
-        ("resources", "first"),
+        ("create-app-env", "first", "Tester", "gothic", True),
         ("cleanup-support", "first"),
         ("support", "first"),
+        ("requirements", "Tester-gothic", "first", False, False),
+        ("resources", "first"),
         ("cleanup", "first"),
     ]
 
@@ -315,12 +326,14 @@ def test_update_debug_with_requirements(update_command, first_app, second_app):
         ("verify-app-template", "first"),
         ("verify-app-tools", "first"),
         ("code", "first", False),
-        ("requirements", "first", False, True),
+        ("create-app-env", "first", "Tester", "gothic", True),
+        ("requirements", "Tester-gothic", "first", False, True),
         ("cleanup", "first"),
         # Update the second app
         ("verify-app-template", "second"),
         ("verify-app-tools", "second"),
         ("code", "second", False),
-        ("requirements", "second", False, True),
+        ("create-app-env", "second", "Tester", "gothic", True),
+        ("requirements", "Tester-gothic", "second", False, True),
         ("cleanup", "second"),
     ]

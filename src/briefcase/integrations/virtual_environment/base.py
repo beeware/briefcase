@@ -154,6 +154,11 @@ class VirtualEnvironment(ABC):
         try:
             install_args = []
             if install_path:
+                # If an install path is specified, ensure it's clean.
+                if install_path.is_dir():
+                    self.tools.shutil.rmtree(install_path)
+                install_path.mkdir(parents=True, exist_ok=True)
+
                 install_args.append(f"--target={install_path}")
                 if platform_tag := self.platform_tag(min_os_version):
                     install_args.extend(["--platform", platform_tag])
@@ -174,7 +179,12 @@ class VirtualEnvironment(ABC):
                 )
 
             if extra_installer_args:
-                install_args.extend(extra_installer_args)
+                install_args.extend(
+                    self.tools.file.resolve_relative_args(
+                        extra_installer_args,
+                        self.base_path,
+                    )
+                )
 
             self.run(
                 [
