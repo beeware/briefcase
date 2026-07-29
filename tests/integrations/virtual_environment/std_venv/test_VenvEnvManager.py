@@ -1,7 +1,7 @@
 import subprocess
 import sys
 from pathlib import Path
-from unittest.mock import ANY, MagicMock, call
+from unittest.mock import MagicMock
 
 import pytest
 
@@ -28,8 +28,8 @@ def test_create(venv, mock_tools, base_path, recreate):
     # Mock a side effect of calling run that creates the pyvenv.cfg marker file.
     def mock_run(cmd, *args, **kwargs):
         if cmd[:3] == [sys.executable, "-m", "venv"]:
-            Path(cmd[3]).mkdir(parents=True)
-            (Path(cmd[3]) / "pyvenv.cfg").write_text("", encoding="UTF-8")
+            Path(cmd[-1]).mkdir(parents=True)
+            (Path(cmd[-1]) / "pyvenv.cfg").write_text("", encoding="UTF-8")
 
     mock_tools.subprocess.run.side_effect = mock_run
 
@@ -40,36 +40,16 @@ def test_create(venv, mock_tools, base_path, recreate):
     assert venv.prepare(recreate=recreate)
     assert venv.exists()
 
-    assert mock_tools.subprocess.run.mock_calls == [
-        call(
-            [
-                sys.executable,
-                "-m",
-                "venv",
-                base_path / ".briefcase/first-app/venv-myenv",
-            ],
-            check=True,
-        ),
-        call(
-            [
-                venv.executable,
-                "-u",
-                "-X",
-                "utf8",
-                "-m",
-                "pip",
-                "install",
-                "--disable-pip-version-check",
-                "--no-user",
-                "--upgrade",
-                "-vv",
-                "pip",
-            ],
-            check=True,
-            encoding="UTF-8",
-            env=ANY,
-        ),
-    ]
+    mock_tools.subprocess.run.assert_called_once_with(
+        [
+            sys.executable,
+            "-m",
+            "venv",
+            "--without-pip",
+            base_path / ".briefcase/first-app/venv-myenv",
+        ],
+        check=True,
+    )
 
 
 def test_creates_parent_directory(first_app, mock_tools, base_path):
@@ -101,36 +81,16 @@ def test_recreate(venv, mock_tools, base_path):
     create_file(venv.venv_path / "pyvenv.cfg", "exists")
 
     assert venv.prepare(recreate=True)
-    assert mock_tools.subprocess.run.mock_calls == [
-        call(
-            [
-                sys.executable,
-                "-m",
-                "venv",
-                base_path / ".briefcase/first-app/venv-myenv",
-            ],
-            check=True,
-        ),
-        call(
-            [
-                venv.executable,
-                "-u",
-                "-X",
-                "utf8",
-                "-m",
-                "pip",
-                "install",
-                "--disable-pip-version-check",
-                "--no-user",
-                "--upgrade",
-                "-vv",
-                "pip",
-            ],
-            check=True,
-            encoding="UTF-8",
-            env=ANY,
-        ),
-    ]
+    mock_tools.subprocess.run.assert_called_once_with(
+        [
+            sys.executable,
+            "-m",
+            "venv",
+            "--without-pip",
+            base_path / ".briefcase/first-app/venv-myenv",
+        ],
+        check=True,
+    )
 
 
 def test_venv_failure(venv, mock_tools, base_path):
@@ -146,54 +106,12 @@ def test_venv_failure(venv, mock_tools, base_path):
         venv.prepare()
 
     mock_tools.subprocess.run.assert_called_once_with(
-        [sys.executable, "-m", "venv", base_path / ".briefcase/first-app/venv-myenv"],
+        [
+            sys.executable,
+            "-m",
+            "venv",
+            "--without-pip",
+            base_path / ".briefcase/first-app/venv-myenv",
+        ],
         check=True,
     )
-
-
-def test_pip_upgrade_failure(venv, mock_tools, base_path):
-    """If pip can't be upgraded, a BriefcaseCommandError is raised."""
-    # Second subprocess call fails
-    mock_tools.subprocess.run = MagicMock(
-        side_effect=[
-            0,
-            subprocess.CalledProcessError(returncode=1, cmd="venv"),
-        ]
-    )
-
-    with pytest.raises(
-        BriefcaseCommandError,
-        match=r"Failed to update core tooling for ",
-    ):
-        venv.prepare()
-
-    assert mock_tools.subprocess.run.mock_calls == [
-        call(
-            [
-                sys.executable,
-                "-m",
-                "venv",
-                base_path / ".briefcase/first-app/venv-myenv",
-            ],
-            check=True,
-        ),
-        call(
-            [
-                ANY,
-                "-u",
-                "-X",
-                "utf8",
-                "-m",
-                "pip",
-                "install",
-                "--disable-pip-version-check",
-                "--no-user",
-                "--upgrade",
-                "-vv",
-                "pip",
-            ],
-            check=True,
-            encoding="UTF-8",
-            env=ANY,
-        ),
-    ]

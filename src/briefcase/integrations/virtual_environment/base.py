@@ -1,4 +1,5 @@
 import subprocess
+import sys
 from abc import ABC, abstractmethod
 from pathlib import Path
 
@@ -186,14 +187,20 @@ class VirtualEnvironment(ABC):
                     )
                 )
 
-            self.run(
+            # Use the app context, but *without* the venv execution wrapper.
+            # We want to use the *Briefcase* environment to run pip so that
+            # we don't have to install pip into the venv. Use `--python` to
+            # target pip at the venv.
+            self.tools[self.app].app_context.run(
                 [
-                    self.executable,
+                    sys.executable,
                     "-u",
                     "-X",
                     "utf8",
                     "-m",
                     "pip",
+                    "--python",
+                    self.executable,
                     "install",
                     "--disable-pip-version-check",
                     "--no-user",
