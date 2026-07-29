@@ -27,7 +27,7 @@ def test_install_requirements_no_error(dev_command, first_app, logging_level):
             "package_two",
         ],
         allow_editable=True,
-        installer_args=[],
+        extra_installer_args=[],
     )
 
 
@@ -71,7 +71,7 @@ def test_install_requirements_test_mode(dev_command, first_app):
             "./local1",
         ],
         allow_editable=True,
-        installer_args=[],
+        extra_installer_args=[],
     )
 
 
@@ -90,7 +90,7 @@ def test_only_test_requirements(dev_command, first_app):
             "./local1",
         ],
         allow_editable=True,
-        installer_args=[],
+        extra_installer_args=[],
     )
 
 
@@ -109,5 +109,5 @@ def test_requirement_installer_args(dev_command, first_app):
             "./local1",
         ],
         allow_editable=True,
-        installer_args=["--no-cache"],
+        extra_installer_args=["--no-cache"],
     )

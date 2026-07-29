@@ -54,6 +54,7 @@ def full_context():
         "external_package_executable_path": None,
         "install_launcher": True,
         "test_mode": False,
+        "env_manager": "venv",
         # Properties of the generating environment
         "python_version": platform.python_version(),
         "host_arch": "gothic",

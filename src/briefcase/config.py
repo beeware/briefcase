@@ -8,6 +8,7 @@ import sys
 import unicodedata
 from email.utils import getaddresses
 from pathlib import Path
+from typing import Literal
 from urllib.parse import urlparse
 
 from build import BuildBackendException
@@ -25,6 +26,8 @@ from briefcase.platforms import get_output_formats, get_platforms
 
 from .constants import MIME_TYPE_REGISTRIES, RESERVED_WORDS
 from .exceptions import BriefcaseConfigError, InvalidVersionError
+
+EnvManagerT = Literal["venv", "uv", "conda"]
 
 # PEP 508 restricts the naming of modules. The PEP defines a regex that uses
 # re.IGNORECASE; but in in practice, packaging uses a version that rolls out the lower
@@ -452,6 +455,7 @@ class AppConfig(BaseConfig):
     and identity (``__eq__``/``__hash__`` based on ``app_name``).
     """
 
+    project_name: str
     app_name: str
     version: Version
     bundle: str
@@ -480,6 +484,8 @@ class AppConfig(BaseConfig):
     install_launcher: bool
     install_options: dict
     uninstall_options: dict
+    requires_python: str | None
+    env_manager: EnvManagerT
 
     test_mode: bool
     debugger: BaseDebugger | None
@@ -611,6 +617,7 @@ class DraftAppConfig(AppConfig):
         external_package_path: str | None = None,
         external_package_executable_path: str | None = None,
         install_launcher: bool | None = None,
+        env_manager: EnvManagerT | None = None,
         **kwargs,
     ):
         super().__init__(**kwargs)
@@ -712,6 +719,13 @@ class DraftAppConfig(AppConfig):
                     f"The `sources` list for {self.app_name!r} does not include a "
                     f"package named {self.module_name!r}."
                 )
+
+        if env_manager == "venv":
+            self.env_manager = env_manager
+        elif env_manager is None:
+            self.env_manager = "venv"
+        else:
+            raise BriefcaseConfigError(f"Unknown environment manager {env_manager!r}")
 
 
 class FinalizedAppConfig(AppConfig):

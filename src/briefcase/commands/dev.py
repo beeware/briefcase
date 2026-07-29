@@ -10,6 +10,7 @@ from pathlib import Path
 from briefcase.commands.run import RunAppMixin
 from briefcase.config import FinalizedAppConfig
 from briefcase.exceptions import BriefcaseCommandError
+from briefcase.integrations.subprocess import NativeAppContext
 from briefcase.integrations.virtual_environment import VirtualEnvironment
 
 from .base import BaseCommand
@@ -47,10 +48,6 @@ class DevCommand(RunAppMixin, BaseCommand):
             "win32": "windows",
         }[sys.platform]
 
-    def bundle_path(self, app):
-        """A placeholder; Dev command doesn't have a bundle path."""
-        raise NotImplementedError()
-
     def binary_path(self, app):
         """A placeholder; Dev command doesn't have a binary path."""
         raise NotImplementedError()
@@ -86,6 +83,11 @@ class DevCommand(RunAppMixin, BaseCommand):
             help="Run the app in test mode",
         )
 
+    def verify_app_tools(self, app: FinalizedAppConfig):
+        """Verify that tools needed to run the command for this app exist."""
+        super().verify_app_tools(app)
+        NativeAppContext.verify(tools=self.tools, app=app)
+
     def install_dev_requirements(
         self,
         app: FinalizedAppConfig,
@@ -112,7 +114,7 @@ class DevCommand(RunAppMixin, BaseCommand):
             venv.install_requirements(
                 requires,
                 allow_editable=True,
-                installer_args=app.requirement_installer_args,
+                extra_installer_args=app.requirement_installer_args,
             )
 
     def run_dev_app(
@@ -220,14 +222,6 @@ class DevCommand(RunAppMixin, BaseCommand):
         ext = importlib.machinery.EXTENSION_SUFFIXES[0].split(".")[1]
         return f"dev.{ext}"
 
-    def venv_path(self, appname: str) -> Path:
-        """Return the path for the app's virtual environment.
-
-        :param app: The app config
-        :returns: Path where the venv should be located
-        """
-        return self.base_path / ".briefcase" / appname / self.venv_name
-
     def __call__(
         self,
         appname: str | None = None,
@@ -299,38 +293,46 @@ class DevCommand(RunAppMixin, BaseCommand):
 
         if isolated:
             self.console.info("Activating dev environment...", prefix=app.app_name)
+            env_manager = app.env_manager
+        else:
+            env_manager = None
 
-        with self.tools.virtual_environment(
-            venv_path=self.venv_path(app.app_name),
-            isolated=isolated,
-            recreate=update_requirements,
-        ) as venv:
-            if venv.created:
-                self.console.info("Installing requirements...", prefix=app.app_name)
-                try:
-                    self.install_dev_requirements(app, venv, **options)
-                except Exception:
-                    # If any problem occurs during installing requirements, remove the
-                    # venv; it will need to be re-created on the next run.
-                    venv.clean()
-                    raise
+        venv = self.tools.virtual_environment[env_manager](
+            name=self.venv_name,
+            app=app,
+            tools=self.tools,
+            platform=self.platform,
+            arch=self.tools.host_arch,
+            base_path=self.base_path,
+        )
+        created = venv.prepare(recreate=update_requirements)
 
-                write_dist_info(
-                    app,
-                    self.app_module_path(app).parent / app.dist_info_name,
+        if created:
+            self.console.info("Installing requirements...", prefix=app.app_name)
+            try:
+                self.install_dev_requirements(app, venv, **options)
+            except Exception:
+                # If any problem occurs during installing requirements, remove the
+                # venv; it will need to be re-created on the next run.
+                venv.clean()
+                raise
+
+            write_dist_info(
+                app,
+                self.app_module_path(app).parent / app.dist_info_name,
+            )
+
+        if run_app:
+            if app.test_mode:
+                self.console.info(
+                    "Running test suite in dev environment...", prefix=app.app_name
                 )
-
-            if run_app:
-                if app.test_mode:
-                    self.console.info(
-                        "Running test suite in dev environment...", prefix=app.app_name
-                    )
-                else:
-                    self.console.info("Starting in dev mode...", prefix=app.app_name)
-                return self.run_dev_app(
-                    app,
-                    env=self.get_environment(app),
-                    venv=venv,
-                    passthrough=[] if passthrough is None else passthrough,
-                    **options,
-                )
+            else:
+                self.console.info("Starting in dev mode...", prefix=app.app_name)
+            return self.run_dev_app(
+                app,
+                env=self.get_environment(app),
+                venv=venv,
+                passthrough=[] if passthrough is None else passthrough,
+                **options,
+            )
