@@ -3,9 +3,10 @@ import os
 import sys
 from unittest.mock import MagicMock
 
-import briefcase_debugger
 import debugpy
 import pytest
+
+import briefcase_debugger
 from briefcase_debugger.config import AppPathMappings
 
 

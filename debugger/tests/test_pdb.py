@@ -2,9 +2,10 @@ import json
 import os
 from unittest.mock import MagicMock
 
+import pytest
+
 import briefcase_debugger
 import briefcase_debugger.pdb
-import pytest
 
 
 def test_no_env_vars(monkeypatch, capsys):

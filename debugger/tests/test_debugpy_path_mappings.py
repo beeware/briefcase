@@ -1,8 +1,9 @@
 import os
 import sys
 
-import briefcase_debugger.debugpy
 import pytest
+
+import briefcase_debugger.debugpy
 from briefcase_debugger.config import (
     AppPackagesPathMappings,
     AppPathMappings,
