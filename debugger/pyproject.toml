@@ -51,7 +51,6 @@ extend = "../pyproject.toml"
 
 [tool.ruff.lint]
 ignore = [
-    "E501",   # line too long, to be fixed in future changes
     "T20",    # flake8-print (useful for briefcase, but not in the debugger)
 ]
 

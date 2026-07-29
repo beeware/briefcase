@@ -126,10 +126,9 @@ def test_with_debugger(
     fake_debugpy_wait_for_client = MagicMock()
     monkeypatch.setattr(debugpy, "wait_for_client", fake_debugpy_wait_for_client)
 
-    # pydevd is dynamically loaded and only available when a real debugger
-    # is attached. So
-    # we fake the whole module, as otherwise the import in
-    # start_remote_debugger would fail
+    # pydevd is dynamically loaded and only available when a real debugger is attached.
+    # So we fake the whole module, as otherwise the import in start_remote_debugger
+    # would fail
     fake_pydevd = MagicMock()
     monkeypatch.setitem(sys.modules, "pydevd", fake_pydevd)
     fake_pydevd.DebugInfoHolder.DEBUG_TRACE_LEVEL = 0
@@ -180,10 +179,9 @@ def test_with_debugger_without_path_mappings(monkeypatch, capsys):
     fake_debugpy_wait_for_client = MagicMock()
     monkeypatch.setattr(debugpy, "wait_for_client", fake_debugpy_wait_for_client)
 
-    # pydevd is dynamically loaded and only available when a real debugger
-    # is attached. So
-    # we fake the whole module, as otherwise the import in
-    # start_remote_debugger would fail
+    # pydevd is dynamically loaded and only available when a real debugger is attached.
+    # So we fake the whole module, as otherwise the import in start_remote_debugger
+    # would fail
     fake_pydevd = MagicMock()
     monkeypatch.setitem(sys.modules, "pydevd", fake_pydevd)
     fake_pydevd.DebugInfoHolder.DEBUG_TRACE_LEVEL = 0
