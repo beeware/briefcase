@@ -31,8 +31,9 @@ def test_dockerize_args(mock_tools, my_app, tmp_path):
 @pytest.mark.usefixtures("mock_docker_app_context")
 def test_dockerize_args_sys_executable(mock_tools, my_app, tmp_path):
     """A command to run in Docker using the current Python is dockerized."""
+    # There could be references to the executable anywhere on the path.
     dockerize_args = mock_tools[my_app].app_context._dockerize_args(
-        [sys.executable, "-m", "pip"]
+        [sys.executable, "-m", "pip", "--python", sys.executable]
     )
 
     assert dockerize_args == {
@@ -45,9 +46,11 @@ def test_dockerize_args_sys_executable(mock_tools, my_app, tmp_path):
             "--volume",
             f"{tmp_path / 'briefcase'}:/briefcase:z",
             "briefcase/com.example.myapp:py3.X",
-            "python3.X",
+            "/usr/bin/python3.X",
             "-m",
             "pip",
+            "--python",
+            "/usr/bin/python3.X",
         ],
         "env": {"DOCKER_CLI_HINTS": "false"},
     }

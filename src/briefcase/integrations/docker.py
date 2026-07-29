@@ -996,6 +996,6 @@ class DockerAppContext(Tool):
 
         # Convert fully-qualified paths for the host's Python to the unqualified Python
         # binary available inside the container
-        kwargs["path_map"][sys.executable] = f"python{self.python_version}"
+        kwargs["path_map"][sys.executable] = f"/usr/bin/python{self.python_version}"
 
         return self.tools.docker.dockerize_args(args, **kwargs)
