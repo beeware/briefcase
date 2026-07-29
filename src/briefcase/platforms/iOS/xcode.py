@@ -407,7 +407,7 @@ class iOSXcodeCreateCommand(iOSXcodePassiveMixin, CreateCommand):
             venv.install_requirements(
                 requires,
                 allow_editable=False,
-                require_binary=True,
+                require_binary=self.require_binary_installs,
                 min_os_version=ios_min_version,
                 install_path=app_packages_path.parent / "app_packages.iphoneos",
                 install_hint=f"""
@@ -432,7 +432,7 @@ with Python {self.python_version_tag} and a minimum iOS version of {ios_min_vers
             sim_venv.install_requirements(
                 requires,
                 allow_editable=False,
-                require_binary=True,
+                require_binary=self.require_binary_installs,
                 min_os_version=ios_min_version,
                 install_path=app_packages_path.parent / "app_packages.iphonesimulator",
                 install_hint=f"""

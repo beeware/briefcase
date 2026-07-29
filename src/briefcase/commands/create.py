@@ -83,7 +83,29 @@ def write_dist_info(app: FinalizedAppConfig, dist_info_path: Path):
 class CreateCommand(BaseCommand):
     command = "create"
     description = "Create a new app for a target platform."
-    require_binary_installs = False
+
+    # By default, we explicitly require binary package installs. This is for two
+    # reasons:
+    #
+    # 1. Security. Installs from source tarball involve executing arbitrary code
+    #    at time of installation; and it makes the entire development
+    #    environment building the app a vector for introducing vulnerabilities
+    #    into an app. Forcing the use of binary wheels ensures that we can know
+    #    with certainty the provenance of any binary content in the app.
+    #
+    # 2. Consistency. Platforms that require multiple package installs (macOS,
+    #    iOS) also often require the use of the `--platform` argument to pip (or
+    #    equivalent), which imposes a co-requirement on using binary packages.
+    #    If we only reject source installs (rather than requiring binary) then a
+    #    package that only provides binary wheels for one architecture would
+    #    cause inconsistent results depending on which platform was the host.
+    #
+    # Since Briefcase is a tool designed to produce redistributable binaries,
+    # we've made the judgement call that the (minor, with known workarounds)
+    # inconvenience of not being able to use source tarballs is outweighed by
+    # the need to produce reliable, repeatable binary artefacts. This is
+    # overridden on platforms (i.e., Linux) where this isn't possible.
+    require_binary_installs = True
 
     def add_options(self, parser):
         super().add_options(parser)

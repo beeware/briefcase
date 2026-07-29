@@ -169,8 +169,6 @@ Install a 64bit version of Python and run Briefcase again.
 
 
 class WindowsCreateCommand(CreateCommand):
-    require_binary_installs = True
-
     def stub_binary_filename(
         self,
         support_revision: str,
