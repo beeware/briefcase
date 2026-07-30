@@ -379,11 +379,7 @@ def test_arm64_managed_python(monkeypatch, create_command, first_app):
     create_command.verify_app(first_app)
 
 
-def test_generate_app_template_formal_name_mismatch(
-    create_command,
-    first_app,
-    tmp_path,
-):
+def test_generate_app_template_formal_name_mismatch(create_command, first_app):
     """If the app's formal name doesn't match the external package path, an error is
     raised."""
     first_app.external_package_path = "output/Unexpected Name.app"

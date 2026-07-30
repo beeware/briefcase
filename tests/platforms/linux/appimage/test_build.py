@@ -55,12 +55,7 @@ def build_command(dummy_console, tmp_path, first_app_config):
     command.tools.os = mock.MagicMock()
     # Mock user and group IDs for docker image
     command.tools.os.environ = mock.MagicMock()
-    command.tools.os.environ.__getitem__.return_value = (
-        "/usr/local/bin:/usr/bin:/path/to/somewhere"
-    )
-    command.tools.os.environ.copy.return_value = {
-        "PATH": "/usr/local/bin:/usr/bin:/path/to/somewhere"
-    }
+    command.tools.os.environ = {"PATH": "/usr/local/bin:/usr/bin:/path/to/somewhere"}
 
     # mock user and group IDs for docker build
     command.tools.os.getuid.return_value = 1000
@@ -588,9 +583,6 @@ def test_build_appimage_with_support_package_update(
             "DISABLE_COPYRIGHT_FILES_DEPLOYMENT": "1",
             "APPIMAGE_EXTRACT_AND_RUN": "1",
             "ARCH": "x86_64",
-            "VIRTUAL_ENV": str(
-                build_command.base_path / ".briefcase/first-app/venv-linux-x86_64"
-            ),
         },
         cwd=os.fsdecode(tmp_path / "base_path/build/first-app/linux/appimage"),
         **sub_stream_kw,

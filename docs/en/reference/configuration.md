@@ -107,7 +107,7 @@ The contact email address for the person or organization responsible for the pro
 
 #### `env_manager`
 
-**EXPERIMENTAL** This is an experimental feature. It is currently only used by developer mode.
+**EXPERIMENTAL** This is an experimental feature.
 
 The environment manager to use when creating isolated Python environments and installing requirements. Must be one of:
 

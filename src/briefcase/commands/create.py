@@ -83,7 +83,34 @@ def write_dist_info(app: FinalizedAppConfig, dist_info_path: Path):
 class CreateCommand(BaseCommand):
     command = "create"
     description = "Create a new app for a target platform."
-    require_binary_installs = False
+
+    # By default, we explicitly require binary package installs. This is for three
+    # reasons:
+    #
+    # 1. Security. Installs from source tarball involve executing arbitrary code
+    #    at time of installation; and it makes the entire development
+    #    environment building the app a vector for introducing vulnerabilities
+    #    into an app. Forcing the use of binary wheels ensures that we can know
+    #    with certainty the provenance of any binary content in the app.
+    #
+    # 2. Consistency. Platforms that require multiple package installs (macOS,
+    #    iOS) also often require the use of the `--platform` argument to pip (or
+    #    equivalent), which imposes a co-requirement on using binary packages.
+    #    If we only reject source installs (rather than requiring binary) then a
+    #    package that only provides binary wheels for one architecture would
+    #    cause inconsistent results depending on which platform was the host.
+    #
+    # 3. Some platforms (most notably Windows) don't provide compilers out of the
+    #    box, and it's entirely possible to build Python apps without ever needing
+    #    a compiler. When a compiler *isn't* available, the failure mode for `pip`
+    #    isn't especially meaningful; so requiring binaries avoids those problems.
+    #
+    # Since Briefcase is a tool designed to produce redistributable binaries,
+    # we've made the judgement call that the (minor, with known workarounds)
+    # inconvenience of not being able to use source tarballs is outweighed by
+    # the need to produce reliable, repeatable binary artefacts. This is
+    # overridden on platforms (i.e., Linux) where this isn't possible.
+    require_binary_installs = True
 
     def add_options(self, parser):
         super().add_options(parser)
@@ -291,7 +318,7 @@ class CreateCommand(BaseCommand):
         app: FinalizedAppConfig,
         platform: str,
         arch: str,
-        env_manager: EnvManagerT | None | Literal["noop"] = None,
+        env_manager: EnvManagerT | Literal["default"] | None = "default",
         recreate: bool = True,
         **kwargs,
     ) -> VirtualEnvironment:
@@ -305,10 +332,8 @@ class CreateCommand(BaseCommand):
         :param recreate: If the environment already exists, should it be re-created?
             Defaults to True (i.e., recreate by default).
         """
-        if env_manager is None:
+        if env_manager == "default":
             env_manager = app.env_manager
-        elif env_manager == "noop":
-            env_manager = None
 
         venv = self.tools.virtual_environment[env_manager](
             app=app,
@@ -678,11 +703,6 @@ class CreateCommand(BaseCommand):
         else:
             try:
                 app_packages_path = self.app_packages_path(app)
-                # Clear existing dependency directory
-                if app_packages_path.is_dir():
-                    self.tools.shutil.rmtree(app_packages_path)
-                    self.tools.os.mkdir(app_packages_path)
-
                 if requires:
                     self._install_app_requirements(
                         app, venv, requires, app_packages_path

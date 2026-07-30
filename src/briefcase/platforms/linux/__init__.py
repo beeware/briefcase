@@ -5,10 +5,10 @@ import re
 import subprocess
 import sys
 from pathlib import Path
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, Literal
 
 from briefcase.commands.open import OpenCommand
-from briefcase.config import FinalizedAppConfig
+from briefcase.config import EnvManagerT, FinalizedAppConfig
 from briefcase.exceptions import BriefcaseCommandError, ParseError
 
 if TYPE_CHECKING:
@@ -137,19 +137,26 @@ class LocalRequirementsMixin(_MixinBase):  # pragma: no-cover-if-is-windows
     # as local file references into sdists, and then installing those requirements
     # from the sdist.
 
+    # We can't enforce binary installs on Linux, because the manylinux
+    # specification doesn't include any system GUI libraries. This means that
+    # libraries like PyGObject *must* be installed from source, and there's no
+    # reliable way to flag the specific packages that need source installs
+    # without adding a full allow-list.
+    require_binary_installs = False
+
     def create_app_environment(
         self,
         app: FinalizedAppConfig,
         platform: str,
         arch: str,
-        env_manager: str | None = None,
+        env_manager: EnvManagerT | Literal["default"] | None = "default",
         recreate: bool = True,
         **kwargs,
     ) -> VirtualEnvironment:
         # If the app is using Docker, don't use a virtual environment;
         # the Docker container *is* the environment
         if self.use_docker:
-            env_manager = "noop"
+            env_manager = None
 
         return super().create_app_environment(
             app=app,

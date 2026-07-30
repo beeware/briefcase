@@ -346,33 +346,13 @@ class macOSCreateMixin(AppPackagesMergeMixin):
             # directly into the app_packages folder.
             host_app_packages_path = app_packages_path
 
-        # We explicitly reject source installs for two reasons:
-        #
-        # 1. Consistency. We need to use `--only-binary :all:` when we do the second
-        #    "other arch" wheel install because of use of the `--platform` argument;
-        #    if we only reject source tarballs from one of the installs, then a
-        #    package that only provides binary wheels for one architecture would
-        #    cause inconsistent results depending on which platform was the host;
-        #    and
-        #
-        # 2. Security. Installs from source tarball involve executing arbitrary code
-        #    at time of installation; and it makes the entire development
-        #    environment building the app a vector for introducing vulnerabilities
-        #    into an app. Forcing the use of binary wheels ensures that we can know
-        #    with certainty the provenance of any binary content in the app.
-        #
-        # Since Briefcase is a tool designed to produce redistributable binaries,
-        # we've made the judgement call that the (minor, with known workarounds)
-        # inconvenience of not being able to use source tarballs is outweighed by
-        # the need to produce reliable, repeatable binary artefacts.
-
         with self.console.wait_bar(
             f"Installing app requirements for {self.tools.host_arch}..."
         ):
             venv.install_requirements(
                 requires,
                 allow_editable=False,
-                require_binary=True,
+                require_binary=self.require_binary_installs,
                 min_os_version=macOS_min_version,
                 install_path=host_app_packages_path,
                 install_hint=f"""
@@ -423,7 +403,7 @@ is not available.
                             for package, version in binary_packages
                         ],
                         allow_editable=False,
-                        require_binary=True,
+                        require_binary=self.require_binary_installs,
                         min_os_version=macOS_min_version,
                         install_path=other_app_packages_path,
                         install_hint=f"""

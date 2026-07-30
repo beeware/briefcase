@@ -88,9 +88,11 @@ class DummyUpdateCommand(UpdateCommand):
         self.actions.append(("cleanup-support", app.app_name))
 
     def create_app_environment(
-        self, app, platform, arch, env_manager=None, recreate=True
+        self, app, platform, arch, env_manager="default", recreate=True
     ):
-        self.actions.append(("create-app-env", app.app_name, platform, arch, recreate))
+        self.actions.append(
+            ("create-app-env", app.app_name, platform, arch, env_manager, recreate)
+        )
         return super().create_app_environment(
             app,
             platform,

@@ -186,9 +186,19 @@ class TrackingCreateCommand(DummyCreateCommand):
             "The packaged app goes here",
         )
 
-    def create_app_environment(self, app, platform, arch, env_manager=None):
-        self.actions.append(("create-app-env", app.app_name, platform, arch))
-        return super().create_app_environment(app, platform, arch, env_manager)
+    def create_app_environment(
+        self, app, platform, arch, env_manager="default", recreate=True
+    ):
+        self.actions.append(
+            ("create-app-env", app.app_name, platform, arch, env_manager, recreate)
+        )
+        return super().create_app_environment(
+            app,
+            platform,
+            arch,
+            env_manager=env_manager,
+            recreate=recreate,
+        )
 
     def install_app_support_package(self, app):
         self.actions.append(("support", app.app_name))

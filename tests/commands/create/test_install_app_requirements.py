@@ -152,7 +152,7 @@ def test_app_packages_valid_requires(
             "third>=3.2.1",
         ],
         allow_editable=False,
-        require_binary=False,
+        require_binary=True,
         install_path=app_packages_path,
         extra_installer_args=[],
     )
@@ -183,7 +183,7 @@ def test_app_packages_requirement_installer_args_no_paths(
             "package",
         ],
         allow_editable=False,
-        require_binary=False,
+        require_binary=True,
         install_path=app_packages_path,
         extra_installer_args=["--no-cache"],
     )
@@ -211,7 +211,7 @@ def test_app_packages_requirement_installer_args_path_transformed(
             "package",
         ],
         allow_editable=False,
-        require_binary=False,
+        require_binary=True,
         install_path=app_packages_path,
         extra_installer_args=["--extra-index-url", "./packages"],
     )
@@ -239,7 +239,7 @@ def test_app_packages_requirement_installer_args_coincidental_path_not_transform
             "package",
         ],
         allow_editable=False,
-        require_binary=False,
+        require_binary=True,
         install_path=app_packages_path,
         extra_installer_args=["-f./wheels"],
     )
@@ -267,7 +267,7 @@ def test_app_packages_requirement_installer_args_path_not_transformed(
             "package",
         ],
         allow_editable=False,
-        require_binary=False,
+        require_binary=True,
         install_path=app_packages_path,
         extra_installer_args=["--extra-index-url", "./packages"],
     )
@@ -295,7 +295,7 @@ def test_app_packages_requirement_installer_args_combined_argument_not_transform
             "package",
         ],
         allow_editable=False,
-        require_binary=False,
+        require_binary=True,
         install_path=app_packages_path,
         extra_installer_args=["--extra-index-url=./packages"],
     )
@@ -328,7 +328,7 @@ def test_app_packages_valid_requires_no_support_package(
             "third>=3.2.1",
         ],
         allow_editable=False,
-        require_binary=False,
+        require_binary=True,
         install_path=app_packages_path,
         extra_installer_args=[],
     )
@@ -362,7 +362,7 @@ def test_app_packages_invalid_requires(
             "does-not-exist",
         ],
         allow_editable=False,
-        require_binary=False,
+        require_binary=True,
         install_path=app_packages_path,
         extra_installer_args=[],
     )
@@ -398,7 +398,7 @@ def test_app_packages_offline(
             "third",
         ],
         allow_editable=False,
-        require_binary=False,
+        require_binary=True,
         install_path=app_packages_path,
         extra_installer_args=[],
     )
@@ -440,7 +440,7 @@ def test_app_packages_install_requirements(
             "third",
         ],
         allow_editable=False,
-        require_binary=False,
+        require_binary=True,
         install_path=app_packages_path,
         extra_installer_args=[],
     )
@@ -488,7 +488,7 @@ def test_app_packages_replace_existing_requirements(
             "third",
         ],
         allow_editable=False,
-        require_binary=False,
+        require_binary=True,
         install_path=app_packages_path,
         extra_installer_args=[],
     )
@@ -501,12 +501,41 @@ def test_app_packages_replace_existing_requirements(
     assert (app_packages_path / "third").exists()
     assert (app_packages_path / "third/__main__.py").exists()
 
-    # The old app packages no longer exist.
-    assert not (app_packages_path / "old").exists()
-    assert not (app_packages_path / "ancient").exists()
-
     # Original app definitions haven't changed
     assert myapp.requires == ["first", "second", "third"]
+    assert myapp.test_requires is None
+
+
+def test_app_packages_no_binary_requires(
+    create_command,
+    mock_venv,
+    myapp,
+    app_packages_path,
+    app_packages_path_index,
+):
+    """If the platform doesn't enforce binary requirements, that is passed on."""
+    # Disable binary installs at the command level.
+    create_command.require_binary_installs = False
+
+    myapp.requires = ["first", "second==1.2.3", "third>=3.2.1"]
+
+    create_command.install_app_requirements(myapp, mock_venv)
+
+    # A request was made to install requirements
+    mock_venv.install_requirements.assert_called_with(
+        [
+            "first",
+            "second==1.2.3",
+            "third>=3.2.1",
+        ],
+        allow_editable=False,
+        require_binary=False,
+        install_path=app_packages_path,
+        extra_installer_args=[],
+    )
+
+    # Original app definitions haven't changed
+    assert myapp.requires == ["first", "second==1.2.3", "third>=3.2.1"]
     assert myapp.test_requires is None
 
 
@@ -899,7 +928,7 @@ def test_app_packages_test_requires(
             "third>=3.2.1",
         ],
         allow_editable=False,
-        require_binary=False,
+        require_binary=True,
         install_path=app_packages_path,
         extra_installer_args=[],
     )
@@ -933,7 +962,7 @@ def test_app_packages_test_requires_test_mode(
             "pytest-tldr",
         ],
         allow_editable=False,
-        require_binary=False,
+        require_binary=True,
         install_path=app_packages_path,
         extra_installer_args=[],
     )
@@ -965,7 +994,7 @@ def test_app_packages_only_test_requires_test_mode(
             "pytest-tldr",
         ],
         allow_editable=False,
-        require_binary=False,
+        require_binary=True,
         install_path=app_packages_path,
         extra_installer_args=[],
     )
@@ -1013,7 +1042,7 @@ def test_app_packages_debugger(
             "briefcase-dummy-debugger-support",
         ],
         allow_editable=False,
-        require_binary=False,
+        require_binary=True,
         install_path=app_packages_path,
         extra_installer_args=[],
     )

@@ -25,13 +25,13 @@ def test_create_app_environment(create_command, first_app):
 
 
 @pytest.mark.parametrize(
-    "env_type",
+    ("env_type", "expected_type"),
     [
-        "venv",  # An explicit environment manager specification
-        "noop",  # Not a valid EnvManagerT value; has special handling
+        ("venv", "venv"),  # An explicit environment manager specification
+        ("default", "venv"),  # Default handling
     ],
 )
-def test_explicit_env_manager(create_command, first_app, env_type):
+def test_explicit_env_manager(create_command, first_app, env_type, expected_type):
     """The no-op environment managerapp's environment manager can be overridden."""
     create_command.verify_app(first_app)
 
@@ -42,7 +42,7 @@ def test_explicit_env_manager(create_command, first_app, env_type):
         env_manager=env_type,
     )
 
-    assert venv.env_type == env_type
+    assert venv.env_type == expected_type
     assert venv.platform == "some_platform"
     assert venv.arch == "gothic"
     assert venv.base_path == create_command.base_path
