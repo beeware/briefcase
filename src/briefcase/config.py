@@ -720,7 +720,7 @@ class DraftAppConfig(AppConfig):
                     f"package named {self.module_name!r}."
                 )
 
-        if env_manager in {"venv", "uv"}:
+        if env_manager in {"venv", "uv", "conda"}:
             self.env_manager = env_manager
         elif env_manager is None:
             self.env_manager = "venv"

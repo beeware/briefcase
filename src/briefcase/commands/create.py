@@ -969,8 +969,9 @@ class CreateCommand(BaseCommand):
                 arch=self.tools.host_arch,
             )
 
-            self.console.info("Installing support package...", prefix=app.app_name)
-            self.install_app_support_package(app=app)
+            if not venv.provides_python:
+                self.console.info("Installing support package...", prefix=app.app_name)
+                self.install_app_support_package(app=app)
 
             try:
                 # If the platform uses a stub binary, the template will define a binary
@@ -993,6 +994,12 @@ class CreateCommand(BaseCommand):
                 "Installing application resources...", prefix=app.app_name
             )
             self.install_app_resources(app=app)
+
+            if venv.provides_python:
+                self.console.info(
+                    "Installing managed Python environment...", prefix=app.app_name
+                )
+                self.install_managed_python_env(app=app, venv=venv)
 
             self.console.info("Removing unneeded app content...", prefix=app.app_name)
             self.cleanup_app_content(app=app)

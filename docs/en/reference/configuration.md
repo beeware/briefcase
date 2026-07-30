@@ -111,6 +111,7 @@ The environment manager to use when creating isolated Python environments and in
 
 * `venv` - The `venv` package provided by the Python standard library
 * `uv` - The [uv](https://docs.astral.sh/uv/) environment manager
+* `conda` - The [Conda](https://docs.conda.io/) environment manager
 
 Defaults to `venv`.
 
@@ -338,6 +339,23 @@ Any version specifier accepted by the [environment manager][env_manager] is lega
 - Local wheel file:
   ```python
   requires = ["fullpath/wheelfile.whl"]
+  ```
+
+If you were using `conda` as an environment manager, the following would be legal:
+
+- Bare package name:
+  ```python
+  requires = ["pillow"]
+  ```
+
+- Fuzzy version match
+  ```python
+  requires = ["pillow=9.1"]
+  ```
+
+- Channel-qualified install
+  ```python
+  requires = ["conda-forge::pillow"]
   ```
 
 #### `revision`
