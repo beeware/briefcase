@@ -13,7 +13,7 @@ def test_update_app(update_command, first_app, tmp_path):
         ("verify-app-template", "first"),
         ("verify-app-tools", "first"),
         ("code", "first", False),
-        ("create-app-env", "first", "Tester", "gothic", False),
+        ("create-app-env", "first", "Tester", "gothic", "default", False),
         ("cleanup", "first"),
     ]
 
@@ -64,7 +64,7 @@ def test_update_app_with_requirements(update_command, first_app, tmp_path):
         ("verify-app-template", "first"),
         ("verify-app-tools", "first"),
         ("code", "first", False),
-        ("create-app-env", "first", "Tester", "gothic", True),
+        ("create-app-env", "first", "Tester", "gothic", "default", True),
         ("requirements", "Tester-gothic", "first", False, False),
         ("cleanup", "first"),
     ]
@@ -97,7 +97,7 @@ def test_update_app_with_resources(update_command, first_app, tmp_path):
         ("verify-app-template", "first"),
         ("verify-app-tools", "first"),
         ("code", "first", False),
-        ("create-app-env", "first", "Tester", "gothic", False),
+        ("create-app-env", "first", "Tester", "gothic", "default", False),
         ("resources", "first"),
         ("cleanup", "first"),
     ]
@@ -130,7 +130,7 @@ def test_update_app_with_support_package(update_command, first_app, tmp_path):
         ("verify-app-template", "first"),
         ("verify-app-tools", "first"),
         ("code", "first", False),
-        ("create-app-env", "first", "Tester", "gothic", True),
+        ("create-app-env", "first", "Tester", "gothic", "default", True),
         ("cleanup-support", "first"),
         ("support", "first"),
         ("cleanup", "first"),
@@ -169,7 +169,7 @@ def test_update_app_with_stub(update_command, first_app, tmp_path):
         ("verify-app-template", "first"),
         ("verify-app-tools", "first"),
         ("code", "first", False),
-        ("create-app-env", "first", "Tester", "gothic", False),
+        ("create-app-env", "first", "Tester", "gothic", "default", False),
         ("cleanup-stub", "first"),
         ("stub", "first"),
         ("cleanup", "first"),
@@ -204,7 +204,7 @@ def test_update_app_stub_without_stub(update_command, first_app, tmp_path):
         ("verify-app-template", "first"),
         ("verify-app-tools", "first"),
         ("code", "first", False),
-        ("create-app-env", "first", "Tester", "gothic", False),
+        ("create-app-env", "first", "Tester", "gothic", "default", False),
         ("cleanup", "first"),
     ]
 
@@ -239,7 +239,7 @@ def test_update_app_test_mode(update_command, first_app, tmp_path):
         ("verify-app-template", "first"),
         ("verify-app-tools", "first"),
         ("code", "first", True),
-        ("create-app-env", "first", "Tester", "gothic", False),
+        ("create-app-env", "first", "Tester", "gothic", "default", False),
         ("cleanup", "first"),
     ]
 
@@ -274,7 +274,7 @@ def test_update_app_test_mode_requirements(update_command, first_app, tmp_path):
         ("verify-app-template", "first"),
         ("verify-app-tools", "first"),
         ("code", "first", True),
-        ("create-app-env", "first", "Tester", "gothic", True),
+        ("create-app-env", "first", "Tester", "gothic", "default", True),
         ("requirements", "Tester-gothic", "first", True, False),
         ("cleanup", "first"),
     ]
@@ -310,7 +310,7 @@ def test_update_app_test_mode_resources(update_command, first_app, tmp_path):
         ("verify-app-template", "first"),
         ("verify-app-tools", "first"),
         ("code", "first", True),
-        ("create-app-env", "first", "Tester", "gothic", False),
+        ("create-app-env", "first", "Tester", "gothic", "default", False),
         ("resources", "first"),
         ("cleanup", "first"),
     ]

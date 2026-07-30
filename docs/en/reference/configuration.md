@@ -107,11 +107,10 @@ The contact email address for the person or organization responsible for the pro
 
 #### `env_manager`
 
-**EXPERIMENTAL** This is an experimental feature.
-
 The environment manager to use when creating isolated Python environments and installing requirements. Must be one of:
 
 * `venv` - The `venv` package provided by the Python standard library
+* `uv` - The [uv](https://docs.astral.sh/uv/) environment manager
 
 Defaults to `venv`.
 
@@ -314,7 +313,7 @@ A list of packages that must be packaged with this application.
 
 Unlike most other keys in a configuration file, [`requires`][] is a *cumulative* setting. If an application defines requirements at the global level, application level, *and* platform level, the final set of requirements will be the *concatenation* of requirements from all levels, starting from least to most specific.
 
-Any PEP 508 version specifier is legal. For example:
+Any version specifier accepted by the [environment manager][env_manager] is legal. For example, if you're using `venv` or `uv`, the following would be legal:
 
 - Bare package name:
   ```python
@@ -324,15 +323,6 @@ Any PEP 508 version specifier is legal. For example:
 - Package name with version specifier:
   ```python
   requires = ["pillow==9.1.0"]
-  ```
-
-- Install from source using the `--no-binary` entry:
-  ```python
-  requires = [
-      "pillow==9.1.0",
-      "--no-binary",
-      "pillow",
-  ]
   ```
 
 - Git repository:

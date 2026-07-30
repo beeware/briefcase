@@ -80,6 +80,7 @@ class WindowsMixin(_MixinBase):
     platform = "windows"
     supported_host_os: Collection[str] = {"Windows"}
     supported_host_os_reason = "Windows applications can only be built on Windows."
+    supported_env_managers: Collection[str] = {"venv", "uv"}
     platform_target_version = "0.3.24"
 
     def bundle_package_executable_path(self, app):
