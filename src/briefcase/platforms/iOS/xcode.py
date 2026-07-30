@@ -4,6 +4,7 @@ import contextlib
 import plistlib
 import subprocess
 import time
+from collections.abc import Collection
 from pathlib import Path
 from typing import Literal
 from uuid import UUID
@@ -37,6 +38,7 @@ from briefcase.platforms.macOS.filters import XcodeBuildFilter, macOS_log_clean_
 
 class iOSXcodePassiveMixin(iOSMixin):
     output_format = "Xcode"
+    supported_env_managers: Collection[EnvManagerT] = {"venv", "uv"}
 
     @property
     def packaging_formats(self):

@@ -14,7 +14,7 @@ from typing import TYPE_CHECKING
 
 from packaging.version import Version
 
-from briefcase.config import FinalizedAppConfig
+from briefcase.config import EnvManagerT, FinalizedAppConfig
 from briefcase.exceptions import BriefcaseCommandError, NotarizationInterrupted
 from briefcase.integrations.subprocess import (
     get_process_id_by_command,
@@ -96,6 +96,7 @@ class macOSMixin(_MixinBase):
     platform = "macOS"
     supported_host_os: Collection[str] = {"Darwin"}
     supported_host_os_reason = "macOS applications can only be built on macOS."
+    supported_env_managers: Collection[EnvManagerT] = {"venv", "uv"}
     # 0.3.20 introduced a framework-based support package.
     platform_target_version: str | None = "0.3.20"
 
