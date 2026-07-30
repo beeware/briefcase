@@ -84,7 +84,7 @@ class CreateCommand(BaseCommand):
     command = "create"
     description = "Create a new app for a target platform."
 
-    # By default, we explicitly require binary package installs. This is for two
+    # By default, we explicitly require binary package installs. This is for three
     # reasons:
     #
     # 1. Security. Installs from source tarball involve executing arbitrary code
@@ -99,6 +99,11 @@ class CreateCommand(BaseCommand):
     #    If we only reject source installs (rather than requiring binary) then a
     #    package that only provides binary wheels for one architecture would
     #    cause inconsistent results depending on which platform was the host.
+    #
+    # 3. Some platforms (most notably Windows) don't provide compilers out of the
+    #    box, and it's entirely possible to build Python apps without ever needing
+    #    a compiler. When a compiler *isn't* available, the failure mode for `pip`
+    #    isn't especially meaningful; so requiring binaries avoids those problems.
     #
     # Since Briefcase is a tool designed to produce redistributable binaries,
     # we've made the judgement call that the (minor, with known workarounds)
