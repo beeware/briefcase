@@ -66,13 +66,6 @@ def parse_freedesktop_os_release(content):
 class LinuxMixin(_MixinBase):
     platform = "linux"
 
-    # We can't enforce binary installs on Linux, because the manylinux
-    # specification doesn't include any system GUI libraries. This means that
-    # libraries like PyGObject *must* be installed from source, and there's no
-    # reliable way to flag the specific packages that need source installs
-    # without adding a full allow-list.
-    require_binary_installs = False
-
     def support_package_url(self, support_revision):
         """The URL of the support package to use for apps of this type.
 
@@ -143,6 +136,13 @@ class LocalRequirementsMixin(_MixinBase):  # pragma: no-cover-if-is-windows
     # A mixin that captures the process of compiling requirements that are specified
     # as local file references into sdists, and then installing those requirements
     # from the sdist.
+
+    # We can't enforce binary installs on Linux, because the manylinux
+    # specification doesn't include any system GUI libraries. This means that
+    # libraries like PyGObject *must* be installed from source, and there's no
+    # reliable way to flag the specific packages that need source installs
+    # without adding a full allow-list.
+    require_binary_installs = False
 
     def create_app_environment(
         self,
