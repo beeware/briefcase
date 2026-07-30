@@ -9,7 +9,7 @@ from typing import TYPE_CHECKING
 from zipfile import ZIP_DEFLATED, ZipFile
 
 from briefcase.commands import CreateCommand, PackageCommand, RunCommand
-from briefcase.config import FinalizedAppConfig
+from briefcase.config import EnvManagerT, FinalizedAppConfig
 from briefcase.exceptions import (
     BriefcaseCommandError,
     BriefcaseConfigError,
@@ -80,7 +80,7 @@ class WindowsMixin(_MixinBase):
     platform = "windows"
     supported_host_os: Collection[str] = {"Windows"}
     supported_host_os_reason = "Windows applications can only be built on Windows."
-    supported_env_managers: Collection[str] = {"venv", "uv"}
+    supported_env_managers: Collection[EnvManagerT] = {"venv", "uv"}
     platform_target_version = "0.3.24"
 
     def bundle_package_executable_path(self, app):

@@ -132,11 +132,15 @@ Ensure that you have installed `uv`, and that it is on your path.
 
         UV ignores the min_os_version; and uses GNU-style references to ARM64
         """
-        if self.arch.lower() == "arm64":
-            self.arch = "aarch64"
 
         if self.platform == "macOS":
+            if self.arch.lower() == "arm64":
+                self.arch = "aarch64"
             return f"{self.arch}-apple-darwin"
+        elif self.platform == "iphoneos":
+            return f"{self.arch}-apple-ios"
+        elif self.platform == "iphonesimulator":
+            return f"{self.arch}-apple-ios-simulator"
         else:
             return None
 
@@ -191,8 +195,14 @@ Ensure that you have installed `uv`, and that it is on your path.
 
                 if platform_tag := self.platform_tag:
                     install_args.extend(["--python-platform", platform_tag])
-                    if min_os_version and self.platform == "macOS":
+
+                if min_os_version:
+                    if self.platform == "macOS":
                         env = {"MACOSX_DEPLOYMENT_TARGET": min_os_version}
+                    elif self.platform in {"iphoneos", "iphonesimulator"}:
+                        env = {"IPHONEOS_DEPLOYMENT_TARGET": min_os_version}
+                    else:
+                        env = {}
 
             if require_binary:
                 # uv can't install a local directory if `--only-binary` is specified.

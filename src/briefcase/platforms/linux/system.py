@@ -18,7 +18,13 @@ from briefcase.commands import (
     UpdateCommand,
 )
 from briefcase.commands.convert import find_changelog_filename
-from briefcase.config import AppConfig, DraftAppConfig, FinalizedAppConfig, merge_config
+from briefcase.config import (
+    AppConfig,
+    DraftAppConfig,
+    EnvManagerT,
+    FinalizedAppConfig,
+    merge_config,
+)
 from briefcase.exceptions import BriefcaseCommandError, UnsupportedHostError
 from briefcase.integrations.docker import Docker, DockerAppContext
 from briefcase.integrations.subprocess import NativeAppContext
@@ -56,6 +62,7 @@ class LinuxSystemMixin(LinuxMixin):
     output_format = "system"
     supported_host_os: Collection[str] = {"Linux"}
     supports_external_packaging = True
+    supported_env_managers: Collection[EnvManagerT] = {"venv", "uv"}
 
     def build_path(self, app):
         # Override the default build path to use the vendor name,

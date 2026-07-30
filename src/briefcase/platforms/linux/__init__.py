@@ -156,6 +156,7 @@ class LocalRequirementsMixin(_MixinBase):  # pragma: no-cover-if-is-windows
         # If the app is using Docker, don't use a virtual environment;
         # the Docker container *is* the environment
         if self.use_docker:
+            self.console.warning("Ignoring environment manager for Docker build")
             env_manager = None
 
         return super().create_app_environment(

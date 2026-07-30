@@ -130,7 +130,14 @@ def test_install_requirements_path_formats(
 @pytest.mark.parametrize(
     ("platform", "arch", "min_os_version", "args", "extra_env"),
     [
-        ("macOS", "arm64", None, ["--python-platform", "aarch64-apple-darwin"], {}),
+        # macOS
+        (
+            "macOS",
+            "arm64",
+            None,
+            ["--python-platform", "aarch64-apple-darwin"],
+            {},
+        ),
         (
             "macOS",
             "arm64",
@@ -138,7 +145,13 @@ def test_install_requirements_path_formats(
             ["--python-platform", "aarch64-apple-darwin"],
             {"MACOSX_DEPLOYMENT_TARGET": "12.3"},
         ),
-        ("macOS", "x86_64", None, ["--python-platform", "x86_64-apple-darwin"], {}),
+        (
+            "macOS",
+            "x86_64",
+            None,
+            ["--python-platform", "x86_64-apple-darwin"],
+            {},
+        ),
         (
             "macOS",
             "x86_64",
@@ -146,10 +159,57 @@ def test_install_requirements_path_formats(
             ["--python-platform", "x86_64-apple-darwin"],
             {"MACOSX_DEPLOYMENT_TARGET": "12.3"},
         ),
+        # Windows
         ("windows", "AMD64", None, [], {}),
         ("windows", "ARM64", None, [], {}),
+        ("windows", "AMD64", "22000", [], {}),
+        ("windows", "ARM64", "22000", [], {}),
+        # Linux
         ("linux", "x86_64", None, [], {}),
         ("linux", "aarch4", None, [], {}),
+        # iOS
+        (
+            "iphoneos",
+            "arm64",
+            None,
+            ["--python-platform", "arm64-apple-ios"],
+            {},
+        ),
+        (
+            "iphoneos",
+            "arm64",
+            "16.4",
+            ["--python-platform", "arm64-apple-ios"],
+            {"IPHONEOS_DEPLOYMENT_TARGET": "16.4"},
+        ),
+        (
+            "iphonesimulator",
+            "arm64",
+            None,
+            ["--python-platform", "arm64-apple-ios-simulator"],
+            {},
+        ),
+        (
+            "iphonesimulator",
+            "arm64",
+            "16.4",
+            ["--python-platform", "arm64-apple-ios-simulator"],
+            {"IPHONEOS_DEPLOYMENT_TARGET": "16.4"},
+        ),
+        (
+            "iphonesimulator",
+            "x86_64",
+            None,
+            ["--python-platform", "x86_64-apple-ios-simulator"],
+            {},
+        ),
+        (
+            "iphonesimulator",
+            "x86_64",
+            "16.4",
+            ["--python-platform", "x86_64-apple-ios-simulator"],
+            {"IPHONEOS_DEPLOYMENT_TARGET": "16.4"},
+        ),
     ],
 )
 def test_install_requirements_with_install_path(
