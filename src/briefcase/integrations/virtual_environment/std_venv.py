@@ -3,7 +3,7 @@ import shutil
 import subprocess
 import sys
 
-from briefcase.exceptions import BriefcaseCommandError, RequirementsInstallError
+from briefcase.exceptions import BriefcaseCommandError
 from briefcase.integrations.base import ToolCache
 from briefcase.integrations.subprocess import SubprocessArgsT
 from briefcase.integrations.virtual_environment.base import VirtualEnvironment
@@ -46,22 +46,16 @@ class VenvVirtualEnvironment(VirtualEnvironment):
                 self.clean()
 
             try:
+                # Create the venv, but *don't* install pip. We'll use
+                # pip from the environment that is running Briefcase.
                 self.venv_path.parent.mkdir(parents=True, exist_ok=True)
                 self.tools.subprocess.run(
-                    [sys.executable, "-m", "venv", self.venv_path],
+                    [sys.executable, "-m", "venv", "--without-pip", self.venv_path],
                     check=True,
                 )
             except subprocess.CalledProcessError as e:
                 raise BriefcaseCommandError(
                     f"Failed to create virtual environment at {self.venv_path}"
-                ) from e
-
-            try:
-                # Ensure pip is upgraded in the environment
-                self.install_requirements(["pip"])
-            except RequirementsInstallError as e:
-                raise BriefcaseCommandError(
-                    f"Failed to update core tooling for {self.venv_path}"
                 ) from e
 
         return True
@@ -106,5 +100,9 @@ class VenvVirtualEnvironment(VirtualEnvironment):
         )
         env["VIRTUAL_ENV"] = os.fspath(self.venv_path)
         env.pop("PYTHONHOME", None)
+
+        # Make the environment an iOS cross-build environment
+        if self.platform in {"iphoneos", "iphonesimulator"}:
+            env["PYTHONPATH"] = str(self.platform_path)
 
         return env

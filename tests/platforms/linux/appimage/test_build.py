@@ -55,12 +55,7 @@ def build_command(dummy_console, tmp_path, first_app_config):
     command.tools.os = mock.MagicMock()
     # Mock user and group IDs for docker image
     command.tools.os.environ = mock.MagicMock()
-    command.tools.os.environ.__getitem__.return_value = (
-        "/usr/local/bin:/usr/bin:/path/to/somewhere"
-    )
-    command.tools.os.environ.copy.return_value = {
-        "PATH": "/usr/local/bin:/usr/bin:/path/to/somewhere"
-    }
+    command.tools.os.environ = {"PATH": "/usr/local/bin:/usr/bin:/path/to/somewhere"}
 
     # mock user and group IDs for docker build
     command.tools.os.getuid.return_value = 1000

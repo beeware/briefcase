@@ -10,6 +10,10 @@ from briefcase.commands import CreateCommand
 from briefcase.exceptions import BriefcaseCommandError
 from briefcase.integrations.docker import Docker, DockerAppContext
 from briefcase.integrations.subprocess import Subprocess
+from briefcase.integrations.virtual_environment import (
+    NoOpVirtualEnvironment,
+    VenvVirtualEnvironment,
+)
 from briefcase.platforms.linux import LocalRequirementsMixin
 
 from ...utils import create_file, create_tgz_file, create_zip_file
@@ -144,43 +148,79 @@ def other_package(create_command, first_app_config):
     )
 
 
+def test_create_app_environment(
+    mock_venv,
+    no_docker_create_command,
+    first_app_config,
+    tmp_path,
+):
+    """A Linux virtual environment can be created."""
+    no_docker_create_command.tools.subprocess = MagicMock()
+    no_docker_create_command.tools[
+        first_app_config
+    ].app_context = no_docker_create_command.tools.subprocess
+
+    # Create the app environment
+    venv = no_docker_create_command.create_app_environment(
+        first_app_config, "Linux", "x86_64", "venv"
+    )
+
+    assert isinstance(venv, VenvVirtualEnvironment)
+    assert venv.platform == "Linux"
+    assert venv.arch == "x86_64"
+
+
 @pytest.mark.skipif(
-    sys.platform == "win32", reason="Windows paths aren't converted in Docker context"
+    sys.platform == "win32",
+    reason="Windows paths aren't converted in Docker context",
 )
-def test_install_app_requirements_in_docker(create_command, first_app_config, tmp_path):
+def test_create_app_environment_in_docker(
+    mock_venv,
+    create_command,
+    first_app_config,
+    tmp_path,
+):
+    """If Docker is used, all venvs are converted to no-ops."""
+    create_command.tools.subprocess = MagicMock()
+    create_command.tools[first_app_config].app_context = create_command.tools.subprocess
+
+    # Create the app environment
+    venv = create_command.create_app_environment(
+        first_app_config, "Linux", "x86_64", "venv"
+    )
+
+    assert isinstance(venv, NoOpVirtualEnvironment)
+    assert venv.platform == "Linux"
+    assert venv.arch == "x86_64"
+
+
+@pytest.mark.skipif(
+    sys.platform == "win32",
+    reason="Windows paths aren't converted in Docker context",
+)
+def test_install_app_requirements_in_docker(
+    mock_venv,
+    create_command,
+    first_app_config,
+    tmp_path,
+):
     """If Docker is in use, a docker context is used to invoke pip."""
 
     # Install requirements
-    create_command.install_app_requirements(first_app_config)
+    create_command.install_app_requirements(first_app_config, mock_venv)
 
-    # pip was invoked inside docker.
-    create_command.tools.subprocess.run.assert_called_once_with(
-        args=[
-            "docker",
-            "run",
-            "--rm",
-            "--volume",
-            f"{tmp_path / 'base_path/build/first-app/tester/dummy'}:/app:z",
-            "--volume",
-            f"{tmp_path / 'briefcase'}:/briefcase:z",
-            "briefcase/com.example.first-app:py3.X",
-            "python3.X",
-            "-u",
-            "-X",
-            "utf8",
-            "-m",
-            "pip",
-            "install",
-            "--disable-pip-version-check",
-            "--upgrade",
-            "--no-user",
-            "--target=/app/path/to/app_packages",
+    # requirements were installed in docker
+    mock_venv.install_requirements.assert_called_once_with(
+        [
             "foo==1.2.3",
             "bar>=4.5",
         ],
-        check=True,
-        encoding="UTF-8",
-        env={"DOCKER_CLI_HINTS": "false"},
+        allow_editable=False,
+        require_binary=False,
+        install_path=(
+            tmp_path / "base_path/build/first-app/tester/dummy/path/to/app_packages"
+        ),
+        extra_installer_args=[],
     )
 
     # The local requirements path exists, but is empty
@@ -190,9 +230,11 @@ def test_install_app_requirements_in_docker(create_command, first_app_config, tm
 
 
 @pytest.mark.skipif(
-    sys.platform == "win32", reason="Windows paths aren't converted in Docker context"
+    sys.platform == "win32",
+    reason="Windows paths aren't converted in Docker context",
 )
 def test_install_app_requirements_no_docker(
+    mock_venv,
     no_docker_create_command,
     first_app_config,
     tmp_path,
@@ -203,7 +245,7 @@ def test_install_app_requirements_no_docker(
     no_docker_create_command.verify_app_tools(first_app_config)
 
     # Install requirements
-    no_docker_create_command.install_app_requirements(first_app_config)
+    no_docker_create_command.install_app_requirements(first_app_config, mock_venv)
 
     # Docker is not verified.
     assert not hasattr(no_docker_create_command.tools, "docker")
@@ -217,27 +259,18 @@ def test_install_app_requirements_no_docker(
         is no_docker_create_command.tools.subprocess
     )
 
-    # pip was invoked natively
-    no_docker_create_command.tools[
-        first_app_config
-    ].app_context.run.assert_called_once_with(
+    # requirements were installed
+    mock_venv.install_requirements.assert_called_once_with(
         [
-            sys.executable,
-            "-u",
-            "-X",
-            "utf8",
-            "-m",
-            "pip",
-            "install",
-            "--disable-pip-version-check",
-            "--upgrade",
-            "--no-user",
-            f"--target={tmp_path / 'base_path/build/first-app/tester/dummy/path/to/app_packages'}",
             "foo==1.2.3",
             "bar>=4.5",
         ],
-        check=True,
-        encoding="UTF-8",
+        allow_editable=False,
+        require_binary=False,
+        install_path=(
+            tmp_path / "base_path/build/first-app/tester/dummy/path/to/app_packages"
+        ),
+        extra_installer_args=[],
     )
 
     # The local requirements path exists, but is empty
@@ -267,6 +300,7 @@ def test_install_app_requirements_no_docker(
     ],
 )
 def test_install_app_requirements_with_locals(
+    mock_venv,
     create_command,
     first_app_config,
     tmp_path,
@@ -303,7 +337,7 @@ def test_install_app_requirements_with_locals(
     create_command.tools.subprocess.check_output.side_effect = build_wheel
 
     # Install requirements
-    create_command.install_app_requirements(first_app_config)
+    create_command.install_app_requirements(first_app_config, mock_venv)
 
     # A wheel was built for the local package
     create_command.tools.subprocess.check_output.assert_called_once_with(
@@ -322,48 +356,35 @@ def test_install_app_requirements_with_locals(
     )
 
     # An attempt was made to copy the prebuilt packages
+    requirements_path = (
+        tmp_path / "base_path/build/first-app/tester/dummy/_requirements"
+    )
     create_command.tools.shutil.copy.mock_calls = [
-        call(
-            str(tmp_path / "local/second-2.3.4.tar.gz"),
-            tmp_path / "base_path/build/first-app/tester/dummy/_requirements",
-        ),
-        call(
-            str(tmp_path / "local/third-3.4.5-py3-none-any.whl"),
-            tmp_path / "base_path/build/first-app/tester/dummy/_requirements",
-        ),
+        call(str(tmp_path / "local/second-2.3.4.tar.gz"), requirements_path),
+        call(str(tmp_path / "local/third-3.4.5-py3-none-any.whl"), requirements_path),
     ]
 
-    # pip was invoked inside docker.
-    create_command.tools.subprocess.run.assert_called_once_with(
-        args=[
-            "docker",
-            "run",
-            "--rm",
-            "--volume",
-            f"{tmp_path / 'base_path/build/first-app/tester/dummy'}:/app:z",
-            "--volume",
-            f"{tmp_path / 'briefcase'}:/briefcase:z",
-            "briefcase/com.example.first-app:py3.X",
-            "python3.X",
-            "-u",
-            "-X",
-            "utf8",
-            "-m",
-            "pip",
-            "install",
-            "--disable-pip-version-check",
-            "--upgrade",
-            "--no-user",
-            "--target=/app/path/to/app_packages",
+    # requirements were installed in docker
+    mock_venv.install_requirements.assert_called_once_with(
+        [
             "foo==1.2.3",
             "bar>=4.5",
-            "/app/_requirements/first-1.2.3-py3-none-any.whl" + extras.get("first", ""),
-            "/app/_requirements/second-2.3.4.tar.gz" + extras.get("second", ""),
-            "/app/_requirements/third-3.4.5-py3-none-any.whl" + extras.get("third", ""),
+            str(
+                requirements_path
+                / ("first-1.2.3-py3-none-any.whl" + extras.get("first", ""))
+            ),
+            str(requirements_path / ("second-2.3.4.tar.gz" + extras.get("second", ""))),
+            str(
+                requirements_path
+                / ("third-3.4.5-py3-none-any.whl" + extras.get("third", ""))
+            ),
         ],
-        check=True,
-        encoding="UTF-8",
-        env={"DOCKER_CLI_HINTS": "false"},
+        allow_editable=False,
+        require_binary=False,
+        install_path=(
+            tmp_path / "base_path/build/first-app/tester/dummy/path/to/app_packages"
+        ),
+        extra_installer_args=[],
     )
 
     # The local requirements path exists, and contains the compiled wheel, the
@@ -379,9 +400,11 @@ def test_install_app_requirements_with_locals(
 
 
 @pytest.mark.skipif(
-    sys.platform == "win32", reason="Windows paths aren't converted in Docker context"
+    sys.platform == "win32",
+    reason="Windows paths aren't converted in Docker context",
 )
 def test_install_app_requirements_with_bad_local(
+    mock_venv,
     create_command,
     first_app_config,
     tmp_path,
@@ -404,7 +427,7 @@ def test_install_app_requirements_with_bad_local(
         BriefcaseCommandError,
         match=r"Unable to build wheel for .*/local/first",
     ):
-        create_command.install_app_requirements(first_app_config)
+        create_command.install_app_requirements(first_app_config, mock_venv)
 
     # An attempt to build the wheel was made
     create_command.tools.subprocess.check_output.assert_called_once_with(
@@ -432,9 +455,11 @@ def test_install_app_requirements_with_bad_local(
 
 
 @pytest.mark.skipif(
-    sys.platform == "win32", reason="Windows paths aren't converted in Docker context"
+    sys.platform == "win32",
+    reason="Windows paths aren't converted in Docker context",
 )
 def test_install_app_requirements_with_missing_local_build(
+    mock_venv,
     create_command,
     first_app_config,
     tmp_path,
@@ -449,7 +474,7 @@ def test_install_app_requirements_with_missing_local_build(
         BriefcaseCommandError,
         match=r"Unable to find local requirement .*/local/first",
     ):
-        create_command.install_app_requirements(first_app_config)
+        create_command.install_app_requirements(first_app_config, mock_venv)
 
     # No attempt to build the wheel was made
     create_command.tools.subprocess.check_output.assert_not_called()
@@ -464,9 +489,11 @@ def test_install_app_requirements_with_missing_local_build(
 
 
 @pytest.mark.skipif(
-    sys.platform == "win32", reason="Windows paths aren't converted in Docker context"
+    sys.platform == "win32",
+    reason="Windows paths aren't converted in Docker context",
 )
 def test_install_app_requirements_with_bad_local_file(
+    mock_venv,
     create_command,
     first_app_config,
     tmp_path,
@@ -481,7 +508,7 @@ def test_install_app_requirements_with_bad_local_file(
         BriefcaseCommandError,
         match=r"Unable to find local requirement .*/local/missing-2.3.4.tar.gz",
     ):
-        create_command.install_app_requirements(first_app_config)
+        create_command.install_app_requirements(first_app_config, mock_venv)
 
     # An attempt was made to copy the package
     create_command.tools.shutil.copy.assert_called_once_with(

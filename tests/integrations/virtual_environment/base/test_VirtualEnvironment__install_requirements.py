@@ -5,6 +5,8 @@ import pytest
 
 from briefcase.exceptions import RequirementsInstallError
 
+from ....utils import create_file
+
 
 def test_install_requirements(mock_tools, mock_venv):
     """Requirements can be installed with pip."""
@@ -16,15 +18,18 @@ def test_install_requirements(mock_tools, mock_venv):
         ],
     )
 
+    # pip was run using the *Briefcase* environment,
+    # targeted at the *venv*'s Python install.
     mock_tools.subprocess.run.assert_called_once_with(
         [
-            "rewrite",
-            mock_venv.executable,
+            sys.executable,
             "-u",
             "-X",
             "utf8",
             "-m",
             "pip",
+            "--python",
+            mock_venv.executable,
             "install",
             "--disable-pip-version-check",
             "--no-user",
@@ -36,7 +41,6 @@ def test_install_requirements(mock_tools, mock_venv):
         ],
         check=True,
         encoding="UTF-8",
-        env={"VENV": "active"},
     )
 
 
@@ -112,15 +116,18 @@ def test_install_requirements_path_formats(
         allow_editable=allow_editable,
     )
 
+    # pip was run using the *Briefcase* environment,
+    # targeted at the *venv*'s Python install.
     mock_tools.subprocess.run.assert_called_once_with(
         [
-            "rewrite",
-            mock_venv.executable,
+            sys.executable,
             "-u",
             "-X",
             "utf8",
             "-m",
             "pip",
+            "--python",
+            mock_venv.executable,
             "install",
             "--disable-pip-version-check",
             "--no-user",
@@ -130,7 +137,6 @@ def test_install_requirements_path_formats(
         + (["-e", requirement] if (editable and allow_editable) else [requirement]),
         check=True,
         encoding="UTF-8",
-        env={"VENV": "active"},
     )
 
 
@@ -192,6 +198,7 @@ def test_install_requirements_path_formats(
         ("android", "arm64_v8a", None, []),
     ],
 )
+@pytest.mark.parametrize("preexisting", [True, False])
 def test_install_requirements_with_install_path(
     mock_tools,
     mock_venv,
@@ -200,10 +207,16 @@ def test_install_requirements_with_install_path(
     arch,
     min_os_version,
     args,
+    preexisting,
 ):
     """If an install path is provided, extra platform tags are included."""
     mock_venv.platform = platform
     mock_venv.arch = arch
+
+    if preexisting:
+        # Mock some pre-existing content in the install path
+        create_file(tmp_path / "location" / "pre-existing.file", "content")
+        create_file(tmp_path / "location" / "folder" / "other.file", "content")
 
     mock_venv.install_requirements(
         [
@@ -214,15 +227,25 @@ def test_install_requirements_with_install_path(
         min_os_version=min_os_version,
     )
 
+    # If the install folder was pre-existing, it will be removed,
+    if preexisting:
+        mock_tools.shutil.rmtree.assert_called_once_with(tmp_path / "location")
+
+    # We can guarantee the install path exists now.
+    assert (tmp_path / "location").is_dir()
+
+    # pip was run using the *Briefcase* environment,
+    # targeted at the *venv*'s Python install.
     mock_tools.subprocess.run.assert_called_once_with(
         [
-            "rewrite",
-            mock_venv.executable,
+            sys.executable,
             "-u",
             "-X",
             "utf8",
             "-m",
             "pip",
+            "--python",
+            mock_venv.executable,
             "install",
             "--disable-pip-version-check",
             "--no-user",
@@ -235,7 +258,6 @@ def test_install_requirements_with_install_path(
         ],
         check=True,
         encoding="UTF-8",
-        env={"VENV": "active"},
     )
 
 
@@ -249,15 +271,18 @@ def test_require_binary(mock_tools, mock_venv):
         require_binary=True,
     )
 
+    # pip was run using the *Briefcase* environment,
+    # targeted at the *venv*'s Python install.
     mock_tools.subprocess.run.assert_called_once_with(
         [
-            "rewrite",
-            mock_venv.executable,
+            sys.executable,
             "-u",
             "-X",
             "utf8",
             "-m",
             "pip",
+            "--python",
+            mock_venv.executable,
             "install",
             "--disable-pip-version-check",
             "--no-user",
@@ -270,7 +295,6 @@ def test_require_binary(mock_tools, mock_venv):
         ],
         check=True,
         encoding="UTF-8",
-        env={"VENV": "active"},
     )
 
 
@@ -284,15 +308,18 @@ def test_disable_include_dependencies(mock_tools, mock_venv):
         include_deps=False,
     )
 
+    # pip was run using the *Briefcase* environment,
+    # targeted at the *venv*'s Python install.
     mock_tools.subprocess.run.assert_called_once_with(
         [
-            "rewrite",
-            mock_venv.executable,
+            sys.executable,
             "-u",
             "-X",
             "utf8",
             "-m",
             "pip",
+            "--python",
+            mock_venv.executable,
             "install",
             "--disable-pip-version-check",
             "--no-user",
@@ -304,7 +331,6 @@ def test_disable_include_dependencies(mock_tools, mock_venv):
         ],
         check=True,
         encoding="UTF-8",
-        env={"VENV": "active"},
     )
 
 
@@ -320,28 +346,30 @@ def test_extra_installer_args(mock_tools, mock_venv, base_path):
         extra_installer_args=["-f", "./wheels"],
     )
 
+    # pip was run using the *Briefcase* environment,
+    # targeted at the *venv*'s Python install.
     mock_tools.subprocess.run.assert_called_once_with(
         [
-            "rewrite",
-            mock_venv.executable,
+            sys.executable,
             "-u",
             "-X",
             "utf8",
             "-m",
             "pip",
+            "--python",
+            mock_venv.executable,
             "install",
             "--disable-pip-version-check",
             "--no-user",
             "--upgrade",
             "-vv",
             "-f",
-            "./wheels",
+            base_path / "wheels",
             "pkg1",
             "pkg2==1.2.3",
         ],
         check=True,
         encoding="UTF-8",
-        env={"VENV": "active"},
     )
 
 
@@ -357,15 +385,18 @@ def test_install_failure(mock_tools, mock_venv):
             allow_editable=True,
         )
 
+    # pip was run using the *Briefcase* environment,
+    # targeted at the *venv*'s Python install.
     mock_tools.subprocess.run.assert_called_once_with(
         [
-            "rewrite",
-            mock_venv.executable,
+            sys.executable,
             "-u",
             "-X",
             "utf8",
             "-m",
             "pip",
+            "--python",
+            mock_venv.executable,
             "install",
             "--disable-pip-version-check",
             "--no-user",
@@ -375,5 +406,4 @@ def test_install_failure(mock_tools, mock_venv):
         ],
         check=True,
         encoding="UTF-8",
-        env={"VENV": "active"},
     )

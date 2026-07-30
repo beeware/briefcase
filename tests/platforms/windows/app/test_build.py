@@ -392,7 +392,7 @@ def test_build_app_with_support_package_update(
     build_command(first_app_templated, update_support=True)
 
     # update the app binary resources
-    build_command.tools.subprocess.run.assert_called_once_with(
+    build_command.tools.subprocess.run.assert_called_with(
         [
             tmp_path / "briefcase/tools/rcedit-x64.exe",
             Path("src/First App.exe"),

@@ -3,7 +3,6 @@ from unittest.mock import MagicMock
 import pytest
 
 from briefcase.exceptions import BriefcaseCommandError
-from briefcase.integrations.subprocess import Subprocess
 from briefcase.platforms.windows.visualstudio import WindowsVisualStudioCreateCommand
 
 # Most tests and fixtures are the same for both "app" and "visualstudio". This file only
@@ -40,6 +39,7 @@ def test_package_path(create_command, first_app_config, tmp_path):
     ],
 )
 def test_min_os_version(
+    mock_venv,
     create_command,
     first_app_templated,
     template_version,
@@ -52,9 +52,7 @@ def test_min_os_version(
     create_command.target_windows_build = MagicMock(return_value=template_version)
     if app_version:
         first_app_templated.min_os_version = app_version
-    create_command.tools[first_app_templated].app_context = MagicMock(
-        spec_set=Subprocess
-    )
+
     if not compatible:
         with pytest.raises(
             BriefcaseCommandError,
@@ -63,11 +61,20 @@ def test_min_os_version(
                 f"but the app template only supports {template_version}"
             ),
         ):
-            create_command.install_app_requirements(first_app_templated)
-        create_command.tools[first_app_templated].app_context.run.assert_not_called()
+            create_command.install_app_requirements(first_app_templated, mock_venv)
+        mock_venv.install_requirements.assert_not_called()
     else:
-        create_command.install_app_requirements(first_app_templated)
-        create_command.tools[first_app_templated].app_context.run.assert_called()
+        create_command.install_app_requirements(first_app_templated, mock_venv)
+        mock_venv.install_requirements.assert_called_once_with(
+            ["first", "second==1.2.3", "third>=3.2.1"],
+            allow_editable=False,
+            require_binary=True,
+            install_path=(
+                create_command.base_path
+                / "build/first-app/windows/visualstudio/src/app_packages"
+            ),
+            extra_installer_args=[],
+        )
 
 
 def test_target_windows_build(create_command, first_app_templated):

@@ -1,4 +1,5 @@
 import subprocess
+import sys
 from abc import ABC, abstractmethod
 from pathlib import Path
 
@@ -154,6 +155,11 @@ class VirtualEnvironment(ABC):
         try:
             install_args = []
             if install_path:
+                # If an install path is specified, ensure it's clean.
+                if install_path.is_dir():
+                    self.tools.shutil.rmtree(install_path)
+                install_path.mkdir(parents=True, exist_ok=True)
+
                 install_args.append(f"--target={install_path}")
                 if platform_tag := self.platform_tag(min_os_version):
                     install_args.extend(["--platform", platform_tag])
@@ -174,16 +180,27 @@ class VirtualEnvironment(ABC):
                 )
 
             if extra_installer_args:
-                install_args.extend(extra_installer_args)
+                install_args.extend(
+                    self.tools.file.resolve_relative_args(
+                        extra_installer_args,
+                        self.base_path,
+                    )
+                )
 
-            self.run(
+            # Use the app context, but *without* the venv execution wrapper.
+            # We want to use the *Briefcase* environment to run pip so that
+            # we don't have to install pip into the venv. Use `--python` to
+            # target pip at the venv.
+            self.tools[self.app].app_context.run(
                 [
-                    self.executable,
+                    sys.executable,
                     "-u",
                     "-X",
                     "utf8",
                     "-m",
                     "pip",
+                    "--python",
+                    self.executable,
                     "install",
                     "--disable-pip-version-check",
                     "--no-user",
