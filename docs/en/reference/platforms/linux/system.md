@@ -91,6 +91,20 @@ The Linux system app template includes a `LICENSE` and `CHANGELOG` file, with st
 
 The Linux system app template also includes an initial draft manfile for your app. This manfile will be populated with the [`description`][] and [`long_description`][] of your app. You may wish to add more details on app usage. If you need full control over the man page content, you can provide your own troff-formatted man page using the [`man_page`][] configuration option.
 
+## Code signing
+
+Linux system packages can be signed using a GPG signing identity. See the [how-to guide on Linux code signing](../../../how-to/code-signing/linux.md) for instructions on generating and obtaining a GPG signing identity.
+
+When signing a package, Briefcase uses the first secret key reported by `gpg --list-secret-keys`. The identity used to sign the package can be specified with the `-i` / `--identity` option; if no identity is specified and only one secret key is available, that key will be used. If multiple secret keys are available, Briefcase will prompt you to select one.
+
+Signing is performed as follows, depending on the packaging format:
+
+- `.deb` packages are signed with [`debsigs`](https://manpages.debian.org/bookworm/debsigs/debsigs.1.en.html), embedding an `origin` signature in the package. The `debsigs` tool must be installed.
+- `.rpm` packages are signed with [`rpmsign`](https://manpages.debian.org/bookworm/rpm/rpmsign.8.en.html), embedding a signature in the package header. The `rpm-sign` tool must be installed.
+- `.pkg.tar.zst` packages are signed with `gpg`, producing a detached signature in a `.sig` file alongside the package; both files must be distributed together. The `gnupg` tool must be installed.
+
+If the relevant signing tool is not installed, Briefcase will report an error suggesting how to install it. If no signing identity is available, or if `--adhoc-sign` is used, the package will be produced without a signature.
+
 ## Additional options
 
 The following options can be provided at the command line when producing Deb packages:

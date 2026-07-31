@@ -27,6 +27,9 @@ def package_command(monkeypatch, dummy_console, first_app, tmp_path):
     # Mock the packaging tools.
     command._verify_packaging_tools = mock.MagicMock()
 
+    # Mock the signing identities, so no identities are available by default.
+    command.get_gpg_identities = mock.MagicMock(return_value={})
+
     return command
 
 

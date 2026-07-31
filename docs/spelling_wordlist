@@ -76,6 +76,7 @@ geolocation
 GID
 git's
 GitPython's
+GPG
 gradle
 Gradle
 gradlew
@@ -98,6 +99,7 @@ keychain
 Keychain
 keystore
 keystores
+keyring
 linters
 Linux
 linuxdeploy

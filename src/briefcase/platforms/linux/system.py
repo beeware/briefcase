@@ -26,6 +26,7 @@ from briefcase.config import (
     merge_config,
 )
 from briefcase.exceptions import BriefcaseCommandError, UnsupportedHostError
+from briefcase.integrations.base import ToolCache
 from briefcase.integrations.docker import Docker, DockerAppContext
 from briefcase.integrations.subprocess import NativeAppContext
 from briefcase.integrations.virtual_environment import VirtualEnvironment
@@ -37,6 +38,7 @@ from briefcase.platforms.linux import (
     DockerOpenCommand,
     LinuxMixin,
     LocalRequirementsMixin,
+    _MixinBase,
     parse_freedesktop_os_release,
 )
 
@@ -1043,7 +1045,256 @@ def debian_multiline_description(description):
     return "\n ".join(line for line in description.split("\n") if line.strip() != "")
 
 
-class LinuxSystemPackageCommand(LinuxSystemDockerMixin, PackageCommand):
+def get_gpg_identities(tools: ToolCache) -> dict[str, str]:
+    """Obtain a set of valid GPG signing identities.
+
+    :param tools: ToolCache of available tools
+    :returns: A dictionary of the GPG signing identities available on the
+        system, keyed by fingerprint, with the primary user ID as the value.
+    """
+    try:
+        output = tools.subprocess.check_output(
+            ["gpg", "--list-secret-keys", "--with-colons"],
+            quiet=1,
+        )
+    except (OSError, subprocess.CalledProcessError):
+        # No secret keys are available (gpg returns a non-zero exit code when
+        # there are no secret keys), or gpg isn't installed.
+        return {}
+
+    identities = {}
+    fingerprint = None
+    for line in output.split("\n"):
+        record = line.split(":")
+        if record[0] == "sec":
+            # A new secret key; the fingerprint of the key will follow.
+            fingerprint = None
+        elif record[0] == "fpr":
+            # The fingerprint of the current secret key. The first UID for the
+            # key is used as the identity name.
+            if fingerprint is None:
+                fingerprint = record[9]
+        elif record[0] == "uid" and fingerprint and fingerprint not in identities:
+            identities[fingerprint] = record[9]
+
+    return identities
+
+
+class LinuxSystemSigningMixin(_MixinBase):
+    ADHOC_SIGN_HELP = (
+        "Perform no signing on the package. If signing is not performed, "
+        "users will not be able to verify the provenance of the package."
+    )
+    IDENTITY_HELP = (
+        "The GPG signing identity to use to sign the package. This can be the "
+        "fingerprint, key ID, or the name/email address of any GPG identity "
+        "available on the system."
+    )
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+
+        # External service APIs.
+        # These are abstracted to enable testing without patching.
+        self.get_gpg_identities = get_gpg_identities
+
+    def _signing_tool(self, app: LinuxSystemAppConfig) -> tuple[str, str, str]:
+        """Utility method returning the tool used to sign a package.
+
+        :param app: The app being packaged
+        :returns: A triple of (tool name, executable name, package name) for
+            the tool used to sign the package.
+        """
+        return {
+            "deb": ("debsigs", "debsigs", "debsigs"),
+            "rpm": ("rpmsign", "rpmsign", "rpm-sign"),
+            "pkg": ("gpg", "gpg", "gnupg"),
+        }[app.packaging_format]
+
+    def _verify_signing_tool(self, app: LinuxSystemAppConfig):
+        """Verify that the local environment contains the signing tool.
+
+        :param app: The app being signed
+        """
+        tool_name, executable_name, package_name = self._signing_tool(app)
+        if not self.tools.shutil.which(executable_name):
+            if install_cmd := self._system_requirement_tools(app)[3]:
+                raise BriefcaseCommandError(
+                    f"Can't find the {tool_name} tools. "
+                    f"Try running `sudo {' '.join(install_cmd)} {package_name}`."
+                )
+            else:
+                raise BriefcaseCommandError(
+                    f"Can't find the {executable_name} tool. "
+                    f"Install this first to sign the {app.packaging_format}."
+                )
+
+    def signature_path(self, app: LinuxSystemAppConfig) -> Path:
+        """The path of the signature for the packaged app.
+
+        :param app: The app being packaged
+        :returns: The path to the signature of the app's distribution artefact.
+        """
+        return Path(f"{self.distribution_path(app)}.sig")
+
+    def select_identity(self, identity: str | None = None) -> str | None:
+        """Get the GPG signing identity to use.
+
+        This can be either a fingerprint, key ID, or user ID (name or email
+        address) of an identity available on the system. If no identity is
+        specified, and exactly one identity is available, that identity will
+        be used; if multiple identities are available, the user will be
+        prompted to select one.
+
+        :param identity: A pre-specified identity (either the fingerprint, key
+            ID, or string name of the identity). If provided, it will be
+            validated against the list of available identities to confirm that
+            it is a valid signing identity.
+        :returns: The final identity to use, or `None` if no identity is
+            available and no identity was specified.
+        """
+        identities = self.get_gpg_identities(self.tools)
+
+        if identity:
+            # The user has specified an identity. Match it against the
+            # available identities as a fingerprint, key ID, or user ID.
+            for fingerprint, uid in identities.items():
+                if (
+                    identity.lower() in fingerprint.lower()
+                    or identity.lower() in uid.lower()
+                ):
+                    return fingerprint
+            raise BriefcaseCommandError(f"Invalid signing identity {identity}")
+
+        if not identities:
+            # No signing identities are available.
+            return None
+
+        if len(identities) == 1:
+            # Only one identity is available; use it without prompting.
+            return next(iter(identities))
+
+        # Multiple identities are available; prompt the user to select one.
+        identity = self.console.selection_question(
+            intro="Select GPG signing identity to use:",
+            description="GPG Signing Identity",
+            options=identities,
+        )
+        identity_name = identities[identity]
+        self.console.info(f"""
+In future, you could specify this signing identity by using:
+
+    $ briefcase {self.command} {self.platform} {self.output_format} --identity {identity} ...
+
+or
+
+    $ briefcase {self.command} {self.platform} {self.output_format} --identity "{identity_name}" ...
+
+""")  # noqa: E501
+
+        return identity
+
+    def sign_package(self, app: LinuxSystemAppConfig, identity: str):
+        """Sign a package with a GPG identity.
+
+        :param app: The app being packaged
+        :param identity: The signing identity (fingerprint) to use
+        """
+        dist_path = self.distribution_path(app)
+        sign_command = {
+            "deb": [
+                "debsigs",
+                "--sign=origin",
+                f"--default-key={identity}",
+                str(dist_path),
+            ],
+            "rpm": [
+                "rpmsign",
+                "--define",
+                f"_gpg_name {identity}",
+                "--addsign",
+                str(dist_path),
+            ],
+            "pkg": [
+                "gpg",
+                "--detach-sign",
+                "-u",
+                identity,
+                "--output",
+                str(self.signature_path(app)),
+                str(dist_path),
+            ],
+        }[app.packaging_format]
+
+        try:
+            self.tools.subprocess.run(sign_command, check=True)
+        except subprocess.CalledProcessError as e:
+            raise BriefcaseCommandError(
+                f"Error while signing .{app.packaging_format} package for "
+                f"{app.app_name}."
+            ) from e
+
+    def clean_dist_folder(self, app, **options):
+        super().clean_dist_folder(app, **options)
+        # Also remove any existing signature for the distribution artefact, so
+        # a stale signature isn't mistaken for the current package.
+        if self.signature_path(app).exists():
+            self.signature_path(app).unlink()
+
+    def package_app(self, app, identity=None, adhoc_sign=False, **kwargs):
+        """Package an application.
+
+        :param app: The application to package
+        :param identity: The GPG signing identity to use to sign the package.
+            This can be a fingerprint, key ID, or the name/email address of an
+            identity. If unspecified, the identity will be determined from the
+            identities available on the system. Ignored if ``adhoc_sign`` is
+            True.
+        :param adhoc_sign: If ``True``, the package will not be signed.
+        """
+        app = cast(LinuxSystemAppConfig, app)
+
+        # Determine whether the package should be signed, and the identity
+        # that will be used.
+        if adhoc_sign:
+            identity = None
+        else:
+            identity = self.select_identity(identity=identity)
+            if identity:
+                # Signing is required; verify the signing tool is available.
+                self._verify_signing_tool(app)
+            else:
+                self.tools.console.warning_banner(
+                    "No signing identity available",
+                    """
+                        Briefcase will not sign the package. To sign the
+                        package, provide a GPG signing identity with the
+                        `--identity` option.
+                    """,
+                )
+
+        if app.packaging_format == "deb":
+            self._package_deb(app, **kwargs)
+        elif app.packaging_format == "rpm":
+            self._package_rpm(app, **kwargs)
+        elif app.packaging_format == "pkg":
+            self._package_pkg(app, **kwargs)
+        else:
+            raise BriefcaseCommandError(
+                "Briefcase doesn't currently know how to build system packages in "
+                f"{app.packaging_format.upper()} format."
+            )
+
+        if identity:
+            self.console.info("Signing package...", prefix=app.app_name)
+            self.sign_package(app, identity=identity)
+
+
+class LinuxSystemPackageCommand(
+    LinuxSystemSigningMixin,
+    LinuxSystemDockerMixin,
+    PackageCommand,
+):
     description = "Package a Linux system project."
 
     @property
@@ -1091,20 +1342,6 @@ class LinuxSystemPackageCommand(LinuxSystemDockerMixin, PackageCommand):
 
         if not self.use_docker:
             self._verify_packaging_tools(app)
-
-    def package_app(self, app: FinalizedAppConfig, **kwargs):
-        app = cast(LinuxSystemAppConfig, app)
-        if app.packaging_format == "deb":
-            self._package_deb(app, **kwargs)
-        elif app.packaging_format == "rpm":
-            self._package_rpm(app, **kwargs)
-        elif app.packaging_format == "pkg":
-            self._package_pkg(app, **kwargs)
-        else:
-            raise BriefcaseCommandError(
-                "Briefcase doesn't currently know how to build system packages in "
-                f"{app.packaging_format.upper()} format."
-            )
 
     def _package_deb(self, app: LinuxSystemAppConfig, **kwargs):
         self.console.info("Building .deb package...", prefix=app.app_name)
