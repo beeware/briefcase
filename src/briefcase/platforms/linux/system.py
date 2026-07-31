@@ -1049,8 +1049,8 @@ def get_gpg_identities(tools: ToolCache) -> dict[str, str]:
     """Obtain a set of valid GPG signing identities.
 
     :param tools: ToolCache of available tools
-    :returns: A dictionary of the GPG signing identities available on the
-        system, keyed by fingerprint, with the primary user ID as the value.
+    :returns: A dictionary of the GPG signing identities available on the system, keyed
+        by fingerprint, with the primary user ID as the value.
     """
     try:
         output = tools.subprocess.check_output(
@@ -1102,8 +1102,8 @@ class LinuxSystemSigningMixin(_MixinBase):
         """Utility method returning the tool used to sign a package.
 
         :param app: The app being packaged
-        :returns: A triple of (tool name, executable name, package name) for
-            the tool used to sign the package.
+        :returns: A triple of (tool name, executable name, package name) for the tool
+            used to sign the package.
         """
         return {
             "deb": ("debsigs", "debsigs", "debsigs"),
