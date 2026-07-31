@@ -113,7 +113,7 @@ The environment manager to use when creating isolated Python environments and in
 * `uv` - The [uv](https://docs.astral.sh/uv/) environment manager
 * `conda` - The [Conda](https://docs.conda.io/) environment manager
 
-Defaults to `venv`.
+Defaults to `venv`. For details on using different environment managers, see the `[environment management reference][environment-management]`.
 
 #### `license_files`
 
@@ -314,49 +314,7 @@ A list of packages that must be packaged with this application.
 
 Unlike most other keys in a configuration file, [`requires`][] is a *cumulative* setting. If an application defines requirements at the global level, application level, *and* platform level, the final set of requirements will be the *concatenation* of requirements from all levels, starting from least to most specific.
 
-Any version specifier accepted by the [environment manager][env_manager] is legal. For example, if you're using `venv` or `uv`, the following would be legal:
-
-- Bare package name:
-  ```python
-  requires = ["pillow"]
-  ```
-
-- Package name with version specifier:
-  ```python
-  requires = ["pillow==9.1.0"]
-  ```
-
-- Git repository:
-  ```python
-  requires = ["git+https://github.com/beeware/briefcase.git"]
-  ```
-
-- Local directory:
-  ```python
-  requires = ["mysrc/myapp"]
-  ```
-
-- Local wheel file:
-  ```python
-  requires = ["fullpath/wheelfile.whl"]
-  ```
-
-If you were using `conda` as an environment manager, the following would be legal:
-
-- Bare package name:
-  ```python
-  requires = ["pillow"]
-  ```
-
-- Fuzzy version match
-  ```python
-  requires = ["pillow=9.1"]
-  ```
-
-- Channel-qualified install
-  ```python
-  requires = ["conda-forge::pillow"]
-  ```
+The format for specifying requirements is determined by the [environment manager][env_manager] that is in use. For details on the format for specifying requirements, see the `[environment management reference][environment-management]`.
 
 #### `revision`
 
@@ -414,7 +372,7 @@ A list of packages that are required for the test suite to run.
 
 Unlike most other keys in a configuration file, [`test_requires`][] is a *cumulative* setting. If an application defines requirements at the global level, application level, *and* platform level, the final set of requirements will be the *concatenation* of requirements from all levels, starting from least to most specific.
 
-See [`requires`][] for examples.
+The format for specifying requirements is determined by the [environment manager][env_manager] that is in use. For details on the format for specifying requirements, see the `[environment management reference][environment-management]`.
 
 #### `test_sources`
 
