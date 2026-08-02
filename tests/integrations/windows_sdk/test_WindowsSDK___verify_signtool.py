@@ -46,7 +46,8 @@ def test_winsdk_signtool_raises_oserror(windows_sdk, tmp_path):
     )
     windows_sdk.tools.subprocess.check_output.side_effect = OSError(
         14001,
-        " The application has failed to start because its side-by-side configuration is incorrect.",
+        " The application has failed to start because its "
+        "side-by-side configuration is incorrect.",
     )
 
     assert WindowsSDK._verify_signtool(windows_sdk) is False

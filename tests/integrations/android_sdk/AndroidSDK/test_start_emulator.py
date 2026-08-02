@@ -375,14 +375,19 @@ def test_emulator_fail_to_boot(mock_tools, android_sdk):
     # 3 calls to avd_name and then 3 calls to getprop
     android_sdk.mock_run.side_effect = [
         # emu avd_name
-        subprocess.CalledProcessError(returncode=1, cmd="emu avd name"),
+        subprocess.CalledProcessError(
+            returncode=1,
+            cmd="emu avd name",
+        ),
         "runningEmulator\nOK",
         "idleEmulator\nOK",
         # shell getprop sys.boot_completed
         "\n",  # gets in to emulator has_booted() if block
         "\n",  # enters has_booted() while loop
         "\n",  # one loop waiting for simulator to finish booting
-        "1\n",  # successful boot...except poll() will return non-None first raising failure
+        # successful boot...except poll() will return
+        # non-None first raising failure
+        "1\n",
     ]
 
     # poll() on the process returns failure during simulator boot
