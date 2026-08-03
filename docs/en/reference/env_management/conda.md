@@ -10,7 +10,7 @@ Briefcase requires the use of Conda 26.5 or higher.
 
 To use Conda as the environment manager for your app, add `env_manager = "conda"` to your app configuration. This can be done as a global setting (in `[tool.briefcase]` section) or in a per-app setting (in the `[tool.briefcase.app.myapp]` section for `myapp`).
 
-The Conda environments that are created by Briefcase enable the use of `rattler` resolver.
+The Conda environments that are created by Briefcase are installed using the `rattler` resolver.
 
 ## Specifying requirements
 
@@ -31,7 +31,7 @@ When `conda` is used as an environment manager, the values provided to `requires
   requires = ["conda-forge::pillow"]
   ```
 
-Conda cannot install packages stored as local source references. If your requirements reference a local path, Briefcase will use `pip` to install that requirement (and it's dependencies) into your Conda environment. The following are examples of paths that would be installed with `pip`:
+Conda cannot install packages stored as local source references. If your requirements reference a local path, Briefcase will use `pip` to install that requirement (and its dependencies) into your Conda environment. The following are examples of paths that would be installed with `pip`:
 
 - A local directory:
   ```python
