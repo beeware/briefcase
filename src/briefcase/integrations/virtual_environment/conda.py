@@ -15,11 +15,10 @@ from briefcase.integrations.virtual_environment.base import VirtualEnvironment
 class CondaVirtualEnvironment(VirtualEnvironment):
     """An environment manager using conda.
 
-    The environment is created as a prefix-based conda environment (`conda
-    create --prefix <path>`). The Python interpreter installed into the
-    environment matches the major/minor version of the interpreter running
-    Briefcase. Commands are executed against the environment by activating it
-    (prepending the environment's binary directory to ``PATH``).
+    The environment is created as a prefix-based conda environment (`conda create
+    --prefix <path>`). The Python interpreter installed into the environment matches the
+    major/minor version of the interpreter running Briefcase. Commands are executed in
+    the environment using `conda run`.
     """
 
     env_type: str = "conda"

@@ -344,11 +344,13 @@ A file path or URL pointing at a tarball containing a Python support package. (i
 
 If this setting is not provided, Briefcase will use the default support package for the platform.
 
+The setting will be ignored if the app's environment manager is responsible for providing Python (e.g., Conda).
+
 #### `support_revision`
 
 The specific revision of a support package that should be used. By default, Briefcase will use the support package revision nominated by the application template. If you specify a support revision, that will override the revision nominated by the application template.
 
-If you specify an explicit support package (either as a URL or a file path), this argument is ignored.
+This argument will be ignored if you specify an explicit support package (either as a URL or a file path), the app's environment manager is responsible for providing Python (e.g., Conda).
 
 #### `supported`
 

@@ -2,9 +2,11 @@
 
 The default environment manager used by Briefcase to manage the installation of application requirements is the `venv` package built into Python's standard library.
 
+When `venv` is used to manage your app environment, an official Python or Briefcase-supplied Python support package will be used for your app.
+
 ## Prerequisites
 
-There are no additional pre-requisites for using `venv` to manage application environments.
+There are no additional pre-requisites for using `venv` to manage application environments. Requirements will be installed with `pip`; Briefcase will use the version of `pip` that is installed in the environment where Briefcase is executed.
 
 ## Configuration
 

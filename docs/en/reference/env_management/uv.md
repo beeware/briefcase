@@ -2,9 +2,11 @@
 
 Briefcase is able to use [uv](https://docs.astral.sh/uv/) to manage the installation of application requirements.
 
+When `uv` is used to manage your app environment, an official Python or Briefcase-supplied Python support package will be used for your app.
+
 ## Prerequisites
 
-To use uv as the environment manager in your application, the `uv` binary must be available on your PATH. It can be installed using any of the [installation methods described in the uv documentation](https://docs.astral.sh/uv/getting-started/installation/).
+To use uv as the environment manager in your application, the `uv` binary must be available on your `PATH`. It can be installed using any of the [installation methods described in the uv documentation](https://docs.astral.sh/uv/getting-started/installation/).
 
 ## Configuration
 

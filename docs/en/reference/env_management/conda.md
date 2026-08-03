@@ -1,10 +1,14 @@
 # Environment management with Conda
 
-Briefcase is able to use [Conda](https://conda.io) to provide Python, and manage the installation of application requirements.
+Briefcase is able to use [Conda](https://conda.io) to manage the installation of application requirements.
+
+When Conda is used to manage your app environment, Conda is also used to provide the underlying Python library for the running application, rather than an official Python or Briefcase-supplied Python support package.
 
 ## Prerequisites
 
 Briefcase requires the use of Conda 26.5 or higher.
+
+To use Conda as the environment manager in your application, the `conda` binary must be available on your `PATH`. It can be installed using any of the [installation methods described in the Conda documentation](https://docs.conda.io/projects/conda/en/stable/user-guide/install/index.html).
 
 ## Configuration
 
