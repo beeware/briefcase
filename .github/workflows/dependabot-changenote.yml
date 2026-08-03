@@ -7,11 +7,12 @@ on:
 
 permissions:
   contents: read
+  pull-requests: write
 
 jobs:
   changenote:
     name: Dependabot Change Note
-    uses: beeware/.github/.github/workflows/dependabot-changenote.yml@04ef7a6aca716616670c1ce5232d4aa3061f5c5e  # main
+    uses: beeware/.github/.github/workflows/dependabot-changenote.yml@main
     secrets:
       BRUTUS_PAT_TOKEN: ${{ secrets.BRUTUS_PAT_TOKEN }}
     with:
