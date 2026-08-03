@@ -33,7 +33,7 @@ permissions:
 jobs:
   pre-commit:
     name: Pre-commit checks
-    uses: beeware/.github/.github/workflows/pre-commit-run.yml@04ef7a6aca716616670c1ce5232d4aa3061f5c5e  # main
+    uses: beeware/.github/.github/workflows/pre-commit-run.yml@main
     with:
       pre-commit-source: "--group pre-commit"
 
@@ -60,7 +60,7 @@ jobs:
 
   towncrier:
     name: Check towncrier
-    uses: beeware/.github/.github/workflows/towncrier-run.yml@04ef7a6aca716616670c1ce5232d4aa3061f5c5e  # main
+    uses: beeware/.github/.github/workflows/towncrier-run.yml@main
     permissions:
       contents: read
       pull-requests: write
@@ -79,7 +79,7 @@ jobs:
         - ""  # root briefcase package
         - "debugger"
         - "automation"
-    uses: beeware/.github/.github/workflows/python-package-create.yml@04ef7a6aca716616670c1ce5232d4aa3061f5c5e  # main
+    uses: beeware/.github/.github/workflows/python-package-create.yml@main
     with:
       build-subdirectory: ${{ matrix.subdir }}
       attest: ${{ inputs.attest-package }}
@@ -238,7 +238,7 @@ jobs:
   verify-projects:
     name: Verify project
     needs: [ package, unit-tests ]
-    uses: beeware/.github/.github/workflows/app-create-verify.yml@04ef7a6aca716616670c1ce5232d4aa3061f5c5e  # main
+    uses: beeware/.github/.github/workflows/app-create-verify.yml@main
     with:
       runner-os: ${{ matrix.runner-os }}
       framework: ${{ matrix.framework }}
@@ -251,7 +251,7 @@ jobs:
   verify-apps:
     name: Build app
     needs: [ package, unit-tests ]
-    uses: beeware/.github/.github/workflows/app-build-verify.yml@04ef7a6aca716616670c1ce5232d4aa3061f5c5e  # main
+    uses: beeware/.github/.github/workflows/app-build-verify.yml@main
     with:
       # Builds on Linux must use System Python; otherwise, fall back to version all GUI toolkits support
       python-version: ${{ startsWith(matrix.runner-os, 'ubuntu') && 'system' || '3.12' }}

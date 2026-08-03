@@ -22,7 +22,7 @@ jobs:
     permissions:
       contents: read
     name: Verify Docs Build
-    uses: beeware/.github/.github/workflows/docs-build-verify.yml@04ef7a6aca716616670c1ce5232d4aa3061f5c5e  # main
+    uses: beeware/.github/.github/workflows/docs-build-verify.yml@main
     secrets:
       RTD_API_TOKEN: ${{ secrets.RTD_API_TOKEN }}
     with:
