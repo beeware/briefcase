@@ -107,6 +107,7 @@ def test_install_requirements(
     create_command.create_app_environment = mock.MagicMock(return_value=mock_sim_venv)
 
     first_app_generated.requires = ["something==1.2.3", "other>=2.3.4"]
+    first_app_generated.requirement_installer_args = ["-f", "./wheels"]
 
     create_command.install_app_requirements(first_app_generated, mock_venv)
 
@@ -119,6 +120,7 @@ def test_install_requirements(
         allow_editable=False,
         require_binary=True,
         min_os_version="12.0",
+        extra_installer_args=["-f", "./wheels"],
         install_path=bundle_path / "app_packages.iphoneos",
         install_hint=(
             "\n\n"
@@ -135,6 +137,7 @@ def test_install_requirements(
         allow_editable=False,
         require_binary=True,
         min_os_version="12.0",
+        extra_installer_args=["-f", "./wheels"],
         install_path=bundle_path / "app_packages.iphonesimulator",
         install_hint=(
             "\n\n"
@@ -204,6 +207,7 @@ def test_legacy_support_format(
         allow_editable=False,
         require_binary=True,
         min_os_version=version,
+        extra_installer_args=[],
         install_path=bundle_path / "app_packages.iphoneos",
         install_hint=mock.ANY,
     )
@@ -215,6 +219,7 @@ def test_legacy_support_format(
         allow_editable=False,
         require_binary=True,
         min_os_version=version,
+        extra_installer_args=[],
         install_path=bundle_path / "app_packages.iphonesimulator",
         install_hint=mock.ANY,
     )
@@ -250,6 +255,7 @@ def test_min_os_version(
         allow_editable=False,
         require_binary=True,
         min_os_version="15.2",
+        extra_installer_args=[],
         install_path=bundle_path / "app_packages.iphoneos",
         install_hint=mock.ANY,
     )
@@ -261,6 +267,7 @@ def test_min_os_version(
         allow_editable=False,
         require_binary=True,
         min_os_version="15.2",
+        extra_installer_args=[],
         install_path=bundle_path / "app_packages.iphonesimulator",
         install_hint=mock.ANY,
     )
