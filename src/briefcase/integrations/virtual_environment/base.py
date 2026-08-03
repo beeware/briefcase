@@ -179,6 +179,13 @@ class VirtualEnvironment(ABC):
                     ]
                 )
 
+                # Add include the platform extensions vendored with with the
+                # support package so that pip will resolve transitive binary
+                # platform dependencies.
+                env = {"PYTHONPATH": str(self.platform_path)}
+            else:
+                env = None
+
             if extra_installer_args:
                 install_args.extend(
                     self.tools.file.resolve_relative_args(
@@ -211,6 +218,7 @@ class VirtualEnvironment(ABC):
                 ],
                 check=True,
                 encoding="UTF-8",
+                env=env,
             )
         except subprocess.CalledProcessError as e:
             raise RequirementsInstallError(install_hint=install_hint) from e
