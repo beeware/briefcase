@@ -15,7 +15,6 @@ from typing import TYPE_CHECKING, TypeVar
 
 import httpx
 from cookiecutter.main import cookiecutter
-from typing_extensions import Self
 
 from briefcase.config import AppConfig, FinalizedAppConfig
 from briefcase.console import Console
@@ -43,6 +42,11 @@ if TYPE_CHECKING:
     from briefcase.integrations.windows_sdk import WindowsSDK
     from briefcase.integrations.wix import WiX
     from briefcase.integrations.xcode import Xcode, XcodeCliTools
+
+    try:
+        from typing import Self
+    except ImportError:  # pragma: no-cover-if-gte-py311
+        from typing_extensions import Self
 
 ToolT = TypeVar("ToolT", bound="Tool")
 ManagedToolT = TypeVar("ManagedToolT", bound="ManagedTool")

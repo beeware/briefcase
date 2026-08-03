@@ -39,7 +39,7 @@ def start_remote_debugger():
             start_pdb(config, verbose)
         else:
             raise ValueError(f"Unknown debugger '{config['debugger']}'")
-    except Exception:
-        # Show exception and stop the whole application when an error occurs
+    except Exception:  # noqa: BLE001
+        # Show exception and stop the whole application when any error occurs
         print(traceback.format_exc())
         sys.exit(-1)
