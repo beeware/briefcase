@@ -10,8 +10,7 @@ from briefcase.exceptions import BriefcaseCommandError, UnsupportedHostError
 from briefcase.integrations.visualstudio import VisualStudio
 
 MSBUILD_OUTPUT = (
-    "Microsoft (R) Build Engine version 17.2.1+52cd2da31 "
-    "for .NET Framework\n"
+    "Microsoft (R) Build Engine version 17.2.1+52cd2da31 for .NET Framework\n"
     "Copyright (C) Microsoft Corporation. All rights reserved.\n"
     "\n"
     "17.2.1.25201\n"
@@ -263,7 +262,7 @@ def test_vswhere_bad_executable(mock_tools, vswhere_path):
         BriefcaseCommandError,
         match=(
             r"Visual Studio appears to exist, "
-            r"but Briefcase can't retrieve installation metadata.",
+            r"but Briefcase can't retrieve installation metadata."
         ),
     ):
         VisualStudio.verify(mock_tools)
