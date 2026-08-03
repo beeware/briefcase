@@ -3,6 +3,7 @@ import subprocess
 import sys
 import tarfile
 from pathlib import Path
+from textwrap import dedent
 from unittest import mock
 
 import pytest
@@ -185,9 +186,25 @@ def test_pkg_package(package_command, first_app_pkg, tmp_path, changelog_filenam
     # The PKGBUILD file is written
     assert (bundle_path / "pkgbuild/PKGBUILD").exists()
     with (bundle_path / "pkgbuild/PKGBUILD").open(encoding="utf-8") as f:
-        assert (
-            f.read()
-            == "# Maintainer: Megacorp <maintainer@example.com>\nexport PACKAGER=\"Megacorp <maintainer@example.com>\"\npkgname=first-app\npkgver=0.0.1\npkgrel=1\npkgdesc=\"Description for the app\"\narch=('wonky')\nurl=\"https://example.com/first-app\"\nlicense=('Unknown')\ndepends=('glibc>=2.99' 'python3')\nchangelog=CHANGELOG\nsource=(\"$pkgname-$pkgver.tar.gz\")\nmd5sums=('SKIP')\noptions=('!strip')\npackage() {\n    cp -r \"$srcdir/$pkgname-$pkgver/usr/\" \"$pkgdir\"/usr/\n}"
+        assert f.read() == dedent(
+            """\
+            # Maintainer: Megacorp <maintainer@example.com>
+            export PACKAGER="Megacorp <maintainer@example.com>"
+            pkgname=first-app
+            pkgver=0.0.1
+            pkgrel=1
+            pkgdesc="Description for the app"
+            arch=('wonky')
+            url="https://example.com/first-app"
+            license=('Unknown')
+            depends=('glibc>=2.99' 'python3')
+            changelog=CHANGELOG
+            source=("$pkgname-$pkgver.tar.gz")
+            md5sums=('SKIP')
+            options=('!strip')
+            package() {
+                cp -r "$srcdir/$pkgname-$pkgver/usr/" "$pkgdir"/usr/
+            }"""
         )
 
     # A source tarball was created with the right content
@@ -264,9 +281,25 @@ def test_pkg_re_package(package_command, first_app_pkg, tmp_path):
     # The PKGBUILD file is written
     assert (bundle_path / "pkgbuild/PKGBUILD").exists()
     with (bundle_path / "pkgbuild/PKGBUILD").open(encoding="utf-8") as f:
-        assert (
-            f.read()
-            == "# Maintainer: Megacorp <maintainer@example.com>\nexport PACKAGER=\"Megacorp <maintainer@example.com>\"\npkgname=first-app\npkgver=0.0.1\npkgrel=1\npkgdesc=\"Description for the app\"\narch=('wonky')\nurl=\"https://example.com/first-app\"\nlicense=('Unknown')\ndepends=('glibc>=2.99' 'python3')\nchangelog=CHANGELOG\nsource=(\"$pkgname-$pkgver.tar.gz\")\nmd5sums=('SKIP')\noptions=('!strip')\npackage() {\n    cp -r \"$srcdir/$pkgname-$pkgver/usr/\" \"$pkgdir\"/usr/\n}"
+        assert f.read() == dedent(
+            """\
+            # Maintainer: Megacorp <maintainer@example.com>
+            export PACKAGER="Megacorp <maintainer@example.com>"
+            pkgname=first-app
+            pkgver=0.0.1
+            pkgrel=1
+            pkgdesc="Description for the app"
+            arch=('wonky')
+            url="https://example.com/first-app"
+            license=('Unknown')
+            depends=('glibc>=2.99' 'python3')
+            changelog=CHANGELOG
+            source=("$pkgname-$pkgver.tar.gz")
+            md5sums=('SKIP')
+            options=('!strip')
+            package() {
+                cp -r "$srcdir/$pkgname-$pkgver/usr/" "$pkgdir"/usr/
+            }"""
         )
 
     # A source tarball was created with the right content
@@ -358,9 +391,25 @@ def test_pkg_package_extra_requirements(package_command, first_app_pkg, tmp_path
     # The PKGBUILD file is written
     assert (bundle_path / "pkgbuild/PKGBUILD").exists()
     with (bundle_path / "pkgbuild/PKGBUILD").open(encoding="utf-8") as f:
-        assert (
-            f.read()
-            == "# Maintainer: Megacorp <maintainer@example.com>\nexport PACKAGER=\"Megacorp <maintainer@example.com>\"\npkgname=first-app\npkgver=0.0.1\npkgrel=1\npkgdesc=\"Description for the app\"\narch=('wonky')\nurl=\"https://example.com/first-app\"\nlicense=('Unknown')\ndepends=('glibc>=2.99' 'python3' 'first' 'second')\nchangelog=CHANGELOG\nsource=(\"$pkgname-$pkgver.tar.gz\")\nmd5sums=('SKIP')\noptions=('!strip')\npackage() {\n    cp -r \"$srcdir/$pkgname-$pkgver/usr/\" \"$pkgdir\"/usr/\n}"
+        assert f.read() == dedent(
+            """\
+            # Maintainer: Megacorp <maintainer@example.com>
+            export PACKAGER="Megacorp <maintainer@example.com>"
+            pkgname=first-app
+            pkgver=0.0.1
+            pkgrel=1
+            pkgdesc="Description for the app"
+            arch=('wonky')
+            url="https://example.com/first-app"
+            license=('Unknown')
+            depends=('glibc>=2.99' 'python3' 'first' 'second')
+            changelog=CHANGELOG
+            source=("$pkgname-$pkgver.tar.gz")
+            md5sums=('SKIP')
+            options=('!strip')
+            package() {
+                cp -r "$srcdir/$pkgname-$pkgver/usr/" "$pkgdir"/usr/
+            }"""
         )
 
     # A source tarball was created
@@ -480,9 +529,25 @@ def test_external_pkg_package(
     # The PKGBUILD file is written
     assert (bundle_path / "pkgbuild/PKGBUILD").exists()
     with (bundle_path / "pkgbuild/PKGBUILD").open(encoding="utf-8") as f:
-        assert (
-            f.read()
-            == "# Maintainer: Megacorp <maintainer@example.com>\nexport PACKAGER=\"Megacorp <maintainer@example.com>\"\npkgname=first-app\npkgver=0.0.1\npkgrel=1\npkgdesc=\"Description for the app\"\narch=('wonky')\nurl=\"https://example.com/first-app\"\nlicense=('Unknown')\ndepends=('glibc>=2.99' 'python3')\nchangelog=CHANGELOG\nsource=(\"$pkgname-$pkgver.tar.gz\")\nmd5sums=('SKIP')\noptions=('!strip')\npackage() {\n    cp -r \"$srcdir/$pkgname-$pkgver/usr/\" \"$pkgdir\"/usr/\n}"
+        assert f.read() == dedent(
+            """\
+            # Maintainer: Megacorp <maintainer@example.com>
+            export PACKAGER="Megacorp <maintainer@example.com>"
+            pkgname=first-app
+            pkgver=0.0.1
+            pkgrel=1
+            pkgdesc="Description for the app"
+            arch=('wonky')
+            url="https://example.com/first-app"
+            license=('Unknown')
+            depends=('glibc>=2.99' 'python3')
+            changelog=CHANGELOG
+            source=("$pkgname-$pkgver.tar.gz")
+            md5sums=('SKIP')
+            options=('!strip')
+            package() {
+                cp -r "$srcdir/$pkgname-$pkgver/usr/" "$pkgdir"/usr/
+            }"""
         )
 
     # A source tarball was created with the right content

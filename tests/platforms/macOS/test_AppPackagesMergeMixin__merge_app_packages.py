@@ -1,6 +1,7 @@
 import os
 import subprocess
 from pathlib import Path
+from textwrap import dedent
 
 import pytest
 
@@ -87,12 +88,29 @@ def test_merge(dummy_command, pre_existing, tmp_path):
         (Path("first-1.2.3.dist-info/INSTALLER"), "pip\n"),
         (
             Path("first-1.2.3.dist-info/METADATA"),
-            "Metadata-Version: 2.1\nName: first\nVersion: 1.2.3\nSummary: A packaged named first.\nAuthor-email: Jane Developer <jane@example.com>\n\n",
+            dedent(
+                """\
+                Metadata-Version: 2.1
+                Name: first
+                Version: 1.2.3
+                Summary: A packaged named first.
+                Author-email: Jane Developer <jane@example.com>
+
+                """
+            ),
         ),
         (Path("first-1.2.3.dist-info/RECORD"), ""),
         (
             Path("first-1.2.3.dist-info/WHEEL"),
-            "Wheel-Version: 1.0\nGenerator: test-case\nRoot-Is-Purelib: true\nTag: py3-none-any\n\n",
+            dedent(
+                """\
+                Wheel-Version: 1.0
+                Generator: test-case
+                Root-Is-Purelib: true
+                Tag: py3-none-any
+
+                """
+            ),
         ),
         (Path("second"), None),
         (Path("second/__init__.py"), ""),
@@ -112,12 +130,29 @@ def test_merge(dummy_command, pre_existing, tmp_path):
         (Path("second-2.3.4.dist-info/INSTALLER"), "pip\n"),
         (
             Path("second-2.3.4.dist-info/METADATA"),
-            "Metadata-Version: 2.1\nName: second\nVersion: 2.3.4\nSummary: A packaged named second.\nAuthor-email: Jane Developer <jane@example.com>\n\n",
+            dedent(
+                """\
+                Metadata-Version: 2.1
+                Name: second
+                Version: 2.3.4
+                Summary: A packaged named second.
+                Author-email: Jane Developer <jane@example.com>
+
+                """
+            ),
         ),
         (Path("second-2.3.4.dist-info/RECORD"), ""),
         (
             Path("second-2.3.4.dist-info/WHEEL"),
-            "Wheel-Version: 1.0\nGenerator: test-case\nRoot-Is-Purelib: false\nTag: macOS_11_0_gothic\n\n",
+            dedent(
+                """\
+                Wheel-Version: 1.0
+                Generator: test-case
+                Root-Is-Purelib: false
+                Tag: macOS_11_0_gothic
+
+                """
+            ),
         ),
     }
 
@@ -207,12 +242,29 @@ def test_merge_no_dylib(dummy_command, tmp_path, capsys):
         (Path("first-1.2.3.dist-info/INSTALLER"), "pip\n"),
         (
             Path("first-1.2.3.dist-info/METADATA"),
-            "Metadata-Version: 2.1\nName: first\nVersion: 1.2.3\nSummary: A packaged named first.\nAuthor-email: Jane Developer <jane@example.com>\n\n",
+            dedent(
+                """\
+                Metadata-Version: 2.1
+                Name: first
+                Version: 1.2.3
+                Summary: A packaged named first.
+                Author-email: Jane Developer <jane@example.com>
+
+                """
+            ),
         ),
         (Path("first-1.2.3.dist-info/RECORD"), ""),
         (
             Path("first-1.2.3.dist-info/WHEEL"),
-            "Wheel-Version: 1.0\nGenerator: test-case\nRoot-Is-Purelib: true\nTag: py3-none-any\n\n",
+            dedent(
+                """\
+                Wheel-Version: 1.0
+                Generator: test-case
+                Root-Is-Purelib: true
+                Tag: py3-none-any
+
+                """
+            ),
         ),
         (Path("second"), None),
         (Path("second/__init__.py"), ""),
@@ -221,11 +273,28 @@ def test_merge_no_dylib(dummy_command, tmp_path, capsys):
         (Path("second-2.3.4.dist-info/INSTALLER"), "pip\n"),
         (
             Path("second-2.3.4.dist-info/METADATA"),
-            "Metadata-Version: 2.1\nName: second\nVersion: 2.3.4\nSummary: A packaged named second.\nAuthor-email: Jane Developer <jane@example.com>\n\n",
+            dedent(
+                """\
+                Metadata-Version: 2.1
+                Name: second
+                Version: 2.3.4
+                Summary: A packaged named second.
+                Author-email: Jane Developer <jane@example.com>
+
+                """
+            ),
         ),
         (Path("second-2.3.4.dist-info/RECORD"), ""),
         (
             Path("second-2.3.4.dist-info/WHEEL"),
-            "Wheel-Version: 1.0\nGenerator: test-case\nRoot-Is-Purelib: true\nTag: py3-none-any\n\n",
+            dedent(
+                """\
+                Wheel-Version: 1.0
+                Generator: test-case
+                Root-Is-Purelib: true
+                Tag: py3-none-any
+
+                """
+            ),
         ),
     }

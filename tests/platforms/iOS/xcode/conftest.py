@@ -18,7 +18,12 @@ def first_app_generated(first_app_config, tmp_path):
         / "ios"
         / "xcode"
         / "briefcase.toml",
-        '[paths]\napp_packages_path="app_packages"\nsupport_path="Support"\ninfo_plist_path="Info.plist"\n',
+        (
+            "[paths]\n"
+            'app_packages_path="app_packages"\n'
+            'support_path="Support"\n'
+            'info_plist_path="Info.plist"\n'
+        ),
     )
 
     create_plist_file(

@@ -3,6 +3,7 @@ import subprocess
 import sys
 import tarfile
 from pathlib import Path
+from textwrap import dedent
 from unittest import mock
 
 import pytest
@@ -190,9 +191,63 @@ def test_rpm_package(package_command, first_app_rpm, tmp_path, changelog_filenam
     # The spec file is written
     assert (bundle_path / "rpmbuild/SPECS/first-app.spec").exists()
     with (bundle_path / "rpmbuild/SPECS/first-app.spec").open(encoding="utf-8") as f:
-        assert (
-            f.read()
-            == '%global __brp_mangle_shebangs %{nil}\n%global __brp_strip %{nil}\n%global __brp_strip_static_archive %{nil}\n%global __brp_strip_comment_note %{nil}\n%global __brp_check_rpaths %{nil}\n%global __requires_exclude_from ^%{_libdir}/first-app/.*$\n%global __provides_exclude_from ^%{_libdir}/first-app/.*$\n%global _enable_debug_package 0\n%global debug_package %{nil}\n\nName:           first-app\nVersion:        0.0.1\nRelease:        1%{?dist}\nSummary:        The first simple app \\ demonstration\n\nLicense:        Unknown\nURL:            https://example.com/first-app\nSource0:        %{name}-%{version}.tar.gz\n\nRequires:       python3\n\nExclusiveArch:  wonky\n\n%description\nLong description\nfor the app\n\n%prep\n%autosetup\n\n%build\n\n%install\ncp -r usr %{buildroot}/usr\n\n%files\n"/usr/bin/first-app"\n%dir "/usr/lib/first-app"\n%dir "/usr/lib/first-app/app"\n"/usr/lib/first-app/app/support.so"\n"/usr/lib/first-app/app/support_same_perms.so"\n%dir "/usr/lib/first-app/app_packages"\n%dir "/usr/lib/first-app/app_packages/firstlib"\n"/usr/lib/first-app/app_packages/firstlib/first.so"\n"/usr/lib/first-app/app_packages/firstlib/first.so.1.0"\n%dir "/usr/lib/first-app/app_packages/secondlib"\n"/usr/lib/first-app/app_packages/secondlib/second_a.so"\n"/usr/lib/first-app/app_packages/secondlib/second_b.so"\n%dir "/usr/share/doc/first-app"\n"/usr/share/doc/first-app/UserManual"\n"/usr/share/doc/first-app/license"\n"/usr/share/man/man1/first-app.1.gz"\n\n%changelog\nFirst App Changelog'
+        assert f.read() == dedent(
+            """\
+            %global __brp_mangle_shebangs %{nil}
+            %global __brp_strip %{nil}
+            %global __brp_strip_static_archive %{nil}
+            %global __brp_strip_comment_note %{nil}
+            %global __brp_check_rpaths %{nil}
+            %global __requires_exclude_from ^%{_libdir}/first-app/.*$
+            %global __provides_exclude_from ^%{_libdir}/first-app/.*$
+            %global _enable_debug_package 0
+            %global debug_package %{nil}
+
+            Name:           first-app
+            Version:        0.0.1
+            Release:        1%{?dist}
+            Summary:        The first simple app \\ demonstration
+
+            License:        Unknown
+            URL:            https://example.com/first-app
+            Source0:        %{name}-%{version}.tar.gz
+
+            Requires:       python3
+
+            ExclusiveArch:  wonky
+
+            %description
+            Long description
+            for the app
+
+            %prep
+            %autosetup
+
+            %build
+
+            %install
+            cp -r usr %{buildroot}/usr
+
+            %files
+            "/usr/bin/first-app"
+            %dir "/usr/lib/first-app"
+            %dir "/usr/lib/first-app/app"
+            "/usr/lib/first-app/app/support.so"
+            "/usr/lib/first-app/app/support_same_perms.so"
+            %dir "/usr/lib/first-app/app_packages"
+            %dir "/usr/lib/first-app/app_packages/firstlib"
+            "/usr/lib/first-app/app_packages/firstlib/first.so"
+            "/usr/lib/first-app/app_packages/firstlib/first.so.1.0"
+            %dir "/usr/lib/first-app/app_packages/secondlib"
+            "/usr/lib/first-app/app_packages/secondlib/second_a.so"
+            "/usr/lib/first-app/app_packages/secondlib/second_b.so"
+            %dir "/usr/share/doc/first-app"
+            "/usr/share/doc/first-app/UserManual"
+            "/usr/share/doc/first-app/license"
+            "/usr/share/man/man1/first-app.1.gz"
+
+            %changelog
+            First App Changelog"""
         )
 
     # A source tarball was created with the right content
@@ -281,9 +336,63 @@ def test_rpm_re_package(package_command, first_app_rpm, tmp_path):
     # The spec file is written
     assert (bundle_path / "rpmbuild/SPECS/first-app.spec").exists()
     with (bundle_path / "rpmbuild/SPECS/first-app.spec").open(encoding="utf-8") as f:
-        assert (
-            f.read()
-            == '%global __brp_mangle_shebangs %{nil}\n%global __brp_strip %{nil}\n%global __brp_strip_static_archive %{nil}\n%global __brp_strip_comment_note %{nil}\n%global __brp_check_rpaths %{nil}\n%global __requires_exclude_from ^%{_libdir}/first-app/.*$\n%global __provides_exclude_from ^%{_libdir}/first-app/.*$\n%global _enable_debug_package 0\n%global debug_package %{nil}\n\nName:           first-app\nVersion:        0.0.1\nRelease:        1%{?dist}\nSummary:        The first simple app \\ demonstration\n\nLicense:        Unknown\nURL:            https://example.com/first-app\nSource0:        %{name}-%{version}.tar.gz\n\nRequires:       python3\n\nExclusiveArch:  wonky\n\n%description\nLong description\nfor the app\n\n%prep\n%autosetup\n\n%build\n\n%install\ncp -r usr %{buildroot}/usr\n\n%files\n"/usr/bin/first-app"\n%dir "/usr/lib/first-app"\n%dir "/usr/lib/first-app/app"\n"/usr/lib/first-app/app/support.so"\n"/usr/lib/first-app/app/support_same_perms.so"\n%dir "/usr/lib/first-app/app_packages"\n%dir "/usr/lib/first-app/app_packages/firstlib"\n"/usr/lib/first-app/app_packages/firstlib/first.so"\n"/usr/lib/first-app/app_packages/firstlib/first.so.1.0"\n%dir "/usr/lib/first-app/app_packages/secondlib"\n"/usr/lib/first-app/app_packages/secondlib/second_a.so"\n"/usr/lib/first-app/app_packages/secondlib/second_b.so"\n%dir "/usr/share/doc/first-app"\n"/usr/share/doc/first-app/UserManual"\n"/usr/share/doc/first-app/license"\n"/usr/share/man/man1/first-app.1.gz"\n\n%changelog\nFirst App Changelog'
+        assert f.read() == dedent(
+            """\
+            %global __brp_mangle_shebangs %{nil}
+            %global __brp_strip %{nil}
+            %global __brp_strip_static_archive %{nil}
+            %global __brp_strip_comment_note %{nil}
+            %global __brp_check_rpaths %{nil}
+            %global __requires_exclude_from ^%{_libdir}/first-app/.*$
+            %global __provides_exclude_from ^%{_libdir}/first-app/.*$
+            %global _enable_debug_package 0
+            %global debug_package %{nil}
+
+            Name:           first-app
+            Version:        0.0.1
+            Release:        1%{?dist}
+            Summary:        The first simple app \\ demonstration
+
+            License:        Unknown
+            URL:            https://example.com/first-app
+            Source0:        %{name}-%{version}.tar.gz
+
+            Requires:       python3
+
+            ExclusiveArch:  wonky
+
+            %description
+            Long description
+            for the app
+
+            %prep
+            %autosetup
+
+            %build
+
+            %install
+            cp -r usr %{buildroot}/usr
+
+            %files
+            "/usr/bin/first-app"
+            %dir "/usr/lib/first-app"
+            %dir "/usr/lib/first-app/app"
+            "/usr/lib/first-app/app/support.so"
+            "/usr/lib/first-app/app/support_same_perms.so"
+            %dir "/usr/lib/first-app/app_packages"
+            %dir "/usr/lib/first-app/app_packages/firstlib"
+            "/usr/lib/first-app/app_packages/firstlib/first.so"
+            "/usr/lib/first-app/app_packages/firstlib/first.so.1.0"
+            %dir "/usr/lib/first-app/app_packages/secondlib"
+            "/usr/lib/first-app/app_packages/secondlib/second_a.so"
+            "/usr/lib/first-app/app_packages/secondlib/second_b.so"
+            %dir "/usr/share/doc/first-app"
+            "/usr/share/doc/first-app/UserManual"
+            "/usr/share/doc/first-app/license"
+            "/usr/share/man/man1/first-app.1.gz"
+
+            %changelog
+            First App Changelog"""
         )
 
     # A source tarball was created with the right content
@@ -382,9 +491,65 @@ def test_rpm_package_extra_requirements(package_command, first_app_rpm, tmp_path
     # The spec file is written
     assert (bundle_path / "rpmbuild/SPECS/first-app.spec").exists()
     with (bundle_path / "rpmbuild/SPECS/first-app.spec").open(encoding="utf-8") as f:
-        assert (
-            f.read()
-            == '%global __brp_mangle_shebangs %{nil}\n%global __brp_strip %{nil}\n%global __brp_strip_static_archive %{nil}\n%global __brp_strip_comment_note %{nil}\n%global __brp_check_rpaths %{nil}\n%global __requires_exclude_from ^%{_libdir}/first-app/.*$\n%global __provides_exclude_from ^%{_libdir}/first-app/.*$\n%global _enable_debug_package 0\n%global debug_package %{nil}\n\nName:           first-app\nVersion:        0.0.1\nRelease:        42%{?dist}\nSummary:        The first simple app \\ demonstration\n\nLicense:        Unknown\nURL:            https://example.com/first-app\nSource0:        %{name}-%{version}.tar.gz\n\nRequires:       python3\nRequires:       first\nRequires:       second\n\nExclusiveArch:  wonky\n\n%description\nLong description\nfor the app\n\n%prep\n%autosetup\n\n%build\n\n%install\ncp -r usr %{buildroot}/usr\n\n%files\n"/usr/bin/first-app"\n%dir "/usr/lib/first-app"\n%dir "/usr/lib/first-app/app"\n"/usr/lib/first-app/app/support.so"\n"/usr/lib/first-app/app/support_same_perms.so"\n%dir "/usr/lib/first-app/app_packages"\n%dir "/usr/lib/first-app/app_packages/firstlib"\n"/usr/lib/first-app/app_packages/firstlib/first.so"\n"/usr/lib/first-app/app_packages/firstlib/first.so.1.0"\n%dir "/usr/lib/first-app/app_packages/secondlib"\n"/usr/lib/first-app/app_packages/secondlib/second_a.so"\n"/usr/lib/first-app/app_packages/secondlib/second_b.so"\n%dir "/usr/share/doc/first-app"\n"/usr/share/doc/first-app/UserManual"\n"/usr/share/doc/first-app/license"\n"/usr/share/man/man1/first-app.1.gz"\n\n%changelog\nFirst App Changelog'
+        assert f.read() == dedent(
+            """\
+            %global __brp_mangle_shebangs %{nil}
+            %global __brp_strip %{nil}
+            %global __brp_strip_static_archive %{nil}
+            %global __brp_strip_comment_note %{nil}
+            %global __brp_check_rpaths %{nil}
+            %global __requires_exclude_from ^%{_libdir}/first-app/.*$
+            %global __provides_exclude_from ^%{_libdir}/first-app/.*$
+            %global _enable_debug_package 0
+            %global debug_package %{nil}
+
+            Name:           first-app
+            Version:        0.0.1
+            Release:        42%{?dist}
+            Summary:        The first simple app \\ demonstration
+
+            License:        Unknown
+            URL:            https://example.com/first-app
+            Source0:        %{name}-%{version}.tar.gz
+
+            Requires:       python3
+            Requires:       first
+            Requires:       second
+
+            ExclusiveArch:  wonky
+
+            %description
+            Long description
+            for the app
+
+            %prep
+            %autosetup
+
+            %build
+
+            %install
+            cp -r usr %{buildroot}/usr
+
+            %files
+            "/usr/bin/first-app"
+            %dir "/usr/lib/first-app"
+            %dir "/usr/lib/first-app/app"
+            "/usr/lib/first-app/app/support.so"
+            "/usr/lib/first-app/app/support_same_perms.so"
+            %dir "/usr/lib/first-app/app_packages"
+            %dir "/usr/lib/first-app/app_packages/firstlib"
+            "/usr/lib/first-app/app_packages/firstlib/first.so"
+            "/usr/lib/first-app/app_packages/firstlib/first.so.1.0"
+            %dir "/usr/lib/first-app/app_packages/secondlib"
+            "/usr/lib/first-app/app_packages/secondlib/second_a.so"
+            "/usr/lib/first-app/app_packages/secondlib/second_b.so"
+            %dir "/usr/share/doc/first-app"
+            "/usr/share/doc/first-app/UserManual"
+            "/usr/share/doc/first-app/license"
+            "/usr/share/man/man1/first-app.1.gz"
+
+            %changelog
+            First App Changelog"""
         )
 
     # A source tarball was created
@@ -524,9 +689,63 @@ def test_external_rpm_package(package_command, external_first_app_rpm, tmp_path)
     # The spec file is written
     assert (bundle_path / "rpmbuild/SPECS/first-app.spec").exists()
     with (bundle_path / "rpmbuild/SPECS/first-app.spec").open(encoding="utf-8") as f:
-        assert (
-            f.read()
-            == '%global __brp_mangle_shebangs %{nil}\n%global __brp_strip %{nil}\n%global __brp_strip_static_archive %{nil}\n%global __brp_strip_comment_note %{nil}\n%global __brp_check_rpaths %{nil}\n%global __requires_exclude_from ^%{_libdir}/first-app/.*$\n%global __provides_exclude_from ^%{_libdir}/first-app/.*$\n%global _enable_debug_package 0\n%global debug_package %{nil}\n\nName:           first-app\nVersion:        0.0.1\nRelease:        1%{?dist}\nSummary:        The first simple app \\ demonstration\n\nLicense:        Unknown\nURL:            https://example.com/first-app\nSource0:        %{name}-%{version}.tar.gz\n\nRequires:       python3\n\nExclusiveArch:  wonky\n\n%description\nLong description\nfor the app\n\n%prep\n%autosetup\n\n%build\n\n%install\ncp -r usr %{buildroot}/usr\n\n%files\n"/usr/bin/first-app"\n%dir "/usr/lib/first-app"\n%dir "/usr/lib/first-app/app"\n"/usr/lib/first-app/app/support.so"\n"/usr/lib/first-app/app/support_same_perms.so"\n%dir "/usr/lib/first-app/app_packages"\n%dir "/usr/lib/first-app/app_packages/firstlib"\n"/usr/lib/first-app/app_packages/firstlib/first.so"\n"/usr/lib/first-app/app_packages/firstlib/first.so.1.0"\n%dir "/usr/lib/first-app/app_packages/secondlib"\n"/usr/lib/first-app/app_packages/secondlib/second_a.so"\n"/usr/lib/first-app/app_packages/secondlib/second_b.so"\n%dir "/usr/share/doc/first-app"\n"/usr/share/doc/first-app/UserManual"\n"/usr/share/doc/first-app/license"\n"/usr/share/man/man1/first-app.1.gz"\n\n%changelog\nFirst App Changelog'
+        assert f.read() == dedent(
+            """\
+            %global __brp_mangle_shebangs %{nil}
+            %global __brp_strip %{nil}
+            %global __brp_strip_static_archive %{nil}
+            %global __brp_strip_comment_note %{nil}
+            %global __brp_check_rpaths %{nil}
+            %global __requires_exclude_from ^%{_libdir}/first-app/.*$
+            %global __provides_exclude_from ^%{_libdir}/first-app/.*$
+            %global _enable_debug_package 0
+            %global debug_package %{nil}
+
+            Name:           first-app
+            Version:        0.0.1
+            Release:        1%{?dist}
+            Summary:        The first simple app \\ demonstration
+
+            License:        Unknown
+            URL:            https://example.com/first-app
+            Source0:        %{name}-%{version}.tar.gz
+
+            Requires:       python3
+
+            ExclusiveArch:  wonky
+
+            %description
+            Long description
+            for the app
+
+            %prep
+            %autosetup
+
+            %build
+
+            %install
+            cp -r usr %{buildroot}/usr
+
+            %files
+            "/usr/bin/first-app"
+            %dir "/usr/lib/first-app"
+            %dir "/usr/lib/first-app/app"
+            "/usr/lib/first-app/app/support.so"
+            "/usr/lib/first-app/app/support_same_perms.so"
+            %dir "/usr/lib/first-app/app_packages"
+            %dir "/usr/lib/first-app/app_packages/firstlib"
+            "/usr/lib/first-app/app_packages/firstlib/first.so"
+            "/usr/lib/first-app/app_packages/firstlib/first.so.1.0"
+            %dir "/usr/lib/first-app/app_packages/secondlib"
+            "/usr/lib/first-app/app_packages/secondlib/second_a.so"
+            "/usr/lib/first-app/app_packages/secondlib/second_b.so"
+            %dir "/usr/share/doc/first-app"
+            "/usr/share/doc/first-app/UserManual"
+            "/usr/share/doc/first-app/license"
+            "/usr/share/man/man1/first-app.1.gz"
+
+            %changelog
+            First App Changelog"""
         )
 
     # A source tarball was created with the right content

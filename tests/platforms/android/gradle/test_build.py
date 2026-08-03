@@ -103,9 +103,10 @@ def test_build_app(
         / "res"
         / "briefcase.xml"
     ).open(encoding="utf-8") as f:
-        assert (
-            f.read()
-            == '<resources>\n    <string name="main_module">first_app</string>\n</resources>'
+        assert f.read() == (
+            "<resources>\n"
+            '    <string name="main_module">first_app</string>\n'
+            "</resources>"
             "\n"
         )
 
@@ -179,9 +180,10 @@ def test_build_app_test_mode(
         / "res"
         / "briefcase.xml"
     ).open(encoding="utf-8") as f:
-        assert (
-            f.read()
-            == '<resources>\n    <string name="main_module">tests.first_app</string>\n</resources>'
+        assert f.read() == (
+            "<resources>\n    "
+            '<string name="main_module">tests.first_app</string>\n'
+            "</resources>"
             "\n"
         )
 

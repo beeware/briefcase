@@ -90,7 +90,12 @@ def test_error_handling(mock_tools, adb, name, exception, tmp_path):
 
 def test_older_sdk_error(mock_tools, adb):
     """Failure [INSTALL_FAILED_OLDER_SDK] needs to be caught manually."""
-    mock_tools.subprocess.check_output.return_value = "Performing Push Install\nC:/.../app-debug.apk: 1 file pushed, 0 skipped. 5.5 MB/s (33125287 bytes in 5.768s)\n         pkg: /data/local/tmp/app-debug.apk\nFailure [INSTALL_FAILED_OLDER_SDK]"
+    mock_tools.subprocess.check_output.return_value = (
+        "Performing Push Install\n"
+        "C:/.../app-debug.apk: 1 file pushed, 0 skipped. 5.5 MB/s (33125287 bytes in 5.768s)\n"
+        "         pkg: /data/local/tmp/app-debug.apk\n"
+        "Failure [INSTALL_FAILED_OLDER_SDK]"
+    )
     with pytest.raises(
         BriefcaseCommandError,
         match=r"Your device doesn't meet the minimum SDK requirements of this app",

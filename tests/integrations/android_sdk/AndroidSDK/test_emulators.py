@@ -14,8 +14,12 @@ from briefcase.exceptions import BriefcaseCommandError
         ("first\n\nsecond", ["first", "second"]),
         (
             (
-                "first\nINFO    | Storing crashdata in\nsecond\nWARNING | nothing to see\n"
-                "third\nERROR   | lot to see here"
+                "first\n"
+                "INFO    | Storing crashdata in\n"
+                "second\n"
+                "WARNING | nothing to see\n"
+                "third\n"
+                "ERROR   | lot to see here"
             ),
             ["first", "second", "third"],
         ),

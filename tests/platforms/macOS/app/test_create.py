@@ -2,6 +2,7 @@ import os
 import shutil
 import sys
 import time
+from textwrap import dedent
 from unittest import mock
 
 import pytest
@@ -511,7 +512,13 @@ def test_min_os_version(
         )
         create_file(
             tmp_path / "base_path/build/first-app/macos/app/support/VERSIONS",
-            "Python version: 3.10.15\nBuild: b11\nMin macOS version: 10.12\n",
+            dedent(
+                """\
+                Python version: 3.10.15
+                Build: b11
+                Min macOS version: 10.12
+                """
+            ),
         )
 
     bundle_path = tmp_path / "base_path/build/first-app/macos/app"
@@ -618,7 +625,12 @@ def test_default_min_os_version(
         )
         create_file(
             tmp_path / "base_path/build/first-app/macos/app/support/VERSIONS",
-            "Python version: 3.10.15\nBuild: b11\n",
+            dedent(
+                """\
+                Python version: 3.10.15
+                Build: b11
+                """
+            ),
         )
     else:
         # Replace the framework plist file with one without a min OS version.
