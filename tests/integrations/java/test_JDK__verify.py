@@ -406,64 +406,80 @@ def test_unparseable_javac_version(mock_tools, host_os, java_home, tmp_path, cap
         (
             "Darwin",
             "x86_64",
-            "https://github.com/adoptium/temurin17-binaries/releases/download/"
-            f"jdk-{JDK_RELEASE}+{JDK_BUILD}/OpenJDK17U-jdk_x64_mac_hotspot_{JDK_RELEASE}_{JDK_BUILD}.tar.gz",
+            (
+                "https://github.com/adoptium/temurin17-binaries/releases/download/"
+                f"jdk-{JDK_RELEASE}+{JDK_BUILD}/OpenJDK17U-jdk_x64_mac_hotspot_{JDK_RELEASE}_{JDK_BUILD}.tar.gz"
+            ),
             "java17/Contents/Home",
             False,
         ),
         (
             "Darwin",
             "arm64",
-            "https://github.com/adoptium/temurin17-binaries/releases/download/"
-            f"jdk-{JDK_RELEASE}+{JDK_BUILD}/OpenJDK17U-jdk_aarch64_mac_hotspot_{JDK_RELEASE}_{JDK_BUILD}.tar.gz",
+            (
+                "https://github.com/adoptium/temurin17-binaries/releases/download/"
+                f"jdk-{JDK_RELEASE}+{JDK_BUILD}/OpenJDK17U-jdk_aarch64_mac_hotspot_{JDK_RELEASE}_{JDK_BUILD}.tar.gz"
+            ),
             "java17/Contents/Home",
             False,
         ),
         (
             "Linux",
             "x86_64",
-            "https://github.com/adoptium/temurin17-binaries/releases/download/"
-            f"jdk-{JDK_RELEASE}+{JDK_BUILD}/OpenJDK17U-jdk_x64_linux_hotspot_{JDK_RELEASE}_{JDK_BUILD}.tar.gz",
+            (
+                "https://github.com/adoptium/temurin17-binaries/releases/download/"
+                f"jdk-{JDK_RELEASE}+{JDK_BUILD}/OpenJDK17U-jdk_x64_linux_hotspot_{JDK_RELEASE}_{JDK_BUILD}.tar.gz"
+            ),
             "java17",
             False,
         ),
         (
             "Linux",
             "aarch64",
-            "https://github.com/adoptium/temurin17-binaries/releases/download/"
-            f"jdk-{JDK_RELEASE}+{JDK_BUILD}/OpenJDK17U-jdk_aarch64_linux_hotspot_{JDK_RELEASE}_{JDK_BUILD}.tar.gz",
+            (
+                "https://github.com/adoptium/temurin17-binaries/releases/download/"
+                f"jdk-{JDK_RELEASE}+{JDK_BUILD}/OpenJDK17U-jdk_aarch64_linux_hotspot_{JDK_RELEASE}_{JDK_BUILD}.tar.gz"
+            ),
             "java17",
             False,
         ),
         (
             "Linux",
             "aarch64",
-            "https://github.com/adoptium/temurin17-binaries/releases/download/"
-            f"jdk-{JDK_RELEASE}+{JDK_BUILD}/OpenJDK17U-jdk_arm_linux_hotspot_{JDK_RELEASE}_{JDK_BUILD}.tar.gz",
+            (
+                "https://github.com/adoptium/temurin17-binaries/releases/download/"
+                f"jdk-{JDK_RELEASE}+{JDK_BUILD}/OpenJDK17U-jdk_arm_linux_hotspot_{JDK_RELEASE}_{JDK_BUILD}.tar.gz"
+            ),
             "java17",
             True,
         ),
         (
             "Linux",
             "armv7l",
-            "https://github.com/adoptium/temurin17-binaries/releases/download/"
-            f"jdk-{JDK_RELEASE}+{JDK_BUILD}/OpenJDK17U-jdk_arm_linux_hotspot_{JDK_RELEASE}_{JDK_BUILD}.tar.gz",
+            (
+                "https://github.com/adoptium/temurin17-binaries/releases/download/"
+                f"jdk-{JDK_RELEASE}+{JDK_BUILD}/OpenJDK17U-jdk_arm_linux_hotspot_{JDK_RELEASE}_{JDK_BUILD}.tar.gz"
+            ),
             "java17",
             False,
         ),
         (
             "Linux",
             "armv8l",
-            "https://github.com/adoptium/temurin17-binaries/releases/download/"
-            f"jdk-{JDK_RELEASE}+{JDK_BUILD}/OpenJDK17U-jdk_arm_linux_hotspot_{JDK_RELEASE}_{JDK_BUILD}.tar.gz",
+            (
+                "https://github.com/adoptium/temurin17-binaries/releases/download/"
+                f"jdk-{JDK_RELEASE}+{JDK_BUILD}/OpenJDK17U-jdk_arm_linux_hotspot_{JDK_RELEASE}_{JDK_BUILD}.tar.gz"
+            ),
             "java17",
             False,
         ),
         (
             "Windows",
             "AMD64",
-            "https://github.com/adoptium/temurin17-binaries/releases/download/"
-            f"jdk-{JDK_RELEASE}+{JDK_BUILD}/OpenJDK17U-jdk_x64_windows_hotspot_{JDK_RELEASE}_{JDK_BUILD}.zip",
+            (
+                "https://github.com/adoptium/temurin17-binaries/releases/download/"
+                f"jdk-{JDK_RELEASE}+{JDK_BUILD}/OpenJDK17U-jdk_x64_windows_hotspot_{JDK_RELEASE}_{JDK_BUILD}.zip"
+            ),
             "java17",
             False,
         ),

@@ -52,19 +52,7 @@ def test_install_requirements(
         # Create the old-style VERSIONS file with a deliberately weird min iOS version
         create_file(
             tmp_path / "base_path/build/first-app/ios/xcode/Support/VERSIONS",
-            "\n".join(
-                [
-                    "Python version: 3.10.15",
-                    "Build: b11",
-                    "Min iOS version: 12.0",
-                    "---------------------",
-                    "BZip2: 1.0.8-1",
-                    "libFFI: 3.4.6-1",
-                    "OpenSSL: 3.0.15-1",
-                    "XZ: 5.6.2-1",
-                    "",
-                ]
-            ),
+            "Python version: 3.10.15\nBuild: b11\nMin iOS version: 12.0\n---------------------\nBZip2: 1.0.8-1\nlibFFI: 3.4.6-1\nOpenSSL: 3.0.15-1\nXZ: 5.6.2-1\n",
         )
 
     # Hard code the current architecture for testing. We only install simulator

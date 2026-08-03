@@ -8,6 +8,8 @@ from pathlib import Path
 from typing import TypeVar
 from urllib.parse import urlparse
 
+from typing_extensions import Self
+
 from briefcase.exceptions import (
     BriefcaseCommandError,
     CorruptToolError,
@@ -105,11 +107,11 @@ class LinuxDeployBase(ABC):
 
     @classmethod
     def verify_install(
-        cls: type[LinuxDeployT],
+        cls,
         tools: ToolCache,
         install: bool = True,
         **kwargs,
-    ) -> LinuxDeployT:
+    ) -> Self:
         """Verify that linuxdeploy tool or plugin is available.
 
         :param tools: ToolCache of available tools
@@ -125,7 +127,7 @@ class LinuxDeployBase(ABC):
         if not is_plugin and hasattr(tools, "linuxdeploy"):
             return tools.linuxdeploy
 
-        tool: LinuxDeployT = cls(tools=tools, **kwargs)
+        tool: Self = cls(tools=tools, **kwargs)
         if not tool.exists():
             if install:
                 tools.console.info(

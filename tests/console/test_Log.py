@@ -421,14 +421,9 @@ def test_save_log_to_file_fail_to_make_logs_dir(
     console.print("a line of output")
     console.save_log_to_file(command=command)
 
-    assert capsys.readouterr().out == "\n".join(
-        [
-            "a line of output",
-            "",
-            "Failed to save log to /asdf/log_filepath: directory creation denied",
-            "",
-            "",
-        ]
+    assert (
+        capsys.readouterr().out
+        == "a line of output\n\nFailed to save log to /asdf/log_filepath: directory creation denied\n\n"
     )
 
 
@@ -484,47 +479,9 @@ def test_log_with_context(console, capsys):
         console.info("Pop back to deep")
     console.info("Pop back to normal")
 
-    assert capsys.readouterr().out == "\n".join(
-        [
-            "this is info output",
-            "",
-            "Entering Deep context...",
-            (
-                "Deep|"
-                " --------------------------------------------------------------------"
-            ),
-            "Deep| this is deep context",
-            "Deep| ",
-            "Deep| [prefix] prefixed deep context",
-            "Deep| ",
-            "Deep| this is deep debug",
-            "Deep| ",
-            "Deep| Entering Really Deep context...",
-            (
-                "Really Deep|"
-                " -------------------------------------------------------------"
-            ),
-            "Really Deep| this is really deep context",
-            "Really Deep| ",
-            "Really Deep| [prefix2] prefixed really deep context",
-            "Really Deep| ",
-            "Really Deep| this is really deep debug",
-            (
-                "Really Deep|"
-                " -------------------------------------------------------------"
-            ),
-            "Deep| Leaving Really Deep context.",
-            "Deep| ",
-            "Deep| Pop back to deep",
-            (
-                "Deep|"
-                " --------------------------------------------------------------------"
-            ),
-            "Leaving Deep context.",
-            "",
-            "Pop back to normal",
-            "",
-        ]
+    assert (
+        capsys.readouterr().out
+        == "this is info output\n\nEntering Deep context...\nDeep| --------------------------------------------------------------------\nDeep| this is deep context\nDeep| \nDeep| [prefix] prefixed deep context\nDeep| \nDeep| this is deep debug\nDeep| \nDeep| Entering Really Deep context...\nReally Deep| -------------------------------------------------------------\nReally Deep| this is really deep context\nReally Deep| \nReally Deep| [prefix2] prefixed really deep context\nReally Deep| \nReally Deep| this is really deep debug\nReally Deep| -------------------------------------------------------------\nDeep| Leaving Really Deep context.\nDeep| \nDeep| Pop back to deep\nDeep| --------------------------------------------------------------------\nLeaving Deep context.\n\nPop back to normal\n"
     )
 
 
@@ -541,25 +498,9 @@ def test_log_error_with_context(console, capsys):
     except ValueError:
         console.info("this is cleanup")
 
-    assert capsys.readouterr().out == "\n".join(
-        [
-            "this is info output",
-            "",
-            "Entering Deep context...",
-            (
-                "Deep|"
-                " --------------------------------------------------------------------"
-            ),
-            "Deep| this is deep context",
-            (
-                "Deep|"
-                " --------------------------------------------------------------------"
-            ),
-            "Leaving Deep context.",
-            "",
-            "this is cleanup",
-            "",
-        ]
+    assert (
+        capsys.readouterr().out
+        == "this is info output\n\nEntering Deep context...\nDeep| --------------------------------------------------------------------\nDeep| this is deep context\nDeep| --------------------------------------------------------------------\nLeaving Deep context.\n\nthis is cleanup\n"
     )
 
 

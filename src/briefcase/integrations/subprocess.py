@@ -93,7 +93,7 @@ def get_process_id_by_command(
         return matching_procs[0]["pid"]
     elif len(matching_procs) > 1:
         # return the ID of the most recently created matching process
-        pid = sorted(matching_procs, key=operator.itemgetter("create_time"))[-1]["pid"]
+        pid = max(matching_procs, key=operator.itemgetter("create_time"))["pid"]
         if console:
             console.info(
                 f"Multiple running instances of app found. "

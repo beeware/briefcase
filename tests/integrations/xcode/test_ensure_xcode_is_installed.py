@@ -224,14 +224,7 @@ def test_installed_extra_output(capsys, xcode, mock_tools):
     # This specific output was seen in the wild with Xcode 13.2.1; see #668
     mock_tools.subprocess.check_output.side_effect = [
         xcode + "\n",  # xcode-select -p
-        "\n".join(
-            [
-                "objc[86306]: Class AMSupportURLConnectionDelegate is implemented in both /usr/lib/libauthinstall.dylib (0x20d17ab90) and /Library/Apple/System/Library/PrivateFrameworks/MobileDevice.framework/Versions/A/MobileDevice (0x1084b82c8). One of the two will be used. Which one is undefined."
-                "objc[86306]: Class AMSupportURLSession is implemented in both /usr/lib/libauthinstall.dylib (0x20d17abe0) and /Library/Apple/System/Library/PrivateFrameworks/MobileDevice.framework/Versions/A/MobileDevice (0x1084b8318). One of the two will be used. Which one is undefined.",
-                "Xcode 13.2.1",
-                "Build version 13C100",
-            ]
-        ),
+        "objc[86306]: Class AMSupportURLConnectionDelegate is implemented in both /usr/lib/libauthinstall.dylib (0x20d17ab90) and /Library/Apple/System/Library/PrivateFrameworks/MobileDevice.framework/Versions/A/MobileDevice (0x1084b82c8). One of the two will be used. Which one is undefined.objc[86306]: Class AMSupportURLSession is implemented in both /usr/lib/libauthinstall.dylib (0x20d17abe0) and /Library/Apple/System/Library/PrivateFrameworks/MobileDevice.framework/Versions/A/MobileDevice (0x1084b8318). One of the two will be used. Which one is undefined.\nXcode 13.2.1\nBuild version 13C100",
     ]
 
     # Check passes without an error.

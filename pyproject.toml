@@ -94,6 +94,7 @@ dependencies = [
     "tenacity >= 8.0, < 10.0",
     "tomli >= 2.0, < 3.0; python_version <= '3.10'",
     "tomli_w >= 1.0, < 2.0",
+    "typing_extensions >= 4.6; python_version < '3.11'",  # for typing.Self
 ]
 
 [dependency-groups]
@@ -300,6 +301,33 @@ known-third-party = ["build"]
 # E501: line too long, to be fixed in future changes
 "tests/integrations/*" = ["E501"]
 "tests/platforms/*" = ["E501"]
+
+# Ignores needed to pass the Ruff 0.16 update.
+# N999: test modules are deliberately named after the class/method they cover,
+# which doesn't match Python's module naming conventions.
+"tests/**/*.py" = ["N999"]
+"debugger/src/briefcase_debugger/__init__.py" = ["BLE001"]
+"debugger/src/briefcase_debugger/debugpy.py" = ["T100"]
+"debugger/tests/test_debugpy.py" = ["T100"]
+"src/briefcase/commands/base.py" = ["DTZ001", "DTZ002"]
+"src/briefcase/commands/create.py" = ["DTZ005", "DTZ011"]
+"src/briefcase/config.py" = ["PLR1704"]
+"src/briefcase/console.py" = ["BLE001", "DTZ005"]
+"src/briefcase/debuggers/base.py" = ["BLE001", "TRY203"]
+"src/briefcase/integrations/android_sdk.py" = ["DTZ007"]
+"src/briefcase/integrations/docker.py" = ["PLR1704"]
+"src/briefcase/integrations/subprocess.py" = ["BLE001", "PERF402"]
+"src/briefcase/platforms/android/gradle.py" = ["DTZ005"]
+"tests/commands/base/test_end_of_life.py" = ["DTZ001"]
+"tests/commands/create/test_generate_app_template.py" = ["DTZ011"]
+"tests/commands/create/test_install_app_requirements.py" = ["DTZ001"]
+"tests/commands/run/test_LogFilter.py" = ["PERF402"]
+"tests/console/test_Log.py" = ["DTZ001", "E501"]
+"tests/integrations/android_sdk/ADB/test_datetime.py" = ["DTZ001"]
+"tests/integrations/android_sdk/ADB/test_logcat_tail.py" = ["DTZ001"]
+"tests/integrations/linuxdeploy/test_LinuxDeploy__verify_plugins.py" = ["TRY002"]
+"tests/platforms/android/gradle/test_run.py" = ["DTZ001"]
+"tests/platforms/macOS/test_XcodeBuildFilter.py" = ["PERF402"]
 
 [tool.rumdl]
 flavor = "mkdocs"

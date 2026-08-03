@@ -82,13 +82,7 @@ def run_command(dummy_console, tmp_path, first_app, monkeypatch):
 def mock_linux_env(run_command, tmp_path, monkeypatch):
     """Mock a linux system environment."""
     # Mock the freedesktop ID environment
-    os_release = "\n".join(
-        [
-            "ID=somevendor",
-            "VERSION_CODENAME=surprising",
-            "ID_LIKE=debian",
-        ]
-    )
+    os_release = "ID=somevendor\nVERSION_CODENAME=surprising\nID_LIKE=debian"
     run_command.tools.platform.freedesktop_os_release = mock.MagicMock(
         return_value=parse_freedesktop_os_release(os_release)
     )

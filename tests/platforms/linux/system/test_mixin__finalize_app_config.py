@@ -16,12 +16,8 @@ def test_docker(create_command, first_app_config):
     create_command.target_glibc_version = MagicMock(return_value="2.42")
 
     # Mock a minimal response from checking /etc/os-release
-    create_command.tools.docker.check_output.return_value = "\n".join(
-        [
-            "ID=somevendor",
-            "VERSION_CODENAME=surprising",
-            "ID_LIKE=debian",
-        ]
+    create_command.tools.docker.check_output.return_value = (
+        "ID=somevendor\nVERSION_CODENAME=surprising\nID_LIKE=debian"
     )
 
     # Finalize the app config
@@ -43,13 +39,7 @@ def test_nodocker(create_command, first_app_config, tmp_path):
     create_command.target_image = None
     create_command.target_glibc_version = MagicMock(return_value="2.42")
 
-    os_release = "\n".join(
-        [
-            "ID=somevendor",
-            "VERSION_CODENAME=surprising",
-            "ID_LIKE=debian",
-        ]
-    )
+    os_release = "ID=somevendor\nVERSION_CODENAME=surprising\nID_LIKE=debian"
     create_command.tools.platform.freedesktop_os_release = MagicMock(
         return_value=parse_freedesktop_os_release(os_release)
     )
@@ -95,11 +85,8 @@ def test_docker_arch_with_user_mapping(create_command, first_app_config, tmp_pat
     create_command.target_glibc_version = MagicMock(return_value="2.42")
 
     # Mock a minimal response for an Arch /etc/os-release
-    create_command.tools.docker.check_output.return_value = "\n".join(
-        [
-            "ID=arch",
-            "VERSION_ID=20230625.0.160368",
-        ]
+    create_command.tools.docker.check_output.return_value = (
+        "ID=arch\nVERSION_ID=20230625.0.160368"
     )
 
     # Finalize the app config
@@ -123,11 +110,8 @@ def test_docker_arch_with_user_mapping_macOS(
     create_command.target_glibc_version = MagicMock(return_value="2.42")
 
     # Mock a minimal response for an Arch /etc/os-release
-    create_command.tools.docker.check_output.return_value = "\n".join(
-        [
-            "ID=arch",
-            "VERSION_ID=20230625.0.160368",
-        ]
+    create_command.tools.docker.check_output.return_value = (
+        "ID=arch\nVERSION_ID=20230625.0.160368"
     )
 
     # Finalize the app config
@@ -151,11 +135,8 @@ def test_docker_arch_without_user_mapping(create_command, first_app_config, tmp_
     create_command.target_glibc_version = MagicMock(return_value="2.42")
 
     # Mock a minimal response for an Arch /etc/os-release
-    create_command.tools.docker.check_output.return_value = "\n".join(
-        [
-            "ID=arch",
-            "VERSION_ID=20230625.0.160368",
-        ]
+    create_command.tools.docker.check_output.return_value = (
+        "ID=arch\nVERSION_ID=20230625.0.160368"
     )
 
     # Finalize the app config
@@ -177,12 +158,8 @@ def test_properties(create_command, first_app_config):
     create_command.target_glibc_version = MagicMock(return_value="2.42")
 
     # Mock a minimal response from checking /etc/os-release
-    create_command.tools.docker.check_output.return_value = "\n".join(
-        [
-            "ID=somevendor",
-            "VERSION_CODENAME=surprising",
-            "ID_LIKE=debian",
-        ]
+    create_command.tools.docker.check_output.return_value = (
+        "ID=somevendor\nVERSION_CODENAME=surprising\nID_LIKE=debian"
     )
 
     # Augment the app config with some extra attributes
@@ -253,11 +230,8 @@ def test_properties_unknown_basevendor(create_command, first_app_config):
     create_command.target_glibc_version = MagicMock(return_value="2.42")
 
     # Mock a minimal response from checking /etc/os-release
-    create_command.tools.docker.check_output.return_value = "\n".join(
-        [
-            "ID=somevendor",
-            "VERSION_CODENAME=surprising",
-        ]
+    create_command.tools.docker.check_output.return_value = (
+        "ID=somevendor\nVERSION_CODENAME=surprising"
     )
 
     # Augment the app config with some extra attributes
@@ -314,12 +288,8 @@ def test_properties_no_basevendor_config(create_command, first_app_config):
     create_command.target_glibc_version = MagicMock(return_value="2.42")
 
     # Mock a minimal response from checking /etc/os-release
-    create_command.tools.docker.check_output.return_value = "\n".join(
-        [
-            "ID=somevendor",
-            "VERSION_CODENAME=surprising",
-            "ID_LIKE=debian",
-        ]
+    create_command.tools.docker.check_output.return_value = (
+        "ID=somevendor\nVERSION_CODENAME=surprising\nID_LIKE=debian"
     )
 
     # Augment the app config with some extra attributes
@@ -376,12 +346,8 @@ def test_properties_no_vendor(create_command, first_app_config):
     create_command.target_glibc_version = MagicMock(return_value="2.42")
 
     # Mock a minimal response from checking /etc/os-release
-    create_command.tools.docker.check_output.return_value = "\n".join(
-        [
-            "ID=somevendor",
-            "VERSION_CODENAME=surprising",
-            "ID_LIKE=debian",
-        ]
+    create_command.tools.docker.check_output.return_value = (
+        "ID=somevendor\nVERSION_CODENAME=surprising\nID_LIKE=debian"
     )
 
     # Augment the app config with some extra attributes
@@ -428,12 +394,8 @@ def test_properties_no_version(create_command, first_app_config):
     create_command.target_glibc_version = MagicMock(return_value="2.42")
 
     # Mock a minimal response from checking /etc/os-release
-    create_command.tools.docker.check_output.return_value = "\n".join(
-        [
-            "ID=somevendor",
-            "VERSION_CODENAME=surprising",
-            "ID_LIKE=debian",
-        ]
+    create_command.tools.docker.check_output.return_value = (
+        "ID=somevendor\nVERSION_CODENAME=surprising\nID_LIKE=debian"
     )
 
     # Augment the app config with some extra attributes
@@ -493,13 +455,7 @@ def test_passive_mixin(dummy_console, first_app_config, tmp_path):
     run_command.target_image = None
     run_command.target_glibc_version = MagicMock(return_value="2.42")
 
-    os_release = "\n".join(
-        [
-            "ID=somevendor",
-            "VERSION_CODENAME=surprising",
-            "ID_LIKE=debian",
-        ]
-    )
+    os_release = "ID=somevendor\nVERSION_CODENAME=surprising\nID_LIKE=debian"
     run_command.tools.platform.freedesktop_os_release = MagicMock(
         return_value=parse_freedesktop_os_release(os_release)
     )
@@ -526,12 +482,8 @@ def test_cascading_distribution_properties(create_command, first_app_config):
     create_command.target_glibc_version = MagicMock(return_value="2.42")
 
     # Mock a minimal response from checking /etc/os-release
-    create_command.tools.docker.check_output.return_value = "\n".join(
-        [
-            "ID=somevendor",
-            "VERSION_CODENAME=surprising",
-            "ID_LIKE=debian",
-        ]
+    create_command.tools.docker.check_output.return_value = (
+        "ID=somevendor\nVERSION_CODENAME=surprising\nID_LIKE=debian"
     )
 
     # Modify the app config with distribution-level properties
@@ -571,12 +523,8 @@ def test_external_docker(create_command, first_app_config):
     create_command.target_glibc_version = MagicMock(return_value="2.42")
 
     # Mock a minimal response from checking /etc/os-release
-    create_command.tools.docker.check_output.return_value = "\n".join(
-        [
-            "ID=somevendor",
-            "VERSION_CODENAME=surprising",
-            "ID_LIKE=debian",
-        ]
+    create_command.tools.docker.check_output.return_value = (
+        "ID=somevendor\nVERSION_CODENAME=surprising\nID_LIKE=debian"
     )
 
     # Finalize the app config - this will raise an error
@@ -596,13 +544,7 @@ def test_finalized_attrs(create_command, first_app_config):
     create_command.target_image = None
     create_command.target_glibc_version = MagicMock(return_value="2.42")
 
-    os_release = "\n".join(
-        [
-            "ID=somevendor",
-            "VERSION_CODENAME=surprising",
-            "ID_LIKE=debian",
-        ]
-    )
+    os_release = "ID=somevendor\nVERSION_CODENAME=surprising\nID_LIKE=debian"
     create_command.tools.platform.freedesktop_os_release = MagicMock(
         return_value=parse_freedesktop_os_release(os_release)
     )

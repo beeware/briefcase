@@ -508,14 +508,7 @@ def test_min_os_version(
         )
         create_file(
             tmp_path / "base_path/build/first-app/macos/app/support/VERSIONS",
-            "\n".join(
-                [
-                    "Python version: 3.10.15",
-                    "Build: b11",
-                    "Min macOS version: 10.12",
-                    "",
-                ]
-            ),
+            "Python version: 3.10.15\nBuild: b11\nMin macOS version: 10.12\n",
         )
 
     bundle_path = tmp_path / "base_path/build/first-app/macos/app"
@@ -620,13 +613,7 @@ def test_default_min_os_version(
         )
         create_file(
             tmp_path / "base_path/build/first-app/macos/app/support/VERSIONS",
-            "\n".join(
-                [
-                    "Python version: 3.10.15",
-                    "Build: b11",
-                    "",
-                ]
-            ),
+            "Python version: 3.10.15\nBuild: b11\n",
         )
     else:
         # Replace the framework plist file with one without a min OS version.

@@ -15,6 +15,7 @@ from typing import TYPE_CHECKING, TypeVar
 
 import httpx
 from cookiecutter.main import cookiecutter
+from typing_extensions import Self
 
 from briefcase.config import AppConfig, FinalizedAppConfig
 from briefcase.console import Console
@@ -69,11 +70,11 @@ class Tool(ABC):
 
     @classmethod
     def verify(
-        cls: type[ToolT],
+        cls,
         tools: ToolCache,
         app: FinalizedAppConfig | None = None,
         **kwargs,
-    ) -> ToolT:
+    ) -> Self:
         """Confirm the tool is available and usable on the host platform."""
         cls.verify_host(tools=tools)
         tool = cls.verify_install(tools=tools, app=app, **kwargs)
@@ -105,12 +106,12 @@ class ManagedTool(Tool):
 
     @classmethod
     def verify(
-        cls: type[ManagedToolT],
+        cls,
         tools: ToolCache,
         app: FinalizedAppConfig | None = None,
         install: bool = True,
         **kwargs,
-    ) -> ManagedToolT:
+    ) -> Self:
         """Confirm the managed tool is installed and available."""
         return super().verify(tools=tools, app=app, install=install, **kwargs)
 

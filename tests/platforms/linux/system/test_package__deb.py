@@ -165,22 +165,8 @@ def test_deb_package(package_command, first_app_deb, tmp_path):
     with (bundle_path / "first-app-0.0.1/DEBIAN/control").open(encoding="utf-8") as f:
         assert (
             f.read()
-            == "\n".join(
-                [
-                    "Package: first-app",
-                    "Version: 0.0.1",
-                    "Architecture: wonky",
-                    "Maintainer: Megacorp <maintainer@example.com>",
-                    "Homepage: https://example.com/first-app",
-                    "Description: The first simple app \\ demonstration",
-                    " Long description",
-                    " for the app",
-                    "Depends: libc6 (>=2.99), libpython3.10",
-                    "Section: utils",
-                    "Priority: optional",
-                ]
-            )
-            + "\n"
+            == "Package: first-app\nVersion: 0.0.1\nArchitecture: wonky\nMaintainer: Megacorp <maintainer@example.com>\nHomepage: https://example.com/first-app\nDescription: The first simple app \\ demonstration\n Long description\n for the app\nDepends: libc6 (>=2.99), libpython3.10\nSection: utils\nPriority: optional"
+            "\n"
         )
 
     package_command.tools.app_tools[
@@ -218,22 +204,8 @@ def test_deb_re_package(package_command, first_app_deb, tmp_path):
     with (bundle_path / "first-app-0.0.1/DEBIAN/control").open(encoding="utf-8") as f:
         assert (
             f.read()
-            == "\n".join(
-                [
-                    "Package: first-app",
-                    "Version: 0.0.1",
-                    "Architecture: wonky",
-                    "Maintainer: Megacorp <maintainer@example.com>",
-                    "Homepage: https://example.com/first-app",
-                    "Description: The first simple app \\ demonstration",
-                    " Long description",
-                    " for the app",
-                    "Depends: libc6 (>=2.99), libpython3.10",
-                    "Section: utils",
-                    "Priority: optional",
-                ]
-            )
-            + "\n"
+            == "Package: first-app\nVersion: 0.0.1\nArchitecture: wonky\nMaintainer: Megacorp <maintainer@example.com>\nHomepage: https://example.com/first-app\nDescription: The first simple app \\ demonstration\n Long description\n for the app\nDepends: libc6 (>=2.99), libpython3.10\nSection: utils\nPriority: optional"
+            "\n"
         )
 
     package_command.tools.app_tools[
@@ -273,22 +245,8 @@ def test_deb_package_underscore(package_command, underscore_app_deb, tmp_path):
     ) as f:
         assert (
             f.read()
-            == "\n".join(
-                [
-                    "Package: underscore-app",
-                    "Version: 0.0.1",
-                    "Architecture: wonky",
-                    "Maintainer: Megacorp <maintainer@example.com>",
-                    "Homepage: https://example.com/underscore_app",
-                    "Description: The first simple app \\ demonstration",
-                    " Long description",
-                    " for the app",
-                    "Depends: libc6 (>=2.99), libpython3.10",
-                    "Section: utils",
-                    "Priority: optional",
-                ]
-            )
-            + "\n"
+            == "Package: underscore-app\nVersion: 0.0.1\nArchitecture: wonky\nMaintainer: Megacorp <maintainer@example.com>\nHomepage: https://example.com/underscore_app\nDescription: The first simple app \\ demonstration\n Long description\n for the app\nDepends: libc6 (>=2.99), libpython3.10\nSection: utils\nPriority: optional"
+            "\n"
         )
 
     package_command.tools.app_tools[
@@ -363,22 +321,8 @@ def test_deb_package_extra_requirements(package_command, first_app_deb, tmp_path
     with (bundle_path / "first-app-0.0.1/DEBIAN/control").open(encoding="utf-8") as f:
         assert (
             f.read()
-            == "\n".join(
-                [
-                    "Package: first-app",
-                    "Version: 0.0.1",
-                    "Architecture: wonky",
-                    "Maintainer: Megacorp <maintainer@example.com>",
-                    "Homepage: https://example.com/first-app",
-                    "Description: The first simple app \\ demonstration",
-                    " Long description",
-                    " for the app",
-                    "Depends: libc6 (>=2.99), libpython3.10, first, second (>=1.2.3)",
-                    "Section: Funny stuff",
-                    "Priority: optional",
-                ]
-            )
-            + "\n"
+            == "Package: first-app\nVersion: 0.0.1\nArchitecture: wonky\nMaintainer: Megacorp <maintainer@example.com>\nHomepage: https://example.com/first-app\nDescription: The first simple app \\ demonstration\n Long description\n for the app\nDepends: libc6 (>=2.99), libpython3.10, first, second (>=1.2.3)\nSection: Funny stuff\nPriority: optional"
+            "\n"
         )
 
     package_command.tools.app_tools[
@@ -423,22 +367,8 @@ def test_deb_package_failure(package_command, first_app_deb, tmp_path):
     with (bundle_path / "first-app-0.0.1/DEBIAN/control").open(encoding="utf-8") as f:
         assert (
             f.read()
-            == "\n".join(
-                [
-                    "Package: first-app",
-                    "Version: 0.0.1",
-                    "Architecture: wonky",
-                    "Maintainer: Megacorp <maintainer@example.com>",
-                    "Homepage: https://example.com/first-app",
-                    "Description: The first simple app \\ demonstration",
-                    " Long description",
-                    " for the app",
-                    "Depends: libc6 (>=2.99), libpython3.10",
-                    "Section: utils",
-                    "Priority: optional",
-                ]
-            )
-            + "\n"
+            == "Package: first-app\nVersion: 0.0.1\nArchitecture: wonky\nMaintainer: Megacorp <maintainer@example.com>\nHomepage: https://example.com/first-app\nDescription: The first simple app \\ demonstration\n Long description\n for the app\nDepends: libc6 (>=2.99), libpython3.10\nSection: utils\nPriority: optional"
+            "\n"
         )
 
     # The call to package was made
@@ -473,22 +403,8 @@ def test_external_deb_package_docker(package_command, external_first_app_deb, tm
     with (package_path / "DEBIAN/control").open(encoding="utf-8") as f:
         assert (
             f.read()
-            == "\n".join(
-                [
-                    "Package: first-app",
-                    "Version: 0.0.1",
-                    "Architecture: wonky",
-                    "Maintainer: Megacorp <maintainer@example.com>",
-                    "Homepage: https://example.com/first-app",
-                    "Description: The first simple app \\ demonstration",
-                    " Long description",
-                    " for the app",
-                    "Depends: libc6 (>=2.99), libpython3.10",
-                    "Section: utils",
-                    "Priority: optional",
-                ]
-            )
-            + "\n"
+            == "Package: first-app\nVersion: 0.0.1\nArchitecture: wonky\nMaintainer: Megacorp <maintainer@example.com>\nHomepage: https://example.com/first-app\nDescription: The first simple app \\ demonstration\n Long description\n for the app\nDepends: libc6 (>=2.99), libpython3.10\nSection: utils\nPriority: optional"
+            "\n"
         )
 
     package_command.tools.app_tools[

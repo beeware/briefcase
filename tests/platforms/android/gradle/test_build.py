@@ -105,14 +105,8 @@ def test_build_app(
     ).open(encoding="utf-8") as f:
         assert (
             f.read()
-            == "\n".join(
-                [
-                    "<resources>",
-                    '    <string name="main_module">first_app</string>',
-                    "</resources>",
-                ]
-            )
-            + "\n"
+            == '<resources>\n    <string name="main_module">first_app</string>\n</resources>'
+            "\n"
         )
 
     with (
@@ -187,14 +181,8 @@ def test_build_app_test_mode(
     ).open(encoding="utf-8") as f:
         assert (
             f.read()
-            == "\n".join(
-                [
-                    "<resources>",
-                    '    <string name="main_module">tests.first_app</string>',
-                    "</resources>",
-                ]
-            )
-            + "\n"
+            == '<resources>\n    <string name="main_module">tests.first_app</string>\n</resources>'
+            "\n"
         )
 
     with (
