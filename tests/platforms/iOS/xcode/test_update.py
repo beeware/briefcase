@@ -73,6 +73,7 @@ def test_install_requirements(
     update_command.create_app_environment = mock.MagicMock(return_value=mock_sim_venv)
 
     first_app_generated.requires = ["something==1.2.3", "other>=2.3.4"]
+    first_app_generated.requirement_installer_args = ["-f", "./wheels"]
 
     update_command.install_app_requirements(first_app_generated, mock_venv)
 
@@ -85,6 +86,7 @@ def test_install_requirements(
         allow_editable=False,
         require_binary=True,
         min_os_version="12.0",
+        extra_installer_args=["-f", "./wheels"],
         install_path=bundle_path / "app_packages.iphoneos",
         install_hint=mock.ANY,
     )
@@ -96,6 +98,7 @@ def test_install_requirements(
         allow_editable=False,
         require_binary=True,
         min_os_version="12.0",
+        extra_installer_args=["-f", "./wheels"],
         install_path=bundle_path / "app_packages.iphonesimulator",
         install_hint=mock.ANY,
     )
