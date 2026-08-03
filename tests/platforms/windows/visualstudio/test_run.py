@@ -75,7 +75,10 @@ def test_run_app_with_args(run_command, first_app_config, tmp_path):
     run_command.tools.subprocess.Popen.assert_called_with(
         [
             tmp_path
-            / "base_path/build/first-app/windows/visualstudio/x64/Release/First App.exe",
+            / (
+                "base_path/build/first-app/windows/"
+                "visualstudio/x64/Release/First App.exe"
+            ),
             "foo",
             "--bar",
         ],
@@ -109,7 +112,10 @@ def test_run_app_test_mode(run_command, first_app_config, tmp_path):
     run_command.tools.subprocess.Popen.assert_called_with(
         [
             tmp_path
-            / "base_path/build/first-app/windows/visualstudio/x64/Release/First App.exe"
+            / (
+                "base_path/build/first-app/windows/"
+                "visualstudio/x64/Release/First App.exe"
+            )
         ],
         cwd=tmp_path / "home",
         encoding="UTF-8",
@@ -145,7 +151,10 @@ def test_run_app_test_mode_with_args(run_command, first_app_config, tmp_path):
     run_command.tools.subprocess.Popen.assert_called_with(
         [
             tmp_path
-            / "base_path/build/first-app/windows/visualstudio/x64/Release/First App.exe",
+            / (
+                "base_path/build/first-app/windows/"
+                "visualstudio/x64/Release/First App.exe"
+            ),
             "foo",
             "--bar",
         ],

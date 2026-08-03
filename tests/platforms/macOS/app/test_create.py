@@ -45,7 +45,7 @@ def create_command(dummy_console, mock_other_venv, tmp_path, first_app_templated
             {
                 "info": {},
                 "entitlements": {
-                    "com.apple.security.cs.allow-unsigned-executable-memory": True,
+                    ("com.apple.security.cs.allow-unsigned-executable-memory"): True,
                     "com.apple.security.cs.disable-library-validation": True,
                 },
             },
@@ -64,7 +64,7 @@ def create_command(dummy_console, mock_other_venv, tmp_path, first_app_templated
                     "NSCustomPermission": "Custom message",
                 },
                 "entitlements": {
-                    "com.apple.security.cs.allow-unsigned-executable-memory": True,
+                    ("com.apple.security.cs.allow-unsigned-executable-memory"): True,
                     "com.apple.security.cs.disable-library-validation": True,
                     "com.apple.vm.networking": True,
                 },
@@ -79,10 +79,12 @@ def create_command(dummy_console, mock_other_venv, tmp_path, first_app_templated
             {},
             {
                 "info": {
-                    "NSBluetoothAlwaysUsageDescription": "I need to connect to bluetooth device."
+                    "NSBluetoothAlwaysUsageDescription": (
+                        "I need to connect to bluetooth device."
+                    )
                 },
                 "entitlements": {
-                    "com.apple.security.cs.allow-unsigned-executable-memory": True,
+                    ("com.apple.security.cs.allow-unsigned-executable-memory"): True,
                     "com.apple.security.cs.disable-library-validation": True,
                     "com.apple.security.device.bluetooth": True,
                 },
@@ -100,7 +102,7 @@ def create_command(dummy_console, mock_other_venv, tmp_path, first_app_templated
                     "NSCameraUsageDescription": "I need to see you",
                 },
                 "entitlements": {
-                    "com.apple.security.cs.allow-unsigned-executable-memory": True,
+                    ("com.apple.security.cs.allow-unsigned-executable-memory"): True,
                     "com.apple.security.cs.disable-library-validation": True,
                     "com.apple.security.device.camera": True,
                 },
@@ -118,7 +120,7 @@ def create_command(dummy_console, mock_other_venv, tmp_path, first_app_templated
                     "NSMicrophoneUsageDescription": "I need to hear you",
                 },
                 "entitlements": {
-                    "com.apple.security.cs.allow-unsigned-executable-memory": True,
+                    ("com.apple.security.cs.allow-unsigned-executable-memory"): True,
                     "com.apple.security.cs.disable-library-validation": True,
                     "com.apple.security.device.microphone": True,
                 },
@@ -127,18 +129,20 @@ def create_command(dummy_console, mock_other_venv, tmp_path, first_app_templated
         # Coarse location permissions
         (
             {
-                "coarse_location": "I need to know roughly where you are",
+                "coarse_location": ("I need to know roughly where you are"),
             },
             {},
             {},
             {
                 "info": {
-                    "NSLocationUsageDescription": "I need to know roughly where you are",
+                    "NSLocationUsageDescription": (
+                        "I need to know roughly where you are"
+                    ),
                 },
                 "entitlements": {
-                    "com.apple.security.cs.allow-unsigned-executable-memory": True,
+                    ("com.apple.security.cs.allow-unsigned-executable-memory"): True,
                     "com.apple.security.cs.disable-library-validation": True,
-                    "com.apple.security.personal-information.location": True,
+                    ("com.apple.security.personal-information.location"): True,
                 },
             },
         ),
@@ -151,49 +155,55 @@ def create_command(dummy_console, mock_other_venv, tmp_path, first_app_templated
             {},
             {
                 "info": {
-                    "NSLocationUsageDescription": "I need to know exactly where you are",
+                    "NSLocationUsageDescription": (
+                        "I need to know exactly where you are"
+                    ),
                 },
                 "entitlements": {
-                    "com.apple.security.cs.allow-unsigned-executable-memory": True,
+                    ("com.apple.security.cs.allow-unsigned-executable-memory"): True,
                     "com.apple.security.cs.disable-library-validation": True,
-                    "com.apple.security.personal-information.location": True,
+                    ("com.apple.security.personal-information.location"): True,
                 },
             },
         ),
         # Background location permissions
         (
             {
-                "background_location": "I always need to know where you are",
+                "background_location": ("I always need to know where you are"),
             },
             {},
             {},
             {
                 "info": {
-                    "NSLocationUsageDescription": "I always need to know where you are",
+                    "NSLocationUsageDescription": (
+                        "I always need to know where you are"
+                    ),
                 },
                 "entitlements": {
-                    "com.apple.security.cs.allow-unsigned-executable-memory": True,
+                    ("com.apple.security.cs.allow-unsigned-executable-memory"): True,
                     "com.apple.security.cs.disable-library-validation": True,
-                    "com.apple.security.personal-information.location": True,
+                    ("com.apple.security.personal-information.location"): True,
                 },
             },
         ),
         # Coarse location background permissions
         (
             {
-                "coarse_location": "I need to know roughly where you are",
-                "background_location": "I always need to know where you are",
+                "coarse_location": ("I need to know roughly where you are"),
+                "background_location": ("I always need to know where you are"),
             },
             {},
             {},
             {
                 "info": {
-                    "NSLocationUsageDescription": "I always need to know where you are",
+                    "NSLocationUsageDescription": (
+                        "I always need to know where you are"
+                    ),
                 },
                 "entitlements": {
-                    "com.apple.security.cs.allow-unsigned-executable-memory": True,
+                    ("com.apple.security.cs.allow-unsigned-executable-memory"): True,
                     "com.apple.security.cs.disable-library-validation": True,
-                    "com.apple.security.personal-information.location": True,
+                    ("com.apple.security.personal-information.location"): True,
                 },
             },
         ),
@@ -201,57 +211,63 @@ def create_command(dummy_console, mock_other_venv, tmp_path, first_app_templated
         (
             {
                 "fine_location": "I need to know exactly where you are",
-                "background_location": "I always need to know where you are",
+                "background_location": ("I always need to know where you are"),
             },
             {},
             {},
             {
                 "info": {
-                    "NSLocationUsageDescription": "I always need to know where you are",
+                    "NSLocationUsageDescription": (
+                        "I always need to know where you are"
+                    ),
                 },
                 "entitlements": {
-                    "com.apple.security.cs.allow-unsigned-executable-memory": True,
+                    ("com.apple.security.cs.allow-unsigned-executable-memory"): True,
                     "com.apple.security.cs.disable-library-validation": True,
-                    "com.apple.security.personal-information.location": True,
+                    ("com.apple.security.personal-information.location"): True,
                 },
             },
         ),
         # Coarse and fine location permissions
         (
             {
-                "coarse_location": "I need to know roughly where you are",
+                "coarse_location": ("I need to know roughly where you are"),
                 "fine_location": "I need to know exactly where you are",
             },
             {},
             {},
             {
                 "info": {
-                    "NSLocationUsageDescription": "I need to know exactly where you are",
+                    "NSLocationUsageDescription": (
+                        "I need to know exactly where you are"
+                    ),
                 },
                 "entitlements": {
-                    "com.apple.security.cs.allow-unsigned-executable-memory": True,
+                    ("com.apple.security.cs.allow-unsigned-executable-memory"): True,
                     "com.apple.security.cs.disable-library-validation": True,
-                    "com.apple.security.personal-information.location": True,
+                    ("com.apple.security.personal-information.location"): True,
                 },
             },
         ),
         # Coarse and fine background location permissions
         (
             {
-                "coarse_location": "I need to know roughly where you are",
+                "coarse_location": ("I need to know roughly where you are"),
                 "fine_location": "I need to know exactly where you are",
-                "background_location": "I always need to know where you are",
+                "background_location": ("I always need to know where you are"),
             },
             {},
             {},
             {
                 "info": {
-                    "NSLocationUsageDescription": "I always need to know where you are",
+                    "NSLocationUsageDescription": (
+                        "I always need to know where you are"
+                    ),
                 },
                 "entitlements": {
-                    "com.apple.security.cs.allow-unsigned-executable-memory": True,
+                    ("com.apple.security.cs.allow-unsigned-executable-memory"): True,
                     "com.apple.security.cs.disable-library-validation": True,
-                    "com.apple.security.personal-information.location": True,
+                    ("com.apple.security.personal-information.location"): True,
                 },
             },
         ),
@@ -264,12 +280,12 @@ def create_command(dummy_console, mock_other_venv, tmp_path, first_app_templated
             {},
             {
                 "info": {
-                    "NSPhotoLibraryUsageDescription": "I need to see your library",
+                    "NSPhotoLibraryUsageDescription": ("I need to see your library"),
                 },
                 "entitlements": {
-                    "com.apple.security.cs.allow-unsigned-executable-memory": True,
+                    ("com.apple.security.cs.allow-unsigned-executable-memory"): True,
                     "com.apple.security.cs.disable-library-validation": True,
-                    "com.apple.security.personal-information.photo_library": True,
+                    ("com.apple.security.personal-information.photo_library"): True,
                 },
             },
         ),
@@ -283,7 +299,7 @@ def create_command(dummy_console, mock_other_venv, tmp_path, first_app_templated
                 "NSLocationUsageDescription": "Platform specific",
             },
             {
-                "com.apple.security.personal-information.location": False,
+                ("com.apple.security.personal-information.location"): False,
                 "com.apple.security.cs.disable-library-validation": False,
                 "com.apple.vm.networking": True,
             },
@@ -293,9 +309,9 @@ def create_command(dummy_console, mock_other_venv, tmp_path, first_app_templated
                     "NSCustomMessage": "Custom message",
                 },
                 "entitlements": {
-                    "com.apple.security.cs.allow-unsigned-executable-memory": True,
+                    ("com.apple.security.cs.allow-unsigned-executable-memory"): True,
                     "com.apple.security.cs.disable-library-validation": False,
-                    "com.apple.security.personal-information.location": False,
+                    ("com.apple.security.personal-information.location"): False,
                     "com.apple.vm.networking": True,
                 },
             },
@@ -340,7 +356,8 @@ def test_generate_app_template_formal_name_mismatch(create_command, first_app):
     with pytest.raises(
         BriefcaseCommandError,
         match=(
-            r"The app bundle referenced by external_package_path \(Unexpected Name.app\)\n"
+            r"The app bundle referenced by external_package_path "
+            r"\(Unexpected Name.app\)\n"
             r"does not match the formal name of the app \('First App'\)."
         ),
     ):
@@ -1119,7 +1136,10 @@ def test_install_support_package(
     assert (bundle_path / "support/Python.xcframework/Info.plist").exists()
     assert (
         bundle_path
-        / "support/Python.xcframework/macos-arm64_x86_64/Python.framework/Versions/Current/Python"
+        / (
+            "support/Python.xcframework/macos-arm64_x86_64/"
+            "Python.framework/Versions/Current/Python"
+        )
     ).is_file()
     assert (
         bundle_path

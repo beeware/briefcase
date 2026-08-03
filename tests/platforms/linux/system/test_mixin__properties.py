@@ -63,10 +63,9 @@ def test_binary_path(create_command, first_app_config, tmp_path):
     first_app_config.target_vendor = "somevendor"
     first_app_config.target_codename = "surprising"
 
-    assert (
-        create_command.binary_path(first_app_config)
-        == tmp_path
-        / "base_path/build/first-app/somevendor/surprising/first-app-0.0.1/usr/bin/first-app"
+    assert create_command.binary_path(first_app_config) == tmp_path / (
+        "base_path/build/first-app/somevendor/"
+        "surprising/first-app-0.0.1/usr/bin/first-app"
     )
 
 
@@ -117,7 +116,10 @@ def test_distribution_path_unknown(create_command, first_app_config, tmp_path):
 
     with pytest.raises(
         BriefcaseCommandError,
-        match=r"Briefcase doesn't currently know how to build system packages in UNKNOWN format.",
+        match=(
+            r"Briefcase doesn't currently know "
+            r"how to build system packages in UNKNOWN format."
+        ),
     ):
         create_command.distribution_path(first_app_config)
 

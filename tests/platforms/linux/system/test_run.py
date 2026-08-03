@@ -139,7 +139,8 @@ def test_supported_host_os(run_command, first_app, sub_kw, tmp_path):
     # The process was started
     run_command.tools.subprocess._subprocess.Popen.assert_called_with(
         [
-            f"{tmp_path / 'base_path/build/first-app/somevendor/surprising/first-app-0.0.1/usr/bin/first-app'}"
+            f"{tmp_path / 'base_path/build/first-app/somevendor'}"
+            "/surprising/first-app-0.0.1/usr/bin/first-app"
         ],
         cwd=f"{tmp_path / 'home'}",
         stdout=subprocess.PIPE,
@@ -250,7 +251,10 @@ def test_run_gui_app(run_command, first_app, sub_kw, tmp_path):
         [
             os.fsdecode(
                 tmp_path
-                / "base_path/build/first-app/somevendor/surprising/first-app-0.0.1/usr/bin/first-app"
+                / (
+                    "base_path/build/first-app/somevendor/"
+                    "surprising/first-app-0.0.1/usr/bin/first-app"
+                )
             )
         ],
         cwd=os.fsdecode(tmp_path / "home"),
@@ -289,7 +293,10 @@ def test_run_gui_app_passthrough(run_command, first_app, sub_kw, tmp_path):
         [
             os.fsdecode(
                 tmp_path
-                / "base_path/build/first-app/somevendor/surprising/first-app-0.0.1/usr/bin/first-app"
+                / (
+                    "base_path/build/first-app/somevendor/"
+                    "surprising/first-app-0.0.1/usr/bin/first-app"
+                )
             ),
             "foo",
             "--bar",
@@ -330,7 +337,10 @@ def test_run_gui_app_failed(run_command, first_app, sub_kw, tmp_path):
         [
             os.fsdecode(
                 tmp_path
-                / "base_path/build/first-app/somevendor/surprising/first-app-0.0.1/usr/bin/first-app"
+                / (
+                    "base_path/build/first-app/somevendor/"
+                    "surprising/first-app-0.0.1/usr/bin/first-app"
+                )
             )
         ],
         cwd=os.fsdecode(tmp_path / "home"),
@@ -359,7 +369,10 @@ def test_run_console_app(run_command, first_app, tmp_path):
         mock.call(
             [
                 tmp_path
-                / "base_path/build/first-app/somevendor/surprising/first-app-0.0.1/usr/bin/first-app"
+                / (
+                    "base_path/build/first-app/somevendor/"
+                    "surprising/first-app-0.0.1/usr/bin/first-app"
+                )
             ],
             cwd=tmp_path / "home",
             bufsize=1,
@@ -388,7 +401,10 @@ def test_run_console_app_passthrough(run_command, first_app, tmp_path):
         mock.call(
             [
                 tmp_path
-                / "base_path/build/first-app/somevendor/surprising/first-app-0.0.1/usr/bin/first-app",
+                / (
+                    "base_path/build/first-app/somevendor/"
+                    "surprising/first-app-0.0.1/usr/bin/first-app"
+                ),
                 "foo",
                 "--bar",
             ],
@@ -420,7 +436,10 @@ def test_run_console_app_failed(run_command, first_app, sub_kw, tmp_path):
         mock.call(
             [
                 tmp_path
-                / "base_path/build/first-app/somevendor/surprising/first-app-0.0.1/usr/bin/first-app"
+                / (
+                    "base_path/build/first-app/somevendor/"
+                    "surprising/first-app-0.0.1/usr/bin/first-app"
+                )
             ],
             cwd=tmp_path / "home",
             bufsize=1,
@@ -583,14 +602,20 @@ def test_run_app_test_mode(
         [
             os.fsdecode(
                 tmp_path
-                / "base_path/build/first-app/somevendor/surprising/first-app-0.0.1/usr/bin/first-app"
+                / (
+                    "base_path/build/first-app/somevendor/"
+                    "surprising/first-app-0.0.1/usr/bin/first-app"
+                )
             )
         ],
         cwd=os.fsdecode(tmp_path / "home"),
         stdout=subprocess.PIPE,
         stderr=subprocess.STDOUT,
         bufsize=1,
-        env={"ENVVAR": "Value", "BRIEFCASE_MAIN_MODULE": "tests.first_app"},
+        env={
+            "ENVVAR": "Value",
+            "BRIEFCASE_MAIN_MODULE": "tests.first_app",
+        },
         **sub_kw,
     )
 
@@ -712,7 +737,10 @@ def test_run_app_test_mode_with_args(
         [
             os.fsdecode(
                 tmp_path
-                / "base_path/build/first-app/somevendor/surprising/first-app-0.0.1/usr/bin/first-app"
+                / (
+                    "base_path/build/first-app/somevendor/"
+                    "surprising/first-app-0.0.1/usr/bin/first-app"
+                )
             ),
             "foo",
             "--bar",
@@ -721,7 +749,10 @@ def test_run_app_test_mode_with_args(
         stdout=subprocess.PIPE,
         stderr=subprocess.STDOUT,
         bufsize=1,
-        env={"ENVVAR": "Value", "BRIEFCASE_MAIN_MODULE": "tests.first_app"},
+        env={
+            "ENVVAR": "Value",
+            "BRIEFCASE_MAIN_MODULE": "tests.first_app",
+        },
         **sub_kw,
     )
 
