@@ -5,6 +5,7 @@ import pytest
 
 from briefcase.console import LogLevel
 from briefcase.exceptions import BriefcaseCommandError
+from briefcase.integrations.android_sdk import AndroidSigningConfig
 
 from ....utils import create_file
 
@@ -93,7 +94,7 @@ def test_execute_gradle(
     # `ANDROID_SDK_ROOT`, which we expect to be overwritten.
     package_command.tools.os.environ = {"ANDROID_SDK_ROOT": "somewhere", "key": "value"}
 
-    package_command.package_app(first_app_apk)
+    package_command.package_app(first_app_apk, adhoc_sign=True)
 
     package_command.tools.android_sdk.verify_emulator.assert_called_once_with()
     package_command.tools.subprocess.run.assert_called_once_with(
@@ -114,6 +115,83 @@ def test_execute_gradle(
     assert (tmp_path / "base_path/dist/First App-0.0.1.apk").exists()
 
 
+@pytest.mark.parametrize(
+    ("host_os", "gradlew_name"),
+    [
+        ("Windows", "gradlew.bat"),
+        ("NonWindows", "gradlew"),
+    ],
+)
+def test_execute_gradle_signed(
+    package_command,
+    first_app_apk,
+    host_os,
+    gradlew_name,
+    tmp_path,
+):
+    """Validate that package_app() passes signing properties to Gradle for APK
+    format."""
+    package_command.tools.host_os = host_os
+
+    keystore_path = tmp_path / "my.jks"
+    keystore_path.touch()
+
+    def create_bundle(*args, **kwargs):
+        create_file(
+            tmp_path
+            / "base_path"
+            / "build"
+            / "first-app"
+            / "android"
+            / "gradle"
+            / "app"
+            / "build"
+            / "outputs"
+            / "apk"
+            / "release"
+            / "app-release.apk",
+            "Android release",
+        )
+
+    package_command.tools.subprocess.run.side_effect = create_bundle
+
+    package_command.tools.android_sdk.signing.select_keystore.return_value = (
+        AndroidSigningConfig(
+            keystore_path=keystore_path,
+            key_alias="mykey",
+            store_password="storepass",
+            key_password="keypass",
+        )
+    )
+
+    package_command.package_app(
+        first_app_apk,
+        keystore=str(keystore_path),
+        key_alias="mykey",
+        keystore_password="storepass",
+        key_password="keypass",
+    )
+
+    package_command.tools.subprocess.run.assert_called_once_with(
+        [
+            package_command.bundle_path(first_app_apk) / gradlew_name,
+            "--console",
+            "plain",
+            "assembleRelease",
+            f"-Pandroid.injected.signing.store.file={keystore_path}",
+            "-Pandroid.injected.signing.store.password=storepass",
+            "-Pandroid.injected.signing.key.alias=mykey",
+            "-Pandroid.injected.signing.key.password=keypass",
+        ],
+        cwd=package_command.bundle_path(first_app_apk),
+        env=package_command.tools.android_sdk.env,
+        check=True,
+        encoding="ISO-42",
+    )
+
+    assert (tmp_path / "base_path/dist/First App-0.0.1.apk").exists()
+
+
 def test_print_gradle_errors(package_command, first_app_apk):
     """Validate that package_app() will convert stderr/stdout from the process into
     exception text."""
@@ -123,4 +201,4 @@ def test_print_gradle_errors(package_command, first_app_apk):
         cmd=["ignored"],
     )
     with pytest.raises(BriefcaseCommandError):
-        package_command.package_app(first_app_apk)
+        package_command.package_app(first_app_apk, adhoc_sign=True)

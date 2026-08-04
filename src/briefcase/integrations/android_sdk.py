@@ -7,8 +7,10 @@ import shlex
 import shutil
 import subprocess
 import time
+from dataclasses import dataclass
 from datetime import datetime
 from pathlib import Path
+from typing import Any
 
 from briefcase.config import PEP508_NAME_RE
 from briefcase.exceptions import (
@@ -359,6 +361,11 @@ class AndroidSDK(ManagedTool):
         tools.console.debug(f"Using Android SDK at {sdk.root_path}")
         tools.android_sdk = sdk
         return sdk
+
+    @property
+    def signing(self) -> AndroidSigning:
+        """Obtain an AndroidSigning instance."""
+        return AndroidSigning(tools=self.tools)
 
     def exists(self) -> bool:
         """Confirm that the SDK actually exists.
@@ -1400,6 +1407,218 @@ run Briefcase again. The running emulator can then be selected from the list.
 
         # Return the device ID and full name.
         return device, full_name
+
+
+@dataclass
+class AndroidSigningConfig:
+    keystore_path: Path
+    key_alias: str
+    store_password: str
+    key_password: str
+
+
+class AndroidSigning:
+    def __init__(self, tools: ToolCache):
+        self.tools = tools
+
+    @property
+    def _keytool(self) -> Path:
+        """Path to the keytool executable bundled with the JDK."""
+        ext = ".exe" if self.tools.host_os == "Windows" else ""
+        return self.tools.java.java_home / "bin" / f"keytool{ext}"
+
+    def _keystore_candidates(self, base_path: Path) -> list[Path]:
+        """Find candidate .jks keystore files in standard locations.
+
+        Searches the project folder, its .android subfolder, and ~/.android.
+
+        :param base_path: The base path (usually the project folder) to search.
+        """
+        search_paths = [
+            base_path,
+            base_path / ".android",
+            self.tools.home_path / ".android",
+        ]
+        candidates = []
+        for search_path in search_paths:
+            if search_path.is_dir():
+                candidates.extend(sorted(search_path.glob("*.p12")))
+                candidates.extend(sorted(search_path.glob("*.jks")))
+        return sorted(set(candidates))
+
+    def create_keystore(
+        self,
+        app: Any,
+        base_path: Path,
+        key_alias: str | None = None,
+        store_password: str | None = None,
+        key_password: str | None = None,
+    ) -> AndroidSigningConfig:
+        """Create a new keystore for signing Android apps.
+
+        The keystore is created at <base_path>/.android/<bundle_identifier>.jks.
+
+        :param app: The app being packaged
+        :param base_path: The project base path
+        :param key_alias: The key alias; prompted if not provided
+        :param store_password: The keystore password; prompted if not provided
+        :returns: An AndroidSigningConfig for the new keystore
+        """
+        keystore_path = base_path / ".android" / f"{app.bundle_identifier}.p12"
+
+        if key_alias is None:
+            key_alias = self.tools.console.text_question(
+                description="Key alias",
+                intro="Enter an alias for the signing key.",
+                default="mykey",
+            )
+
+        if store_password is None:
+            store_password = self.tools.console.text_question(
+                description="Keystore password",
+                intro="Enter a password for the keystore.",
+            )
+
+        # PKCS12 keystores created by keytool must have the same password for
+        # the keystore and the key.
+        key_password = store_password
+
+        keystore_path.parent.mkdir(parents=True, exist_ok=True)
+
+        with self.tools.console.wait_bar("Creating keystore..."):
+            try:
+                # Based on the documentation for signing at
+                # https://developer.android.com/build/building-cmdline#sign_cmdline
+                self.tools.subprocess.run(
+                    [
+                        self._keytool,
+                        "-genkeypair",
+                        "-v",
+                        "-keystore",
+                        str(keystore_path),
+                        "-storetype",
+                        "PKCS12",
+                        "-alias",
+                        key_alias,
+                        "-keyalg",
+                        "RSA",
+                        "-keysize",
+                        "2048",
+                        "-validity",
+                        "10000",
+                        "-storepass",
+                        store_password,
+                        "-keypass",
+                        key_password,
+                        "-dname",
+                        (
+                            f"CN={app.formal_name}, "
+                            "OU=Unknown, O=Unknown, L=Unknown, ST=Unknown, C=Unknown"
+                        ),
+                    ],
+                    check=True,
+                )
+            except subprocess.CalledProcessError as e:
+                raise BriefcaseCommandError("Failed to create keystore.") from e
+
+        self.tools.console.info(
+            f"""
+A new keystore has been created at:
+
+    {keystore_path}
+
+Keep this file secure and backed up. If you lose it, you will not be able to
+publish updates to this app.
+
+In future, you can reuse this keystore by running:
+
+    $ briefcase package android --keystore {keystore_path}
+
+"""
+        )
+        return AndroidSigningConfig(
+            keystore_path=keystore_path,
+            key_alias=key_alias,
+            store_password=store_password,
+            key_password=key_password,
+        )
+
+    def select_keystore(
+        self,
+        app: Any,
+        base_path: Path,
+        keystore: str | None = None,
+        key_alias: str | None = None,
+        keystore_password: str | None = None,
+        key_password: str | None = None,
+    ) -> AndroidSigningConfig:
+        """Select or create a keystore for signing.
+
+        If ``keystore`` is provided it is treated as a path to a .jks keystore
+        file.  Otherwise keystores are discovered from standard locations and
+        the user is prompted to select one or create a new one.
+
+        :param app: The app being packaged
+        :param base_path: The project base path
+        :param keystore: Path to a keystore file, or None to discover/create
+        :param key_alias: The key alias; prompted if not provided
+        :param keystore_password: The keystore password; prompted if not provided
+        :param key_password: The key password; defaults to keystore_password
+        :returns: An AndroidSigningConfig for the selected keystore
+        """
+        if keystore is not None:
+            keystore_path = Path(keystore)
+            if not keystore_path.exists():
+                raise BriefcaseCommandError(
+                    f"Keystore file {str(keystore)!r} does not exist."
+                )
+        else:
+            candidates = self._keystore_candidates(base_path)
+
+            _CREATE_NEW = "__create_new__"
+            options = {_CREATE_NEW: "Create a new keystore"}
+            for path in candidates:
+                options[str(path)] = str(path)
+
+            selection = self.tools.console.selection_question(
+                description="Keystore",
+                intro="Select the keystore to use for signing, or create a new one.",
+                options=options,
+            )
+
+            if selection == _CREATE_NEW:
+                return self.create_keystore(
+                    app,
+                    base_path=base_path,
+                    key_alias=key_alias,
+                    store_password=keystore_password,
+                    key_password=key_password,
+                )
+
+            keystore_path = Path(selection)
+
+        if key_alias is None:
+            key_alias = self.tools.console.text_question(
+                description="Key alias",
+                intro="Enter the alias of the signing key in the keystore.",
+                default="mykey",
+            )
+
+        if keystore_password is None:
+            keystore_password = self.tools.console.text_question(
+                description="Keystore password",
+                intro="Enter the password for the keystore.",
+            )
+
+        if key_password is None:
+            key_password = keystore_password
+
+        return AndroidSigningConfig(
+            keystore_path=keystore_path,
+            key_alias=key_alias,
+            store_password=keystore_password,
+            key_password=key_password,
+        )
 
 
 class ADB:
