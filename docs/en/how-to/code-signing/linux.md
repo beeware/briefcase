@@ -2,7 +2,7 @@
 
 ## Overview
 
-Linux system packages (`.deb`, `.rpm` and `.pkg.tar.zst`) can be signed using a [GNU Privacy Guard](https://gnupg.org/) (GPG) key. Unlike macOS and Windows, there is no central authority that issues signing certificates for Linux. A GPG signature does not, by itself, make a package trusted; the person installing your package must have imported your public key into their GPG keyring, and must choose to trust it. However, a signature does allow a user to verify both the *integrity* and the *provenance* of the package, and it is a requirement for publishing packages to some official repositories.
+Linux system packages (`.deb`, `.rpm` and `.pkg.tar.zst`) can be signed using a [GNU Privacy Guard](https://gnupg.org/) (GPG) key. Unlike macOS and Windows, Linux has no central authority that issues signing certificates. A GPG signature lets users verify the integrity and provenance of a package, but it does not by itself make a package trusted; the person installing your package must import your public key into their GPG keyring and choose to trust it. A signature is required for publishing packages to some official repositories.
 
 ## Create a GPG key
 
@@ -12,7 +12,7 @@ If you don't already have a GPG key, you can create one with:
 $ gpg --full-generate-key
 ```
 
-You will be prompted to select a key type, key size and expiry date, and to provide a name and email address that will identify the key. The email address should be an address you control, as users will use it (along with your public key) to identify that the package really came from you.
+You will be prompted to select a key type, key size and expiry date, and to provide a name and email address that will identify the key. If possible, use an ECC key based on Curve 25519 (an `ed25519` signing key), which is the default in recent GnuPG versions and produces smaller, faster signatures; if you need to support older tools that don't understand ECC keys, generate an RSA key of at least 4096 bits instead. The email address should be an address you control, as users will use it (along with your public key) to identify that the package really came from you.
 
 ## Obtain the identity of your key
 
@@ -28,7 +28,7 @@ Each key is listed with a `sec` entry, followed by the key's 40-character hexade
 $ briefcase package linux system --identity <fingerprint>
 ```
 
-Alternatively, you can specify any portion of the fingerprint, the short key ID, or the name or email address associated with the key. If you have more than one secret key on your system, and you don't specify an identity, Briefcase will prompt you to select the identity to use.
+Alternatively, you can specify any portion of the fingerprint, the short key ID, or the name or email address associated with the key. If you don't specify an identity, Briefcase will prompt you to select the identity to use from the secret keys available on your system, or to opt out of signing. If you have only one secret key, it is offered as the default selection.
 
 ## Distributing the signature
 
@@ -44,7 +44,9 @@ Before distributing your packages, you should export your public key and make it
 $ gpg --export --armor <fingerprint>
 ```
 
-This will output your public key in ASCII armor format, which can be added to a user's keyring with `gpg --import`. A user can then verify the integrity and provenance of your package with `gpg --verify <signature file> <package file>` (for `.pkg.tar.zst` packages), or with the package manager's own verification tooling (for `.deb` and `.rpm` packages).
+This will output your public key in ASCII armor format. You can publish it on a public keyserver, for example with `gpg --send-keys --keyserver keys.openpgp.org <fingerprint>`, or you can host the exported `.asc` file on your own website. Users can then add your key to their keyring with `gpg --import <file>` (or `gpg --recv-keys <fingerprint>`).
+
+A user can then verify the integrity and provenance of your package: with `gpg --verify <signature file> <package file>` for `.pkg.tar.zst` packages; with `debsig-verify` for `.deb` packages (using a policy that declares your key as trusted); or with `rpmkeys --checksig` (or `rpm --checksig`) for `.rpm` packages, once RPM is configured to trust your key.
 
 ## Packaging without signing
 
@@ -55,3 +57,7 @@ $ briefcase package linux system --adhoc-sign
 ```
 
 As with other platforms, `--adhoc-sign` is useful during development and testing, but an unsigned package may not be acceptable for release.
+
+## Docker builds
+
+Signing is not currently supported when building with Docker (i.e., when the `--target` option is used). When packaging with Docker, you must opt out of signing — either by selecting "Don't sign" when prompted, or by providing the `--adhoc-sign` option. Selecting a signing identity when building with Docker will cause an error.

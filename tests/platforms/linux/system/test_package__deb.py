@@ -8,6 +8,7 @@ from unittest import mock
 import pytest
 
 from briefcase.exceptions import BriefcaseCommandError
+from briefcase.integrations.gnupg import GnuPG
 from briefcase.platforms.linux import system
 from briefcase.platforms.linux.system import (
     LinuxSystemPackageCommand,
@@ -40,6 +41,13 @@ def package_command(dummy_console, first_app, tmp_path):
     # Mock not using docker
     command.target_image = None
     command.extra_docker_build_args = []
+
+    # Mock the GPG tool, so no identities are available by default.
+    command.tools.gnupg = mock.MagicMock(spec_set=GnuPG)
+    command.tools.gnupg.identities.return_value = {}
+
+    # Accept the default "Don't sign" selection for the signing menu.
+    command.console.values = [""]
 
     return command
 

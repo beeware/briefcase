@@ -4,6 +4,7 @@ from unittest import mock
 import pytest
 
 from briefcase.exceptions import BriefcaseCommandError
+from briefcase.integrations.gnupg import GnuPG
 from briefcase.integrations.subprocess import Subprocess
 from briefcase.platforms.linux.system import LinuxSystemPackageCommand
 
@@ -27,8 +28,9 @@ def package_command(monkeypatch, dummy_console, first_app, tmp_path):
     # Mock the packaging tools.
     command._verify_packaging_tools = mock.MagicMock()
 
-    # Mock the signing identities, so no identities are available by default.
-    command.get_gpg_identities = mock.MagicMock(return_value={})
+    # Mock the GPG tool, so no identities are available by default.
+    command.tools.gnupg = mock.MagicMock(spec_set=GnuPG)
+    command.tools.gnupg.identities.return_value = {}
 
     return command
 
@@ -175,6 +177,9 @@ def test_package_deb_app(package_command, first_app):
     # Mock the actual packaging call
     package_command._package_deb = mock.MagicMock()
 
+    # Accept the default selection ("Don't sign")
+    package_command.console.values = [""]
+
     # Package the app
     package_command.package_app(first_app)
 
@@ -189,6 +194,9 @@ def test_package_rpm_app(package_command, first_app):
 
     # Mock the actual packaging call
     package_command._package_rpm = mock.MagicMock()
+
+    # Accept the default selection ("Don't sign")
+    package_command.console.values = [""]
 
     # Package the app
     package_command.package_app(first_app)
@@ -205,6 +213,9 @@ def test_package_pkg_app(package_command, first_app):
     # Mock the actual packaging call
     package_command._package_pkg = mock.MagicMock()
 
+    # Accept the default selection ("Don't sign")
+    package_command.console.values = [""]
+
     # Package the app
     package_command.package_app(first_app)
 
@@ -219,6 +230,9 @@ def test_package_unknown_format(package_command, first_app):
 
     # Mock the actual packaging call
     package_command._package_deb = mock.MagicMock()
+
+    # Accept the default selection ("Don't sign")
+    package_command.console.values = [""]
 
     # Package the app
     with pytest.raises(

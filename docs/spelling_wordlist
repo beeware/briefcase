@@ -46,6 +46,7 @@ Cookiecutter
 cryptographic
 CTRL
 CVE
+Curve
 customizations
 datetime
 DBus
@@ -60,6 +61,7 @@ dmg
 DMGs
 DNS
 Dockerfile
+ECC
 drawable
 embeddable
 executables
@@ -100,6 +102,7 @@ Keychain
 keystore
 keystores
 keyring
+keyserver
 linters
 Linux
 linuxdeploy
@@ -173,6 +176,7 @@ reStructuredText
 RGB
 RHEL
 rpmbuild
+rpmsign
 rst
 RTF
 rumdl

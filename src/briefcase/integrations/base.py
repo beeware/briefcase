@@ -33,6 +33,7 @@ if TYPE_CHECKING:
     from briefcase.integrations.docker import Docker, DockerAppContext
     from briefcase.integrations.file import File
     from briefcase.integrations.flatpak import Flatpak
+    from briefcase.integrations.gnupg import GnuPG
     from briefcase.integrations.java import JDK
     from briefcase.integrations.linuxdeploy import LinuxDeploy
     from briefcase.integrations.rcedit import RCEdit
@@ -157,6 +158,7 @@ class ToolCache(Mapping):
     docker: Docker
     file: File
     flatpak: Flatpak
+    gnupg: GnuPG
     git: git_
     java: JDK
     linuxdeploy: LinuxDeploy
