@@ -160,7 +160,7 @@ def test_install_requirements_path_formats(
                 "--extra-index-url",
                 "https://pypi.anaconda.org/beeware/simple",
             ],
-            {"PYTHONPATH": "/path/to/support"},
+            {"PYTHONPATH": str(Path("/path/to/support"))},
         ),
         (
             "iphoneos",
@@ -172,7 +172,7 @@ def test_install_requirements_path_formats(
                 "--extra-index-url",
                 "https://pypi.anaconda.org/beeware/simple",
             ],
-            {"PYTHONPATH": "/path/to/support"},
+            {"PYTHONPATH": str(Path("/path/to/support"))},
         ),
         (
             "iphonesimulator",
@@ -184,7 +184,7 @@ def test_install_requirements_path_formats(
                 "--extra-index-url",
                 "https://pypi.anaconda.org/beeware/simple",
             ],
-            {"PYTHONPATH": "/path/to/support"},
+            {"PYTHONPATH": str(Path("/path/to/support"))},
         ),
         (
             "iphonesimulator",
@@ -196,7 +196,7 @@ def test_install_requirements_path_formats(
                 "--extra-index-url",
                 "https://pypi.anaconda.org/beeware/simple",
             ],
-            {"PYTHONPATH": "/path/to/support"},
+            {"PYTHONPATH": str(Path("/path/to/support"))},
         ),
         ("windows", "x86_64", None, [], None),
         ("windows", "ARM64", None, [], None),

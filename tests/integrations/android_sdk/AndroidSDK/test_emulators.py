@@ -1,4 +1,5 @@
 import subprocess
+from textwrap import dedent
 
 import pytest
 
@@ -13,13 +14,14 @@ from briefcase.exceptions import BriefcaseCommandError
         ("first\nsecond\nthird\n", ["first", "second", "third"]),
         ("first\n\nsecond", ["first", "second"]),
         (
-            (
-                "first\n"
-                "INFO    | Storing crashdata in\n"
-                "second\n"
-                "WARNING | nothing to see\n"
-                "third\n"
-                "ERROR   | lot to see here"
+            dedent(
+                """
+                first
+                INFO    | Storing crashdata in
+                second
+                WARNING | nothing to see
+                third
+                ERROR   | lot to see here"""
             ),
             ["first", "second", "third"],
         ),
