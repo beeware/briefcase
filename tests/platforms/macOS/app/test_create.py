@@ -3,6 +3,7 @@ import os
 import shutil
 import sys
 import time
+from textwrap import dedent
 from unittest import mock
 
 import pytest
@@ -476,6 +477,7 @@ def test_install_app_packages(
 
     create_command.tools.host_arch = host_arch
     first_app_templated.requires = ["first", "second==1.2.3", "third>=3.2.1"]
+    first_app_templated.requirement_installer_args = ["-f", "./wheels"]
 
     # Mock the result of finding the binary packages - 2 of the packages are binary;
     # the version on the loosely specified package doesn't match the lower bound.
@@ -511,6 +513,7 @@ def test_install_app_packages(
         allow_editable=False,
         require_binary=True,
         min_os_version="10.12",
+        extra_installer_args=["-f", "./wheels"],
         install_path=bundle_path / f"app_packages.{host_arch}",
         install_hint=(
             "\n\n"
@@ -528,6 +531,7 @@ def test_install_app_packages(
         allow_editable=False,
         require_binary=True,
         min_os_version="10.12",
+        extra_installer_args=["-f", "./wheels"],
         install_path=bundle_path / f"app_packages.{other_arch}",
         install_hint=(
             "\n\n"
@@ -588,13 +592,12 @@ def test_min_os_version(
         )
         create_file(
             tmp_path / "base_path/build/first-app/macos/app/support/VERSIONS",
-            "\n".join(
-                [
-                    "Python version: 3.10.15",
-                    "Build: b11",
-                    "Min macOS version: 10.12",
-                    "",
-                ]
+            dedent(
+                """\
+                Python version: 3.10.15
+                Build: b11
+                Min macOS version: 10.12
+                """
             ),
         )
 
@@ -639,6 +642,7 @@ def test_min_os_version(
         allow_editable=False,
         require_binary=True,
         min_os_version="13.2",
+        extra_installer_args=[],
         install_path=bundle_path / "app_packages.arm64",
         install_hint=mock.ANY,
     )
@@ -651,6 +655,7 @@ def test_min_os_version(
         allow_editable=False,
         require_binary=True,
         min_os_version="13.2",
+        extra_installer_args=[],
         install_path=bundle_path / "app_packages.x86_64",
         install_hint=mock.ANY,
     )
@@ -700,12 +705,11 @@ def test_default_min_os_version(
         )
         create_file(
             tmp_path / "base_path/build/first-app/macos/app/support/VERSIONS",
-            "\n".join(
-                [
-                    "Python version: 3.10.15",
-                    "Build: b11",
-                    "",
-                ]
+            dedent(
+                """\
+                Python version: 3.10.15
+                Build: b11
+                """
             ),
         )
     else:
@@ -761,6 +765,7 @@ def test_default_min_os_version(
         allow_editable=False,
         require_binary=True,
         min_os_version="11.0",
+        extra_installer_args=[],
         install_path=bundle_path / "app_packages.arm64",
         install_hint=mock.ANY,
     )
@@ -773,6 +778,7 @@ def test_default_min_os_version(
         allow_editable=False,
         require_binary=True,
         min_os_version="11.0",
+        extra_installer_args=[],
         install_path=bundle_path / "app_packages.x86_64",
         install_hint=mock.ANY,
     )
@@ -1017,6 +1023,7 @@ def test_install_app_packages_no_binary(
         allow_editable=False,
         require_binary=True,
         min_os_version="10.12",
+        extra_installer_args=[],
         install_path=bundle_path / "app_packages.arm64",
         install_hint=mock.ANY,
     )
@@ -1109,6 +1116,7 @@ def test_install_app_packages_failure(
         allow_editable=False,
         require_binary=True,
         min_os_version="10.12",
+        extra_installer_args=[],
         install_path=bundle_path / "app_packages.arm64",
         install_hint=mock.ANY,
     )
@@ -1121,6 +1129,7 @@ def test_install_app_packages_failure(
         allow_editable=False,
         require_binary=True,
         min_os_version="10.12",
+        extra_installer_args=[],
         install_path=bundle_path / "app_packages.x86_64",
         install_hint=mock.ANY,
     )
@@ -1183,6 +1192,7 @@ def test_install_app_packages_non_universal(
         allow_editable=False,
         require_binary=True,
         min_os_version="10.12",
+        extra_installer_args=[],
         install_path=bundle_path / "First App.app/Contents/Resources/app_packages",
         install_hint=mock.ANY,
     )

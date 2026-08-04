@@ -131,8 +131,10 @@ def file_perms() -> int:
         # "legacy user agent" in the terms of RFC 6266, for our own simplicity.
         (
             "https://example.com/path/to/irrelevant.zip",
-            'attachment; filename="something.zip"; filename*=utf-8'
-            "''%e2%82%ac%20rates",
+            (
+                'attachment; filename="something.zip"; filename*=utf-8'
+                "''%e2%82%ac%20rates"
+            ),
         ),
     ],
 )

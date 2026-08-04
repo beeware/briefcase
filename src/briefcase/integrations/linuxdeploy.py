@@ -5,7 +5,7 @@ import shlex
 from abc import ABC, abstractmethod
 from collections.abc import Collection
 from pathlib import Path
-from typing import TypeVar
+from typing import TYPE_CHECKING, TypeVar
 from urllib.parse import urlparse
 
 from briefcase.exceptions import (
@@ -15,6 +15,12 @@ from briefcase.exceptions import (
     UnsupportedHostError,
 )
 from briefcase.integrations.base import ManagedTool, Tool, ToolCache
+
+if TYPE_CHECKING:
+    try:
+        from typing import Self
+    except ImportError:  # pragma: no-cover-if-gte-py311
+        from typing_extensions import Self
 
 LinuxDeployT = TypeVar("LinuxDeployT", bound="LinuxDeployBase")
 
@@ -105,11 +111,11 @@ class LinuxDeployBase(ABC):
 
     @classmethod
     def verify_install(
-        cls: type[LinuxDeployT],
+        cls,
         tools: ToolCache,
         install: bool = True,
         **kwargs,
-    ) -> LinuxDeployT:
+    ) -> Self:
         """Verify that linuxdeploy tool or plugin is available.
 
         :param tools: ToolCache of available tools
@@ -125,7 +131,7 @@ class LinuxDeployBase(ABC):
         if not is_plugin and hasattr(tools, "linuxdeploy"):
             return tools.linuxdeploy
 
-        tool: LinuxDeployT = cls(tools=tools, **kwargs)
+        tool: Self = cls(tools=tools, **kwargs)
         if not tool.exists():
             if install:
                 tools.console.info(

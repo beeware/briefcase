@@ -1,4 +1,5 @@
 import shutil
+from textwrap import dedent
 from unittest import mock
 
 import pytest
@@ -52,18 +53,17 @@ def test_install_requirements(
         # Create the old-style VERSIONS file with a deliberately weird min iOS version
         create_file(
             tmp_path / "base_path/build/first-app/ios/xcode/Support/VERSIONS",
-            "\n".join(
-                [
-                    "Python version: 3.10.15",
-                    "Build: b11",
-                    "Min iOS version: 12.0",
-                    "---------------------",
-                    "BZip2: 1.0.8-1",
-                    "libFFI: 3.4.6-1",
-                    "OpenSSL: 3.0.15-1",
-                    "XZ: 5.6.2-1",
-                    "",
-                ]
+            dedent(
+                """\
+                Python version: 3.10.15
+                Build: b11
+                Min iOS version: 12.0
+                ---------------------
+                BZip2: 1.0.8-1
+                libFFI: 3.4.6-1
+                OpenSSL: 3.0.15-1
+                XZ: 5.6.2-1
+                """
             ),
         )
 
@@ -73,6 +73,7 @@ def test_install_requirements(
     update_command.create_app_environment = mock.MagicMock(return_value=mock_sim_venv)
 
     first_app_generated.requires = ["something==1.2.3", "other>=2.3.4"]
+    first_app_generated.requirement_installer_args = ["-f", "./wheels"]
 
     update_command.install_app_requirements(first_app_generated, mock_venv)
 
@@ -85,6 +86,7 @@ def test_install_requirements(
         allow_editable=False,
         require_binary=True,
         min_os_version="12.0",
+        extra_installer_args=["-f", "./wheels"],
         install_path=bundle_path / "app_packages.iphoneos",
         install_hint=mock.ANY,
     )
@@ -96,6 +98,7 @@ def test_install_requirements(
         allow_editable=False,
         require_binary=True,
         min_os_version="12.0",
+        extra_installer_args=["-f", "./wheels"],
         install_path=bundle_path / "app_packages.iphonesimulator",
         install_hint=mock.ANY,
     )

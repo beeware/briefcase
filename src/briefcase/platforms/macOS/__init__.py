@@ -355,6 +355,7 @@ class macOSCreateMixin(AppPackagesMergeMixin):
                 allow_editable=False,
                 require_binary=self.require_binary_installs,
                 min_os_version=macOS_min_version,
+                extra_installer_args=app.requirement_installer_args,
                 install_path=host_app_packages_path,
                 install_hint=f"""
 
@@ -406,6 +407,7 @@ is not available.
                         allow_editable=False,
                         require_binary=self.require_binary_installs,
                         min_os_version=macOS_min_version,
+                        extra_installer_args=app.requirement_installer_args,
                         install_path=other_app_packages_path,
                         install_hint=f"""
 
