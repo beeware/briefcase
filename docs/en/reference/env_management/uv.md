@@ -6,6 +6,8 @@ When `uv` is used to manage your app environment, an official Python or Briefcas
 
 ## Prerequisites
 
+Uv environment management can be used for macOS, Windows and iOS apps; and for Linux System apps when Docker is *not* used. An error will be raised if you attempt to use uv as an environment manager on any other platform, or if you attempt to build a Linux System app with Docker.
+
 To use uv as the environment manager in your application, the `uv` binary must be available on your `PATH`. It can be installed using any of the [installation methods described in the uv documentation](https://docs.astral.sh/uv/getting-started/installation/).
 
 ## Configuration

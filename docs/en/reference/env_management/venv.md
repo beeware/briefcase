@@ -6,7 +6,7 @@ When `venv` is used to manage your app environment, an official Python or Briefc
 
 ## Prerequisites
 
-There are no additional pre-requisites for using `venv` to manage application environments. Requirements will be installed with `pip`; Briefcase will use the version of `pip` that is installed in the environment where Briefcase is executed.
+There are no additional pre-requisites for using `venv` to manage application environments. Requirements will be installed with `pip`; Briefcase will use the version of `pip` that is installed in the environment where Briefcase is executed. `venv` can be used to build apps on all platforms.
 
 ## Configuration
 

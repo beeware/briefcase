@@ -110,8 +110,8 @@ The contact email address for the person or organization responsible for the pro
 The environment manager to use when creating isolated Python environments and installing requirements. Must be one of:
 
 * `venv` - The `venv` package provided by the Python standard library
-* `uv` - The [uv](https://docs.astral.sh/uv/) environment manager
-* `conda` - The [Conda](https://docs.conda.io/) environment manager
+* `uv` - The [uv](https://docs.astral.sh/uv/) environment manager (available for macOS, Windows, iOS, and Linux System apps that do *not* use Docker)
+* `conda` - The [Conda](https://docs.conda.io/) environment manager (available for macOS and Windows apps)
 
 Defaults to `venv`. For details on using different environment managers, see the `[environment management reference][environment-management]`.
 

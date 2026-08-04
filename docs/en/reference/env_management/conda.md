@@ -8,6 +8,8 @@ When Conda is used to manage your app environment, Conda is also used to provide
 
 Briefcase requires the use of Conda 26.5 or higher.
 
+Conda environment management can only be used for macOS and Windows apps. An error will be raised if you attempt to use Conda as an environment manager on any other platform.
+
 To use Conda as the environment manager in your application, the `conda` binary must be available on your `PATH`. It can be installed using any of the [installation methods described in the Conda documentation](https://docs.conda.io/projects/conda/en/stable/user-guide/install/index.html).
 
 ## Configuration
