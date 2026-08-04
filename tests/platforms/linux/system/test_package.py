@@ -9,6 +9,14 @@ from briefcase.integrations.subprocess import Subprocess
 from briefcase.platforms.linux.system import LinuxSystemPackageCommand
 
 
+@pytest.fixture(autouse=True)
+def mock_gpg_identities(monkeypatch):
+    """Mock the GPG identities listing, so no identities are available by default."""
+    identities = mock.MagicMock(return_value={})
+    monkeypatch.setattr(GnuPG, "identities", identities)
+    return identities
+
+
 @pytest.fixture
 def package_command(monkeypatch, dummy_console, first_app, tmp_path):
     command = LinuxSystemPackageCommand(
@@ -27,10 +35,6 @@ def package_command(monkeypatch, dummy_console, first_app, tmp_path):
 
     # Mock the packaging tools.
     command._verify_packaging_tools = mock.MagicMock()
-
-    # Mock the GPG tool, so no identities are available by default.
-    command.tools.gnupg = mock.MagicMock(spec_set=GnuPG)
-    command.tools.gnupg.identities.return_value = {}
 
     return command
 

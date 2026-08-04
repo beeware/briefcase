@@ -71,11 +71,11 @@ def test_sign_pkg_package(package_command, first_app):
 def test_sign_package_error(package_command, first_app):
     """If signing fails, an error is raised."""
     first_app.packaging_format = "deb"
-    package_command.tools[first_app].app_context.run.side_effect = (
-        subprocess.CalledProcessError(
-            returncode=1,
-            cmd=["debsigs", "--sign=origin", "--default-key=DEADBEEF"],
-        )
+    package_command.tools[
+        first_app
+    ].app_context.run.side_effect = subprocess.CalledProcessError(
+        returncode=1,
+        cmd=["debsigs", "--sign=origin", "--default-key=DEADBEEF"],
     )
     package_command.distribution_path = mock.MagicMock(
         return_value=Path("/path/to/dist/first-app.deb")

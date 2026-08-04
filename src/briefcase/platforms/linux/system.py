@@ -1120,7 +1120,7 @@ class LinuxSystemSigningMixin(_MixinBase):
         :returns: The final identity to use, or `None` if no identity is
             available and no identity was specified.
         """
-        identities = self.tools.gnupg.identities()
+        identities = GnuPG.identities(tools=self.tools)
 
         if identity:
             # The user has specified an identity. Match it against the

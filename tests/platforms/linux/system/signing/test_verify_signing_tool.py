@@ -37,11 +37,11 @@ def test_verify_signing_tool_missing(
     """If the signing tool isn't installed, an error with install hints is raised."""
     first_app.packaging_format = format
     first_app.target_vendor_base = "debian"
-    package_command.tools[first_app].app_context.check_output.side_effect = (
-        subprocess.CalledProcessError(
-            returncode=1,
-            cmd=["sh", "-c", f"command -v {tool_name}"],
-        )
+    package_command.tools[
+        first_app
+    ].app_context.check_output.side_effect = subprocess.CalledProcessError(
+        returncode=1,
+        cmd=["sh", "-c", f"command -v {tool_name}"],
     )
 
     with pytest.raises(
@@ -59,11 +59,11 @@ def test_verify_signing_tool_missing_unknown_vendor(package_command, first_app):
     raised."""
     first_app.packaging_format = "deb"
     first_app.target_vendor_base = None
-    package_command.tools[first_app].app_context.check_output.side_effect = (
-        subprocess.CalledProcessError(
-            returncode=1,
-            cmd=["sh", "-c", "command -v debsigs"],
-        )
+    package_command.tools[
+        first_app
+    ].app_context.check_output.side_effect = subprocess.CalledProcessError(
+        returncode=1,
+        cmd=["sh", "-c", "command -v debsigs"],
     )
 
     with pytest.raises(

@@ -10,6 +10,14 @@ JANE = "5F0B07E0E2D05DD5611BF7A3F9FCBC4A7701B685"
 BOB = "B6C8B38C96FFE1E6A1C66C9F4D68E1A93D2F47FB"
 
 
+@pytest.fixture(autouse=True)
+def mock_identities(monkeypatch):
+    """Mock the GPG identities listing, so no identities are available by default."""
+    identities = mock.MagicMock(return_value={})
+    monkeypatch.setattr(GnuPG, "identities", identities)
+    return identities
+
+
 @pytest.fixture
 def package_command(dummy_console, first_app, tmp_path):
     command = LinuxSystemPackageCommand(
@@ -31,9 +39,5 @@ def package_command(dummy_console, first_app, tmp_path):
 
     # Provide an app context for the app.
     command.tools[first_app].app_context = mock.MagicMock(spec_set=Subprocess)
-
-    # Mock the GPG tool, so no identities are available by default.
-    command.tools.gnupg = mock.MagicMock(spec_set=GnuPG)
-    command.tools.gnupg.identities.return_value = {}
 
     return command

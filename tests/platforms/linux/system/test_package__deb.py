@@ -18,6 +18,14 @@ from briefcase.platforms.linux.system import (
 from ....utils import create_file
 
 
+@pytest.fixture(autouse=True)
+def mock_gpg_identities(monkeypatch):
+    """Mock the GPG identities listing, so no identities are available by default."""
+    identities = mock.MagicMock(return_value={})
+    monkeypatch.setattr(GnuPG, "identities", identities)
+    return identities
+
+
 @pytest.fixture
 def package_command(dummy_console, first_app, tmp_path):
     command = LinuxSystemPackageCommand(
@@ -41,10 +49,6 @@ def package_command(dummy_console, first_app, tmp_path):
     # Mock not using docker
     command.target_image = None
     command.extra_docker_build_args = []
-
-    # Mock the GPG tool, so no identities are available by default.
-    command.tools.gnupg = mock.MagicMock(spec_set=GnuPG)
-    command.tools.gnupg.identities.return_value = {}
 
     # Accept the default "Don't sign" selection for the signing menu.
     command.console.values = [""]

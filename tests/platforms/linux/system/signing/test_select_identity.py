@@ -5,9 +5,9 @@ from briefcase.exceptions import BriefcaseCommandError
 from .conftest import BOB, JANE
 
 
-def test_select_identity_by_fingerprint(package_command):
+def test_select_identity_by_fingerprint(package_command, mock_identities):
     """An identity can be selected by full fingerprint."""
-    package_command.tools.gnupg.identities.return_value = {
+    mock_identities.return_value = {
         JANE: "Jane Doe <jane@example.com>",
         BOB: "Bob Builder <bob@example.com>",
     }
@@ -19,9 +19,9 @@ def test_select_identity_by_fingerprint(package_command):
     assert package_command.console.prompts == []
 
 
-def test_select_identity_by_key_id(package_command):
+def test_select_identity_by_key_id(package_command, mock_identities):
     """An identity can be selected by key ID (a substring of the fingerprint)."""
-    package_command.tools.gnupg.identities.return_value = {
+    mock_identities.return_value = {
         JANE: "Jane Doe <jane@example.com>",
         BOB: "Bob Builder <bob@example.com>",
     }
@@ -33,9 +33,9 @@ def test_select_identity_by_key_id(package_command):
     assert package_command.console.prompts == []
 
 
-def test_select_identity_by_name(package_command):
+def test_select_identity_by_name(package_command, mock_identities):
     """An identity can be selected by name or email address."""
-    package_command.tools.gnupg.identities.return_value = {
+    mock_identities.return_value = {
         JANE: "Jane Doe <jane@example.com>",
         BOB: "Bob Builder <bob@example.com>",
     }
@@ -47,9 +47,9 @@ def test_select_identity_by_name(package_command):
     assert package_command.console.prompts == []
 
 
-def test_select_identity_invalid(package_command):
+def test_select_identity_invalid(package_command, mock_identities):
     """An identity that can't be found raises an error."""
-    package_command.tools.gnupg.identities.return_value = {
+    mock_identities.return_value = {
         JANE: "Jane Doe <jane@example.com>",
     }
 
@@ -74,9 +74,9 @@ def test_select_identity_no_identities(package_command):
     assert package_command.console.prompts == ["GPG Signing Identity [1]: "]
 
 
-def test_select_identity_single(package_command):
+def test_select_identity_single(package_command, mock_identities):
     """If only one identity is available, it is the default selection."""
-    package_command.tools.gnupg.identities.return_value = {
+    mock_identities.return_value = {
         JANE: "Jane Doe <jane@example.com>",
     }
     package_command.console.values = [""]
@@ -88,9 +88,9 @@ def test_select_identity_single(package_command):
     assert package_command.console.prompts == ["GPG Signing Identity [2]: "]
 
 
-def test_select_identity_multiple(package_command):
+def test_select_identity_multiple(package_command, mock_identities):
     """If multiple identities are available, the user is prompted to select one."""
-    package_command.tools.gnupg.identities.return_value = {
+    mock_identities.return_value = {
         JANE: "Jane Doe <jane@example.com>",
         BOB: "Bob Builder <bob@example.com>",
     }
@@ -105,9 +105,9 @@ def test_select_identity_multiple(package_command):
     assert package_command.console.prompts == ["GPG Signing Identity: "]
 
 
-def test_select_identity_dont_sign(package_command):
+def test_select_identity_dont_sign(package_command, mock_identities):
     """The user can opt out of signing from the menu."""
-    package_command.tools.gnupg.identities.return_value = {
+    mock_identities.return_value = {
         JANE: "Jane Doe <jane@example.com>",
         BOB: "Bob Builder <bob@example.com>",
     }
