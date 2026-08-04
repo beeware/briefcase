@@ -1,6 +1,6 @@
 import os
 import shutil
-import subprocess as subprocess
+import subprocess
 import sys
 from pathlib import Path
 

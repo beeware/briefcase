@@ -2,6 +2,7 @@ import os
 import shutil
 import sys
 import time
+from textwrap import dedent
 from unittest import mock
 
 import pytest
@@ -511,13 +512,12 @@ def test_min_os_version(
         )
         create_file(
             tmp_path / "base_path/build/first-app/macos/app/support/VERSIONS",
-            "\n".join(
-                [
-                    "Python version: 3.10.15",
-                    "Build: b11",
-                    "Min macOS version: 10.12",
-                    "",
-                ]
+            dedent(
+                """\
+                Python version: 3.10.15
+                Build: b11
+                Min macOS version: 10.12
+                """
             ),
         )
 
@@ -625,12 +625,11 @@ def test_default_min_os_version(
         )
         create_file(
             tmp_path / "base_path/build/first-app/macos/app/support/VERSIONS",
-            "\n".join(
-                [
-                    "Python version: 3.10.15",
-                    "Build: b11",
-                    "",
-                ]
+            dedent(
+                """\
+                Python version: 3.10.15
+                Build: b11
+                """
             ),
         )
     else:

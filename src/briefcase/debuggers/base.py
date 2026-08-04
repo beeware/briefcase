@@ -22,10 +22,7 @@ def _is_editable_pep610(dist_name: str) -> bool:
     The check requires, that the tool that installs briefcase support PEP610 (eg. pip
     since v20.1).
     """
-    try:
-        dist = metadata.distribution(dist_name)
-    except metadata.PackageNotFoundError:
-        raise
+    dist = metadata.distribution(dist_name)
 
     direct_url = dist.read_text("direct_url.json")
     if direct_url is None:
@@ -34,7 +31,8 @@ def _is_editable_pep610(dist_name: str) -> bool:
     try:
         data = json.loads(direct_url)
         return data.get("dir_info", {}).get("editable", False)
-    except Exception:
+    except Exception:  # noqa: BLE001
+        # Return False in the case of *any* error
         return False
 
 

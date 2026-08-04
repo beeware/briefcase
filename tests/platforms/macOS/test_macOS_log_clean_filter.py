@@ -8,10 +8,12 @@ from briefcase.platforms.macOS.filters import macOS_log_clean_filter
     [
         # macOS Logging preamble
         (
-            "Filtering the log data using "
-            '"senderImagePath == "/path/to/My App.app/Contents/MacOS/My App" '
-            'OR (processImagePath == "/path/to/My App.app/Contents/MacOS/My App" '
-            'AND senderImagePath == "/usr/lib/libffi.dylib")"',
+            (
+                "Filtering the log data using "
+                '"senderImagePath == "/path/to/My App.app/Contents/MacOS/My App" '
+                'OR (processImagePath == "/path/to/My App.app/Contents/MacOS/My App" '
+                'AND senderImagePath == "/usr/lib/libffi.dylib")"'
+            ),
             None,
         ),
         (
@@ -28,10 +30,12 @@ from briefcase.platforms.macOS.filters import macOS_log_clean_filter
             None,
         ),
         (
-            'Filtering the log data using "senderImagePath ENDSWITH "/Toga Test!" '
-            'OR (processImagePath ENDSWITH "/Toga Test!" '
-            'AND (senderImagePath ENDSWITH "-iphonesimulator.so" '
-            'OR senderImagePath ENDSWITH "-iphonesimulator.dylib"))"',
+            (
+                'Filtering the log data using "senderImagePath ENDSWITH "/Toga Test!" '
+                'OR (processImagePath ENDSWITH "/Toga Test!" '
+                'AND (senderImagePath ENDSWITH "-iphonesimulator.so" '
+                'OR senderImagePath ENDSWITH "-iphonesimulator.dylib"))"'
+            ),
             None,
         ),
         # Startup log
@@ -132,14 +136,18 @@ from briefcase.platforms.macOS.filters import macOS_log_clean_filter
         ),
         # Log content that contains `.so`
         (
-            "2022-11-14 13:21:15.341 Df My App[59972:780a15] (_ctypes.cpython-312-iphonesimulator.so) "
-            "A problem (foo.so) try to avoid it",
+            (
+                "2022-11-14 13:21:15.341 Df My App[59972:780a15] (_ctypes.cpython-312-iphonesimulator.so) "
+                "A problem (foo.so) try to avoid it"
+            ),
             ("A problem (foo.so) try to avoid it", True),
         ),
         # Log content that contains `.dylib`
         (
-            "2022-11-14 13:21:15.341 Df My App[59972:780a15] (_ctypes.cpython-312-iphonesimulator.dylib) "
-            "A problem (foo.dylib) try to avoid it",
+            (
+                "2022-11-14 13:21:15.341 Df My App[59972:780a15] (_ctypes.cpython-312-iphonesimulator.dylib) "
+                "A problem (foo.dylib) try to avoid it"
+            ),
             ("A problem (foo.dylib) try to avoid it", True),
         ),
     ],

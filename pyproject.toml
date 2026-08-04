@@ -94,6 +94,7 @@ dependencies = [
     "tenacity >= 8.0, < 10.0",
     "tomli >= 2.0, < 3.0; python_version <= '3.10'",
     "tomli_w >= 1.0, < 2.0",
+    "typing_extensions >= 4.6; python_version < '3.11'",
 ]
 
 [dependency-groups]
@@ -287,8 +288,17 @@ extend-select = [
 ]
 
 ignore = [
-    "SIM105",  # use `contextlib.suppress` (too opinionated)
-    "SIM108",  # replace if-else with ternary operator (too opinionated)
+    # PEP8 module naming conventions aren't appropriate
+    "N999",
+    # The SIM rules are *very* opinionated, and don't necessarily make for better code.
+    "SIM105",  # use `contextlib.suppress`
+    "SIM108",  # replace if-else with ternary operator
+    # These ignores should be fixed, if possible
+    "DTZ001",
+    "DTZ002",
+    "DTZ005",
+    "DTZ007",
+    "DTZ011",
 ]
 
 [tool.ruff.lint.isort]
@@ -297,9 +307,15 @@ ignore = [
 known-third-party = ["build"]
 
 [tool.ruff.lint.per-file-ignores]
+# debugger module *needs* to have debugpy trace imports.
+"debugger/src/briefcase_debugger/debugpy.py" = ["T100"]
+"debugger/tests/test_debugpy.py" = ["T100"]
 # E501: line too long, to be fixed in future changes
 "tests/integrations/*" = ["E501"]
 "tests/platforms/*" = ["E501"]
+# PERF402: list copies, to be fixed in future changes
+"tests/commands/run/test_LogFilter.py" = ["PERF402"]
+"tests/platforms/macOS/test_XcodeBuildFilter.py" = ["PERF402"]
 
 [tool.rumdl]
 flavor = "mkdocs"

@@ -224,7 +224,7 @@ def test_complex_plugin_config(linuxdeploy, mock_tools, tmp_path):
                 / "linuxdeploy-plugin-network.sh"
             )(url, download_path, role)
         else:
-            raise Exception("Unexpected download")
+            raise RuntimeError("Unexpected download")
 
     mock_tools.file.download.side_effect = mock_downloads
 

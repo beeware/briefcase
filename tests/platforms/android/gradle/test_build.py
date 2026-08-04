@@ -1,6 +1,7 @@
 import os
 import sys
 from subprocess import CalledProcessError
+from textwrap import dedent
 from unittest.mock import MagicMock, PropertyMock
 
 import httpx
@@ -103,16 +104,12 @@ def test_build_app(
         / "res"
         / "briefcase.xml"
     ).open(encoding="utf-8") as f:
-        assert (
-            f.read()
-            == "\n".join(
-                [
-                    "<resources>",
-                    '    <string name="main_module">first_app</string>',
-                    "</resources>",
-                ]
-            )
-            + "\n"
+        assert f.read() == dedent(
+            """\
+            <resources>
+                <string name="main_module">first_app</string>
+            </resources>
+            """
         )
 
     with (
@@ -185,16 +182,12 @@ def test_build_app_test_mode(
         / "res"
         / "briefcase.xml"
     ).open(encoding="utf-8") as f:
-        assert (
-            f.read()
-            == "\n".join(
-                [
-                    "<resources>",
-                    '    <string name="main_module">tests.first_app</string>',
-                    "</resources>",
-                ]
-            )
-            + "\n"
+        assert f.read() == dedent(
+            """\
+            <resources>
+                <string name="main_module">tests.first_app</string>
+            </resources>
+            """
         )
 
     with (
