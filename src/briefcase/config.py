@@ -676,11 +676,11 @@ class DraftAppConfig(AppConfig):
                 "may not contain any reserved words (like 'switch', or 'while')."
             )
 
-        for document_type_id, document_type in self.document_types.items():
+        for doc_type_id, doc_type in self.document_types.items():
             validate_document_type_config(
                 self.app_name,
-                document_type_id,
-                document_type,
+                doc_type_id,
+                doc_type,
             )
 
         self.install_options = validate_install_options_config(

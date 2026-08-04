@@ -943,8 +943,8 @@ class DockerAppContext(Tool):
 
         :returns: context manager to wrap the call to Popen/run/check_output()
         """
-        with self.tools.docker.x11_passthrough(subprocess_kwargs) as subprocess_kwargs:
-            yield subprocess_kwargs
+        with self.tools.docker.x11_passthrough(subprocess_kwargs) as docker_kwargs:
+            yield docker_kwargs
 
     def run(self, args: SubprocessArgsT, **kwargs) -> None:
         """Run a process inside a Docker container."""

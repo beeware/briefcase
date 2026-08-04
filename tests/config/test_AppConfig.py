@@ -479,7 +479,6 @@ def test_no_source_for_app():
         (True, False, True),
         (False, False, False),
         (None, False, True),
-        #
         (True, True, True),
         (False, True, False),
         (None, True, False),

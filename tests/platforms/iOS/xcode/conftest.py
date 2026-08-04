@@ -1,3 +1,4 @@
+from textwrap import dedent
 from unittest.mock import MagicMock
 
 import pytest
@@ -18,14 +19,13 @@ def first_app_generated(first_app_config, tmp_path):
         / "ios"
         / "xcode"
         / "briefcase.toml",
-        "\n".join(
-            [
-                "[paths]",
-                'app_packages_path="app_packages"',
-                'support_path="Support"',
-                'info_plist_path="Info.plist"',
-                "",
-            ],
+        dedent(
+            """\
+            [paths]
+            app_packages_path="app_packages"
+            support_path="Support"
+            info_plist_path="Info.plist"
+            """
         ),
     )
 

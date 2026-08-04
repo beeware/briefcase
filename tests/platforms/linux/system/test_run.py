@@ -2,6 +2,7 @@ import os
 import subprocess
 import sys
 from pathlib import Path
+from textwrap import dedent
 from unittest import mock
 
 import pytest
@@ -82,15 +83,16 @@ def run_command(dummy_console, tmp_path, first_app, monkeypatch):
 def mock_linux_env(run_command, tmp_path, monkeypatch):
     """Mock a linux system environment."""
     # Mock the freedesktop ID environment
-    os_release = "\n".join(
-        [
-            "ID=somevendor",
-            "VERSION_CODENAME=surprising",
-            "ID_LIKE=debian",
-        ]
-    )
     run_command.tools.platform.freedesktop_os_release = mock.MagicMock(
-        return_value=parse_freedesktop_os_release(os_release)
+        return_value=parse_freedesktop_os_release(
+            dedent(
+                """\
+                ID=somevendor
+                VERSION_CODENAME=surprising
+                ID_LIKE=debian
+                """
+            )
+        )
     )
 
     # Mock the glibc version
@@ -139,8 +141,10 @@ def test_supported_host_os(run_command, first_app, sub_kw, tmp_path):
     # The process was started
     run_command.tools.subprocess._subprocess.Popen.assert_called_with(
         [
-            f"{tmp_path / 'base_path/build/first-app/somevendor'}"
-            "/surprising/first-app-0.0.1/usr/bin/first-app"
+            (
+                f"{tmp_path / 'base_path/build/first-app/somevendor'}"
+                "/surprising/first-app-0.0.1/usr/bin/first-app"
+            )
         ],
         cwd=f"{tmp_path / 'home'}",
         stdout=subprocess.PIPE,

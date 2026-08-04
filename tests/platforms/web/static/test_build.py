@@ -1,6 +1,7 @@
 import shutil
 import subprocess
 import sys
+from textwrap import dedent
 from unittest import mock
 
 if sys.version_info >= (3, 11):  # pragma: no-cover-if-lt-py311
@@ -49,19 +50,23 @@ def test_build_app(build_command, first_app_generated, logging_level, tmp_path):
                     ("dependency/static/style.css", "span { margin: 10px; }\n"),
                     (
                         "dependency/deploy/config.toml",
-                        """
-implementation = "pyscript"
+                        dedent(
+                            """
+                            implementation = "pyscript"
 
-[pyscript]
-version = "2024.11.1"
-""",
+                            [pyscript]
+                            version = "2024.11.1"
+                            """
+                        ),
                     ),
                     (
                         "dependency/deploy/pyscript.toml",
-                        """
-existing-key-1 = "value-1"
-existing-key-2 = 2
-""",
+                        dedent(
+                            """
+                            existing-key-1 = "value-1"
+                            existing-key-2 = 2
+                            """
+                        ),
                     ),
                 ],
             )
@@ -150,96 +155,88 @@ existing-key-2 = 2
 
     # index.html has insertions
     with (bundle_path / "www/index.html").open(encoding="utf-8") as f:
-        assert (
-            f.read()
-            == "\n".join(
-                [
-                    "<!doctype html>",
-                    "<html>",
-                    "  <head>",
-                    "    <!--@@ head:start @@-->",
-                    "    <!--@@ head:end @@-->",
-                    "    <!--@@ head-python:start @@-->",
-                    "    <!--------------------------------------------------",
-                    "     * briefcase",
-                    "     -------------------------------------------------->",
-                    '    <script type="module">',
-                    "        // Hide the splash screen when the page is ready.",
-                    '        import { hooks } from "https://pyscript.net/'
-                    'releases/2024.11.1/core.js";',
-                    "        hooks.main.onReady.add(() => {",
-                    '            document.getElementById("briefcase-splash")'
-                    '.classList.add("hidden");',
-                    "        });",
-                    "    </script>",
-                    "",
-                    '    <link rel="stylesheet" href="https://pyscript.net/'
-                    'releases/2024.11.1/core.css">',
-                    '    <script type="module" src="https://pyscript.net/'
-                    'releases/2024.11.1/core.js"></script>',
-                    "    <!--@@ head-python:end @@-->",
-                    "  </head>",
-                    "  <body>",
-                    '    <div id="briefcase-splash"></div>',
-                    "",
-                    "    <!--@@ body-start:start @@-->",
-                    "    <!--@@ body-start:end @@-->",
-                    "",
-                    "    <!--@@ body-python:start @@-->",
-                    "    <!--------------------------------------------------",
-                    "     * briefcase",
-                    "     -------------------------------------------------->",
-                    '    <script type="py" async="false" config="pyscript.toml">',
-                    "        import runpy",
-                    "        result = runpy.run_module(",
-                    '            "first-app", run_name="__main__", alter_sys=True',
-                    "        )",
-                    "    </script>",
-                    "    <!--@@ body-python:end @@-->",
-                    "",
-                    "    <!--@@ body-end:start @@-->",
-                    "    <!--@@ body-end:end @@-->",
-                    "  </body>",
-                    "</html>",
-                ]
-            )
-            + "\n"
+        assert f.read() == dedent(
+            """\
+            <!doctype html>
+            <html>
+              <head>
+                <!--@@ head:start @@-->
+                <!--@@ head:end @@-->
+                <!--@@ head-python:start @@-->
+                <!--------------------------------------------------
+                 * briefcase
+                 -------------------------------------------------->
+                <script type="module">
+                    // Hide the splash screen when the page is ready.
+                    import { hooks } from "https://pyscript.net/"""
+            """releases/2024.11.1/core.js";
+                    hooks.main.onReady.add(() => {
+                        document.getElementById("briefcase-splash")"""
+            """.classList.add("hidden");
+                    });
+                </script>
+
+                <link rel="stylesheet" href="https://pyscript.net/"""
+            """releases/2024.11.1/core.css">
+                <script type="module" src="https://pyscript.net/"""
+            """releases/2024.11.1/core.js"></script>
+                <!--@@ head-python:end @@-->
+              </head>
+              <body>
+                <div id="briefcase-splash"></div>
+
+                <!--@@ body-start:start @@-->
+                <!--@@ body-start:end @@-->
+
+                <!--@@ body-python:start @@-->
+                <!--------------------------------------------------
+                 * briefcase
+                 -------------------------------------------------->
+                <script type="py" async="false" config="pyscript.toml">
+                    import runpy
+                    result = runpy.run_module(
+                        "first-app", run_name="__main__", alter_sys=True
+                    )
+                </script>
+                <!--@@ body-python:end @@-->
+
+                <!--@@ body-end:start @@-->
+                <!--@@ body-end:end @@-->
+              </body>
+            </html>
+            """
         )
 
     # style.css has been appended
     with (bundle_path / "www/static/css/style.css").open(encoding="utf-8") as f:
-        assert (
-            f.read()
-            == "\n".join(
-                [
-                    "",
-                    "#pyconsole {",
-                    "  display: None;",
-                    "}",
-                    "/**************************************************"
-                    "*****************",
-                    "******************** Wheel contributed styles "
-                    "********************/",
-                    "/*@@ css:start @@*/",
-                    "/**************************************************",
-                    " * dependency 1.2.3 (legacy static CSS: style.css)",
-                    " *************************************************/",
-                    "div { margin: 10px; }",
-                    "",
-                    "/**************************************************",
-                    " * first_app 1.2.3 (legacy static CSS: style.css)",
-                    " *************************************************/",
-                    "span { margin: 10px; }",
-                    "",
-                    "/**************************************************",
-                    " * other 1.2.3 (legacy static CSS: style.css)",
-                    " *************************************************/",
-                    "div { padding: 10px; }",
-                    "/*@@ css:end @@*/",
-                    "",
-                ]
-            )
-            + "\n"
+        assert f.read() == dedent(
+            """\
+
+            #pyconsole {
+              display: None;
+            }
+            /**************************************************"""
+            """*****************
+            ******************** Wheel contributed styles """
+            """********************/
+            /*@@ css:start @@*/
+            /**************************************************
+             * dependency 1.2.3 (legacy static CSS: style.css)
+             *************************************************/
+            div { margin: 10px; }
+
+            /**************************************************
+             * first_app 1.2.3 (legacy static CSS: style.css)
+             *************************************************/
+            span { margin: 10px; }
+
+            /**************************************************
+             * other 1.2.3 (legacy static CSS: style.css)
+             *************************************************/
+            div { padding: 10px; }
+            /*@@ css:end @@*/
+
+            """
         )
 
 
@@ -247,22 +244,15 @@ def test_build_app_custom_pyscript_toml(build_command, first_app_generated, tmp_
     """An app with extra pyscript.toml content can be written."""
     bundle_path = tmp_path / "base_path/build/first-app/web/static"
 
-    first_app_generated.extra_pyscript_toml_content = (
-        "\n".join(
-            [
-                # A custom top level key
-                'something = "custom"',
-                # A key overwriting something in the main namespace
-                'packages = ["something-custom"]',
-                # A table overwriting an existing value
-                "[splashscreen]",
-                "wiggle = false",
-                # A custom array of tables
-                "[[runtimes]]",
-                'src = "https://example.com/pyodide.js"',
-            ]
-        )
-        + "\n"
+    first_app_generated.extra_pyscript_toml_content = dedent(
+        """\
+        something = "custom"
+        packages = ["something-custom"]
+        [splashscreen]
+        wiggle = false
+        [[runtimes]]
+        src = "https://example.com/pyodide.js"
+        """
     )
 
     # Mock the side effect of invoking shutil
@@ -467,28 +457,24 @@ def test_build_app_no_requirements(build_command, first_app_generated, tmp_path)
 
     # style.css has been appended
     with (bundle_path / "www/static/css/style.css").open(encoding="utf-8") as f:
-        assert (
-            f.read()
-            == "\n".join(
-                [
-                    "",
-                    "#pyconsole {",
-                    "  display: None;",
-                    "}",
-                    "/*******************************************************"
-                    "************",
-                    "******************** Wheel contributed styles "
-                    "********************/",
-                    "/*@@ css:start @@*/",
-                    "/**************************************************",
-                    " * first_app 1.2.3 (legacy static CSS: style.css)",
-                    " *************************************************/",
-                    "span { margin: 10px; }",
-                    "/*@@ css:end @@*/",
-                    "",
-                ]
-            )
-            + "\n"
+        assert f.read() == dedent(
+            """\
+
+            #pyconsole {
+              display: None;
+            }
+            /**************************************************"""
+            """*****************
+            ******************** Wheel contributed styles """
+            """********************/
+            /*@@ css:start @@*/
+            /**************************************************
+             * first_app 1.2.3 (legacy static CSS: style.css)
+             *************************************************/
+            span { margin: 10px; }
+            /*@@ css:end @@*/
+
+            """
         )
 
 

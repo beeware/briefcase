@@ -610,7 +610,8 @@ class Console:
                 for func in self.log_file_extras:
                     try:
                         func()
-                    except Exception:
+                    except Exception:  # noqa: BLE001
+                        # Catch *any* error and report
                         self.error(traceback.format_exc())
 
         sanitized_env_vars = "\n".join(

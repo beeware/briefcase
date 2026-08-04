@@ -181,14 +181,16 @@ def test_run_app_simulator_booted(run_command, first_app_config, tmp_path):
                     "--style",
                     "compact",
                     "--predicate",
-                    'senderImagePath ENDSWITH "/First App"'
-                    'OR (processImagePath ENDSWITH "/First App"'
-                    '  AND (senderImagePath ENDSWITH "-iphonesimulator.so"'
-                    '    OR senderImagePath ENDSWITH "-iphonesimulator.dylib"'
-                    '    OR senderImagePath ENDSWITH "_ctypes.framework/_ctypes"'
-                    '    OR senderImagePath ENDSWITH "/Python"'
-                    "  )"
-                    ")",
+                    (
+                        'senderImagePath ENDSWITH "/First App"'
+                        'OR (processImagePath ENDSWITH "/First App"'
+                        '  AND (senderImagePath ENDSWITH "-iphonesimulator.so"'
+                        '    OR senderImagePath ENDSWITH "-iphonesimulator.dylib"'
+                        '    OR senderImagePath ENDSWITH "_ctypes.framework/_ctypes"'
+                        '    OR senderImagePath ENDSWITH "/Python"'
+                        "  )"
+                        ")"
+                    ),
                 ],
                 stdout=subprocess.PIPE,
                 stderr=subprocess.STDOUT,
@@ -318,14 +320,16 @@ def test_run_app_simulator_booted_underscore(
                     "--style",
                     "compact",
                     "--predicate",
-                    'senderImagePath ENDSWITH "/First App"'
-                    'OR (processImagePath ENDSWITH "/First App"'
-                    '  AND (senderImagePath ENDSWITH "-iphonesimulator.so"'
-                    '    OR senderImagePath ENDSWITH "-iphonesimulator.dylib"'
-                    '    OR senderImagePath ENDSWITH "_ctypes.framework/_ctypes"'
-                    '    OR senderImagePath ENDSWITH "/Python"'
-                    "  )"
-                    ")",
+                    (
+                        'senderImagePath ENDSWITH "/First App"'
+                        'OR (processImagePath ENDSWITH "/First App"'
+                        '  AND (senderImagePath ENDSWITH "-iphonesimulator.so"'
+                        '    OR senderImagePath ENDSWITH "-iphonesimulator.dylib"'
+                        '    OR senderImagePath ENDSWITH "_ctypes.framework/_ctypes"'
+                        '    OR senderImagePath ENDSWITH "/Python"'
+                        "  )"
+                        ")"
+                    ),
                 ],
                 stdout=subprocess.PIPE,
                 stderr=subprocess.STDOUT,
@@ -452,14 +456,16 @@ def test_run_app_with_passthrough(run_command, first_app_config, tmp_path):
                     "--style",
                     "compact",
                     "--predicate",
-                    'senderImagePath ENDSWITH "/First App"'
-                    'OR (processImagePath ENDSWITH "/First App"'
-                    '  AND (senderImagePath ENDSWITH "-iphonesimulator.so"'
-                    '    OR senderImagePath ENDSWITH "-iphonesimulator.dylib"'
-                    '    OR senderImagePath ENDSWITH "_ctypes.framework/_ctypes"'
-                    '    OR senderImagePath ENDSWITH "/Python"'
-                    "  )"
-                    ")",
+                    (
+                        'senderImagePath ENDSWITH "/First App"'
+                        'OR (processImagePath ENDSWITH "/First App"'
+                        '  AND (senderImagePath ENDSWITH "-iphonesimulator.so"'
+                        '    OR senderImagePath ENDSWITH "-iphonesimulator.dylib"'
+                        '    OR senderImagePath ENDSWITH "_ctypes.framework/_ctypes"'
+                        '    OR senderImagePath ENDSWITH "/Python"'
+                        "  )"
+                        ")"
+                    ),
                 ],
                 stdout=subprocess.PIPE,
                 stderr=subprocess.STDOUT,
@@ -593,14 +599,16 @@ def test_run_app_simulator_shut_down(
                     "--style",
                     "compact",
                     "--predicate",
-                    'senderImagePath ENDSWITH "/First App"'
-                    'OR (processImagePath ENDSWITH "/First App"'
-                    '  AND (senderImagePath ENDSWITH "-iphonesimulator.so"'
-                    '    OR senderImagePath ENDSWITH "-iphonesimulator.dylib"'
-                    '    OR senderImagePath ENDSWITH "_ctypes.framework/_ctypes"'
-                    '    OR senderImagePath ENDSWITH "/Python"'
-                    "  )"
-                    ")",
+                    (
+                        'senderImagePath ENDSWITH "/First App"'
+                        'OR (processImagePath ENDSWITH "/First App"'
+                        '  AND (senderImagePath ENDSWITH "-iphonesimulator.so"'
+                        '    OR senderImagePath ENDSWITH "-iphonesimulator.dylib"'
+                        '    OR senderImagePath ENDSWITH "_ctypes.framework/_ctypes"'
+                        '    OR senderImagePath ENDSWITH "/Python"'
+                        "  )"
+                        ")"
+                    ),
                 ],
                 stdout=subprocess.PIPE,
                 stderr=subprocess.STDOUT,
@@ -740,14 +748,16 @@ def test_run_app_simulator_shutting_down(run_command, first_app_config, tmp_path
                     "--style",
                     "compact",
                     "--predicate",
-                    'senderImagePath ENDSWITH "/First App"'
-                    'OR (processImagePath ENDSWITH "/First App"'
-                    '  AND (senderImagePath ENDSWITH "-iphonesimulator.so"'
-                    '    OR senderImagePath ENDSWITH "-iphonesimulator.dylib"'
-                    '    OR senderImagePath ENDSWITH "_ctypes.framework/_ctypes"'
-                    '    OR senderImagePath ENDSWITH "/Python"'
-                    "  )"
-                    ")",
+                    (
+                        'senderImagePath ENDSWITH "/First App"'
+                        'OR (processImagePath ENDSWITH "/First App"'
+                        '  AND (senderImagePath ENDSWITH "-iphonesimulator.so"'
+                        '    OR senderImagePath ENDSWITH "-iphonesimulator.dylib"'
+                        '    OR senderImagePath ENDSWITH "_ctypes.framework/_ctypes"'
+                        '    OR senderImagePath ENDSWITH "/Python"'
+                        "  )"
+                        ")"
+                    ),
                 ],
                 stdout=subprocess.PIPE,
                 stderr=subprocess.STDOUT,
@@ -1125,14 +1135,16 @@ def test_run_app_simulator_launch_failure(run_command, first_app_config, tmp_pat
                     "--style",
                     "compact",
                     "--predicate",
-                    'senderImagePath ENDSWITH "/First App"'
-                    'OR (processImagePath ENDSWITH "/First App"'
-                    '  AND (senderImagePath ENDSWITH "-iphonesimulator.so"'
-                    '    OR senderImagePath ENDSWITH "-iphonesimulator.dylib"'
-                    '    OR senderImagePath ENDSWITH "_ctypes.framework/_ctypes"'
-                    '    OR senderImagePath ENDSWITH "/Python"'
-                    "  )"
-                    ")",
+                    (
+                        'senderImagePath ENDSWITH "/First App"'
+                        'OR (processImagePath ENDSWITH "/First App"'
+                        '  AND (senderImagePath ENDSWITH "-iphonesimulator.so"'
+                        '    OR senderImagePath ENDSWITH "-iphonesimulator.dylib"'
+                        '    OR senderImagePath ENDSWITH "_ctypes.framework/_ctypes"'
+                        '    OR senderImagePath ENDSWITH "/Python"'
+                        "  )"
+                        ")"
+                    ),
                 ],
                 stdout=subprocess.PIPE,
                 stderr=subprocess.STDOUT,
@@ -1252,14 +1264,16 @@ def test_run_app_simulator_no_pid(run_command, first_app_config, tmp_path):
                     "--style",
                     "compact",
                     "--predicate",
-                    'senderImagePath ENDSWITH "/First App"'
-                    'OR (processImagePath ENDSWITH "/First App"'
-                    '  AND (senderImagePath ENDSWITH "-iphonesimulator.so"'
-                    '    OR senderImagePath ENDSWITH "-iphonesimulator.dylib"'
-                    '    OR senderImagePath ENDSWITH "_ctypes.framework/_ctypes"'
-                    '    OR senderImagePath ENDSWITH "/Python"'
-                    "  )"
-                    ")",
+                    (
+                        'senderImagePath ENDSWITH "/First App"'
+                        'OR (processImagePath ENDSWITH "/First App"'
+                        '  AND (senderImagePath ENDSWITH "-iphonesimulator.so"'
+                        '    OR senderImagePath ENDSWITH "-iphonesimulator.dylib"'
+                        '    OR senderImagePath ENDSWITH "_ctypes.framework/_ctypes"'
+                        '    OR senderImagePath ENDSWITH "/Python"'
+                        "  )"
+                        ")"
+                    ),
                 ],
                 stdout=subprocess.PIPE,
                 stderr=subprocess.STDOUT,
@@ -1381,14 +1395,16 @@ def test_run_app_simulator_non_integer_pid(run_command, first_app_config, tmp_pa
                     "--style",
                     "compact",
                     "--predicate",
-                    'senderImagePath ENDSWITH "/First App"'
-                    'OR (processImagePath ENDSWITH "/First App"'
-                    '  AND (senderImagePath ENDSWITH "-iphonesimulator.so"'
-                    '    OR senderImagePath ENDSWITH "-iphonesimulator.dylib"'
-                    '    OR senderImagePath ENDSWITH "_ctypes.framework/_ctypes"'
-                    '    OR senderImagePath ENDSWITH "/Python"'
-                    "  )"
-                    ")",
+                    (
+                        'senderImagePath ENDSWITH "/First App"'
+                        'OR (processImagePath ENDSWITH "/First App"'
+                        '  AND (senderImagePath ENDSWITH "-iphonesimulator.so"'
+                        '    OR senderImagePath ENDSWITH "-iphonesimulator.dylib"'
+                        '    OR senderImagePath ENDSWITH "_ctypes.framework/_ctypes"'
+                        '    OR senderImagePath ENDSWITH "/Python"'
+                        "  )"
+                        ")"
+                    ),
                 ],
                 stdout=subprocess.PIPE,
                 stderr=subprocess.STDOUT,
@@ -1491,14 +1507,16 @@ def test_run_app_test_mode(run_command, first_app_config, tmp_path):
                     "--style",
                     "compact",
                     "--predicate",
-                    'senderImagePath ENDSWITH "/First App"'
-                    'OR (processImagePath ENDSWITH "/First App"'
-                    '  AND (senderImagePath ENDSWITH "-iphonesimulator.so"'
-                    '    OR senderImagePath ENDSWITH "-iphonesimulator.dylib"'
-                    '    OR senderImagePath ENDSWITH "_ctypes.framework/_ctypes"'
-                    '    OR senderImagePath ENDSWITH "/Python"'
-                    "  )"
-                    ")",
+                    (
+                        'senderImagePath ENDSWITH "/First App"'
+                        'OR (processImagePath ENDSWITH "/First App"'
+                        '  AND (senderImagePath ENDSWITH "-iphonesimulator.so"'
+                        '    OR senderImagePath ENDSWITH "-iphonesimulator.dylib"'
+                        '    OR senderImagePath ENDSWITH "_ctypes.framework/_ctypes"'
+                        '    OR senderImagePath ENDSWITH "/Python"'
+                        "  )"
+                        ")"
+                    ),
                 ],
                 stdout=subprocess.PIPE,
                 stderr=subprocess.STDOUT,
@@ -1613,14 +1631,16 @@ def test_run_app_test_mode_with_passthrough(run_command, first_app_config, tmp_p
                     "--style",
                     "compact",
                     "--predicate",
-                    'senderImagePath ENDSWITH "/First App"'
-                    'OR (processImagePath ENDSWITH "/First App"'
-                    '  AND (senderImagePath ENDSWITH "-iphonesimulator.so"'
-                    '    OR senderImagePath ENDSWITH "-iphonesimulator.dylib"'
-                    '    OR senderImagePath ENDSWITH "_ctypes.framework/_ctypes"'
-                    '    OR senderImagePath ENDSWITH "/Python"'
-                    "  )"
-                    ")",
+                    (
+                        'senderImagePath ENDSWITH "/First App"'
+                        'OR (processImagePath ENDSWITH "/First App"'
+                        '  AND (senderImagePath ENDSWITH "-iphonesimulator.so"'
+                        '    OR senderImagePath ENDSWITH "-iphonesimulator.dylib"'
+                        '    OR senderImagePath ENDSWITH "_ctypes.framework/_ctypes"'
+                        '    OR senderImagePath ENDSWITH "/Python"'
+                        "  )"
+                        ")"
+                    ),
                 ],
                 stdout=subprocess.PIPE,
                 stderr=subprocess.STDOUT,
@@ -1783,14 +1803,16 @@ def test_run_app_debugger(run_command, first_app_generated, tmp_path, dummy_debu
                     "--style",
                     "compact",
                     "--predicate",
-                    'senderImagePath ENDSWITH "/First App"'
-                    'OR (processImagePath ENDSWITH "/First App"'
-                    '  AND (senderImagePath ENDSWITH "-iphonesimulator.so"'
-                    '    OR senderImagePath ENDSWITH "-iphonesimulator.dylib"'
-                    '    OR senderImagePath ENDSWITH "_ctypes.framework/_ctypes"'
-                    '    OR senderImagePath ENDSWITH "/Python"'
-                    "  )"
-                    ")",
+                    (
+                        'senderImagePath ENDSWITH "/First App"'
+                        'OR (processImagePath ENDSWITH "/First App"'
+                        '  AND (senderImagePath ENDSWITH "-iphonesimulator.so"'
+                        '    OR senderImagePath ENDSWITH "-iphonesimulator.dylib"'
+                        '    OR senderImagePath ENDSWITH "_ctypes.framework/_ctypes"'
+                        '    OR senderImagePath ENDSWITH "/Python"'
+                        "  )"
+                        ")"
+                    ),
                 ],
                 stdout=subprocess.PIPE,
                 stderr=subprocess.STDOUT,
