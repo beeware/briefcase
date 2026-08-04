@@ -881,6 +881,7 @@ def test_min_os_version_python_provided(
         allow_editable=False,
         require_binary=True,
         min_os_version="12.1",
+        extra_installer_args=[],
         install_path=bundle_path / "First App.app/Contents/Resources/app_packages",
         install_hint=mock.ANY,
     )
