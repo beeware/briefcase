@@ -4,7 +4,7 @@ from unittest import mock
 from briefcase.integrations.gnupg import GnuPG
 from briefcase.integrations.subprocess import Subprocess
 
-from .conftest import BOB, GPG_OUTPUT, JANE
+from .conftest import BOB, BOB_OUTPUT, GPG_OUTPUT, JANE, JANE_ALT_UID
 
 
 def test_identities(mock_tools):
@@ -26,13 +26,7 @@ def test_identities(mock_tools):
 def test_identities_multiple_keys(mock_tools):
     """Multiple secret keys are all returned, and subkey fingerprints are ignored."""
     mock_tools.subprocess = mock.MagicMock(spec_set=Subprocess)
-    mock_tools.subprocess.check_output.return_value = (
-        GPG_OUTPUT
-        + """sec:u:3072:1:4D68E1A93D2F47FB:1785485980:::u:::scESC:::::::
-fpr:::::::::B6C8B38C96FFE1E6A1C66C9F4D68E1A93D2F47FB:
-uid:u::::1785485980::89A2D4C6E5F8B3E7::Bob Builder <bob@example.com>::::::::::0:
-"""
-    )
+    mock_tools.subprocess.check_output.return_value = GPG_OUTPUT + BOB_OUTPUT
 
     identities = GnuPG.identities(tools=mock_tools)
 
@@ -45,11 +39,7 @@ uid:u::::1785485980::89A2D4C6E5F8B3E7::Bob Builder <bob@example.com>::::::::::0:
 def test_identities_multiple_uids(mock_tools):
     """If a key has multiple user IDs, the first is used."""
     mock_tools.subprocess = mock.MagicMock(spec_set=Subprocess)
-    mock_tools.subprocess.check_output.return_value = (
-        GPG_OUTPUT
-        + """uid:u::::1785485940::E70814C3C8DC3AC3940E8BFBA0288F0CE55F2120::Jane <jane@example.com>::::::::::0:
-"""
-    )
+    mock_tools.subprocess.check_output.return_value = GPG_OUTPUT + JANE_ALT_UID
 
     identities = GnuPG.identities(tools=mock_tools)
 

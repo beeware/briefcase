@@ -62,7 +62,7 @@ class GnuPG(Tool):
             if record[0] == "sec":
                 # A new secret key; the fingerprint of the key will follow.
                 fingerprint = None
-            elif record[0] == "fpr":
+            elif record[0] == "fpr":  # codespell:ignore fpr
                 # The fingerprint of the current secret key. The first UID for the
                 # key is used as the identity name.
                 if fingerprint is None:

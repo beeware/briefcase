@@ -376,6 +376,6 @@ unresolved-import = "ignore"
 [tool.codespell]
 skip = '.git,*.pdf,*.svg'
 # the way to make case-sensitive skips of words etc
-ignore-regex = '\b(?:Nd|fpr)\b'
+ignore-regex = '\bNd\b'
 # case-insensitive
 # ignore-words-list = ''
