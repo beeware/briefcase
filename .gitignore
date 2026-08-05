@@ -58,3 +58,4 @@ logs/
 .specify/workflow.yml
 /specs/
 /docs/superpowers/
+/.superpowers/
