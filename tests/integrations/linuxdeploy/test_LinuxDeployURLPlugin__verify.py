@@ -47,6 +47,7 @@ def test_verify(mock_tools, tmp_path):
         / "sometool"
         / "f3355f8e631ffc1abbb7afd37b36315f7846182ca2276c481fb9a43a7f4d239f",
         role="user-provided linuxdeploy plugin from URL",
+        expected_hash=None,
     )
 
 
@@ -69,6 +70,7 @@ def test_download_failure(mock_tools, tmp_path):
         / "sometool"
         / "f3355f8e631ffc1abbb7afd37b36315f7846182ca2276c481fb9a43a7f4d239f",
         role="user-provided linuxdeploy plugin from URL",
+        expected_hash=None,
     )
 
 

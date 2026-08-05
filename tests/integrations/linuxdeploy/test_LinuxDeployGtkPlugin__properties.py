@@ -35,3 +35,8 @@ def test_download_url(linuxdeploy_gtk_plugin):
         "master/linuxdeploy-plugin-gtk.sh"
     )
     assert_url_resolvable(linuxdeploy_gtk_plugin.download_url)
+
+
+def test_download_hash(linuxdeploy_gtk_plugin):
+    """The GTK plugin is downloaded from a branch, so it cannot be hash-verified."""
+    assert linuxdeploy_gtk_plugin.download_hash.startswith("unverified:")
