@@ -110,6 +110,78 @@ def test_support_revision(create_command, myapp):
     assert create_command.support_revision(myapp) == 42
 
 
+def test_support_package_hash(create_command, myapp):
+    """If the template publishes a support_package_hash, it is returned."""
+    bundle_path = create_command.bundle_path(myapp)
+    bundle_path.mkdir(parents=True)
+    with (bundle_path / "briefcase.toml").open("wb") as f:
+        index = {
+            "paths": {
+                "app_path": "path/to/app",
+                "app_packages_path": "path/to/app_packages",
+                "support_path": "path/to/support",
+                "support_revision": 42,
+                "support_package_hash": f"sha256:{'a' * 64}",
+            }
+        }
+        tomli_w.dump(index, f)
+
+    assert create_command.support_package_hash(myapp) == f"sha256:{'a' * 64}"
+
+
+def test_no_support_package_hash(create_command, myapp):
+    """If the template doesn't publish a support_package_hash, None is returned."""
+    bundle_path = create_command.bundle_path(myapp)
+    bundle_path.mkdir(parents=True)
+    with (bundle_path / "briefcase.toml").open("wb") as f:
+        index = {
+            "paths": {
+                "app_path": "path/to/app",
+                "app_packages_path": "path/to/app_packages",
+                "support_path": "path/to/support",
+                "support_revision": 42,
+            }
+        }
+        tomli_w.dump(index, f)
+
+    assert create_command.support_package_hash(myapp) is None
+
+
+def test_stub_binary_hash(create_command, myapp):
+    """If the template publishes a stub_binary_hash, it is returned."""
+    bundle_path = create_command.bundle_path(myapp)
+    bundle_path.mkdir(parents=True)
+    with (bundle_path / "briefcase.toml").open("wb") as f:
+        index = {
+            "paths": {
+                "app_path": "path/to/app",
+                "app_requirements_path": "path/to/requirements.txt",
+                "stub_binary_revision": 37,
+                "stub_binary_hash": f"sha256:{'b' * 64}",
+            }
+        }
+        tomli_w.dump(index, f)
+
+    assert create_command.stub_binary_hash(myapp) == f"sha256:{'b' * 64}"
+
+
+def test_no_stub_binary_hash(create_command, myapp):
+    """If the template doesn't publish a stub_binary_hash, None is returned."""
+    bundle_path = create_command.bundle_path(myapp)
+    bundle_path.mkdir(parents=True)
+    with (bundle_path / "briefcase.toml").open("wb") as f:
+        index = {
+            "paths": {
+                "app_path": "path/to/app",
+                "app_requirements_path": "path/to/requirements.txt",
+                "stub_binary_revision": 37,
+            }
+        }
+        tomli_w.dump(index, f)
+
+    assert create_command.stub_binary_hash(myapp) is None
+
+
 def test_cleanup_paths(create_command, myapp):
     bundle_path = create_command.bundle_path(myapp)
     bundle_path.mkdir(parents=True)
