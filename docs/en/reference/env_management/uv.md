@@ -16,7 +16,7 @@ To use uv as the environment manager for your app, add `env_manager = "uv"` to y
 
 ## Specifying requirements
 
-When `uv` is used as an environment manager, the values provided to `requires` and `test_requires` must be in a `pip`-compatible format. The following would be examples of legal specifiers:
+When `uv` is used as an environment manager, requirements are installed using `uv pip install`. The values provided to `requires` and `test_requires` must be in a `pip`-compatible format. The following would be examples of legal specifiers:
 
 - A bare package name:
   ```python

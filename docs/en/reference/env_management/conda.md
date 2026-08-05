@@ -20,7 +20,7 @@ The Conda environments that are created by Briefcase are installed using the `ra
 
 ## Specifying requirements
 
-When `conda` is used as an environment manager, the values provided to `requires` and `test_requires` must be in Conda-compatible format. The following would be examples of legal specifiers:
+When `conda` is used as an environment manager, requirements are installed using `conda install`. The values provided to `requires` and `test_requires` must be in Conda-compatible format. The following would be examples of legal specifiers:
 
 - Bare package name:
   ```python

@@ -16,7 +16,7 @@ However, you can *explicitly* specify the use of `venv` by adding `env_manager =
 
 ## Specifying requirements
 
-When `venv` is used as an environment manager, the values provided to `requires` and `test_requires` must be in a `pip`-compatible format. The following would be examples of legal specifiers:
+When `venv` is used as an environment manager, requirements are installed using `pip`. The values provided to `requires` and `test_requires` must be in a `pip`-compatible format. The following would be examples of legal specifiers:
 
 - A bare package name:
   ```python
