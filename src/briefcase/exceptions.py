@@ -133,6 +133,25 @@ class BadNetworkResourceError(BriefcaseCommandError):
         super().__init__(msg=f"Unable to download {url} (status code {status_code})")
 
 
+class CorruptDownloadError(BriefcaseCommandError):
+    def __init__(self, role, expected_hash, actual_hash):
+        self.role = role
+        self.expected_hash = expected_hash
+        self.actual_hash = actual_hash
+        super().__init__(
+            msg=(
+                f"Unable to download {role}; the downloaded content does not "
+                "match the expected hash.\n\n"
+                f"Expected: {expected_hash}\n"
+                f"Actual:   {actual_hash}\n\n"
+                "The download may have been corrupted or tampered with.\n"
+                "If this error occurs when you re-run the same Briefcase "
+                "command, and you do not believe you hare having network "
+                "difficulties, please report the problem."
+            )
+        )
+
+
 class MissingToolError(BriefcaseCommandError):
     def __init__(self, tool):
         self.tool = tool

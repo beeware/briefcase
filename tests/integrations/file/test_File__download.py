@@ -1,3 +1,4 @@
+import hashlib
 import os
 import platform
 import shutil
@@ -13,6 +14,8 @@ import pytest
 
 from briefcase.exceptions import (
     BadNetworkResourceError,
+    BriefcaseCommandError,
+    CorruptDownloadError,
     MissingNetworkResourceError,
     NetworkFailure,
 )
@@ -138,8 +141,33 @@ def file_perms() -> int:
         ),
     ],
 )
-def test_new_download_oneshot(mock_tools, file_perms, url, content_disposition):
+@pytest.mark.parametrize(
+    "hash_algorithm",
+    [
+        None,
+        "unverified",
+        "blake2b",
+        "md5",
+        "sha256",
+    ],
+)
+def test_new_download_oneshot(
+    mock_tools,
+    file_perms,
+    url,
+    content_disposition,
+    hash_algorithm,
+    capsys,
+):
     """If no content-length is provided, ``File`` downloadds the file all at once."""
+    content = b"all content"
+    expected_hash = {
+        None: None,
+        "unverified": "unverified:Don't check",
+        "blake2b": f"blake2b:{hashlib.blake2b(content).hexdigest()}",
+        "md5": f"md5:{hashlib.md5(content).hexdigest()}",
+        "sha256": f"sha256:{hashlib.sha256(content).hexdigest()}",
+    }[hash_algorithm]
     response = _make_httpx_response(
         method="GET",
         url=url,
@@ -151,7 +179,7 @@ def test_new_download_oneshot(mock_tools, file_perms, url, content_disposition):
             if content_disposition is not None
             else {}
         ),
-        stream=[b"all content"],
+        stream=[content],
     )
     mock_tools.httpx.stream.return_value.__enter__.return_value = response
 
@@ -159,6 +187,7 @@ def test_new_download_oneshot(mock_tools, file_perms, url, content_disposition):
     filename = mock_tools.file.download(
         url="https://example.com/support?useful=Yes",
         download_path=mock_tools.base_path / "downloads",
+        expected_hash=expected_hash,
     )
 
     # httpx.stream has been invoked, but content isn't iterated
@@ -192,20 +221,42 @@ def test_new_download_oneshot(mock_tools, file_perms, url, content_disposition):
     with (mock_tools.base_path / "downloads/something.zip").open(encoding="utf-8") as f:
         assert f.read() == "all content"
 
+    # Verify that the expected warnings are output
+    if hash_algorithm is None:
+        assert "will not be verified" in capsys.readouterr().out
+    else:
+        assert "will not be verified" not in capsys.readouterr().out
 
-def test_new_download_chunked(mock_tools, file_perms):
+
+@pytest.mark.parametrize(
+    "hash_algorithm",
+    [
+        None,
+        "unverified",
+        "blake2b",
+        "md5",
+        "sha256",
+    ],
+)
+def test_new_download_chunked(mock_tools, file_perms, hash_algorithm, capsys):
     """If a content-length is provided, ``File`` streams the response rather than
     downloading it all at once."""
+    chunks = [b"chunk-1;", b"chunk-2;", b"chunk-3;"]
+    content = b"".join(chunks)
+    expected_hash = {
+        None: None,
+        "unverified": "unverified:Don't check",
+        "blake2b": f"blake2b:{hashlib.blake2b(content).hexdigest()}",
+        "md5": f"md5:{hashlib.md5(content).hexdigest()}",
+        "sha256": f"sha256:{hashlib.sha256(content).hexdigest()}",
+    }[hash_algorithm]
+
     response = _make_httpx_response(
         method="GET",
         url="https://example.com/path/to/something.zip",
         status_code=200,
         headers={"content-length": "24"},
-        stream=[
-            b"chunk-1;",
-            b"chunk-2;",
-            b"chunk-3;",
-        ],
+        stream=chunks,
     )
     mock_tools.httpx.stream.return_value.__enter__.return_value = response
 
@@ -213,6 +264,7 @@ def test_new_download_chunked(mock_tools, file_perms):
     filename = mock_tools.file.download(
         url="https://example.com/support?useful=Yes",
         download_path=mock_tools.base_path,
+        expected_hash=expected_hash,
     )
 
     # httpx.stream has been invoked, and content is chunked.
@@ -247,17 +299,30 @@ def test_new_download_chunked(mock_tools, file_perms):
     with (mock_tools.base_path / "something.zip").open(encoding="utf-8") as f:
         assert f.read() == "chunk-1;chunk-2;chunk-3;"
 
+    # Verify that the expected warnings are output
+    if hash_algorithm is None:
+        assert "will not be verified" in capsys.readouterr().out
+    else:
+        assert "will not be verified" not in capsys.readouterr().out
 
-def test_already_downloaded(mock_tools):
+
+@pytest.mark.parametrize("hash_algorithm", [None, "unverified", "sha256"])
+def test_already_downloaded(mock_tools, hash_algorithm, capsys):
     """If the file already exists on disk, it isn't re-downloaded.
 
     The request is still made to derive the filename, but the content is never streamed.
     """
+    content = b"existing content"
+    expected_hash = {
+        None: None,
+        "unverified": "unverified:Don't check",
+        "sha256": f"sha256:{hashlib.sha256(content).hexdigest()}",
+    }[hash_algorithm]
 
     # Create an existing file
     existing_file = mock_tools.base_path / "something.zip"
     with existing_file.open("w", encoding="utf-8") as f:
-        f.write("existing content")
+        f.write(content.decode())
 
     url = "https://example.com/path/to/something.zip"
 
@@ -277,6 +342,7 @@ def test_already_downloaded(mock_tools):
     filename = mock_tools.file.download(
         url=url,
         download_path=mock_tools.base_path,
+        expected_hash=expected_hash,
     )
 
     # The GET request will have been made
@@ -300,6 +366,9 @@ def test_already_downloaded(mock_tools):
     mock_tools.shutil.move.assert_not_called()
     mock_tools.os.chmod.assert_not_called()
     mock_tools.os.remove.assert_not_called()
+
+    # No mention of verification
+    assert "will not be verified" not in capsys.readouterr().out
 
 
 def test_missing_resource(mock_tools):
@@ -600,3 +669,61 @@ def test_unknown_httpx_connectionerror(mock_tools):
     mock_tools.shutil.move.assert_not_called()
     mock_tools.os.chmod.assert_not_called()
     mock_tools.os.remove.assert_not_called()
+
+
+def test_new_download_hash_mismatch(mock_tools, file_perms):
+    """If expected_hash doesn't match the downloaded content, CorruptDownloadError is
+    raised, and the temp file is discarded without being cached."""
+    response = _make_httpx_response(
+        method="GET",
+        url="https://example.com/path/to/something.zip",
+        status_code=200,
+        headers={},
+        stream=[b"all content"],
+    )
+    mock_tools.httpx.stream.return_value.__enter__.return_value = response
+
+    with pytest.raises(
+        CorruptDownloadError,
+        match=r"does not match the expected hash",
+    ):
+        mock_tools.file.download(
+            url="https://example.com/support?useful=Yes",
+            download_path=mock_tools.base_path,
+            role="something",
+            expected_hash=f"sha256:{'0' * 64}",
+        )
+
+    # The temp file was never moved into the cache location
+    mock_tools.shutil.move.assert_not_called()
+    assert not (mock_tools.base_path / "something.zip").exists()
+
+    # The temp file was cleaned up
+    temp_filename = Path(mock_tools.os.remove.call_args_list[0].args[0])
+    assert temp_filename.parent == mock_tools.base_path
+    assert temp_filename.name.startswith("something.zip.")
+    mock_tools.os.remove.assert_called_with(str(temp_filename))
+
+
+@pytest.mark.parametrize(
+    "expected_hash",
+    [
+        "not-a-valid-format",
+        "sha256:",
+        ":abcd1234",
+        "not-a-real-algorithm:abcd1234",
+        # SHAKE algorithms are excluded because they're not constant length.
+        "shake_128:abcd1234",
+        "shake_256:abcd1234",
+    ],
+)
+def test_malformed_expected_hash(mock_tools, expected_hash):
+    """A malformed expected_hash raises an error before any network request."""
+    with pytest.raises(BriefcaseCommandError, match=r"Malformed expected hash"):
+        mock_tools.file.download(
+            url="https://example.com/something.zip",
+            download_path=mock_tools.base_path,
+            expected_hash=expected_hash,
+        )
+
+    mock_tools.httpx.stream.assert_not_called()

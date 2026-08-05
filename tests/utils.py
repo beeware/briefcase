@@ -170,7 +170,7 @@ def mock_file_download(filename, content, mode="w", role=None):
     :returns: a function that can act as a mock side effect for `file.download()`
     """
 
-    def _download_file(url, download_path, role):
+    def _download_file(url, download_path, role, expected_hash=None):
         return create_file(download_path / filename, content, mode=mode)
 
     return _download_file
@@ -186,7 +186,7 @@ def mock_zip_download(filename, content, role=None):
     :returns: a function that can act as a mock side effect for `file.download()`
     """
 
-    def _download_file(url, download_path, role):
+    def _download_file(url, download_path, role, expected_hash=None):
         return create_zip_file(download_path / filename, content)
 
     return _download_file
@@ -202,7 +202,7 @@ def mock_tgz_download(filename, content, role=None, links=None):
     :returns: a function that can act as a mock side effect for `file.download()`
     """
 
-    def _download_file(url, download_path, role):
+    def _download_file(url, download_path, role, expected_hash=None):
         return create_tgz_file(download_path / filename, content, links)
 
     return _download_file
