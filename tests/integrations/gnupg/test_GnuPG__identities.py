@@ -56,11 +56,3 @@ def test_identities_no_keys(mock_tools, gpg):
     )
 
     assert gpg.identities() == {}
-
-
-def test_identities_not_installed(mock_tools, gpg):
-    """If gpg isn't installed, no identities are returned."""
-    mock_tools.subprocess = mock.MagicMock(spec_set=Subprocess)
-    mock_tools.subprocess.check_output.side_effect = FileNotFoundError("gpg not found")
-
-    assert gpg.identities() == {}

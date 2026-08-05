@@ -49,9 +49,6 @@ class GnuPG(Tool):
         except subprocess.CalledProcessError:
             # gpg returns a non-zero exit code when no secret keys are available.
             return {}
-        except OSError:
-            # gpg isn't installed.
-            return {}
 
         identities = {}
         fingerprint = None
