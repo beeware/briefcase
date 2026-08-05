@@ -221,6 +221,9 @@ class TrackingCreateCommand(DummyCreateCommand):
     def cleanup_app_content(self, app):
         self.actions.append(("cleanup", app.app_name))
 
+    def install_managed_python_env(self, app, venv):
+        self.actions.append(("install-managed-python-env", app.app_name, venv.name))
+
 
 @pytest.fixture
 def create_command(dummy_console, tmp_path, mock_git, monkeypatch_tool_host_os):

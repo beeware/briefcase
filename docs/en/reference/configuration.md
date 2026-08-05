@@ -110,9 +110,10 @@ The contact email address for the person or organization responsible for the pro
 The environment manager to use when creating isolated Python environments and installing requirements. Must be one of:
 
 * `venv` - The `venv` package provided by the Python standard library
-* `uv` - The [uv](https://docs.astral.sh/uv/) environment manager
+* `uv` - The [uv](https://docs.astral.sh/uv/) environment manager (available for macOS, Windows, iOS, and Linux System apps that do *not* use Docker)
+* `conda` - The [Conda](https://docs.conda.io/) environment manager (available for macOS and Windows apps)
 
-Defaults to `venv`.
+Defaults to `venv`. For details on using different environment managers, see the [environment management reference][environment-management].
 
 #### `license_files`
 
@@ -261,9 +262,17 @@ A longer description of the purpose of the application. This description can be 
 
 A string describing the minimum OS version that the generated app will support. This value is only used on platforms that have a clear mechanism for specifying OS version compatibility; on the platforms where it *is* used, the interpretation of the value is platform specific. Refer to individual platform guides for details on how the provided value is interpreted.
 
+#### `primary_color`
+
+A hexadecimal RGB color value (e.g., `#008577`) to use as the primary color for the application. This setting is only used if the platform allows color modification, otherwise it is ignored.
+
+#### `primary_color_dark`
+
+A hexadecimal RGB color value (e.g., `#008577`) used alongside the primary color. This setting is only used if the platform allows color modification, otherwise it is ignored.
+
 #### `requirement_installer_args`
 
-A list of strings of arguments to pass to the requirement installer when building the app.
+A list of strings of arguments to pass to the environment manager when installing requirements for the app.
 
 Strings will be automatically transformed to absolute paths if they appear to be relative paths (i.e., starting with `./` or `../`) and resolve to an existing path relative to the app's configuration file. This is done to support build targets where the requirement installer command does not run with the same working directory as the configuration file.
 
@@ -273,7 +282,8 @@ The following examples will have the relative path transformed to an absolute on
 
 ```toml
 requirement_installer_args = ["--find-links", "./wheels"]
-
+```
+```toml
 requirement_installer_args = ["-f", "../wheels"]
 ```
 
@@ -281,31 +291,24 @@ On the other hand, the next two examples avoid it because the string starts with
 
 ```toml
 requirement_installer_args = ["-f./wheels"]
-
+```
+```toml
 requirement_installer_args = ["--find-links=./wheels"]
-
+```
+```toml
 requirement_installer_args = ["-f", "wheels"]
-
+```
+```toml
 requirement_installer_args = ["-f", "./this/path/does/not/exist"]
 ```
 
 /// admonition | Supported arguments
 
-The arguments supported in [`requirement_installer_args`][] depend on the requirement installer backend.
+The arguments supported in [`requirement_installer_args`][] depend on the [environment manager][environment-management] being used.
 
-The only currently supported requirement installer is `pip`. As such, the list should only contain valid arguments to the `pip install` command.
-
-Briefcase does not validate the inputs to this configuration, and will only report errors directly indicated by the requirement installer backend.
+Briefcase does not validate the inputs to this configuration, and will report the errors raised by the environment manager.
 
 ///
-
-#### `primary_color`
-
-A hexadecimal RGB color value (e.g., `#008577`) to use as the primary color for the application. This setting is only used if the platform allows color modification, otherwise it is ignored.
-
-#### `primary_color_dark`
-
-A hexadecimal RGB color value (e.g., `#008577`) used alongside the primary color. This setting is only used if the platform allows color modification, otherwise it is ignored.
 
 #### `requires`
 
@@ -313,32 +316,7 @@ A list of packages that must be packaged with this application.
 
 Unlike most other keys in a configuration file, [`requires`][] is a *cumulative* setting. If an application defines requirements at the global level, application level, *and* platform level, the final set of requirements will be the *concatenation* of requirements from all levels, starting from least to most specific.
 
-Any version specifier accepted by the [environment manager][env_manager] is legal. For example, if you're using `venv` or `uv`, the following would be legal:
-
-- Bare package name:
-  ```python
-  requires = ["pillow"]
-  ```
-
-- Package name with version specifier:
-  ```python
-  requires = ["pillow==9.1.0"]
-  ```
-
-- Git repository:
-  ```python
-  requires = ["git+https://github.com/beeware/briefcase.git"]
-  ```
-
-- Local directory:
-  ```python
-  requires = ["mysrc/myapp"]
-  ```
-
-- Local wheel file:
-  ```python
-  requires = ["fullpath/wheelfile.whl"]
-  ```
+The format for specifying requirements is determined by the [environment manager][env_manager] that is in use. For details on the format for specifying requirements, see the [environment management reference][environment-management].
 
 #### `revision`
 
@@ -368,11 +346,13 @@ A file path or URL pointing at a tarball containing a Python support package. (i
 
 If this setting is not provided, Briefcase will use the default support package for the platform.
 
+The setting will be ignored if the app's environment manager is responsible for providing Python (e.g., Conda).
+
 #### `support_revision`
 
 The specific revision of a support package that should be used. By default, Briefcase will use the support package revision nominated by the application template. If you specify a support revision, that will override the revision nominated by the application template.
 
-If you specify an explicit support package (either as a URL or a file path), this argument is ignored.
+This argument will be ignored if you specify an explicit support package (either as a URL or a file path), or if the app's environment manager is responsible for providing Python (e.g., Conda).
 
 #### `supported`
 
@@ -396,7 +376,7 @@ A list of packages that are required for the test suite to run.
 
 Unlike most other keys in a configuration file, [`test_requires`][] is a *cumulative* setting. If an application defines requirements at the global level, application level, *and* platform level, the final set of requirements will be the *concatenation* of requirements from all levels, starting from least to most specific.
 
-See [`requires`][] for examples.
+The format for specifying requirements is determined by the [environment manager][env_manager] that is in use. For details on the format for specifying requirements, see the [environment management reference][environment-management].
 
 #### `test_sources`
 

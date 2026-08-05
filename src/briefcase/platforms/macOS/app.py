@@ -13,6 +13,7 @@ from briefcase.commands import (
     UpdateCommand,
 )
 from briefcase.config import FinalizedAppConfig
+from briefcase.integrations.virtual_environment import VirtualEnvironment
 from briefcase.platforms.macOS import (
     SigningIdentity,
     macOSCreateMixin,
@@ -86,6 +87,22 @@ class macOSAppCreateCommand(macOSAppMixin, macOSCreateMixin, CreateCommand):
         # macOS will cache application icons. Touching the .app folder flushes the icon
         # cache for the app, ensuring the current icon is loaded.
         self.binary_path(app).touch(exist_ok=True)
+
+    def install_managed_python_env(
+        self,
+        app: FinalizedAppConfig,
+        venv: VirtualEnvironment,
+    ):
+        """Copy the managed Python environment into the app bundle."""
+        runtime_support_path = self.support_path(app, runtime=True)
+        if runtime_support_path.is_dir():
+            self.tools.shutil.rmtree(runtime_support_path)
+
+        self.tools.shutil.copytree(
+            venv.venv_path,
+            runtime_support_path,
+            symlinks=True,
+        )
 
 
 class macOSAppUpdateCommand(macOSAppCreateCommand, UpdateCommand):

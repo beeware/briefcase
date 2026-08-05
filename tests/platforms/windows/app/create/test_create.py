@@ -8,6 +8,8 @@ from packaging.version import Version
 from briefcase.exceptions import BriefcaseCommandError, UnsupportedHostError
 from briefcase.platforms.windows.app import WindowsAppCreateCommand
 
+from .....utils import create_file
+
 
 @pytest.fixture
 def create_command(dummy_console, tmp_path):
@@ -375,3 +377,27 @@ def test_target_windows_build(create_command, first_app_templated):
         "briefcase": {"target_windows_build": 10240}
     }
     assert create_command.target_windows_build(first_app_templated) == 10240
+
+
+def test_install_managed_python_env(
+    create_command,
+    mock_venv,
+    first_app_templated,
+    base_path,
+):
+    """A managed python environment will be copied into the final app."""
+    # Create some mock content in the virtual environment
+    create_file(base_path / "mock-venv/base.txt", "Top level file")
+    create_file(base_path / "mock-venv/DLLs/python.dll", "A Python DLL")
+    create_file(base_path / "mock-venv/Lib/site-packages/test.py", "Stdlib")
+
+    # Install the managed Python environment
+    create_command.install_managed_python_env(first_app_templated, mock_venv)
+
+    # The managed environment was copied to the final app.
+    # Deep directory structure is preserved.
+    app_path = create_command.bundle_path(first_app_templated) / "src"
+
+    assert (app_path / "base.txt").exists()
+    assert (app_path / "DLLs/python.dll").exists()
+    assert (app_path / "Lib/site-packages/test.py").exists()
