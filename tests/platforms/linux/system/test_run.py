@@ -139,20 +139,13 @@ def test_supported_host_os(run_command, first_app, sub_kw, tmp_path):
     run_command()
 
     # The process was started
-    binary_path = os.fsdecode(
-        tmp_path
-        / "base_path"
-        / "build"
-        / "first-app"
-        / "somevendor"
-        / "surprising"
-        / "first-app-0.0.1"
-        / "usr"
-        / "bin"
-        / "first-app"
-    )
     run_command.tools.subprocess._subprocess.Popen.assert_called_with(
-        [binary_path],
+        [
+            str(
+                tmp_path / "base_path/build/first-app/somevendor/surprising/"
+                "first-app-0.0.1/usr/bin/first-app"
+            )
+        ],
         cwd=f"{tmp_path / 'home'}",
         stdout=subprocess.PIPE,
         stderr=subprocess.STDOUT,
@@ -258,20 +251,16 @@ def test_run_gui_app(run_command, first_app, sub_kw, tmp_path):
     run_command.run_app(first_app, passthrough=[])
 
     # The process was started
-    binary_path = os.fsdecode(
-        tmp_path
-        / "base_path"
-        / "build"
-        / "first-app"
-        / "somevendor"
-        / "surprising"
-        / "first-app-0.0.1"
-        / "usr"
-        / "bin"
-        / "first-app"
-    )
     run_command.tools.subprocess._subprocess.Popen.assert_called_with(
-        [binary_path],
+        [
+            os.fsdecode(
+                tmp_path
+                / (
+                    "base_path/build/first-app/somevendor/surprising/"
+                    "first-app-0.0.1/usr/bin/first-app"
+                )
+            )
+        ],
         cwd=os.fsdecode(tmp_path / "home"),
         stdout=subprocess.PIPE,
         stderr=subprocess.STDOUT,
@@ -304,20 +293,18 @@ def test_run_gui_app_passthrough(run_command, first_app, sub_kw, tmp_path):
     run_command.run_app(first_app, passthrough=["foo", "--bar"])
 
     # The process was started
-    binary_path = os.fsdecode(
-        tmp_path
-        / "base_path"
-        / "build"
-        / "first-app"
-        / "somevendor"
-        / "surprising"
-        / "first-app-0.0.1"
-        / "usr"
-        / "bin"
-        / "first-app"
-    )
     run_command.tools.subprocess._subprocess.Popen.assert_called_with(
-        [binary_path, "foo", "--bar"],
+        [
+            os.fsdecode(
+                tmp_path
+                / (
+                    "base_path/build/first-app/somevendor/surprising/"
+                    "first-app-0.0.1/usr/bin/first-app"
+                )
+            ),
+            "foo",
+            "--bar",
+        ],
         cwd=os.fsdecode(tmp_path / "home"),
         stdout=subprocess.PIPE,
         stderr=subprocess.STDOUT,
@@ -350,20 +337,16 @@ def test_run_gui_app_failed(run_command, first_app, sub_kw, tmp_path):
         run_command.run_app(first_app, passthrough=[])
 
     # The run command was still invoked
-    binary_path = os.fsdecode(
-        tmp_path
-        / "base_path"
-        / "build"
-        / "first-app"
-        / "somevendor"
-        / "surprising"
-        / "first-app-0.0.1"
-        / "usr"
-        / "bin"
-        / "first-app"
-    )
     run_command.tools.subprocess._subprocess.Popen.assert_called_with(
-        [binary_path],
+        [
+            os.fsdecode(
+                tmp_path
+                / (
+                    "base_path/build/first-app/somevendor/surprising/"
+                    "first-app-0.0.1/usr/bin/first-app"
+                )
+            )
+        ],
         cwd=os.fsdecode(tmp_path / "home"),
         stdout=subprocess.PIPE,
         stderr=subprocess.STDOUT,
@@ -386,21 +369,15 @@ def test_run_console_app(run_command, first_app, tmp_path):
     run_command.run_app(first_app, passthrough=[])
 
     # The process was started
-    binary_path = os.fsdecode(
-        tmp_path
-        / "base_path"
-        / "build"
-        / "first-app"
-        / "somevendor"
-        / "surprising"
-        / "first-app-0.0.1"
-        / "usr"
-        / "bin"
-        / "first-app"
-    )
     assert run_command.tools.subprocess.run.mock_calls == [
         mock.call(
-            [binary_path],
+            [
+                tmp_path
+                / (
+                    "base_path/build/first-app/somevendor/surprising/"
+                    "first-app-0.0.1/usr/bin/first-app"
+                )
+            ],
             cwd=tmp_path / "home",
             bufsize=1,
             stream_output=False,
@@ -429,8 +406,8 @@ def test_run_console_app_passthrough(run_command, first_app, tmp_path):
             [
                 tmp_path
                 / (
-                    "base_path/build/first-app/somevendor/"
-                    "surprising/first-app-0.0.1/usr/bin/first-app"
+                    "base_path/build/first-app/somevendor/surprising/"
+                    "first-app-0.0.1/usr/bin/first-app"
                 ),
                 "foo",
                 "--bar",
@@ -464,8 +441,8 @@ def test_run_console_app_failed(run_command, first_app, sub_kw, tmp_path):
             [
                 tmp_path
                 / (
-                    "base_path/build/first-app/somevendor/"
-                    "surprising/first-app-0.0.1/usr/bin/first-app"
+                    "base_path/build/first-app/somevendor/surprising/"
+                    "first-app-0.0.1/usr/bin/first-app"
                 )
             ],
             cwd=tmp_path / "home",
@@ -625,28 +602,21 @@ def test_run_app_test_mode(
     run_command.run_app(first_app, passthrough=[])
 
     # The process was started
-    binary_path = os.fsdecode(
-        tmp_path
-        / "base_path"
-        / "build"
-        / "first-app"
-        / "somevendor"
-        / "surprising"
-        / "first-app-0.0.1"
-        / "usr"
-        / "bin"
-        / "first-app"
-    )
     run_command.tools.subprocess._subprocess.Popen.assert_called_with(
-        [binary_path],
+        [
+            os.fsdecode(
+                tmp_path
+                / (
+                    "base_path/build/first-app/somevendor/surprising/"
+                    "first-app-0.0.1/usr/bin/first-app"
+                )
+            )
+        ],
         cwd=os.fsdecode(tmp_path / "home"),
         stdout=subprocess.PIPE,
         stderr=subprocess.STDOUT,
         bufsize=1,
-        env={
-            "ENVVAR": "Value",
-            "BRIEFCASE_MAIN_MODULE": "tests.first_app",
-        },
+        env={"ENVVAR": "Value", "BRIEFCASE_MAIN_MODULE": "tests.first_app"},
         **sub_kw,
     )
 
@@ -764,28 +734,23 @@ def test_run_app_test_mode_with_args(
     )
 
     # The process was started
-    binary_path = os.fsdecode(
-        tmp_path
-        / "base_path"
-        / "build"
-        / "first-app"
-        / "somevendor"
-        / "surprising"
-        / "first-app-0.0.1"
-        / "usr"
-        / "bin"
-        / "first-app"
-    )
     run_command.tools.subprocess._subprocess.Popen.assert_called_with(
-        [binary_path, "foo", "--bar"],
+        [
+            os.fsdecode(
+                tmp_path
+                / (
+                    "base_path/build/first-app/somevendor/surprising/"
+                    "first-app-0.0.1/usr/bin/first-app"
+                )
+            ),
+            "foo",
+            "--bar",
+        ],
         cwd=os.fsdecode(tmp_path / "home"),
         stdout=subprocess.PIPE,
         stderr=subprocess.STDOUT,
         bufsize=1,
-        env={
-            "ENVVAR": "Value",
-            "BRIEFCASE_MAIN_MODULE": "tests.first_app",
-        },
+        env={"ENVVAR": "Value", "BRIEFCASE_MAIN_MODULE": "tests.first_app"},
         **sub_kw,
     )
 
