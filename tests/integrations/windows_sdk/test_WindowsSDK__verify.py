@@ -52,7 +52,6 @@ def setup_winsdk_install(
     sdk_path = base_path / "win_sdk"
     sdk_ver = version
 
-    # Extract the repeated path to keep lines short and clean
     bin_dir = sdk_path / "bin" / f"{sdk_ver}.0" / arch
     bin_dir.mkdir(parents=True, exist_ok=True)
 

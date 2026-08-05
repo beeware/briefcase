@@ -92,8 +92,7 @@ def test_existing_system_image(mock_tools, android_sdk):
         "  -------                                 | ------- | "
         "-------                        | -------\n"
         "  system-images;android-31;default;x86_64 | 5       | "
-        "Intel x86_64 Atom System Image | "
-        "system-images/android-31/default/x86_64\n"
+        "Intel x86_64 Atom System Image | system-images/android-31/default/x86_64\n"
     )
 
     # Verify the system image that we already have

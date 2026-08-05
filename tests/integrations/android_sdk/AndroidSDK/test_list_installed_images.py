@@ -15,8 +15,7 @@ def test_list_installed_system_images(mock_tools, android_sdk):
         "  -------                                 | ------- | "
         "-------                        | -------\n"
         "  system-images;android-31;default;x86_64 | 5       | "
-        "Intel x86_64 Atom System Image | "
-        "system-images/android-31/default/x86_64\n"
+        "Intel x86_64 Atom System Image | system-images/android-31/default/x86_64\n"
         "  emulator                                | 35.4.9  | "
         "Android Emulator               | emulator\n"
     )

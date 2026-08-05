@@ -597,8 +597,7 @@ def test_x11_passthrough_xauth_fails(mock_tools, in_kwargs, out_kwargs, capsys):
 
     # User is warned that xauth failed
     assert capsys.readouterr().out == (
-        "An X11 authentication database could not be created "
-        "for the display.\n"
+        "An X11 authentication database could not be created for the display.\n"
         "\n"
         "Briefcase will proceed, but if access to the display "
         "is rejected, this may be why.\n"
