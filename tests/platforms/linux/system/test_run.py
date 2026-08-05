@@ -317,7 +317,7 @@ def test_run_gui_app_passthrough(run_command, first_app, sub_kw, tmp_path):
         / "first-app"
     )
     run_command.tools.subprocess._subprocess.Popen.assert_called_with(
-        [binary_path],
+        [binary_path, "foo", "--bar"],
         cwd=os.fsdecode(tmp_path / "home"),
         stdout=subprocess.PIPE,
         stderr=subprocess.STDOUT,
@@ -777,7 +777,7 @@ def test_run_app_test_mode_with_args(
         / "first-app"
     )
     run_command.tools.subprocess._subprocess.Popen.assert_called_with(
-        [binary_path],
+        [binary_path, "foo", "--bar"],
         cwd=os.fsdecode(tmp_path / "home"),
         stdout=subprocess.PIPE,
         stderr=subprocess.STDOUT,
