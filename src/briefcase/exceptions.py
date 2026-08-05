@@ -140,14 +140,13 @@ class CorruptDownloadError(BriefcaseCommandError):
         self.actual_hash = actual_hash
         super().__init__(
             msg=(
-                f"Unable to download {role}; the downloaded content does not "
-                "match the expected hash.\n\n"
-                f"Expected: {expected_hash}\n"
-                f"Actual:   {actual_hash}\n\n"
+                f"Unable to download {role}; the downloaded content does not\n"
+                "match the expected hash.\n"
+                "\n"
+                f"    Expected: {expected_hash}\n"
+                f"    Actual:   {actual_hash}\n"
+                "\n"
                 "The download may have been corrupted or tampered with.\n"
-                "If this error occurs when you re-run the same Briefcase "
-                "command, and you do not believe you hare having network "
-                "difficulties, please report the problem."
             )
         )
 

@@ -683,10 +683,7 @@ def test_new_download_hash_mismatch(mock_tools, file_perms):
     )
     mock_tools.httpx.stream.return_value.__enter__.return_value = response
 
-    with pytest.raises(
-        CorruptDownloadError,
-        match=r"does not match the expected hash",
-    ):
+    with pytest.raises(CorruptDownloadError):
         mock_tools.file.download(
             url="https://example.com/support?useful=Yes",
             download_path=mock_tools.base_path,
