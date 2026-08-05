@@ -35,5 +35,5 @@ BOB_OUTPUT += "\n"
 
 JANE_ALT_UID = (
     "uid:u::::1785485940::E70814C3C8DC3AC3940E8BFBA0288F0CE55F2120::"
-    "Jane <jane@example.com>::::::::::0:\n"
+    "Jane's secret alternate identity <jane@example.com>::::::::::0:\n"
 )

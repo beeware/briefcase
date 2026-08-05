@@ -35,16 +35,14 @@ class GnuPG(Tool):
         tools.gnupg = gpg
         return gpg
 
-    @classmethod
-    def identities(cls, tools: ToolCache) -> dict[str, str]:
+    def identities(self) -> dict[str, str]:
         """Obtain a set of valid GPG signing identities.
 
-        :param tools: ToolCache of available tools
         :returns: A dictionary of the GPG signing identities available on the system,
             keyed by fingerprint, with the primary user ID as the value.
         """
         try:
-            output = tools.subprocess.check_output(
+            output = self.tools.subprocess.check_output(
                 ["gpg", "--list-secret-keys", "--with-colons"],
                 quiet=1,
             )

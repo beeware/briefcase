@@ -1120,7 +1120,10 @@ class LinuxSystemSigningMixin(_MixinBase):
         :returns: The final identity to use, or `None` if no identity is
             available and no identity was specified.
         """
-        identities = GnuPG.identities(tools=self.tools)
+        # Verify that GnuPG is available before listing the identities it can
+        # provide; if it has already been verified, this is a no-op.
+        GnuPG.verify(tools=self.tools)
+        identities = self.tools.gnupg.identities()
 
         if identity:
             # The user has specified an identity. Match it against the
@@ -1215,9 +1218,9 @@ or
         :param identity: The GPG signing identity to use to sign the package.
             This can be a fingerprint, key ID, or the name/email address of an
             identity. If unspecified, the identity will be determined from the
-            identities available on the system. Ignored if ``adhoc_sign`` is
+            identities available on the system. Ignored if `adhoc_sign` is
             True.
-        :param adhoc_sign: If ``True``, the package will not be signed.
+        :param adhoc_sign: If `True`, the package will not be signed.
         """
         app = cast(LinuxSystemAppConfig, app)
 
