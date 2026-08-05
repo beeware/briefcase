@@ -4,27 +4,19 @@ from unittest import mock
 import pytest
 
 from briefcase.exceptions import BriefcaseCommandError
-from briefcase.integrations.gnupg import GnuPG
 from briefcase.integrations.subprocess import Subprocess
 from briefcase.platforms.linux.system import LinuxSystemPackageCommand
 
 
-@pytest.fixture(autouse=True)
-def mock_gpg_identities(monkeypatch):
-    """Mock the GPG identities listing, so no identities are available by default."""
-    identities = mock.MagicMock(return_value={})
-    monkeypatch.setattr(GnuPG, "identities", identities)
-    return identities
-
-
 @pytest.fixture
-def package_command(monkeypatch, dummy_console, first_app, tmp_path):
+def package_command(mock_tools, dummy_console, first_app, tmp_path):
     command = LinuxSystemPackageCommand(
         console=dummy_console,
+        tools=mock_tools,
         base_path=tmp_path / "base_path",
         data_path=tmp_path / "briefcase",
     )
-    command.tools.home_path = tmp_path / "home"
+    mock_tools.host_os = "Linux"
 
     # Run outside docker for these tests.
     command.target_image = None
@@ -173,7 +165,7 @@ def test_unknown_packaging_format(package_command, first_app):
         package_command.verify_app_tools(first_app)
 
 
-def test_package_deb_app(package_command, first_app):
+def test_package_deb_app(package_command, first_app, mock_gpg):
     """A debian app can be packaged."""
     # Set the packaging format
     first_app.packaging_format = "deb"
@@ -191,7 +183,7 @@ def test_package_deb_app(package_command, first_app):
     package_command._package_deb.assert_called_once_with(first_app)
 
 
-def test_package_rpm_app(package_command, first_app):
+def test_package_rpm_app(package_command, first_app, mock_gpg):
     """A Red Hat app can be packaged."""
     # Set the packaging format
     first_app.packaging_format = "rpm"
@@ -209,7 +201,7 @@ def test_package_rpm_app(package_command, first_app):
     package_command._package_rpm.assert_called_once_with(first_app)
 
 
-def test_package_pkg_app(package_command, first_app):
+def test_package_pkg_app(package_command, first_app, mock_gpg):
     """An Arch app can be packaged."""
     # Set the packaging format
     first_app.packaging_format = "pkg"
@@ -227,7 +219,7 @@ def test_package_pkg_app(package_command, first_app):
     package_command._package_pkg.assert_called_once_with(first_app)
 
 
-def test_package_unknown_format(package_command, first_app):
+def test_package_unknown_format(package_command, first_app, mock_gpg):
     """Unknown/unsupported packaging formats raise an error."""
     # Set the packaging format
     first_app.packaging_format = "unknown"
