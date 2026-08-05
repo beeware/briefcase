@@ -310,9 +310,6 @@ known-third-party = ["build"]
 # debugger module *needs* to have debugpy trace imports.
 "debugger/src/briefcase_debugger/debugpy.py" = ["T100"]
 "debugger/tests/test_debugpy.py" = ["T100"]
-# E501: line too long, to be fixed in future changes # fixed
-#"tests/integrations/*" = ["E501"]
-#"tests/platforms/*" = ["E501"]
 # PERF402: list copies, to be fixed in future changes
 "tests/commands/run/test_LogFilter.py" = ["PERF402"]
 "tests/platforms/macOS/test_XcodeBuildFilter.py" = ["PERF402"]
