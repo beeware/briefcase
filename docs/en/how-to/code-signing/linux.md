@@ -12,7 +12,7 @@ If you don't already have a GPG key, you can create one with:
 $ gpg --full-generate-key
 ```
 
-You will be prompted to select a key type, key size and expiry date, and to provide a name and email address that will identify the key. If possible, use an ECC key based on Curve 25519 (an `ed25519` signing key), which is the default in recent GnuPG versions and produces smaller, faster signatures; if you need to support older tools that don't understand ECC keys, generate an RSA key of at least 4096 bits instead. The email address should be an address you control, as users will use it (along with your public key) to identify that the package really came from you.
+You will be prompted to select a key type, key size and expiry date, and to provide a name and email address that will identify the key. If possible, use an ECC key based on Curve 25519 (an `ed25519` signing key), which is the default in recent GnuPG versions and produces smaller, faster signatures. If you need to support older tools that don't understand ECC keys, generate an RSA key of at least 4096 bits instead. The email address should be an address you control, as users will use it (along with your public key) to identify that the package really came from you.
 
 ## Obtain the identity of your key
 
@@ -44,9 +44,13 @@ Before distributing your packages, you should export your public key and make it
 $ gpg --export --armor <fingerprint>
 ```
 
-This will output your public key in ASCII armor format. You can publish it on a public keyserver, for example with `gpg --send-keys --keyserver keys.openpgp.org <fingerprint>`, or you can host the exported `.asc` file on your own website. Users can then add your key to their keyring with `gpg --import <file>` (or `gpg --recv-keys <fingerprint>`).
+This will output your public key in ASCII armor format. You can publish it on a public keyserver (e.g., with `gpg --send-keys --keyserver keys.openpgp.org <fingerprint>`), or you can host the exported `.asc` file on your own website. Users can then add your key to their keyring with `gpg --import <file>` (or `gpg --recv-keys <fingerprint>`).
 
-A user can then verify the integrity and provenance of your package: with `gpg --verify <signature file> <package file>` for `.pkg.tar.zst` packages; with `debsig-verify` for `.deb` packages (using a policy that declares your key as trusted); or with `rpmkeys --checksig` (or `rpm --checksig`) for `.rpm` packages, once RPM is configured to trust your key.
+A user can then verify the integrity and provenance of your package:
+
+- `debsig-verify` for `.deb` packages (using a policy that declares your key as trusted).
+- `rpmkeys --checksig` (or `rpm --checksig`) for `.rpm` packages, once RPM is configured to trust your key.
+- `gpg --verify <signature file> <package file>` for `.pkg.tar.zst` packages.
 
 ## Packaging without signing
 
