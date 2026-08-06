@@ -2,11 +2,12 @@ from __future__ import annotations
 
 import gzip
 import re
+import shlex
 import subprocess
 import tarfile
 from collections.abc import Collection
 from pathlib import Path
-from typing import cast
+from typing import Any, cast
 
 from briefcase.commands import (
     BuildCommand,
@@ -1248,13 +1249,45 @@ or
             ],
         }[app.packaging_format]
 
+        subprocess_kwargs: dict[str, Any] = {}
+        key_file_path: Path | None = None
+        if isinstance(self.tools[app].app_context, DockerAppContext):
+            # When packaging inside Docker, the secret key must be made available
+            # to the container. Export the key to the data path (which is mounted
+            # into the container), then import it and sign the package in a single
+            # container run, so the key is not retained in the image or container.
+            key_file_path = self.data_path / f"{app.app_name}-signing-key.gpg"
+            subprocess_kwargs["mounts"] = [(self.dist_path, "/dist")]
+
         try:
-            self.tools[app].app_context.run(sign_command, check=True)
+            if key_file_path is not None:
+                self.tools.gnupg.export_secret_key(identity, key_file_path)
+                self.tools.os.chmod(key_file_path, 0o600)
+                sign_command = [
+                    "sh",
+                    "-c",
+                    " && ".join(
+                        " ".join(shlex.quote(arg) for arg in command)
+                        for command in [
+                            ["gpg", "--batch", "--import", str(key_file_path)],
+                            sign_command,
+                        ]
+                    ),
+                ]
+
+            self.tools[app].app_context.run(
+                sign_command,
+                check=True,
+                **subprocess_kwargs,
+            )
         except subprocess.CalledProcessError as e:
             raise BriefcaseCommandError(
                 f"Error while signing .{app.packaging_format} package for "
                 f"{app.app_name}."
             ) from e
+        finally:
+            if key_file_path is not None:
+                key_file_path.unlink(missing_ok=True)
 
     def clean_dist_folder(self, app, **options):
         super().clean_dist_folder(app, **options)
@@ -1283,12 +1316,6 @@ or
         else:
             identity = self.select_identity(identity=identity)
             if identity:
-                if self.use_docker:
-                    raise BriefcaseCommandError(
-                        "Signing system packages is not supported when using "
-                        "Docker. Re-run the package command without the "
-                        "`--target` option, or select `Don't sign`."
-                    )
                 # Signing is required; verify the signing tool is available.
                 self._verify_signing_tool(app)
             else:
