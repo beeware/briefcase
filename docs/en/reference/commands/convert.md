@@ -24,7 +24,7 @@ The branch of the cookiecutter template repository to use for the project. If no
 
 ### `--template-hash <hash>`
 
-The expected commit hash of the cookiecutter template, in the form `sha1:<hexdigest>` (e.g. `sha1:e8082ea4d3310d7605e12f4ab1fa7ff7b637b974`). If a template or template branch is specified and a hash is provided, Briefcase will verify the hexdigest of template matches this hash, and raise an error if the hash doesn't match. If no hash is provided, a warning will be displayed.
+The expected commit hash of the cookiecutter template, in the form `sha1:<hexdigest>` (e.g. `sha1:e8082ea4d3310d7605e12f4ab1fa7ff7b637b974`). If a template or template branch is specified and a hash is provided, Briefcase will verify the hex digest of template matches this hash, and raise an error if the hash doesn't match. If no hash is provided, a warning will be displayed.
 
 ### `-Q <KEY=VALUE>`
 
