@@ -1137,12 +1137,14 @@ class LinuxSystemSigningMixin(_MixinBase):
             if install_cmd := self._system_requirement_tools(app)[3]:
                 raise BriefcaseCommandError(
                     f"Can't find the {tool_name} tools. "
-                    f"Try running `sudo {' '.join(install_cmd)} {package_name}`."
+                    f"Try running `sudo {' '.join(install_cmd)} {package_name}`. "
+                    "Alternatively, use `--adhoc-sign` to skip signing the package."
                 ) from None
             else:
                 raise BriefcaseCommandError(
                     f"Can't find the {executable_name} tool. "
-                    f"Install this first to sign the {app.packaging_format}."
+                    f"Install this first to sign the {app.packaging_format}. "
+                    "Alternatively, use `--adhoc-sign` to skip signing the package."
                 ) from None
 
     def signature_path(self, app: LinuxSystemAppConfig) -> Path:
