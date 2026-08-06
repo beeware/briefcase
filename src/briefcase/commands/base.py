@@ -1192,7 +1192,12 @@ Configuration file not found.
 Did you run Briefcase in a project directory that contains {filename.name!r}?"""
             ) from e
 
-    def update_cookiecutter_cache(self, template: str, branch="master"):
+    def update_cookiecutter_cache(
+        self,
+        template: str,
+        branch: str | None = "master",
+        template_hash: str | None = None,
+    ):
         """Ensure that we have a current checkout of a template path.
 
         If the path is a local path, use the path as is.
@@ -1201,7 +1206,10 @@ Did you run Briefcase in a project directory that contains {filename.name!r}?"""
         including checking out the required branch.
 
         :param template: The template URL or path.
-        :param branch: The template branch to use. Default: ``master``
+        :param branch: The template branch to use. Default: `main`
+        :param template_hash: The expected commit hash of the template's resolved
+            branch head, or `None`/`"unverified:<reason>"`. Ignored if `template`
+            is a local path. See `File.check_hash()` for the accepted format.
         :return: The path to the cached template. This may be the originally
             provided path if the template was a file path.
         """
@@ -1304,6 +1312,13 @@ Did you run Briefcase in a project directory that contains {filename.name!r}?"""
                         f"Using existing template (sha {head.commit.hexsha}, "
                         f"updated {head.commit.committed_datetime.strftime('%c')})"
                     )
+
+                    self.tools.file.check_hash(
+                        role="the template",
+                        expected_hash=template_hash,
+                        actual_hash=f"sha1:{head.commit.hexsha}",
+                    )
+
                     head.checkout()
                 except IndexError as e:
                     # No branch exists for the requested version.

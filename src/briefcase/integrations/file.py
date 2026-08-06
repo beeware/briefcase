@@ -18,6 +18,7 @@ from tenacity import retry, retry_if_exception_type, stop_after_attempt, wait_fi
 
 from briefcase.exceptions import (
     BadNetworkResourceError,
+    CorruptContentError,
     MissingNetworkResourceError,
     NetworkFailure,
 )
@@ -419,6 +420,51 @@ class File(Tool):
             # exist if the download fails or the user sends CTRL+C.
             with suppress(FileNotFoundError):
                 self.tools.os.remove(temp_file.name)
+
+    def check_hash(
+        self,
+        *,
+        role: str,
+        expected_hash: str | None,
+        actual_hash: str,
+    ) -> None:
+        """Verify a hash value the caller already has (e.g. a git commit's hexsha)
+        against an expected value.
+
+        `expected_hash` can be one of:
+
+        - `None`: no reference hash is available; a warning is logged, and no
+          comparison is made.
+        - `"unverified:<reason>"`: verification is deliberately skipped; nothing
+          is logged.
+        - `"<label>:<digest>"`: compared as a whole string (case-insensitively)
+          against `actual_hash`. The caller is responsible for formatting
+          `actual_hash` the same way (e.g. `f"sha1:{commit.hexsha}"`), since the
+          `<label>` is part of the comparison, not just documentation.
+
+        :param role: A string describing the resource being verified; used in log
+            and error messages.
+        :param expected_hash: The expected hash value, or `None`/`"unverified:..."`.
+        :param actual_hash: The hash value to compare against, formatted the same
+            way as `expected_hash` (e.g. `"<label>:<digest>"`).
+        :raises CorruptContentError: If `expected_hash` and `actual_hash` don't match.
+        """
+        if expected_hash is None:
+            self.tools.console.warning(
+                f"The integrity of {role} will not be verified as no reference "
+                "hash has been provided."
+            )
+            return
+
+        if expected_hash.startswith("unverified:"):
+            return
+
+        if expected_hash.lower() != actual_hash.lower():
+            raise CorruptContentError(
+                role=role,
+                expected_hash=expected_hash,
+                actual_hash=actual_hash,
+            )
 
     @retry(
         retry=retry_if_exception_type(PermissionError),
