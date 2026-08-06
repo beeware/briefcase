@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import subprocess
+from pathlib import Path
 
 from briefcase.exceptions import BriefcaseCommandError
 from briefcase.integrations.base import Tool, ToolCache
@@ -66,3 +67,29 @@ class GnuPG(Tool):
                 identities[fingerprint] = record[9]
 
         return identities
+
+    def export_secret_key(self, identity: str, output_path: Path):
+        """Export a secret key to a file.
+
+        The exported key can be imported into a different environment (e.g., a Docker
+        container) to enable signing there.
+
+        :param identity: The fingerprint of the identity to export
+        :param output_path: The path of the file to write the exported key to
+        """
+        try:
+            self.tools.subprocess.run(
+                [
+                    "gpg",
+                    "--batch",
+                    "--output",
+                    output_path,
+                    "--export-secret-keys",
+                    identity,
+                ],
+                check=True,
+            )
+        except subprocess.CalledProcessError as e:
+            raise BriefcaseCommandError(
+                f"Error exporting the GPG signing key for identity {identity}."
+            ) from e
