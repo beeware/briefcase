@@ -71,7 +71,7 @@ def test_select_identity_no_identities(package_command, mock_gpg):
 
     assert result is None
     # The user was prompted, and "Don't sign" was the default selection
-    assert package_command.console.prompts == ["GPG Signing Identity [1]: "]
+    assert package_command.console.prompts == ["GPG signing identity [1]: "]
 
 
 def test_select_identity_single(package_command, mock_gpg):
@@ -85,7 +85,7 @@ def test_select_identity_single(package_command, mock_gpg):
 
     assert result == JANE
     # The user was prompted, and the single identity was the default selection
-    assert package_command.console.prompts == ["GPG Signing Identity [2]: "]
+    assert package_command.console.prompts == ["GPG signing identity [2]: "]
 
 
 def test_select_identity_multiple(package_command, mock_gpg):
@@ -102,7 +102,7 @@ def test_select_identity_multiple(package_command, mock_gpg):
 
     assert result == JANE
     # User input was solicited once
-    assert package_command.console.prompts == ["GPG Signing Identity: "]
+    assert package_command.console.prompts == ["GPG signing identity: "]
 
 
 def test_select_identity_dont_sign(package_command, mock_gpg):
@@ -119,4 +119,4 @@ def test_select_identity_dont_sign(package_command, mock_gpg):
 
     assert result is None
     # User input was solicited once
-    assert package_command.console.prompts == ["GPG Signing Identity: "]
+    assert package_command.console.prompts == ["GPG signing identity: "]

@@ -1138,20 +1138,25 @@ class LinuxSystemSigningMixin(_MixinBase):
 
         # Offer "Don't sign" as the first option, then the available identities.
         # If only one identity is available, it becomes the default selection.
-        options = {None: "Don't sign", **identities}
+        options = {None: "Don't sign the package", **identities}
         identity = self.console.selection_question(
             intro="Select GPG signing identity to use:",
-            description="GPG Signing Identity",
+            description="GPG signing identity",
             options=options,
             default=next(iter(identities)) if len(identities) == 1 else None,
         )
 
         if identity is None:
-            # The user opted not to sign the package.
-            return None
+            self.console.info(f"""
+In future, you could specify this signing identity by using:
 
-        identity_name = identities[identity]
-        self.console.info(f"""
+    $ briefcase {self.command} {self.platform} {self.output_format} --adhoc-sign ...
+
+""")
+            return None
+        else:
+            identity_name = identities[identity]
+            self.console.info(f"""
 In future, you could specify this signing identity by using:
 
     $ briefcase {self.command} {self.platform} {self.output_format} --identity {identity} ...
@@ -1162,7 +1167,7 @@ or
 
 """)  # noqa: E501
 
-        return identity
+            return identity
 
     def sign_package(self, app: LinuxSystemAppConfig, identity: str):
         """Sign a package with a GPG identity.
@@ -1241,11 +1246,13 @@ or
                 self._verify_signing_tool(app)
             else:
                 self.tools.console.warning_banner(
-                    "No signing identity available",
+                    "Package will be unsigned",
                     """
-                        Briefcase will not sign the package. To sign the
-                        package, provide a GPG signing identity with the
-                        `--identity` option.
+                        Briefcase will not sign the package. This may limit the
+                        willingness of some users to install your package.
+
+                        To sign the package, provide a GPG signing identity with
+                        the `--identity` option.
                     """,
                 )
 
