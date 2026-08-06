@@ -22,6 +22,10 @@ A local directory path or URL to use as a cookiecutter template for the project.
 
 The branch of the cookiecutter template repository to use for the project. If not specified, Briefcase will attempt to use a template branch matching the version of Briefcase that is being used (i.e., if you're using Briefcase 0.3.14, Briefcase will use the `v0.3.14` template branch when generating the app). If you're using a development version of Briefcase, Briefcase will use the `main` branch of the template.
 
+### `--template-hash <hash>`
+
+The expected commit hash of the cookiecutter template, in the form `sha1:<hexdigest>` (e.g. `sha1:e8082ea4d3310d7605e12f4ab1fa7ff7b637b974`). If a template or template branch is specified and a hash is provided, Briefcase will verify the hexdigest of template matches this hash, and raise an error if the hash doesn't match. If no hash is provided, a warning will be displayed.
+
 ### `-Q <KEY=VALUE>`
 
 Override the answer to a prompt with the provided value.
