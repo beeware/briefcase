@@ -14,6 +14,7 @@ from briefcase.exceptions import (
 )
 
 from ...utils import (
+    create_toml_file,
     create_zip_file,
     mock_file_download,
     mock_tgz_download,
@@ -50,6 +51,7 @@ def test_install_app_support_package(
         download_path=create_command.data_path / "support",
         url="https://briefcase-support.s3.amazonaws.com/python/3.X/Tester/Python-3.X-Tester-support.b37.tar.gz",
         role="support package",
+        expected_hash=f"sha256:{'a' * 64}",
     )
 
     # Confirm the right file was unpacked
@@ -64,9 +66,11 @@ def test_install_app_support_package(
     assert (support_path / "internal/file.txt").exists()
 
 
+@pytest.mark.parametrize("support_package_hash", [f"sha256:{'d' * 64}", None])
 def test_install_pinned_app_support_package(
     create_command,
     myapp,
+    support_package_hash,
     tmp_path,
     support_path,
     app_requirements_path_index,
@@ -74,6 +78,8 @@ def test_install_pinned_app_support_package(
     """A pinned support package can be downloaded and unpacked where it is needed."""
     # Pin the support revision
     myapp.support_revision = "42"
+    if support_package_hash:
+        myapp.support_package_hash = support_package_hash
 
     # Mock download.file to return a support package
     create_command.tools.file.download = mock.MagicMock(
@@ -96,6 +102,7 @@ def test_install_pinned_app_support_package(
         download_path=create_command.data_path / "support",
         url="https://briefcase-support.s3.amazonaws.com/python/3.X/Tester/Python-3.X-Tester-support.b42.tar.gz",
         role="support package",
+        expected_hash=support_package_hash,
     )
 
     # Confirm the right file was unpacked
@@ -231,6 +238,7 @@ def test_support_package_url_with_invalid_custom_support_package_url(
         ),
         url=url,
         role="support package",
+        expected_hash=None,  # No hash because it's a custom URL
     )
 
 
@@ -259,12 +267,15 @@ def test_support_package_url_with_unsupported_platform(
         download_path=create_command.data_path / "support",
         url="https://briefcase-support.s3.amazonaws.com/python/3.X/Tester/Python-3.X-Tester-support.b37.tar.gz",
         role="support package",
+        expected_hash=f"sha256:{'a' * 64}",
     )
 
 
+@pytest.mark.parametrize("support_package_hash", [f"sha256:{'d' * 64}", None])
 def test_install_custom_app_support_package_url(
     create_command,
     myapp,
+    support_package_hash,
     tmp_path,
     support_path,
     app_requirements_path_index,
@@ -272,6 +283,8 @@ def test_install_custom_app_support_package_url(
     """A custom support package can be specified as URL."""
     # Provide an app-specific override of the package URL
     myapp.support_package = "https://example.com/custom/custom-support.zip"
+    if support_package_hash:
+        myapp.support_package_hash = support_package_hash
 
     # Mock download.file to return a support package
     create_command.tools.file.download = mock.MagicMock(
@@ -298,6 +311,7 @@ def test_install_custom_app_support_package_url(
         ),
         url="https://example.com/custom/custom-support.zip",
         role="support package",
+        expected_hash=support_package_hash,
     )
 
     # Confirm the right file was unpacked into the hashed location
@@ -354,6 +368,7 @@ def test_install_custom_app_support_package_url_with_revision(
         ),
         url="https://example.com/custom/custom-support.zip",
         role="support package",
+        expected_hash=None,  # No hash because it's a custom URL
     )
 
     # Confirm the right file was unpacked into the hashed location
@@ -407,6 +422,7 @@ def test_install_custom_app_support_package_url_with_args(
         / "f8cf64ad2ba249a1efbb63db60ebdc64f043035fbdd81934c6ad1e84a030c429",
         url="https://example.com/custom/custom-support.zip?cool=Yes",
         role="support package",
+        expected_hash=None,  # No hash because it's a custom URL
     )
 
     # Confirm the right file was unpacked
@@ -500,3 +516,36 @@ def test_no_support_revision(create_command, myapp, no_support_revision_index):
 
     # No download attempt is made.
     create_command.tools.file.download.assert_not_called()
+
+
+def test_install_app_support_package_no_hash(create_command, myapp, bundle_path):
+    """A template can publish a support_revision without a hash."""
+    create_toml_file(
+        bundle_path / "briefcase.toml",
+        {
+            "paths": {
+                "app_path": "path/to/app",
+                "app_requirements_path": "path/to/requirements.txt",
+                "support_path": "path/to/support",
+                "support_revision": 37,
+            }
+        },
+    )
+
+    create_command.tools.file.download = mock.MagicMock(
+        side_effect=mock_tgz_download(
+            "Python-3.X-tester-support.b37.tar.gz",
+            [("internal/file.txt", "hello world")],
+        )
+    )
+    create_command.tools.shutil = mock.MagicMock(spec_set=shutil)
+    create_command.tools.shutil.unpack_archive.side_effect = shutil.unpack_archive
+
+    create_command.install_app_support_package(myapp)
+
+    create_command.tools.file.download.assert_called_with(
+        download_path=create_command.data_path / "support",
+        url="https://briefcase-support.s3.amazonaws.com/python/3.X/Tester/Python-3.X-Tester-support.b37.tar.gz",
+        role="support package",
+        expected_hash=None,
+    )

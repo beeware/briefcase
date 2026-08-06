@@ -401,7 +401,7 @@ def test_unparseable_javac_version(mock_tools, host_os, java_home, tmp_path, cap
 
 
 @pytest.mark.parametrize(
-    ("host_os", "host_arch", "jdk_url", "jhome", "is_32bit"),
+    ("host_os", "host_arch", "jdk_url", "jdk_hash", "jhome", "is_32bit"),
     [
         (
             "Darwin",
@@ -410,6 +410,7 @@ def test_unparseable_javac_version(mock_tools, host_os, java_home, tmp_path, cap
                 "https://github.com/adoptium/temurin17-binaries/releases/download/"
                 f"jdk-{JDK_RELEASE}+{JDK_BUILD}/OpenJDK17U-jdk_x64_mac_hotspot_{JDK_RELEASE}_{JDK_BUILD}.tar.gz"
             ),
+            "sha256:a2a7bfd3a767fcaf35a2e96cc562e6a63cd695e08c1a896222303c4e978da3d6",
             "java17/Contents/Home",
             False,
         ),
@@ -420,6 +421,7 @@ def test_unparseable_javac_version(mock_tools, host_os, java_home, tmp_path, cap
                 "https://github.com/adoptium/temurin17-binaries/releases/download/"
                 f"jdk-{JDK_RELEASE}+{JDK_BUILD}/OpenJDK17U-jdk_aarch64_mac_hotspot_{JDK_RELEASE}_{JDK_BUILD}.tar.gz"
             ),
+            "sha256:856059de21518c2ff6eba6126ffc93390affe363c3ee205b3146a3bac3be0aa5",
             "java17/Contents/Home",
             False,
         ),
@@ -430,6 +432,7 @@ def test_unparseable_javac_version(mock_tools, host_os, java_home, tmp_path, cap
                 "https://github.com/adoptium/temurin17-binaries/releases/download/"
                 f"jdk-{JDK_RELEASE}+{JDK_BUILD}/OpenJDK17U-jdk_x64_linux_hotspot_{JDK_RELEASE}_{JDK_BUILD}.tar.gz"
             ),
+            "sha256:992f96e7995075ac7636bb1a8de52b0c61d71ed3137fafc979ab96b4ab78dd75",
             "java17",
             False,
         ),
@@ -440,6 +443,7 @@ def test_unparseable_javac_version(mock_tools, host_os, java_home, tmp_path, cap
                 "https://github.com/adoptium/temurin17-binaries/releases/download/"
                 f"jdk-{JDK_RELEASE}+{JDK_BUILD}/OpenJDK17U-jdk_aarch64_linux_hotspot_{JDK_RELEASE}_{JDK_BUILD}.tar.gz"
             ),
+            "sha256:dc29ca6d35beb4419b4b00419b8a3dfbf5ae551e1ae2b046b516d9a579d04533",
             "java17",
             False,
         ),
@@ -450,6 +454,7 @@ def test_unparseable_javac_version(mock_tools, host_os, java_home, tmp_path, cap
                 "https://github.com/adoptium/temurin17-binaries/releases/download/"
                 f"jdk-{JDK_RELEASE}+{JDK_BUILD}/OpenJDK17U-jdk_arm_linux_hotspot_{JDK_RELEASE}_{JDK_BUILD}.tar.gz"
             ),
+            "sha256:a0129be48dfbd16b7c6a158bf9e91683be2e292c473085294a6d436bbc5f4ea9",
             "java17",
             True,
         ),
@@ -460,6 +465,7 @@ def test_unparseable_javac_version(mock_tools, host_os, java_home, tmp_path, cap
                 "https://github.com/adoptium/temurin17-binaries/releases/download/"
                 f"jdk-{JDK_RELEASE}+{JDK_BUILD}/OpenJDK17U-jdk_arm_linux_hotspot_{JDK_RELEASE}_{JDK_BUILD}.tar.gz"
             ),
+            "sha256:a0129be48dfbd16b7c6a158bf9e91683be2e292c473085294a6d436bbc5f4ea9",
             "java17",
             False,
         ),
@@ -470,6 +476,7 @@ def test_unparseable_javac_version(mock_tools, host_os, java_home, tmp_path, cap
                 "https://github.com/adoptium/temurin17-binaries/releases/download/"
                 f"jdk-{JDK_RELEASE}+{JDK_BUILD}/OpenJDK17U-jdk_arm_linux_hotspot_{JDK_RELEASE}_{JDK_BUILD}.tar.gz"
             ),
+            "sha256:a0129be48dfbd16b7c6a158bf9e91683be2e292c473085294a6d436bbc5f4ea9",
             "java17",
             False,
         ),
@@ -480,6 +487,7 @@ def test_unparseable_javac_version(mock_tools, host_os, java_home, tmp_path, cap
                 "https://github.com/adoptium/temurin17-binaries/releases/download/"
                 f"jdk-{JDK_RELEASE}+{JDK_BUILD}/OpenJDK17U-jdk_x64_windows_hotspot_{JDK_RELEASE}_{JDK_BUILD}.zip"
             ),
+            "sha256:dcf0064efec7e515a5e3b56e7532f1a1c125510303c6c9e60af8878e3f7347fe",
             "java17",
             False,
         ),
@@ -492,6 +500,7 @@ def test_successful_jdk_download(
     host_os,
     host_arch,
     jdk_url,
+    jdk_hash,
     jhome,
     is_32bit,
 ):
@@ -527,6 +536,7 @@ def test_successful_jdk_download(
         url=jdk_url,
         download_path=tmp_path / "tools",
         role="Java 17 JDK",
+        expected_hash=jdk_hash,
     )
     # The archive was unpacked
     mock_tools.shutil.unpack_archive.assert_called_with(
@@ -535,7 +545,7 @@ def test_successful_jdk_download(
     # The original archive was deleted
     assert not jdk_zip_path.exists()
     # The download URL for JDK exists
-    assert_url_resolvable(mock_tools.java.OpenJDK_download_url)
+    assert_url_resolvable(mock_tools.java.openjdk_download_url)
 
 
 def test_not_installed(mock_tools, tmp_path):
@@ -570,6 +580,9 @@ def test_jdk_download_failure(mock_tools, tmp_path):
         f"jdk-{JDK_RELEASE}+{JDK_BUILD}/OpenJDK17U-jdk_x64_linux_hotspot_{JDK_RELEASE}_{JDK_BUILD}.tar.gz",
         download_path=tmp_path / "tools",
         role="Java 17 JDK",
+        expected_hash=(
+            "sha256:992f96e7995075ac7636bb1a8de52b0c61d71ed3137fafc979ab96b4ab78dd75"
+        ),
     )
     # No attempt was made to unpack the archive
     assert mock_tools.shutil.unpack_archive.call_count == 0
@@ -597,6 +610,9 @@ def test_invalid_jdk_archive(mock_tools, tmp_path):
         f"jdk-{JDK_RELEASE}+{JDK_BUILD}/OpenJDK17U-jdk_x64_linux_hotspot_{JDK_RELEASE}_{JDK_BUILD}.tar.gz",
         download_path=tmp_path / "tools",
         role="Java 17 JDK",
+        expected_hash=(
+            "sha256:992f96e7995075ac7636bb1a8de52b0c61d71ed3137fafc979ab96b4ab78dd75"
+        ),
     )
     # An attempt was made to unpack the archive.
     mock_tools.shutil.unpack_archive.assert_called_with(

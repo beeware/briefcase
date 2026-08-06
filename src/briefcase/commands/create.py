@@ -433,15 +433,30 @@ class CreateCommand(BaseCommand):
                     )
                 except AttributeError:
                     pass
+
+                # If there is a custom support package, check for a custom
+                # hash as well.
+                try:
+                    support_package_hash = app.support_package_hash
+                except AttributeError:
+                    support_package_hash = None
+
             except AttributeError:
                 # If the app specifies a support revision, use it;
                 # otherwise, use the support revision named by the template
                 try:
                     support_revision = app.support_revision
+                    # The support revision was pinned; check for a custom
+                    # hash as well.
+                    try:
+                        support_package_hash = app.support_package_hash
+                    except AttributeError:
+                        support_package_hash = None
                 except AttributeError:
                     # No support revision specified; use the template-specified version
                     try:
                         support_revision = self.support_revision(app)
+                        support_package_hash = self.support_package_hash(app)
                     except KeyError:
                         # No template-specified support revision
                         raise MissingSupportPackage(
@@ -477,6 +492,7 @@ class CreateCommand(BaseCommand):
                     url=support_package_url,
                     download_path=download_path,
                     role="support package",
+                    expected_hash=support_package_hash,
                 )
             else:
                 return Path(support_package_url)
@@ -551,14 +567,30 @@ class CreateCommand(BaseCommand):
                     )
                 except AttributeError:
                     pass
+
+                # A stub binary URL was speciried; check for a custom
+                # hash as well.
+                try:
+                    stub_binary_hash = app.stub_binary_hash
+                except AttributeError:
+                    stub_binary_hash = None
+
             except AttributeError:
                 # If the app specifies a support revision, use it; otherwise, use the
                 # support revision named by the template. This value *must* exist, as
                 # stub binary handling won't be triggered at all unless it is present.
                 try:
                     stub_binary_revision = app.stub_binary_revision
+                    # A stub binary revision was speciried; check for a custom
+                    # hash as well.
+                    try:
+                        stub_binary_hash = app.stub_binary_hash
+                    except AttributeError:
+                        stub_binary_hash = None
+
                 except AttributeError:
                     stub_binary_revision = self.stub_binary_revision(app)
+                    stub_binary_hash = self.stub_binary_hash(app)
 
                 stub_binary_url = self.stub_binary_url(stub_binary_revision, app=app)
                 custom_stub_binary = False
@@ -584,6 +616,7 @@ class CreateCommand(BaseCommand):
                     url=stub_binary_url,
                     download_path=download_path,
                     role="stub binary",
+                    expected_hash=stub_binary_hash,
                 )
             else:
                 return Path(stub_binary_url)

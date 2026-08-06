@@ -5,7 +5,6 @@ from collections.abc import Collection
 from unittest import mock
 
 import pytest
-import tomli_w
 from cookiecutter.main import cookiecutter
 
 from briefcase.commands import CreateCommand
@@ -308,6 +307,7 @@ def app_packages_path_index(bundle_path):
                 "app_packages_path": "path/to/app_packages",
                 "support_path": "path/to/support",
                 "support_revision": 37,
+                "support_package_hash": f"sha256:{'a' * 64}",
             }
         },
     )
@@ -323,6 +323,7 @@ def app_requirements_path_index(bundle_path):
                 "app_requirements_path": "path/to/requirements.txt",
                 "support_path": "path/to/support",
                 "support_revision": 37,
+                "support_package_hash": f"sha256:{'a' * 64}",
             }
         },
     )
@@ -339,6 +340,7 @@ def app_requirement_installer_args_path_index(bundle_path):
                 "app_requirement_installer_args_path": "path/to/installer-args.txt",
                 "support_path": "path/to/support",
                 "support_revision": 37,
+                "support_package_hash": f"sha256:{'a' * 64}",
             }
         },
     )
@@ -398,12 +400,14 @@ def app_path(bundle_path):
 
 @pytest.fixture
 def stub_binary_revision_path_index(bundle_path):
-    with (bundle_path / "briefcase.toml").open("wb") as f:
-        index = {
+    create_toml_file(
+        bundle_path / "briefcase.toml",
+        {
             "paths": {
                 "app_path": "path/to/app",
                 "app_requirements_path": "path/to/requirements.txt",
                 "stub_binary_revision": 37,
+                "stub_binary_hash": f"sha256:{'b' * 64}",
             }
-        }
-        tomli_w.dump(index, f)
+        },
+    )

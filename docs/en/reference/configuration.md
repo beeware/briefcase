@@ -334,6 +334,12 @@ A file path or URL pointing at a pre-compiled binary (or a zip/tarball of a bina
 
 If this setting is not provided, and a stub binary is required by the platform, Briefcase will use the default stub binary for the platform.
 
+#### `stub_binary_hash`
+
+A string describing the expected hash of the file referenced by [`stub_binary`][] (or the revision referenced by [`stub_binary_revision`][]), in the form `<algorithm>:<hexdigest>` (e.g. `"sha256:2c26b46b..."`). If a stub binary is specified and a hash is provided, Briefcase will verify a downloaded stub binary against this hash, and raises an error if the hash doesn't match. If no hash is provided, a warning will be displayed.
+
+A hash algorithm of `unverified` can be used to explicitly declare that the hash should not be checked; the hash value will be ignored, and can be used to document why hash verification isn't necessary (e.g., `"unverified:rolling release"`)
+
 #### `stub_binary_revision`
 
 The specific revision of the stub binary that should be used. By default, Briefcase will use the stub binary revision nominated by the application template. If you specify a stub binary revision, that will override the revision nominated by the application template.
@@ -347,6 +353,12 @@ A file path or URL pointing at a tarball containing a Python support package. (i
 If this setting is not provided, Briefcase will use the default support package for the platform.
 
 The setting will be ignored if the app's environment manager is responsible for providing Python (e.g., Conda).
+
+#### `support_package_hash`
+
+A string describing the expected hash of the file referenced by [`support_package`][] (or the revision referenced by [`support_revision`][]), in the form `"<algorithm>:<hexdigest>"` (e.g. `"sha256:2c26b46b..."`). If a support package is specified and a hash is provided, Briefcase will verify a downloaded support package against this hash, and raise an error if the hash doesn't match. If no hash is provided, a warning will be displayed.
+
+A hash algorithm of `unverified` can be used to explicitly declare that the hash should not be checked; the hash value will be ignored, and can be used to document why hash verification isn't necessary (e.g., `"unverified:rolling release"`)
 
 #### `support_revision`
 

@@ -45,6 +45,10 @@ def test_gtk_plugin(linuxdeploy, mock_tools, tmp_path):
         url="https://raw.githubusercontent.com/linuxdeploy/linuxdeploy-plugin-gtk/master/linuxdeploy-plugin-gtk.sh",
         download_path=tmp_path / "tools/linuxdeploy_plugins/gtk",
         role="linuxdeploy GTK plugin",
+        expected_hash=(
+            "unverified:linuxdeploy GTK plugin is downloaded from the master "
+            "branch, which has no stable hash"
+        ),
     )
 
 
@@ -72,6 +76,10 @@ def test_qt_plugin(linuxdeploy, mock_tools, tmp_path):
         ),
         download_path=tmp_path / "tools/linuxdeploy_plugins/qt",
         role="linuxdeploy Qt plugin",
+        expected_hash=(
+            "unverified:linuxdeploy Qt plugin uses a rolling 'continuous' "
+            "release with no stable hash"
+        ),
     )
 
 
@@ -104,6 +112,7 @@ def test_custom_url_plugin(linuxdeploy, mock_tools, tmp_path):
         / "sometool"
         / "bbf1b5dc4c3d2069dc5b916f73e9d6f5ad24603576298509367878e393c6f8f5",
         role="user-provided linuxdeploy plugin from URL",
+        expected_hash=None,
     )
 
 
@@ -197,7 +206,7 @@ def test_complex_plugin_config(linuxdeploy, mock_tools, tmp_path):
     # Three tools are obtained by downloading.
     # We don't want the side effects to occur until the function is invoked;
     # so we need to wrap the side effect callables in another callable.
-    def mock_downloads(url, download_path, role):
+    def mock_downloads(url, download_path, role, expected_hash=None):
         if "linuxdeploy_plugins/gtk" in str(download_path):
             return side_effect_create_mock_tool(
                 tmp_path

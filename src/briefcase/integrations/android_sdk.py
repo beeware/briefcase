@@ -74,9 +74,9 @@ class AndroidSDK(ManagedTool):
         # A wrapper for testing purposes
         self.sleep = time.sleep
 
-    @property
-    def cmdline_tools_url(self) -> str:
-        """The Android SDK Command-Line Tools URL appropriate for the current machine.
+    def _cmdline_tools_platform_name(self) -> str:
+        """The platform name Google uses for command-line tools downloads for the
+        current machine.
 
         The SDK largely only supports typical development environments; if a machine is
         using an unsupported architecture, `sdkmanager` will error while installing the
@@ -84,7 +84,7 @@ class AndroidSDK(ManagedTool):
         that are unsupported by sdkmanager, users can set up their own SDK install.
         """
         try:
-            platform_name = {
+            return {
                 "Darwin": {
                     "arm64": "mac",
                     "x86_64": "mac",
@@ -101,10 +101,26 @@ class AndroidSDK(ManagedTool):
                 tool=self.full_name, env_var="ANDROID_HOME"
             ) from None
 
+    @property
+    def cmdline_tools_url(self) -> str:
+        """The Android SDK Command-Line Tools URL appropriate for the current
+        machine."""
+        platform_name = self._cmdline_tools_platform_name()
         return (
             f"https://dl.google.com/android/repository/"
             f"commandlinetools-{platform_name}-{self.SDK_MANAGER_DOWNLOAD_VER}_latest.zip"
         )
+
+    @property
+    def cmdline_tools_hash(self) -> str:
+        """The expected sha256 hash of the command-line tools download for the current
+        machine."""
+        hash = {
+            "mac": "5673201e6f3869f418eeed3b5cb6c4be7401502bd0aae1b12a29d164d647a54e",
+            "linux": "7ec965280a073311c339e571cd5de778b9975026cfcbe79f2b1cdcb1e15317ee",
+            "win": "98b565cb657b012dae6794cefc0f66ae1efb4690c699b78a614b4a6a3505b003",
+        }[self._cmdline_tools_platform_name()]
+        return f"sha256:{hash}"
 
     @property
     def cmdline_tools_path(self) -> Path:
@@ -387,6 +403,7 @@ class AndroidSDK(ManagedTool):
             url=self.cmdline_tools_url,
             download_path=self.tools.base_path,
             role="Android SDK Command-Line Tools",
+            expected_hash=self.cmdline_tools_hash,
         )
 
         # The cmdline-tools package *must* be installed as:
@@ -800,6 +817,7 @@ connection.
             url=skin_url,
             download_path=self.root_path,
             role=f"{skin} device skin",
+            expected_hash="unverified:Android emulator skins do not have a checksum",
         )
 
         # Unpack skin archive
