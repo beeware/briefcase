@@ -1341,7 +1341,14 @@ Did you run Briefcase in a project directory that contains {filename.name!r}?"""
 
         return cached_template
 
-    def _generate_template(self, template, branch, output_path, extra_context):
+    def _generate_template(
+        self,
+        template,
+        branch,
+        output_path,
+        extra_context,
+        template_hash: str | None = None,
+    ):
         """Ensure the named template is up-to-date for the given branch, and roll out
         that template.
 
@@ -1349,12 +1356,15 @@ Did you run Briefcase in a project directory that contains {filename.name!r}?"""
         :param branch: The branch of the template to use
         :param output_path: The filesystem path where the template will be generated.
         :param extra_context: Extra context to pass to the cookiecutter template
+        :param template_hash: The expected commit hash of the template's resolved
+            branch head, or `None`/`"unverified:<reason>"`.
         """
         # Make sure we have an updated cookiecutter template,
         # checked out to the right branch
         cached_template = self.update_cookiecutter_cache(
             template=template,
             branch=branch,
+            template_hash=template_hash,
         )
 
         self.console.configure_stdlib_logging("cookiecutter")
@@ -1392,6 +1402,7 @@ Did you run Briefcase in a project directory that contains {filename.name!r}?"""
         branch: str | None,
         output_path: str | Path,
         extra_context: dict[str, str],
+        template_hash: str | None = None,
     ) -> None:
         # If a branch wasn't supplied through the --template-branch argument,
         # use the branch derived from the Briefcase version
@@ -1423,6 +1434,7 @@ Did you run Briefcase in a project directory that contains {filename.name!r}?"""
                 branch=template_branch,
                 output_path=output_path,
                 extra_context=extra_context,
+                template_hash=template_hash,
             )
         except InvalidTemplateBranch:
             # Only use the main template if we're on a development branch of briefcase
@@ -1431,7 +1443,7 @@ Did you run Briefcase in a project directory that contains {filename.name!r}?"""
                 raise
 
             # Development branches can use the main template.
-            self.console.info(
+            self.console.warning(
                 f"Template branch {template_branch} not found; "
                 f"falling back to development template"
             )
@@ -1442,6 +1454,7 @@ Did you run Briefcase in a project directory that contains {filename.name!r}?"""
                 branch="main",
                 output_path=output_path,
                 extra_context=extra_context,
+                template_hash=None,
             )
 
     def get_git_config_value(self, section: str, option: str) -> str | None:

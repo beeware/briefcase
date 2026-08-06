@@ -329,6 +329,7 @@ def test_generate_app_template(create_command, first_app, tmp_path):
         branch=None,
         output_path=tmp_path / "base_path/build/first-app/macos",
         extra_context=mock.ANY,
+        template_hash=create_command.app_template_hash,
     )
 
     # iCloud was verified, with cleanup.
