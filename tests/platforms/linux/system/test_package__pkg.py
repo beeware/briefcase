@@ -168,7 +168,11 @@ def test_verify_docker(package_command, first_app_pkg, monkeypatch):
 )
 @pytest.mark.skipif(sys.platform == "win32", reason="Can't build PKGs on Windows")
 def test_pkg_package(
-    package_command, first_app_pkg, mock_gpg, tmp_path, changelog_filename
+    package_command,
+    first_app_pkg,
+    mock_gpg,
+    tmp_path,
+    changelog_filename,
 ):
     """A pkg app can be packaged."""
     bundle_path = tmp_path / "base_path/build/first-app/somevendor/surprising"
@@ -378,7 +382,10 @@ def test_pkg_package_no_description(package_command, first_app_pkg, mock_gpg, tm
 
 @pytest.mark.skipif(sys.platform == "win32", reason="Can't build PKGs on Windows")
 def test_pkg_package_extra_requirements(
-    package_command, first_app_pkg, mock_gpg, tmp_path
+    package_command,
+    first_app_pkg,
+    mock_gpg,
+    tmp_path,
 ):
     """A pkg app can be packaged with extra runtime requirements and config features."""
     bundle_path = tmp_path / "base_path/build/first-app/somevendor/surprising"

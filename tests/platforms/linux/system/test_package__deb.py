@@ -253,7 +253,10 @@ def test_deb_re_package(package_command, first_app_deb, mock_gpg, tmp_path):
 
 @pytest.mark.skipif(sys.platform == "win32", reason="Can't build debs on Windows")
 def test_deb_package_underscore(
-    package_command, underscore_app_deb, mock_gpg, tmp_path
+    package_command,
+    underscore_app_deb,
+    mock_gpg,
+    tmp_path,
 ):
     """A deb app can be packaged."""
     package_command.tools.app_tools[underscore_app_deb].app_context = mock.MagicMock()
@@ -306,7 +309,10 @@ def test_deb_package_underscore(
 
 
 def test_deb_package_no_long_description(
-    package_command, first_app_deb, mock_gpg, tmp_path
+    package_command,
+    first_app_deb,
+    mock_gpg,
+    tmp_path,
 ):
     """A deb app without a long description raises an error."""
     bundle_path = tmp_path / "base_path/build/first-app/somevendor/surprising"
@@ -341,7 +347,10 @@ def test_multiline_long_description(input, output):
 
 
 def test_deb_package_extra_requirements(
-    package_command, first_app_deb, mock_gpg, tmp_path
+    package_command,
+    first_app_deb,
+    mock_gpg,
+    tmp_path,
 ):
     """A deb app can be packaged with extra runtime requirements and configuration
     options."""
@@ -450,7 +459,10 @@ def test_deb_package_failure(package_command, first_app_deb, mock_gpg, tmp_path)
 
 @pytest.mark.skipif(sys.platform == "win32", reason="Can't build debs on Windows")
 def test_external_deb_package_docker(
-    package_command, external_first_app_deb, mock_gpg, tmp_path
+    package_command,
+    external_first_app_deb,
+    mock_gpg,
+    tmp_path,
 ):
     """An external app cannot be packaged as a deb using Docker."""
     bundle_path = tmp_path / "base_path/build/first-app/somevendor/surprising"

@@ -168,7 +168,11 @@ def test_verify_docker(package_command, first_app_rpm, monkeypatch):
 )
 @pytest.mark.skipif(sys.platform == "win32", reason="Can't build RPMs on Windows")
 def test_rpm_package(
-    package_command, first_app_rpm, mock_gpg, tmp_path, changelog_filename
+    package_command,
+    first_app_rpm,
+    mock_gpg,
+    tmp_path,
+    changelog_filename,
 ):
     """A rpm app can be packaged."""
     bundle_path = tmp_path / "base_path/build/first-app/somevendor/surprising"
@@ -453,7 +457,10 @@ def test_rpm_re_package(package_command, first_app_rpm, mock_gpg, tmp_path):
 
 @pytest.mark.skipif(sys.platform == "win32", reason="Can't build RPMs on Windows")
 def test_rpm_package_no_long_description(
-    package_command, first_app_rpm, mock_gpg, tmp_path
+    package_command,
+    first_app_rpm,
+    mock_gpg,
+    tmp_path,
 ):
     """A rpm app without a long description raises an error."""
     bundle_path = tmp_path / "base_path/build/first-app/somevendor/surprising"
@@ -475,7 +482,10 @@ def test_rpm_package_no_long_description(
 
 @pytest.mark.skipif(sys.platform == "win32", reason="Can't build RPMs on Windows")
 def test_rpm_package_extra_requirements(
-    package_command, first_app_rpm, mock_gpg, tmp_path
+    package_command,
+    first_app_rpm,
+    mock_gpg,
+    tmp_path,
 ):
     """A rpm app can be packaged with extra runtime requirements and config features."""
     bundle_path = tmp_path / "base_path/build/first-app/somevendor/surprising"
@@ -679,7 +689,10 @@ def test_no_changelog(package_command, first_app_rpm, mock_gpg, tmp_path):
 
 @pytest.mark.skipif(sys.platform == "win32", reason="Can't build RPMs on Windows")
 def test_external_rpm_package(
-    package_command, external_first_app_rpm, mock_gpg, tmp_path
+    package_command,
+    external_first_app_rpm,
+    mock_gpg,
+    tmp_path,
 ):
     """An external app can be published as an RPM."""
     bundle_path = tmp_path / "base_path/build/first-app/somevendor/surprising"
