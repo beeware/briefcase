@@ -21,7 +21,6 @@ from briefcase.exceptions import (
     BadNetworkResourceError,
     BriefcaseCommandError,
     CorruptContentError,
-    CorruptDownloadError,
     MissingNetworkResourceError,
     NetworkFailure,
 )
@@ -280,7 +279,7 @@ class File(Tool):
           no warning is logged.
         - `"<algorithm>:<hexdigest>"` (e.g. `"sha256:2c26b46b..."`): the digest
           of the downloaded content is computed using `<algorithm>`. If the hash
-          doesn't match, a `CorruptDownloadError` is raised. Any fixed-length
+          doesn't match, a `CorruptContentError` is raised. Any fixed-length
           hash algorithm provided by hashlib can be used.
 
         :param url: The URL to download
@@ -449,13 +448,13 @@ class File(Tool):
 
         If `algorithm` and `digest` are provided, a digest is computed while the
         content is streamed, and compared against `digest` before the temporary
-        file is moved into place. A mismatch raises `CorruptDownloadError` and the
+        file is moved into place. A mismatch raises `CorruptContentError` and the
         temporary file is discarded.
 
         :param response: ``httpx.Response``
         :param filename: full filesystem path to save data
         :param role: A string describing the role played by the file being
-            downloaded, used to name the resource in `CorruptDownloadError`.
+            downloaded, used to name the resource in `CorruptContentError`.
         :param algorithm: The hash algorithm to verify the content against, or
             `None` if no verification should occur.
         :param digest: The expected hex digest of the content, or `None` if no
@@ -490,7 +489,7 @@ class File(Tool):
                             progress_bar.update(task_id, advance=len(data))
 
             if hasher is not None and hasher.hexdigest().lower() != digest.lower():
-                raise CorruptDownloadError(
+                raise CorruptContentError(
                     role=role or filename.name,
                     expected_hash=f"{hasher.name}:{digest}",
                     actual_hash=f"{hasher.name}:{hasher.hexdigest()}",

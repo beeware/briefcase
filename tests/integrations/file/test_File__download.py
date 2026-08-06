@@ -15,7 +15,7 @@ import pytest
 from briefcase.exceptions import (
     BadNetworkResourceError,
     BriefcaseCommandError,
-    CorruptDownloadError,
+    CorruptContentError,
     MissingNetworkResourceError,
     NetworkFailure,
 )
@@ -672,7 +672,7 @@ def test_unknown_httpx_connectionerror(mock_tools):
 
 
 def test_new_download_hash_mismatch(mock_tools, file_perms):
-    """If expected_hash doesn't match the downloaded content, CorruptDownloadError is
+    """If expected_hash doesn't match the downloaded content, CorruptContentError is
     raised, and the temp file is discarded without being cached."""
     response = _make_httpx_response(
         method="GET",
@@ -683,7 +683,7 @@ def test_new_download_hash_mismatch(mock_tools, file_perms):
     )
     mock_tools.httpx.stream.return_value.__enter__.return_value = response
 
-    with pytest.raises(CorruptDownloadError):
+    with pytest.raises(CorruptContentError):
         mock_tools.file.download(
             url="https://example.com/support?useful=Yes",
             download_path=mock_tools.base_path,
