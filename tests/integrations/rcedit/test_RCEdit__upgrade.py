@@ -29,6 +29,9 @@ def test_upgrade_exists(mock_tools, rcedit, tmp_path):
         "releases/download/v2.0.0/rcedit-x64.exe",
         download_path=tmp_path / "tools",
         role="RCEdit",
+        expected_hash=(
+            "sha256:3e7801db1a5edbec91b49a24a094aad776cb4515488ea5a4ca2289c400eade2a"
+        ),
     )
 
 
@@ -63,4 +66,7 @@ def test_upgrade_rcedit_download_failure(mock_tools, rcedit, tmp_path):
         "releases/download/v2.0.0/rcedit-x64.exe",
         download_path=tmp_path / "tools",
         role="RCEdit",
+        expected_hash=(
+            "sha256:3e7801db1a5edbec91b49a24a094aad776cb4515488ea5a4ca2289c400eade2a"
+        ),
     )

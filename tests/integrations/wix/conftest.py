@@ -10,6 +10,7 @@ from briefcase.integrations.subprocess import Subprocess
 WIX_DOWNLOAD_URL = (
     "https://github.com/wixtoolset/wix/releases/download/v5.0.2/wix-cli-x64.msi"
 )
+WIX_SHA256 = "sha256:097383b2773bdd3d76a6a2cd3f4de6357bae59172e1b6fa5ad87ce062074e8d0"
 WIX_EXE_PATH = "PFiles64/WiX Toolset v5.0/bin/wix.exe"
 WIX_UI_PATH = (
     "CFiles64/WixToolset/extensions/WixToolset.UI.wixext/5.0.2/wixext5/"

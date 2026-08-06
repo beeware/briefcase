@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import hashlib
 import itertools
 import os
 import re
@@ -18,12 +19,17 @@ from tenacity import retry, retry_if_exception_type, stop_after_attempt, wait_fi
 
 from briefcase.exceptions import (
     BadNetworkResourceError,
+    BriefcaseCommandError,
+    CorruptDownloadError,
     MissingNetworkResourceError,
     NetworkFailure,
 )
 from briefcase.integrations.base import Tool, ToolCache
 
 RELATIVE_PATH_RE = re.compile(r"^\.{1,2}[\\/]")
+
+# We allow any fixed-length hash; SHAKE is variable length.
+SUPPORTED_HASH_ALGORITHMS = hashlib.algorithms_guaranteed - {"shake_128", "shake_256"}
 
 
 class File(Tool):
@@ -249,22 +255,44 @@ class File(Tool):
             },
         )
 
-    def download(self, url: str, download_path: Path, role: str | None = None) -> Path:
+    def download(
+        self,
+        url: str,
+        download_path: Path,
+        role: str | None = None,
+        expected_hash: str | None = None,
+    ) -> Path:
         """Download a given URL, caching it. If it has already been downloaded, return
         the value that has been cached.
 
-        This is a utility method used to obtain assets used by the installation process.
-        The cached filename will be the filename portion of the URL, appended to the
-        download path.
+        This is a utility method used to obtain assets used by the installation
+        process. The cached filename will be the filename portion of the URL,
+        appended to the download path.
+
+        The download will be verified against an expected hash. The hash value
+        can be one of:
+
+        - `None`: no hash is available; the user will be warned that the download
+          has not been verified.
+        - `"unverified:<reason>"`: hash verification is deliberately skipped for
+          a documented reason (e.g. a rolling release with no stable content);
+          no warning is logged.
+        - `"<algorithm>:<hexdigest>"` (e.g. `"sha256:2c26b46b..."`): the digest
+          of the downloaded content is computed using `<algorithm>`. If the hash
+          doesn't match, a `CorruptDownloadError` is raised. Any fixed-length
+          hash algorithm provided by hashlib can be used.
 
         :param url: The URL to download
-        :param download_path: The path to the download cache folder. This path will be
-            created if it doesn't exist.
-        :param role: A string describing the role played by the file being downloaded;
-            used to construct log and error messages. Should be able to fit into the
-            sentence "Error downloading {role}".
+        :param download_path: The path to the download cache folder. This path
+            will be created if it doesn't exist.
+        :param role: A string describing the role played by the file being
+            downloaded; used to construct log and error messages. Should be able
+            to fit into the sentence "Error downloading {role}".
+        :param expected_hash: The expected hash of the downloaded content.
         :returns: The filename of the downloaded (or cached) file.
         """
+        algorithm, digest = self._parse_expected_hash(expected_hash)
+
         download_path.mkdir(parents=True, exist_ok=True)
         filename: Path | None = None
         try:
@@ -306,8 +334,19 @@ class File(Tool):
                 if filename.exists():
                     self.tools.console.info(f"{cache_name} already downloaded")
                 else:
+                    if expected_hash is None:
+                        self.tools.console.warning(
+                            f"The integrity of {cache_name} will not be verified "
+                            "as no reference hash been provided."
+                        )
                     self.tools.console.info(f"Downloading {cache_name}...")
-                    self._fetch_and_write_content(response, filename)
+                    self._fetch_and_write_content(
+                        response,
+                        filename,
+                        role=role,
+                        algorithm=algorithm,
+                        digest=digest,
+                    )
         except httpx.RequestError as e:
             if role:
                 description = role
@@ -363,7 +402,43 @@ class File(Tool):
 
         return filename
 
-    def _fetch_and_write_content(self, response: httpx.Response, filename: Path):
+    def _parse_expected_hash(
+        self,
+        expected_hash: str | None,
+    ) -> tuple[str | None, str | None]:
+        """Validate `expected_hash` and split it into its algorithm and digest.
+
+        :param expected_hash: `None`, `"unverified:<reason>"`, or
+            `"<algorithm>:<hexdigest>"`.
+        :returns: A tuple `(algorithm, digest)`. Both are `None` if no verification
+            should occur, either because no hash was provided, or because the
+            download was explicitly marked as unverified.
+        :raises BriefcaseCommandError: If `expected_hash` doesn't match any of the
+            recognized formats.
+        """
+        if expected_hash is None or expected_hash.startswith("unverified:"):
+            return None, None
+
+        algorithm, _, digest = expected_hash.partition(":")
+        if not algorithm or not digest or algorithm not in SUPPORTED_HASH_ALGORITHMS:
+            raise BriefcaseCommandError(
+                msg=(
+                    f"Malformed expected hash {expected_hash!r}. Expected a value "
+                    "in the form '<algorithm>:<hexdigest>', or "
+                    "'unverified:<reason>'."
+                )
+            )
+
+        return algorithm, digest
+
+    def _fetch_and_write_content(
+        self,
+        response: httpx.Response,
+        filename: Path,
+        role: str | None,
+        algorithm: str | None,
+        digest: str | None,
+    ):
         """Write the content from the httpx Response to file.
 
         The data is initially written in to a temporary file in the Briefcase
@@ -371,9 +446,22 @@ class File(Tool):
         downloads in later Briefcase runs. The temporary file is only moved
         to ``filename`` if the download is successful; otherwise, it is deleted.
 
+        If `algorithm` and `digest` are provided, a digest is computed while the
+        content is streamed, and compared against `digest` before the temporary
+        file is moved into place. A mismatch raises `CorruptDownloadError` and the
+        temporary file is discarded.
+
         :param response: ``httpx.Response``
         :param filename: full filesystem path to save data
+        :param role: A string describing the role played by the file being
+            downloaded, used to name the resource in `CorruptDownloadError`.
+        :param algorithm: The hash algorithm to verify the content against, or
+            `None` if no verification should occur.
+        :param digest: The expected hex digest of the content, or `None` if no
+            verification should occur.
         """
+        hasher = hashlib.new(algorithm) if algorithm else None
+
         # `temp_file` is used in the `finally` block, so make sure it's assigned
         # before the `try`.
         temp_file = tempfile.NamedTemporaryFile(  # noqa: SIM115 (use context manager)
@@ -388,13 +476,24 @@ class File(Tool):
                 if total is None:
                     response.read()
                     temp_file.write(response.content)
+                    if hasher is not None:
+                        hasher.update(response.content)
                 else:
                     progress_bar = self.tools.console.progress_bar()
                     task_id = progress_bar.add_task("Downloader", total=int(total))
                     with progress_bar:
                         for data in response.iter_bytes(chunk_size=1024 * 1024):
                             temp_file.write(data)
+                            if hasher is not None:
+                                hasher.update(data)
                             progress_bar.update(task_id, advance=len(data))
+
+            if hasher is not None and hasher.hexdigest().lower() != digest.lower():
+                raise CorruptDownloadError(
+                    role=role or filename.name,
+                    expected_hash=f"{hasher.name}:{digest}",
+                    actual_hash=f"{hasher.name}:{hasher.hexdigest()}",
+                )
 
             # This file move short circuits to a file rename when the source and
             # destination are on the same filesystem; therefore, it should complete

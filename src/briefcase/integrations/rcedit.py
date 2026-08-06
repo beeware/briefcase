@@ -19,6 +19,11 @@ class RCEdit(ManagedTool):
         )
 
     @property
+    def download_hash(self) -> str:
+        # SHA256 checksum of rcedit-x64.exe v2.0.0
+        return "sha256:3e7801db1a5edbec91b49a24a094aad776cb4515488ea5a4ca2289c400eade2a"
+
+    @property
     def rcedit_path(self) -> Path:
         return self.tools.base_path / "rcedit-x64.exe"
 
@@ -59,6 +64,7 @@ class RCEdit(ManagedTool):
             url=self.download_url,
             download_path=self.tools.base_path,
             role="RCEdit",
+            expected_hash=self.download_hash,
         )
 
     def uninstall(self):
