@@ -105,7 +105,7 @@ Signing is performed as follows, depending on the packaging format:
 
 If the relevant signing tool is not installed, Briefcase will report an error suggesting how to install it. If no signing identity is available, or if `--adhoc-sign` is used, the package will be produced without a signature.
 
-Signing is not supported when building with Docker (i.e., using the `--target` option); in this case, the package must be produced without a signature.
+When building with Docker, the signing tool is installed in the build container, and the signing identity is exported from the host and imported into the container for the duration of the signing step. Note that a key requiring a passphrase cannot be used to sign a package built with Docker, as GnuPG cannot prompt for a passphrase inside the container.
 
 ## Additional options
 

@@ -64,4 +64,8 @@ As with other platforms, `--adhoc-sign` is useful during development and testing
 
 ## Docker builds
 
-Signing is not currently supported when building with Docker (i.e., when the `--target` option is used). When packaging with Docker, you must opt out of signing — either by selecting "Don't sign" when prompted, or by providing the `--adhoc-sign` option. Selecting a signing identity when building with Docker will cause an error.
+Linux system packages can be signed when building with Docker (i.e., when the `--target` option is used), using the same GPG signing identity as native builds.
+
+When signing a package built with Docker, Briefcase exports the selected secret key from the host machine's GPG keyring, and imports it into the build container so that the signing step can run inside the container. The exported key is removed immediately after signing, and is never stored in the Docker image.
+
+One caveat applies when building with Docker: because the signing step runs inside a headless container, GnuPG is not able to prompt for a passphrase. If your signing key requires a passphrase, the signing step will fail. To sign packages built with Docker, use a key (or subkey) that does not require a passphrase, or build the package without the `--target` option and sign it natively.
