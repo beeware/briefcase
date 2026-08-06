@@ -1195,7 +1195,7 @@ Did you run Briefcase in a project directory that contains {filename.name!r}?"""
     def update_cookiecutter_cache(
         self,
         template: str,
-        branch: str | None = "master",
+        branch: str | None = "main",
         template_hash: str | None = None,
     ):
         """Ensure that we have a current checkout of a template path.
