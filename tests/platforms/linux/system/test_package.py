@@ -165,6 +165,73 @@ def test_unknown_packaging_format(package_command, first_app):
         package_command.verify_app_tools(first_app)
 
 
+@pytest.mark.parametrize(
+    ("base_vendor", "input_format", "output_format", "expected_requires"),
+    [
+        # System packaging maps to known formats, and adds the signing tool
+        ("debian", "system", "deb", ["debsigs"]),
+        ("rhel", "system", "rpm", ["rpm-sign"]),
+        ("arch", "system", "pkg", ["gnupg"]),
+        # Explicit output format is preserved, and adds the signing tool
+        ("debian", "deb", "deb", ["debsigs"]),
+        ("redhat", "rpm", "rpm", ["rpm-sign"]),
+        ("arch", "pkg", "pkg", ["gnupg"]),
+        # On SUSE, rpmsign is provided by rpm-build, which is already installed
+        # by the Docker image; no additional package is needed.
+        ("suse", "system", "rpm", []),
+    ],
+)
+def test_docker_packaging_format_adjusts_signing_tools(
+    package_command,
+    first_app,
+    base_vendor,
+    input_format,
+    output_format,
+    expected_requires,
+):
+    """When using Docker, the signing tool is added to the image requirements."""
+    first_app.target_vendor_base = base_vendor
+    first_app.packaging_format = input_format
+    package_command.target_image = "somevendor:surprising"
+    package_command.extra_docker_build_args = []
+    package_command.verify_docker_python = mock.MagicMock()
+    package_command.tools[first_app].app_context = mock.MagicMock()
+
+    package_command.verify_app_tools(first_app)
+
+    assert first_app.packaging_format == output_format
+    assert getattr(first_app, "system_requires", []) == expected_requires
+
+
+def test_docker_packaging_format_signing_tools_are_not_duplicated(
+    package_command,
+    first_app,
+):
+    """The signing tool is not added to the image requirements more than once."""
+    first_app.target_vendor_base = "debian"
+    first_app.packaging_format = "deb"
+    package_command.target_image = "somevendor:surprising"
+    package_command.extra_docker_build_args = []
+    package_command.verify_docker_python = mock.MagicMock()
+    package_command.tools[first_app].app_context = mock.MagicMock()
+
+    package_command.verify_app_tools(first_app)
+    package_command.verify_app_tools(first_app)
+
+    assert first_app.system_requires == ["debsigs"]
+
+
+def test_native_packaging_does_not_add_signing_tools(package_command, first_app):
+    """The signing tool is not added to the host requirements when not using
+    Docker."""
+    first_app.target_vendor_base = "debian"
+    first_app.packaging_format = "deb"
+
+    package_command.verify_app_tools(first_app)
+
+    assert getattr(first_app, "system_requires", None) is None
+
+
 def test_package_deb_app(package_command, first_app, mock_gpg):
     """A debian app can be packaged."""
     # Set the packaging format

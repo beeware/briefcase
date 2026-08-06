@@ -727,6 +727,41 @@ Install Docker Engine and try again or run Briefcase on an Arch host system.
                 f"({system_version!r})."
             )
 
+    def _docker_signing_tool(self, app: LinuxSystemAppConfig) -> list[str]:
+        """Utility method returning the packages needed to install the signing tool in a
+        Docker image.
+
+        The Docker image is built before the signing identity is selected, so the
+        signing tool must be installed in the image for the signing step to be able to
+        run inside the container.
+
+        :param app: The app being packaged
+        :returns: The list of packages that must be installed in the Docker image to
+            provide the signing tool.
+        """
+        packaging_format = getattr(app, "packaging_format", None)
+        if packaging_format == "system":
+            packaging_format = {
+                DEBIAN: "deb",
+                RHEL: "rpm",
+                ARCH: "pkg",
+                SUSE: "rpm",
+            }.get(app.target_vendor_base)
+
+        package_name = {
+            "deb": "debsigs",
+            "rpm": "rpm-sign",
+            "pkg": "gnupg",
+        }.get(packaging_format)
+
+        if package_name is None or (
+            package_name == "rpm-sign" and app.target_vendor_base == SUSE
+        ):
+            # On SUSE, rpmsign is provided by rpm-build, which is already
+            # installed by the Docker image; there is no `rpm-sign` package.
+            return []
+        return [package_name]
+
     def verify_app_tools(self, app: FinalizedAppConfig):
         """Verify App environment is prepared and available.
 
@@ -742,6 +777,17 @@ Install Docker Engine and try again or run Briefcase on an Arch host system.
         verify_python = not hasattr(self.tools[app], "app_context")
 
         if self.use_docker:
+            # The Docker image is built before the signing identity is selected,
+            # so the signing tool must be installed in the image for the signing
+            # step to be able to run inside the container.
+            system_requires = getattr(app, "system_requires", None)
+            if system_requires is None:
+                system_requires = []
+                app.system_requires = system_requires
+            for package in self._docker_signing_tool(app):
+                if package not in system_requires:
+                    system_requires.append(package)
+
             DockerAppContext.verify(
                 tools=self.tools,
                 app=app,
@@ -1307,8 +1353,9 @@ class LinuxSystemPackageCommand(
 
     def verify_app_tools(self, app: FinalizedAppConfig):
         app = cast(LinuxSystemAppConfig, app)
-        super().verify_app_tools(app)
         # If "system" packaging format was selected, determine what that means.
+        # This must be done before the app context is verified, so the Docker
+        # image can be built with the tools needed to package and sign the app.
         if app.packaging_format == "system":
             app.packaging_format = {
                 DEBIAN: "deb",
@@ -1323,6 +1370,8 @@ class LinuxSystemPackageCommand(
                 f"{app.target_vendor}. You may be able to build a package "
                 "by manually specifying a format with -p/--packaging-format"
             )
+
+        super().verify_app_tools(app)
 
         if not self.use_docker:
             self._verify_packaging_tools(app)
