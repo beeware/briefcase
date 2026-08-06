@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import concurrent.futures
+import json
 import os
 import plistlib
 import re
@@ -96,7 +97,7 @@ class macOSMixin(_MixinBase):
     platform = "macOS"
     supported_host_os: Collection[str] = {"Darwin"}
     supported_host_os_reason = "macOS applications can only be built on macOS."
-    supported_env_managers: Collection[EnvManagerT] = {"venv", "uv"}
+    supported_env_managers: Collection[EnvManagerT] = {"venv", "uv", "conda"}
     # 0.3.20 introduced a framework-based support package.
     platform_target_version: str | None = "0.3.20"
 
@@ -127,6 +128,24 @@ class macOSMixin(_MixinBase):
                 )
 
         super().verify_tools()
+
+    def verify_app(self, app: FinalizedAppConfig):
+        super().verify_app(app)
+
+        # Ensure the environment manager supports universal apps if we're trying
+        # to build one.
+        venv_class = self.tools.virtual_environment[app.env_manager]
+        if venv_class.provides_python:
+            if getattr(app, "universal_build", True):
+                raise BriefcaseCommandError(
+                    "Briefcase doesn't support creating universal apps "
+                    "when the environment provides the Python library"
+                )
+            elif self.tools.host_arch == "x86_64":
+                raise BriefcaseCommandError(
+                    "Briefcase doesn't support creating x86_64 apps "
+                    "when the environment provides the Python library"
+                )
 
     def is_icloud_synced(self, path: Path) -> bool:
         """Determine if a path is on an iCloud drive.
@@ -216,6 +235,32 @@ class macOSCreateMixin(AppPackagesMergeMixin):
         # picked up on the next run of any Briefcase command).
         self.verify_not_on_icloud(app, cleanup=True)
 
+    def output_format_template_context(self, app: FinalizedAppConfig):
+        """Additional template context required by the output format.
+
+        :param app: The config object for the app
+        """
+        # If the environment manager provides Python, it will be in `libPython3.X`
+        # format, rather than Python.XCframework format.
+        venv_class = self.tools.virtual_environment[app.env_manager]
+        return {
+            "use_framework": not venv_class.provides_python,
+        }
+
+    def stub_binary_filename(
+        self,
+        support_revision: str,
+        app: FinalizedAppConfig,
+    ) -> str:
+        """The filename for the stub binary."""
+        venv_class = self.tools.virtual_environment[app.env_manager]
+        stub_type = "Console" if app.console_app else "GUI"
+        stub_name = "LStub" if venv_class.provides_python else "Stub"
+
+        return (
+            f"{stub_type}-{stub_name}-{self.python_version_tag}-b{support_revision}.zip"
+        )
+
     def _install_app_requirements(
         self,
         app: FinalizedAppConfig,
@@ -224,31 +269,61 @@ class macOSCreateMixin(AppPackagesMergeMixin):
         app_packages_path: Path,
         **kwargs,
     ):
-        try:
-            # Determine the min macOS version from the framework metadata
-            # of the macos-arm64_x86_64 slice of the XCframework
-            plist_file = (
-                self.support_path(app)
-                / "Python.xcframework/macos-arm64_x86_64"
-                / "Python.framework/Resources/Info.plist"
-            )
-            with plist_file.open("rb") as f:
-                info_plist = plistlib.load(f)
-
-            support_min_version = info_plist.get("MinimumOSVersion", "11.0")
-        except FileNotFoundError:
-            # If a plist file couldn't be found, it's an old-style support package;
-            # Determine min. macOS version from the VERSIONS file in the support package
-            versions = dict(
-                [part.strip() for part in line.split(": ", 1)]
-                for line in (
-                    (self.support_path(app) / "VERSIONS")
-                    .read_text(encoding="UTF-8")
-                    .split("\n")
+        if venv.provides_python:
+            # Read the minimum supported macOS version from the environment's
+            # Python package metadata.
+            try:
+                python_record = next(
+                    (venv.venv_path / "conda-meta").glob("python-*.json")
                 )
-                if ": " in line
-            )
-            support_min_version = versions.get("Min macOS version", "11.0")
+                depends = json.loads(python_record.read_text(encoding="utf-8"))[
+                    "depends"
+                ]
+            except StopIteration:
+                raise BriefcaseCommandError(
+                    "Unable to find Python environment configuration file."
+                ) from None
+            except json.decoder.JSONDecodeError:
+                raise BriefcaseCommandError(
+                    "Unable to parse Python environment configuration file."
+                ) from None
+            else:
+                try:
+                    support_min_version = next(
+                        dep.split(">=")[1] for dep in depends if dep.startswith("__osx")
+                    ).strip()
+                except Exception as e:
+                    raise BriefcaseCommandError(
+                        "Could not extract minimum macOS version from "
+                        "Python environment metadata."
+                    ) from e
+
+        else:
+            try:
+                # Determine the min macOS version from the framework metadata
+                # of the macos-arm64_x86_64 slice of the XCframework
+                plist_file = (
+                    self.support_path(app)
+                    / "Python.xcframework/macos-arm64_x86_64"
+                    / "Python.framework/Resources/Info.plist"
+                )
+                with plist_file.open("rb") as f:
+                    info_plist = plistlib.load(f)
+
+                support_min_version = info_plist.get("MinimumOSVersion", "11.0")
+            except FileNotFoundError:
+                # If a plist file couldn't be found, it's an old-style support package;
+                # Determine min. macOS version from the VERSIONS file.
+                versions = dict(
+                    [part.strip() for part in line.split(": ", 1)]
+                    for line in (
+                        (self.support_path(app) / "VERSIONS")
+                        .read_text(encoding="UTF-8")
+                        .split("\n")
+                    )
+                    if ": " in line
+                )
+                support_min_version = versions.get("Min macOS version", "11.0")
 
         # Check that the app's definition is compatible with the support package
         # If the app doesn't specify a minimum version, use the support package

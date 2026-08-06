@@ -16,13 +16,14 @@ from ....utils import create_file, create_tgz_file
 
 
 @pytest.fixture
-def package_command(dummy_console, first_app, tmp_path):
+def package_command(mock_tools, dummy_console, first_app, tmp_path):
     command = LinuxSystemPackageCommand(
         console=dummy_console,
+        tools=mock_tools,
         base_path=tmp_path / "base_path",
         data_path=tmp_path / "briefcase",
     )
-    command.tools.home_path = tmp_path / "home"
+    mock_tools.host_os = "Linux"
 
     # Mock ABI from packaging system
     command._rpm_abi = "wonky"
@@ -30,14 +31,11 @@ def package_command(dummy_console, first_app, tmp_path):
     # Mock the app context
     command.tools.app_tools[first_app].app_context = mock.MagicMock()
 
-    # Mock shutil
-    command.tools.shutil = mock.MagicMock()
-
     # Make the mock make_archive still package tarballs
-    command.tools.shutil.make_archive = mock.MagicMock(side_effect=shutil.make_archive)
+    command.tools.shutil.make_archive.side_effect = shutil.make_archive
 
     # Make the mock rmtree still remove content
-    command.tools.shutil.rmtree = mock.MagicMock(side_effect=shutil.rmtree)
+    command.tools.shutil.rmtree.side_effect = shutil.rmtree
 
     # Mock the RPM tag, since "somevendor" won't identify as rpm.
     command.rpm_tag = mock.MagicMock(return_value="fcXX")
@@ -45,6 +43,9 @@ def package_command(dummy_console, first_app, tmp_path):
     # Mock not using docker
     command.target_image = None
     command.extra_docker_build_args = []
+
+    # Accept the default "Don't sign" selection for the signing menu.
+    command.console.values = [""]
 
     return command
 
@@ -166,7 +167,13 @@ def test_verify_docker(package_command, first_app_rpm, monkeypatch):
     ["HISTORY", "NEWS.txt"],
 )
 @pytest.mark.skipif(sys.platform == "win32", reason="Can't build RPMs on Windows")
-def test_rpm_package(package_command, first_app_rpm, tmp_path, changelog_filename):
+def test_rpm_package(
+    package_command,
+    first_app_rpm,
+    mock_gpg,
+    tmp_path,
+    changelog_filename,
+):
     """A rpm app can be packaged."""
     bundle_path = tmp_path / "base_path/build/first-app/somevendor/surprising"
 
@@ -308,7 +315,7 @@ def test_rpm_package(package_command, first_app_rpm, tmp_path, changelog_filenam
 
 
 @pytest.mark.skipif(sys.platform == "win32", reason="Can't build RPMs on Windows")
-def test_rpm_re_package(package_command, first_app_rpm, tmp_path):
+def test_rpm_re_package(package_command, first_app_rpm, mock_gpg, tmp_path):
     """A rpm app that has previously been packaged can be re-packaged."""
     bundle_path = tmp_path / "base_path/build/first-app/somevendor/surprising"
 
@@ -449,7 +456,12 @@ def test_rpm_re_package(package_command, first_app_rpm, tmp_path):
 
 
 @pytest.mark.skipif(sys.platform == "win32", reason="Can't build RPMs on Windows")
-def test_rpm_package_no_long_description(package_command, first_app_rpm, tmp_path):
+def test_rpm_package_no_long_description(
+    package_command,
+    first_app_rpm,
+    mock_gpg,
+    tmp_path,
+):
     """A rpm app without a long description raises an error."""
     bundle_path = tmp_path / "base_path/build/first-app/somevendor/surprising"
 
@@ -469,7 +481,12 @@ def test_rpm_package_no_long_description(package_command, first_app_rpm, tmp_pat
 
 
 @pytest.mark.skipif(sys.platform == "win32", reason="Can't build RPMs on Windows")
-def test_rpm_package_extra_requirements(package_command, first_app_rpm, tmp_path):
+def test_rpm_package_extra_requirements(
+    package_command,
+    first_app_rpm,
+    mock_gpg,
+    tmp_path,
+):
     """A rpm app can be packaged with extra runtime requirements and config features."""
     bundle_path = tmp_path / "base_path/build/first-app/somevendor/surprising"
 
@@ -583,7 +600,7 @@ def test_rpm_package_extra_requirements(package_command, first_app_rpm, tmp_path
 
 
 @pytest.mark.skipif(sys.platform == "win32", reason="Can't build RPMs on Windows")
-def test_rpm_package_failure(package_command, first_app_rpm, tmp_path):
+def test_rpm_package_failure(package_command, first_app_rpm, mock_gpg, tmp_path):
     """If packaging doesn't succeed, an error is raised."""
     bundle_path = tmp_path / "base_path/build/first-app/somevendor/surprising"
 
@@ -635,7 +652,7 @@ def test_rpm_package_failure(package_command, first_app_rpm, tmp_path):
 
 
 @pytest.mark.skipif(sys.platform == "win32", reason="Can't build RPMs on Windows")
-def test_no_changelog(package_command, first_app_rpm, tmp_path):
+def test_no_changelog(package_command, first_app_rpm, mock_gpg, tmp_path):
     """If an packaging doesn't succeed, an error is raised."""
     bundle_path = tmp_path / "base_path/build/first-app/somevendor/surprising"
 
@@ -671,7 +688,12 @@ def test_no_changelog(package_command, first_app_rpm, tmp_path):
 
 
 @pytest.mark.skipif(sys.platform == "win32", reason="Can't build RPMs on Windows")
-def test_external_rpm_package(package_command, external_first_app_rpm, tmp_path):
+def test_external_rpm_package(
+    package_command,
+    external_first_app_rpm,
+    mock_gpg,
+    tmp_path,
+):
     """An external app can be published as an RPM."""
     bundle_path = tmp_path / "base_path/build/first-app/somevendor/surprising"
 

@@ -80,7 +80,7 @@ class WindowsMixin(_MixinBase):
     platform = "windows"
     supported_host_os: Collection[str] = {"Windows"}
     supported_host_os_reason = "Windows applications can only be built on Windows."
-    supported_env_managers: Collection[EnvManagerT] = {"venv", "uv"}
+    supported_env_managers: Collection[EnvManagerT] = {"venv", "uv", "conda"}
     platform_target_version = "0.3.24"
 
     def bundle_package_executable_path(self, app):
@@ -427,6 +427,18 @@ files that Briefcase can convert and merge automatically.
         # Install the license.
         with self.console.wait_bar("Installing license..."):
             self.install_license(app)
+
+    def install_managed_python_env(
+        self,
+        app: FinalizedAppConfig,
+        venv: VirtualEnvironment,
+    ):
+        self.tools.shutil.copytree(
+            venv.venv_path,
+            self.support_path(app),
+            symlinks=True,
+            dirs_exist_ok=True,
+        )
 
 
 class WindowsRunCommand(RunCommand):
