@@ -146,10 +146,9 @@ def test_linux_docker_adds_signing_tool(
     """If Docker is enabled on Linux, the signing tool is added to the image
     requirements.
 
-    This must happen during any command's app tool verification, because the
-    Docker image is built before the signing identity is selected; if the
-    signing tool isn't in the image, signing a package built with Docker will
-    fail.
+    This must happen during any command's app tool verification, because the Docker
+    image is built before the signing identity is selected; if the signing tool isn't in
+    the image, signing a package built with Docker will fail.
     """
     create_command.tools.host_os = "Linux"
     create_command.target_image = "somevendor:surprising"

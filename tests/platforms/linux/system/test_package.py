@@ -222,8 +222,7 @@ def test_docker_packaging_format_signing_tools_are_not_duplicated(
 
 
 def test_native_packaging_does_not_add_signing_tools(package_command, first_app):
-    """The signing tool is not added to the host requirements when not using
-    Docker."""
+    """The signing tool is not added to the host requirements when not using Docker."""
     first_app.target_vendor_base = "debian"
     first_app.packaging_format = "deb"
 

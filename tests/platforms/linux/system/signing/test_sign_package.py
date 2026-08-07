@@ -179,7 +179,8 @@ def test_sign_package_in_docker(
 
 
 def test_sign_package_error_in_docker(package_command, first_app, mock_gpg):
-    """If signing inside Docker fails, an error is raised and the key file is removed."""
+    """If signing inside Docker fails, an error is raised and the key file is
+    removed."""
     first_app.packaging_format = "deb"
     package_command.distribution_path = mock.MagicMock(
         return_value=Path("/path/to/dist/first-app.deb")
