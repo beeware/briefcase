@@ -20,7 +20,7 @@ from tenacity import retry, retry_if_exception_type, stop_after_attempt, wait_fi
 from briefcase.exceptions import (
     BadNetworkResourceError,
     BriefcaseCommandError,
-    CorruptDownloadError,
+    CorruptContentError,
     MissingNetworkResourceError,
     NetworkFailure,
 )
@@ -279,7 +279,7 @@ class File(Tool):
           no warning is logged.
         - `"<algorithm>:<hexdigest>"` (e.g. `"sha256:2c26b46b..."`): the digest
           of the downloaded content is computed using `<algorithm>`. If the hash
-          doesn't match, a `CorruptDownloadError` is raised. Any fixed-length
+          doesn't match, a `CorruptContentError` is raised. Any fixed-length
           hash algorithm provided by hashlib can be used.
 
         :param url: The URL to download
@@ -448,13 +448,13 @@ class File(Tool):
 
         If `algorithm` and `digest` are provided, a digest is computed while the
         content is streamed, and compared against `digest` before the temporary
-        file is moved into place. A mismatch raises `CorruptDownloadError` and the
+        file is moved into place. A mismatch raises `CorruptContentError` and the
         temporary file is discarded.
 
         :param response: ``httpx.Response``
         :param filename: full filesystem path to save data
         :param role: A string describing the role played by the file being
-            downloaded, used to name the resource in `CorruptDownloadError`.
+            downloaded, used to name the resource in `CorruptContentError`.
         :param algorithm: The hash algorithm to verify the content against, or
             `None` if no verification should occur.
         :param digest: The expected hex digest of the content, or `None` if no
@@ -489,7 +489,7 @@ class File(Tool):
                             progress_bar.update(task_id, advance=len(data))
 
             if hasher is not None and hasher.hexdigest().lower() != digest.lower():
-                raise CorruptDownloadError(
+                raise CorruptContentError(
                     role=role or filename.name,
                     expected_hash=f"{hasher.name}:{digest}",
                     actual_hash=f"{hasher.name}:{hasher.hexdigest()}",
@@ -518,6 +518,51 @@ class File(Tool):
             # exist if the download fails or the user sends CTRL+C.
             with suppress(FileNotFoundError):
                 self.tools.os.remove(temp_file.name)
+
+    def check_hash(
+        self,
+        *,
+        role: str,
+        expected_hash: str | None,
+        actual_hash: str,
+    ) -> None:
+        """Verify a hash value the caller already has (e.g. a git commit's hexsha)
+        against an expected value.
+
+        `expected_hash` can be one of:
+
+        - `None`: no reference hash is available; a warning is logged, and no
+          comparison is made.
+        - `"unverified:<reason>"`: verification is deliberately skipped; nothing
+          is logged.
+        - `"<label>:<digest>"`: compared as a whole string (case-insensitively)
+          against `actual_hash`. The caller is responsible for formatting
+          `actual_hash` the same way (e.g. `f"sha1:{commit.hexsha}"`), since the
+          `<label>` is part of the comparison, not just documentation.
+
+        :param role: A string describing the resource being verified; used in log
+            and error messages.
+        :param expected_hash: The expected hash value, or `None`/`"unverified:..."`.
+        :param actual_hash: The hash value to compare against, formatted the same
+            way as `expected_hash` (e.g. `"<label>:<digest>"`).
+        :raises CorruptContentError: If `expected_hash` and `actual_hash` don't match.
+        """
+        if expected_hash is None:
+            self.tools.console.warning(
+                f"The integrity of {role} will not be verified as no reference "
+                "hash has been provided."
+            )
+            return
+
+        if expected_hash.startswith("unverified:"):
+            return
+
+        if expected_hash.lower() != actual_hash.lower():
+            raise CorruptContentError(
+                role=role,
+                expected_hash=expected_hash,
+                actual_hash=actual_hash,
+            )
 
     @retry(
         retry=retry_if_exception_type(PermissionError),

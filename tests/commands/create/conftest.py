@@ -13,6 +13,7 @@ from briefcase.integrations.base import Tool
 from briefcase.integrations.subprocess import Subprocess
 
 from ...utils import create_file, create_toml_file
+from ..conftest import TEMPLATE_COMMIT_HEXSHA
 
 
 @pytest.fixture
@@ -52,6 +53,8 @@ class DummyCreateCommand(CreateCommand):
     output_format = "Dummy"
     description = "Dummy create command"
     hidden_app_properties: Collection[str] = {"permission", "request"}
+    # Matches the commit hash to the mock_git fixture
+    app_template_hash = f"sha1:{TEMPLATE_COMMIT_HEXSHA}"
 
     def __init__(self, *args, support_file=None, git=None, home_path=None, **kwargs):
         super().__init__(*args, **kwargs)

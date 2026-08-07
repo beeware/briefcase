@@ -776,6 +776,7 @@ class LinuxSystemCreateCommand(
     LinuxSystemDockerMixin, LocalRequirementsMixin, CreateCommand
 ):
     description = "Create and populate a Linux system project."
+    app_template_hash = "sha1:98aa0bec0b76cd960a7b621d1b150922bb49bc6e"
 
     def output_format_template_context(self, app: FinalizedAppConfig):
         app = cast(LinuxSystemAppConfig, app)

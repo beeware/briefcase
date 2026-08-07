@@ -133,7 +133,7 @@ class BadNetworkResourceError(BriefcaseCommandError):
         super().__init__(msg=f"Unable to download {url} (status code {status_code})")
 
 
-class CorruptDownloadError(BriefcaseCommandError):
+class CorruptContentError(BriefcaseCommandError):
     def __init__(self, role, expected_hash, actual_hash):
         self.role = role
         self.expected_hash = expected_hash

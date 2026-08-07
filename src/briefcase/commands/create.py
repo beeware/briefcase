@@ -125,6 +125,9 @@ class CreateCommand(BaseCommand):
     # app properties that won't be exposed to the context
     hidden_app_properties: Collection[str] = {"permission"}
 
+    # The expected commit hash of this platform's default template.
+    app_template_hash: str = "sha1:invalid - override on subclass"
+
     @property
     def app_template_url(self) -> str:
         """The URL for a cookiecutter repository to use when creating apps."""
@@ -271,6 +274,7 @@ class CreateCommand(BaseCommand):
         # Remove the context items that describe the template
         extra_context.pop("template")
         extra_context.pop("template_branch")
+        extra_context.pop("template_hash")
 
         # Augment with some extra fields.
         extra_context.update(
@@ -306,11 +310,21 @@ class CreateCommand(BaseCommand):
         output_path = self.bundle_path(app).parent
         output_path.mkdir(parents=True, exist_ok=True)
 
+        # If the app defines a template hash, use it. Use the command's template
+        # hash if there's no template or branch override by the app.
+        if app.template_hash:
+            template_hash = app.template_hash
+        elif app.template is None and app.template_branch is None:
+            template_hash = self.app_template_hash
+        else:
+            template_hash = None
+
         self.generate_template(
             template=app.template or self.app_template_url,
             branch=app.template_branch,
             output_path=output_path,
             extra_context=extra_context,
+            template_hash=template_hash,
         )
 
     def create_app_environment(

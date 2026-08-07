@@ -471,6 +471,7 @@ class AppConfig(BaseConfig):
     permission: dict
     template: str | None
     template_branch: str | None
+    template_hash: str | None
     test_sources: list[str] | None
     test_requires: list[str] | None
     supported: bool
@@ -608,6 +609,7 @@ class DraftAppConfig(AppConfig):
         permission: dict | None = None,
         template: str | None = None,
         template_branch: str | None = None,
+        template_hash: str | None = None,
         test_sources: list[str] | None = None,
         test_requires: list[str] | None = None,
         supported: bool = True,
@@ -638,6 +640,7 @@ class DraftAppConfig(AppConfig):
         self.permission = {} if permission is None else permission
         self.template = template
         self.template_branch = template_branch
+        self.template_hash = template_hash
         self.test_sources = test_sources
         self.test_requires = test_requires
         self.supported = supported

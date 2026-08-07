@@ -382,6 +382,14 @@ If this setting is not provided, Briefcase will use a default template for the o
 
 The branch of the project template to use when generating the app. If the template is a local file, this attribute will be ignored. If not specified, Briefcase will use a branch matching the version of Briefcase that is being used (i.e., if you're using Briefcase 0.3.9, Briefcase will use the `v0.3.9` template branch when generating the app). If you're using a development version of Briefcase, Briefcase will use the `main` branch of the template.
 
+#### `template_hash`
+
+The expected commit hash of the template repository referenced by [`template`][] (or the branch referenced by [`template_branch`][]), in the form `sha1:<hexdigest>` (e.g. `sha1:e8082ea4d3310d7605e12f4ab1fa7ff7b637b974`). If a template or template branch is specified and a hash is provided, Briefcase will verify the hexdigest of template matches this hash, and raise an error if the hash doesn't match. If no hash is provided, a warning will be displayed.
+
+A hash algorithm of `unverified` can be used to explicitly declare that the hash should not be checked; the hash value will be ignored, and can be used to document why hash verification isn't necessary (e.g., `"unverified:template tracks main branch"`)
+
+The hash is only used if the template is specified as a Git URL. Templates specified as local file references will not be hash verified, even if the local file is a Git repository.
+
 #### `test_requires`
 
 A list of packages that are required for the test suite to run.
