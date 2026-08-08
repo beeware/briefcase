@@ -67,7 +67,7 @@ def test_install_failure_version_downgrade(adb, capsys):
 
     with pytest.raises(BriefcaseCommandError) as exc_info:
         adb.install_apk("example.apk", "com.example.helloworld")
-    assert "uninstall com.example.helloworld" in str(exc_info.value)
+    assert "newer version" in str(exc_info.value)
 
     adb.run.assert_called_once_with("install", "-r", "example.apk")
 
