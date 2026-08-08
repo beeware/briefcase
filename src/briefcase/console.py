@@ -252,7 +252,7 @@ class Console:
         return self._log_impl.export_text()
 
     @staticmethod
-    def _dedent_and_wrap(text, wrap_width, border=0):
+    def dedent_and_wrap(text, wrap_width=80, border=0):
         """Dedent text, split text into paragraphs and wrap to a width.
 
         If a border is specified, that border width will be preserved on the left *and
@@ -336,7 +336,7 @@ class Console:
 
         if title:
             # Remove 6 from the width to allow for "** " and " **" wrappers
-            title_lines = Console._dedent_and_wrap(f"WARNING: {title}", width - 6)
+            title_lines = Console.dedent_and_wrap(f"WARNING: {title}", width - 6)
 
             # Center each line of the title and add to the box
             for line in title_lines:
@@ -346,7 +346,7 @@ class Console:
             lines_array.append(BORDER_LINE)
 
         if message:
-            msg_lines = Console._dedent_and_wrap(message, width, border=2)
+            msg_lines = Console.dedent_and_wrap(message, width, border=2)
 
             lines_array.extend(["", *msg_lines, "", BORDER_LINE, ""])
 
