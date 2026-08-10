@@ -11,6 +11,7 @@ from datetime import datetime
 from pathlib import Path
 
 from briefcase.config import PEP508_NAME_RE
+from briefcase.console import Console
 from briefcase.exceptions import (
     BriefcaseCommandError,
     IncompatibleToolError,
@@ -1499,18 +1500,60 @@ class ADB:
                 raise InvalidDeviceError("device id", self.device) from e
             raise
 
-    def install_apk(self, apk_path: str | Path):
+    def install_apk(self, apk_path: str | Path, package: str):
         """Install an APK file on an Android device.
 
         :param apk_path: The path of the Android APK file to install.
+        :param package: The package name that the Android APK will install.
         :returns: `None` on success; raises an exception on failure.
         """
         try:
             self.run("install", "-r", apk_path)
         except subprocess.CalledProcessError as e:
-            raise BriefcaseCommandError(
-                f"Unable to install APK {apk_path} on {self.device}"
-            ) from e
+            output = e.output or ""
+            unable_to_install = f"Unable to install APK {apk_path} on {self.device}."
+
+            remedy = "\n".join(
+                Console.dedent_and_wrap(
+                    f"""
+                    To resolve this, run the following command to uninstall the
+                    existing app, then try again:
+
+                        "{self.tools.android_sdk.adb_path}" -s {self.device} """
+                    f"""uninstall {package}
+
+                    Warning: this will delete the app's existing data on the device.
+                    """
+                )
+            )
+
+            if "INSTALL_FAILED_UPDATE_INCOMPATIBLE" in output:
+                cause = "\n".join(
+                    Console.dedent_and_wrap(
+                        """
+                        The app currently installed on the device was signed with
+                        a different key than this APK (maybe because it was
+                        installed from a different computer).
+                        """
+                    )
+                )
+                raise BriefcaseCommandError(
+                    f"{unable_to_install}\n\n{cause}\n\n{remedy}"
+                ) from e
+            elif "INSTALL_FAILED_VERSION_DOWNGRADE" in output:
+                cause = "\n".join(
+                    Console.dedent_and_wrap(
+                        """
+                        A newer version of this app is already installed, and
+                        Android won't install an older version over it.
+                        """
+                    )
+                )
+                raise BriefcaseCommandError(
+                    f"{unable_to_install}\n\n{cause}\n\n{remedy}"
+                ) from e
+            else:
+                raise BriefcaseCommandError(unable_to_install) from e
 
     def force_stop_app(self, package: str):
         """Force-stop an app, specified as a package name.
