@@ -2,7 +2,7 @@
 requires = [
     # keep versions in sync with automation/pyproject.toml
     "setuptools==83.0.0",
-    "setuptools_scm==10.2.0",
+    "setuptools_scm==10.2.1",
 ]
 build-backend = "setuptools.build_meta"
 
@@ -105,7 +105,7 @@ pre-commit = [
 ]
 
 setuptools-scm = [
-    "setuptools_scm==10.2.0",
+    "setuptools_scm==10.2.1",
 ]
 
 towncrier = [
