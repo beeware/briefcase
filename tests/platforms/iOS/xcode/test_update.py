@@ -1,10 +1,9 @@
 import shutil
-import sys
-from unittest.mock import MagicMock, call
+from textwrap import dedent
+from unittest import mock
 
 import pytest
 
-from briefcase.integrations.subprocess import Subprocess
 from briefcase.platforms.iOS.xcode import iOSXcodeUpdateCommand
 
 from ....utils import create_file
@@ -34,8 +33,10 @@ def update_command(dummy_console, tmp_path):
         ),
     ],
 )
-def test_extra_pip_args(
+def test_install_requirements(
     update_command,
+    mock_venv,
+    mock_sim_venv,
     first_app_generated,
     old_config,
     device_config_path,
@@ -52,95 +53,52 @@ def test_extra_pip_args(
         # Create the old-style VERSIONS file with a deliberately weird min iOS version
         create_file(
             tmp_path / "base_path/build/first-app/ios/xcode/Support/VERSIONS",
-            "\n".join(
-                [
-                    "Python version: 3.10.15",
-                    "Build: b11",
-                    "Min iOS version: 12.0",
-                    "---------------------",
-                    "BZip2: 1.0.8-1",
-                    "libFFI: 3.4.6-1",
-                    "OpenSSL: 3.0.15-1",
-                    "XZ: 5.6.2-1",
-                    "",
-                ]
+            dedent(
+                """\
+                Python version: 3.10.15
+                Build: b11
+                Min iOS version: 12.0
+                ---------------------
+                BZip2: 1.0.8-1
+                libFFI: 3.4.6-1
+                OpenSSL: 3.0.15-1
+                XZ: 5.6.2-1
+                """
             ),
         )
 
     # Hard code the current architecture for testing. We only install simulator
     # requirements for the current platform.
     update_command.tools.host_arch = "wonky"
+    update_command.create_app_environment = mock.MagicMock(return_value=mock_sim_venv)
 
     first_app_generated.requires = ["something==1.2.3", "other>=2.3.4"]
+    first_app_generated.requirement_installer_args = ["-f", "./wheels"]
 
-    update_command.tools[first_app_generated].app_context = MagicMock(
-        spec_set=Subprocess
-    )
-
-    update_command.install_app_requirements(first_app_generated)
+    update_command.install_app_requirements(first_app_generated, mock_venv)
 
     bundle_path = tmp_path / "base_path/build/first-app/ios/xcode"
-    assert update_command.tools[first_app_generated].app_context.run.mock_calls == [
-        call(
-            [
-                sys.executable,
-                "-u",
-                "-X",
-                "utf8",
-                "-m",
-                "pip",
-                "install",
-                "--disable-pip-version-check",
-                "--upgrade",
-                "--no-user",
-                f"--target={bundle_path / 'app_packages.iphoneos'}",
-                "--only-binary=:all:",
-                "--extra-index-url",
-                "https://pypi.anaconda.org/beeware/simple",
-                "--platform=ios_12_0_arm64_iphoneos",
-                "something==1.2.3",
-                "other>=2.3.4",
-            ],
-            check=True,
-            encoding="UTF-8",
-            env={
-                "PYTHONPATH": str(
-                    tmp_path
-                    / "base_path/build/first-app/ios/xcode/Support"
-                    / device_config_path
-                ),
-                "PIP_REQUIRE_VIRTUALENV": None,
-            },
-        ),
-        call(
-            [
-                sys.executable,
-                "-u",
-                "-X",
-                "utf8",
-                "-m",
-                "pip",
-                "install",
-                "--disable-pip-version-check",
-                "--upgrade",
-                "--no-user",
-                f"--target={bundle_path / 'app_packages.iphonesimulator'}",
-                "--only-binary=:all:",
-                "--extra-index-url",
-                "https://pypi.anaconda.org/beeware/simple",
-                "--platform=ios_12_0_wonky_iphonesimulator",
-                "something==1.2.3",
-                "other>=2.3.4",
-            ],
-            check=True,
-            encoding="UTF-8",
-            env={
-                "PYTHONPATH": str(
-                    tmp_path
-                    / "base_path/build/first-app/ios/xcode/Support"
-                    / sim_config_path
-                ),
-                "PIP_REQUIRE_VIRTUALENV": None,
-            },
-        ),
-    ]
+    mock_venv.install_requirements.assert_called_once_with(
+        [
+            "something==1.2.3",
+            "other>=2.3.4",
+        ],
+        allow_editable=False,
+        require_binary=True,
+        min_os_version="12.0",
+        extra_installer_args=["-f", "./wheels"],
+        install_path=bundle_path / "app_packages.iphoneos",
+        install_hint=mock.ANY,
+    )
+    mock_sim_venv.install_requirements.assert_called_once_with(
+        [
+            "something==1.2.3",
+            "other>=2.3.4",
+        ],
+        allow_editable=False,
+        require_binary=True,
+        min_os_version="12.0",
+        extra_installer_args=["-f", "./wheels"],
+        install_path=bundle_path / "app_packages.iphonesimulator",
+        install_hint=mock.ANY,
+    )

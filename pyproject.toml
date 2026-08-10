@@ -2,7 +2,7 @@
 requires = [
     # keep versions in sync with automation/pyproject.toml
     "setuptools==83.0.0",
-    "setuptools_scm==10.2.0",
+    "setuptools_scm==10.2.1",
 ]
 build-backend = "setuptools.build_meta"
 
@@ -80,17 +80,10 @@ dependencies = [
     # provides no basis for determining API stability.
     #
     "cookiecutter >= 2.6.0, < 3.0",
-    # See psf/requests#7219. Requests 2.32.5 (a transitive dependency of cookiecutter)
-    # has a runtime warning about the use of chardet 6+, which our test suite turns into
-    # a full error. Requests has already increased the pin; the next requests release
-    # should remove the need for this pin.
-    "chardet < 6.0",
-    # See binaryornot/binaryornot#642 and binaryornot/binaryornot#649. binaryornot is
-    # transitive dependency of cookiecutter; v0.5.0 introduced #642, preventing correct
-    # detection of PNG content (#642). v0.6.0 (released a few days later) fixes #642,
-    # but introduced #649, and the presence of warnings causes catastrophic failures
-    # when running under dev mode.
-    "binaryornot < 0.5.0",
+    # chardet is a dependency of requests, which is a dependency of cookiecutter. Requests
+    # has a runtime warning that verifies "tested" chardet versions, but *doesn't* enforce
+    # a version pin. We need to enforce the implied requests warning.
+    "chardet < 8.0",
     "dmgbuild >= 1.6.4, < 2.0; sys_platform == 'darwin'",
     "GitPython >= 3.1, < 4.0",
     "platformdirs >= 2.6, < 5.0",
@@ -101,17 +94,18 @@ dependencies = [
     "tenacity >= 8.0, < 10.0",
     "tomli >= 2.0, < 3.0; python_version <= '3.10'",
     "tomli_w >= 1.0, < 2.0",
+    "typing_extensions >= 4.6; python_version < '3.11'",
 ]
 
 [dependency-groups]
 # Extras used by developers *of* briefcase are pinned to specific versions to
 # ensure environment consistency.
 pre-commit = [
-    "pre-commit == 4.6.0",
+    "pre-commit == 4.6.1",
 ]
 
 setuptools-scm = [
-    "setuptools_scm==10.2.0",
+    "setuptools_scm==10.2.1",
 ]
 
 towncrier = [
@@ -119,11 +113,11 @@ towncrier = [
 ]
 
 tox-uv = [
-    "tox-uv == 1.35.2",
+    "tox-uv == 1.36.0",
 ]
 
 ty = [
-    "ty == 0.0.56",
+    "ty == 0.0.65",
 ]
 
 dev = [
@@ -133,9 +127,9 @@ dev = [
 ]
 
 test = [
-    "coverage[toml] == 7.15.0",
+    "coverage[toml] == 7.15.3",
     "coverage-conditional-plugin == 0.9.0",
-    "httpx-retries == 0.5.0",
+    "httpx-retries == 0.6.0",
     "pytest == 9.1.1",
     "pytest-xdist == 3.8.0",
     {include-group = "setuptools-scm"},
@@ -260,6 +254,12 @@ no-cover-if-gte-py311 = "sys_version_info >= (3, 11) and os_environ.get('COVERAG
 testpaths = ["tests"]
 filterwarnings = [
     "error",
+    # See binaryornot#649 - binaryornot opens a file without specifying an
+    # encoding. We run the test suite with -X warn_default_encoding, and
+    # surface warnings as test errors. The problem has been fixed upstream,
+    # and doesn't affect actual operation. binaryornot 0.6.0 is affected;
+    # This rule can be removed once binaryornot releases it's next version.
+    "ignore::EncodingWarning:binaryornot.helpers",
 ]
 
 # need to ensure build directories aren't excluded from recursion
@@ -288,8 +288,17 @@ extend-select = [
 ]
 
 ignore = [
-    "SIM105",  # use `contextlib.suppress` (too opinionated)
-    "SIM108",  # replace if-else with ternary operator (too opinionated)
+    # PEP8 module naming conventions aren't appropriate
+    "N999",
+    # The SIM rules are *very* opinionated, and don't necessarily make for better code.
+    "SIM105",  # use `contextlib.suppress`
+    "SIM108",  # replace if-else with ternary operator
+    # These ignores should be fixed, if possible
+    "DTZ001",
+    "DTZ002",
+    "DTZ005",
+    "DTZ007",
+    "DTZ011",
 ]
 
 [tool.ruff.lint.isort]
@@ -298,9 +307,18 @@ ignore = [
 known-third-party = ["build"]
 
 [tool.ruff.lint.per-file-ignores]
+# debugger module *needs* to have debugpy trace imports.
+"debugger/src/briefcase_debugger/debugpy.py" = ["T100"]
+"debugger/tests/test_debugpy.py" = ["T100"]
+# A standalone maintenance script, not part of the briefcase package; it
+# *needs* to print its output for a maintainer to read.
+"scripts/update_template_hashes.py" = ["T201"]
 # E501: line too long, to be fixed in future changes
 "tests/integrations/*" = ["E501"]
 "tests/platforms/*" = ["E501"]
+# PERF402: list copies, to be fixed in future changes
+"tests/commands/run/test_LogFilter.py" = ["PERF402"]
+"tests/platforms/macOS/test_XcodeBuildFilter.py" = ["PERF402"]
 
 [tool.rumdl]
 flavor = "mkdocs"

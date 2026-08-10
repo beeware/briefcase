@@ -679,6 +679,7 @@ class ConvertCommand(NewCommand):
         tmp_path: Path,
         template: str | None = None,
         template_branch: str | None = None,
+        template_hash: str | None = None,
         project_overrides: dict[str, str] | None = None,
         **options,
     ) -> None:
@@ -689,6 +690,9 @@ class ConvertCommand(NewCommand):
             cookiecutter.
         :param template: The cookiecutter template to use.
         :param template_branch: The git branch that the template should use.
+        :param template_hash: The expected commit hash of the template's resolved
+            branch head. Only meaningful together with `template`/`template_branch`;
+            the default template is always verified without needing this.
         """
         self.console.prompt()
         self.console.prompt("Let's setup an existing project as a Briefcase app!")
@@ -713,12 +717,22 @@ class ConvertCommand(NewCommand):
             prefix=context["app_name"],
         )
 
+        # If a template hash has been provided, use it. Use the command's
+        # template hash if there's no template or branch override.
+        if template_hash:
+            resolved_hash = template_hash
+        elif template is None and template_branch is None:
+            resolved_hash = self.template_hash
+        else:
+            resolved_hash = None
+
         # Create the project files
         self.generate_template(
-            template=(template or "https://github.com/beeware/briefcase-template"),
+            template=template or self.template_url,
             branch=template_branch,
             output_path=tmp_path,
             extra_context=context,
+            template_hash=resolved_hash,
         )
 
         project_dir = tmp_path / context["app_name"]
@@ -759,6 +773,7 @@ To run your application, type:
         self,
         template: str | None = None,
         template_branch: str | None = None,
+        template_hash: str | None = None,
         project_overrides: list[str] | None = None,
         **options,
     ):
@@ -775,6 +790,7 @@ To run your application, type:
                 tmp_path=tmp_path,
                 template=template,
                 template_branch=template_branch,
+                template_hash=template_hash,
                 project_overrides=parse_project_overrides(project_overrides),
                 **options,
             )

@@ -55,12 +55,7 @@ def build_command(dummy_console, tmp_path, first_app_config):
     command.tools.os = mock.MagicMock()
     # Mock user and group IDs for docker image
     command.tools.os.environ = mock.MagicMock()
-    command.tools.os.environ.__getitem__.return_value = (
-        "/usr/local/bin:/usr/bin:/path/to/somewhere"
-    )
-    command.tools.os.environ.copy.return_value = {
-        "PATH": "/usr/local/bin:/usr/bin:/path/to/somewhere"
-    }
+    command.tools.os.environ = {"PATH": "/usr/local/bin:/usr/bin:/path/to/somewhere"}
 
     # mock user and group IDs for docker build
     command.tools.os.getuid.return_value = 1000
@@ -127,6 +122,10 @@ def test_verify_tools_download_failure(build_command):
         url="https://github.com/linuxdeploy/linuxdeploy/releases/download/continuous/linuxdeploy-x86_64.AppImage",
         download_path=build_command.tools.base_path,
         role="linuxdeploy",
+        expected_hash=(
+            "unverified:linuxdeploy uses a rolling 'continuous' release with no "
+            "stable hash"
+        ),
     )
 
     # But it failed, so the file won't be made executable...

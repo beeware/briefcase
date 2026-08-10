@@ -33,6 +33,7 @@ if TYPE_CHECKING:
     from briefcase.integrations.docker import Docker, DockerAppContext
     from briefcase.integrations.file import File
     from briefcase.integrations.flatpak import Flatpak
+    from briefcase.integrations.gnupg import GnuPG
     from briefcase.integrations.java import JDK
     from briefcase.integrations.linuxdeploy import LinuxDeploy
     from briefcase.integrations.rcedit import RCEdit
@@ -42,6 +43,11 @@ if TYPE_CHECKING:
     from briefcase.integrations.windows_sdk import WindowsSDK
     from briefcase.integrations.wix import WiX
     from briefcase.integrations.xcode import Xcode, XcodeCliTools
+
+    try:
+        from typing import Self
+    except ImportError:  # pragma: no-cover-if-gte-py311
+        from typing_extensions import Self
 
 ToolT = TypeVar("ToolT", bound="Tool")
 ManagedToolT = TypeVar("ManagedToolT", bound="ManagedTool")
@@ -69,11 +75,11 @@ class Tool(ABC):
 
     @classmethod
     def verify(
-        cls: type[ToolT],
+        cls,
         tools: ToolCache,
         app: FinalizedAppConfig | None = None,
         **kwargs,
-    ) -> ToolT:
+    ) -> Self:
         """Confirm the tool is available and usable on the host platform."""
         cls.verify_host(tools=tools)
         tool = cls.verify_install(tools=tools, app=app, **kwargs)
@@ -105,12 +111,12 @@ class ManagedTool(Tool):
 
     @classmethod
     def verify(
-        cls: type[ManagedToolT],
+        cls,
         tools: ToolCache,
         app: FinalizedAppConfig | None = None,
         install: bool = True,
         **kwargs,
-    ) -> ManagedToolT:
+    ) -> Self:
         """Confirm the managed tool is installed and available."""
         return super().verify(tools=tools, app=app, install=install, **kwargs)
 
@@ -152,6 +158,7 @@ class ToolCache(Mapping):
     docker: Docker
     file: File
     flatpak: Flatpak
+    gnupg: GnuPG
     git: git_
     java: JDK
     linuxdeploy: LinuxDeploy

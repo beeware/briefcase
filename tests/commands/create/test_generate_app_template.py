@@ -12,9 +12,12 @@ import briefcase
 from briefcase.exceptions import (
     BriefcaseCommandError,
     BriefcaseConfigError,
+    CorruptContentError,
     InvalidTemplateBranch,
     NetworkFailure,
 )
+
+from ..conftest import TEMPLATE_COMMIT_HEXSHA
 
 
 @pytest.fixture
@@ -54,6 +57,7 @@ def full_context():
         "external_package_executable_path": None,
         "install_launcher": True,
         "test_mode": False,
+        "env_manager": "venv",
         # Properties of the generating environment
         "python_version": platform.python_version(),
         "host_arch": "gothic",
@@ -326,6 +330,57 @@ def test_platform_exists(monkeypatch, create_command, myapp, full_context, tmp_p
     )
 
 
+def test_explicit_app_template_hash(
+    monkeypatch,
+    create_command,
+    myapp,
+    full_context,
+    tmp_path,
+):
+    """An explicit app.template_hash overrides the class's default, and is used even
+    when the default template and branch are otherwise in effect."""
+    monkeypatch.setattr(briefcase, "__version__", "37.42.7")
+    full_context["briefcase_version"] = "37.42.7"
+    full_context["template_branch"] = "v37.42.7"
+
+    # Point the app's template_hash at a *different* hash
+    myapp.template_hash = "sha1:0000000000000000000000000000000000000000"
+
+    with pytest.raises(CorruptContentError):
+        create_command.generate_app_template(myapp)
+
+
+def test_custom_template_with_no_hash_does_not_use_class_default(
+    monkeypatch,
+    create_command,
+    myapp,
+    full_context,
+    tmp_path,
+):
+    """If a custom template is specified without a template_hash, the class's default
+    hash is NOT applied (it belongs to a different template), so no verification is
+    attempted, and a warning is logged instead of an error."""
+    monkeypatch.setattr(briefcase, "__version__", "37.42.7")
+    full_context["briefcase_version"] = "37.42.7"
+    full_context["template_branch"] = "v37.42.7"
+
+    template = "https://example.com/magic/special-template.git"
+    myapp.template = template
+    full_context["template_source"] = template
+
+    # Generate the template
+    create_command.generate_app_template(myapp)
+
+    create_command.tools.cookiecutter.assert_called_once_with(
+        str(create_command.data_path / "templates/special-template"),
+        no_input=True,
+        checkout="v37.42.7",
+        output_dir=os.fsdecode(tmp_path / "base_path/build/my-app/tester"),
+        extra_context=full_context,
+        default_config={"replay_dir": str(tmp_path / "data/templates/.replay")},
+    )
+
+
 def test_explicit_repo_template(
     monkeypatch,
     create_command,
@@ -554,6 +609,7 @@ def test_cached_template(monkeypatch, create_command, myapp, full_context, tmp_p
     mock_repo = mock.MagicMock()
     mock_remote = mock.MagicMock()
     mock_remote_head = mock.MagicMock()
+    mock_remote_head.commit.hexsha = TEMPLATE_COMMIT_HEXSHA
 
     # Git returns a Repo, that repo can return a remote, and it has
     # heads that can be accessed.
@@ -605,6 +661,7 @@ def test_cached_template_offline(
     mock_repo = mock.MagicMock()
     mock_remote = mock.MagicMock()
     mock_remote_head = mock.MagicMock()
+    mock_remote_head.commit.hexsha = TEMPLATE_COMMIT_HEXSHA
 
     # Git returns a Repo, that repo can return a remote, and it has
     # heads that can be accessed. However, calling fetch on the remote

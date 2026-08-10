@@ -5,7 +5,6 @@ from collections.abc import Collection
 from unittest import mock
 
 import pytest
-import tomli_w
 from cookiecutter.main import cookiecutter
 
 from briefcase.commands import CreateCommand
@@ -13,7 +12,8 @@ from briefcase.config import AppConfig, DraftAppConfig
 from briefcase.integrations.base import Tool
 from briefcase.integrations.subprocess import Subprocess
 
-from ...utils import create_file
+from ...utils import create_file, create_toml_file
+from ..conftest import TEMPLATE_COMMIT_HEXSHA
 
 
 @pytest.fixture
@@ -53,6 +53,8 @@ class DummyCreateCommand(CreateCommand):
     output_format = "Dummy"
     description = "Dummy create command"
     hidden_app_properties: Collection[str] = {"permission", "request"}
+    # Matches the commit hash to the mock_git fixture
+    app_template_hash = f"sha1:{TEMPLATE_COMMIT_HEXSHA}"
 
     def __init__(self, *args, support_file=None, git=None, home_path=None, **kwargs):
         super().__init__(*args, **kwargs)
@@ -179,12 +181,32 @@ class TrackingCreateCommand(DummyCreateCommand):
             "The packaged app goes here",
         )
 
+    def create_app_environment(
+        self, app, platform, arch, env_manager="default", recreate=True
+    ):
+        self.actions.append(
+            ("create-app-env", app.app_name, platform, arch, env_manager, recreate)
+        )
+        return super().create_app_environment(
+            app,
+            platform,
+            arch,
+            env_manager=env_manager,
+            recreate=recreate,
+        )
+
     def install_app_support_package(self, app):
         self.actions.append(("support", app.app_name))
 
-    def install_app_requirements(self, app):
+    def install_app_requirements(self, app, venv):
         self.actions.append(
-            ("requirements", app.app_name, app.test_mode, app.debugger is not None)
+            (
+                "requirements",
+                venv.name,
+                app.app_name,
+                app.test_mode,
+                app.debugger is not None,
+            )
         )
 
     def install_app_code(self, app):
@@ -200,6 +222,9 @@ class TrackingCreateCommand(DummyCreateCommand):
 
     def cleanup_app_content(self, app):
         self.actions.append(("cleanup", app.app_name))
+
+    def install_managed_python_env(self, app, venv):
+        self.actions.append(("install-managed-python-env", app.app_name, venv.name))
 
 
 @pytest.fixture
@@ -274,70 +299,78 @@ def bundle_path(myapp, tmp_path):
 @pytest.fixture
 def app_packages_path_index(bundle_path):
     (bundle_path / "path/to/app_packages").mkdir(parents=True, exist_ok=True)
-    with (bundle_path / "briefcase.toml").open("wb") as f:
-        index = {
+    create_toml_file(
+        bundle_path / "briefcase.toml",
+        {
             "paths": {
                 "app_path": "path/to/app",
                 "app_packages_path": "path/to/app_packages",
                 "support_path": "path/to/support",
                 "support_revision": 37,
+                "support_package_hash": f"sha256:{'a' * 64}",
             }
-        }
-        tomli_w.dump(index, f)
+        },
+    )
 
 
 @pytest.fixture
 def app_requirements_path_index(bundle_path):
-    with (bundle_path / "briefcase.toml").open("wb") as f:
-        index = {
+    create_toml_file(
+        bundle_path / "briefcase.toml",
+        {
             "paths": {
                 "app_path": "path/to/app",
                 "app_requirements_path": "path/to/requirements.txt",
                 "support_path": "path/to/support",
                 "support_revision": 37,
+                "support_package_hash": f"sha256:{'a' * 64}",
             }
-        }
-        tomli_w.dump(index, f)
+        },
+    )
 
 
 @pytest.fixture
 def app_requirement_installer_args_path_index(bundle_path):
-    with (bundle_path / "briefcase.toml").open("wb") as f:
-        index = {
+    create_toml_file(
+        bundle_path / "briefcase.toml",
+        {
             "paths": {
                 "app_path": "path/to/app",
                 "app_requirements_path": "path/to/requirements.txt",
                 "app_requirement_installer_args_path": "path/to/installer-args.txt",
                 "support_path": "path/to/support",
                 "support_revision": 37,
+                "support_package_hash": f"sha256:{'a' * 64}",
             }
-        }
-        tomli_w.dump(index, f)
+        },
+    )
 
 
 @pytest.fixture
 def no_support_revision_index(bundle_path):
-    with (bundle_path / "briefcase.toml").open("wb") as f:
-        index = {
+    create_toml_file(
+        bundle_path / "briefcase.toml",
+        {
             "paths": {
                 "app_path": "path/to/app",
                 "app_requirements_path": "path/to/requirements.txt",
                 "support_path": "path/to/support",
             }
-        }
-        tomli_w.dump(index, f)
+        },
+    )
 
 
 @pytest.fixture
 def no_support_path_index(bundle_path):
-    with (bundle_path / "briefcase.toml").open("wb") as f:
-        index = {
+    create_toml_file(
+        bundle_path / "briefcase.toml",
+        {
             "paths": {
                 "app_path": "path/to/app",
                 "app_requirements_path": "path/to/requirements.txt",
             }
-        }
-        tomli_w.dump(index, f)
+        },
+    )
 
 
 @pytest.fixture
@@ -367,12 +400,14 @@ def app_path(bundle_path):
 
 @pytest.fixture
 def stub_binary_revision_path_index(bundle_path):
-    with (bundle_path / "briefcase.toml").open("wb") as f:
-        index = {
+    create_toml_file(
+        bundle_path / "briefcase.toml",
+        {
             "paths": {
                 "app_path": "path/to/app",
                 "app_requirements_path": "path/to/requirements.txt",
                 "stub_binary_revision": 37,
+                "stub_binary_hash": f"sha256:{'b' * 64}",
             }
-        }
-        tomli_w.dump(index, f)
+        },
+    )

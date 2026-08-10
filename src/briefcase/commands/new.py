@@ -77,6 +77,12 @@ class NewCommand(BaseCommand):
 
     OTHER_FRAMEWORKS = "Other frameworks"
 
+    # The default project template
+    template_url = "https://github.com/beeware/briefcase-template"
+
+    # The expected commit hash of the project template
+    template_hash = "sha1:32ad2fe2db8d92787acc74ee54788a38a56c4970"
+
     def bundle_path(self, app):
         """A placeholder; New command doesn't have a bundle path."""
         raise NotImplementedError()
@@ -101,6 +107,12 @@ class NewCommand(BaseCommand):
             "--template-branch",
             dest="template_branch",
             help="The branch of the cookiecutter template to use for the new project",
+        )
+
+        parser.add_argument(
+            "--template-hash",
+            dest="template_hash",
+            help="The expected commit hash of the cookiecutter template",
         )
 
         parser.add_argument(
@@ -598,6 +610,7 @@ class NewCommand(BaseCommand):
         self,
         template: str | None = None,
         template_branch: str | None = None,
+        template_hash: str | None = None,
         project_overrides: dict[str, str] | None = None,
         **options,
     ):
@@ -634,12 +647,22 @@ class NewCommand(BaseCommand):
                 f"A directory named {context['app_name']!r} already exists."
             )
 
+        # If a template hash has been provided, use it. Use the command's
+        # template hash if there's no template or branch override.
+        if template_hash:
+            resolved_hash = template_hash
+        elif template is None and template_branch is None:
+            resolved_hash = self.template_hash
+        else:
+            resolved_hash = None
+
         # Create the project files
         self.generate_template(
-            template=(template or "https://github.com/beeware/briefcase-template"),
+            template=template or self.template_url,
             branch=template_branch,
             output_path=self.base_path,
             extra_context=context,
+            template_hash=resolved_hash,
         )
 
         # Perform any post-template processing required by the bootstrap.
@@ -671,6 +694,7 @@ To run your application, type:
         self,
         template: str | None = None,
         template_branch: str | None = None,
+        template_hash: str | None = None,
         project_overrides: list[str] | None = None,
         **options,
     ):
@@ -681,6 +705,7 @@ To run your application, type:
         return self.new_app(
             template=template,
             template_branch=template_branch,
+            template_hash=template_hash,
             project_overrides=parse_project_overrides(project_overrides),
             **options,
         )

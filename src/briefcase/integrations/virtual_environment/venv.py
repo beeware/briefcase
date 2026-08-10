@@ -1,10 +1,10 @@
 import os
 import shutil
-import subprocess as stdlib_subprocess
+import subprocess
 import sys
-from pathlib import Path
 
 from briefcase.exceptions import BriefcaseCommandError
+from briefcase.integrations.base import ToolCache
 from briefcase.integrations.subprocess import SubprocessArgsT
 from briefcase.integrations.virtual_environment.base import VirtualEnvironment
 
@@ -12,15 +12,12 @@ from briefcase.integrations.virtual_environment.base import VirtualEnvironment
 class VenvVirtualEnvironment(VirtualEnvironment):
     """An environment manager using the Python standard library module venv."""
 
-    @property
-    def bin_dir(self) -> Path:
-        """The venv's binary directory (`bin` on POSIX, `Scripts` on Windows)."""
-        return self.venv_path / ("Scripts" if os.name == "nt" else "bin")
+    env_type: str = "venv"
 
-    @property
-    def executable(self) -> Path:
-        """Path to the Python executable inside the venv."""
-        return self.bin_dir / ("python.exe" if os.name == "nt" else "python")
+    @classmethod
+    def verify(cls, tools: ToolCache):
+        """Verify that the environment manager is available."""
+        # Venv environment management is available in the standard library.
 
     def exists(self) -> bool:
         """`True` iff the venv directory and its `pyvenv.cfg` are present."""
@@ -49,22 +46,16 @@ class VenvVirtualEnvironment(VirtualEnvironment):
                 self.clean()
 
             try:
+                # Create the venv, but *don't* install pip. We'll use
+                # pip from the environment that is running Briefcase.
                 self.venv_path.parent.mkdir(parents=True, exist_ok=True)
                 self.tools.subprocess.run(
-                    [sys.executable, "-m", "venv", self.venv_path],
+                    [sys.executable, "-m", "venv", "--without-pip", self.venv_path],
                     check=True,
                 )
-            except stdlib_subprocess.CalledProcessError as e:
+            except subprocess.CalledProcessError as e:
                 raise BriefcaseCommandError(
                     f"Failed to create virtual environment at {self.venv_path}"
-                ) from e
-
-            try:
-                # Ensure pip is upgraded in the environment
-                self.install_requirements(["pip"])
-            except Exception as e:
-                raise BriefcaseCommandError(
-                    f"Failed to update core tooling for {self.venv_path}"
                 ) from e
 
         return True
@@ -109,5 +100,9 @@ class VenvVirtualEnvironment(VirtualEnvironment):
         )
         env["VIRTUAL_ENV"] = os.fspath(self.venv_path)
         env.pop("PYTHONHOME", None)
+
+        # Make the environment an iOS cross-build environment
+        if self.platform in {"iphoneos", "iphonesimulator"}:
+            env["PYTHONPATH"] = str(self.platform_path)
 
         return env

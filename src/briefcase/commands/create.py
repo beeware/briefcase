@@ -4,16 +4,14 @@ import argparse
 import hashlib
 import os
 import platform
-import re
 import shutil
-import subprocess
-import sys
 from collections.abc import Collection
 from datetime import date, datetime
 from pathlib import Path
+from typing import Literal
 
 import briefcase
-from briefcase.config import AppConfig, FinalizedAppConfig
+from briefcase.config import AppConfig, EnvManagerT, FinalizedAppConfig
 from briefcase.exceptions import (
     BriefcaseCommandError,
     InvalidStubBinary,
@@ -22,15 +20,13 @@ from briefcase.exceptions import (
     MissingNetworkResourceError,
     MissingStubBinary,
     MissingSupportPackage,
-    RequirementsInstallError,
     UnsupportedPlatform,
 )
 from briefcase.integrations.git import Git
 from briefcase.integrations.subprocess import NativeAppContext
+from briefcase.integrations.virtual_environment import VirtualEnvironment
 
 from .base import BaseCommand, full_options
-
-relative_path_matcher = re.compile(r"^\.{1,2}[\\/]")
 
 
 def cookiecutter_cache_path(template):
@@ -88,6 +84,34 @@ class CreateCommand(BaseCommand):
     command = "create"
     description = "Create a new app for a target platform."
 
+    # By default, we explicitly require binary package installs. This is for three
+    # reasons:
+    #
+    # 1. Security. Installs from source tarball involve executing arbitrary code
+    #    at time of installation; and it makes the entire development
+    #    environment building the app a vector for introducing vulnerabilities
+    #    into an app. Forcing the use of binary wheels ensures that we can know
+    #    with certainty the provenance of any binary content in the app.
+    #
+    # 2. Consistency. Platforms that require multiple package installs (macOS,
+    #    iOS) also often require the use of the `--platform` argument to pip (or
+    #    equivalent), which imposes a co-requirement on using binary packages.
+    #    If we only reject source installs (rather than requiring binary) then a
+    #    package that only provides binary wheels for one architecture would
+    #    cause inconsistent results depending on which platform was the host.
+    #
+    # 3. Some platforms (most notably Windows) don't provide compilers out of the
+    #    box, and it's entirely possible to build Python apps without ever needing
+    #    a compiler. When a compiler *isn't* available, the failure mode for `pip`
+    #    isn't especially meaningful; so requiring binaries avoids those problems.
+    #
+    # Since Briefcase is a tool designed to produce redistributable binaries,
+    # we've made the judgement call that the (minor, with known workarounds)
+    # inconvenience of not being able to use source tarballs is outweighed by
+    # the need to produce reliable, repeatable binary artefacts. This is
+    # overridden on platforms (i.e., Linux) where this isn't possible.
+    require_binary_installs = True
+
     def add_options(self, parser):
         super().add_options(parser)
         parser.add_argument(
@@ -100,6 +124,9 @@ class CreateCommand(BaseCommand):
 
     # app properties that won't be exposed to the context
     hidden_app_properties: Collection[str] = {"permission"}
+
+    # The expected commit hash of this platform's default template.
+    app_template_hash: str = "sha1:invalid - override on subclass"
 
     @property
     def app_template_url(self) -> str:
@@ -122,26 +149,22 @@ class CreateCommand(BaseCommand):
             f"{self.support_package_filename(support_revision)}"
         )
 
-    def stub_binary_filename(self, support_revision: str, is_console_app: bool) -> str:
+    def stub_binary_filename(
+        self,
+        support_revision: str,
+        app: FinalizedAppConfig,
+    ) -> str:
         """The filename for the stub binary."""
-        stub_type = "Console" if is_console_app else "GUI"
-        win_suffix = (
-            f"-{self.tools.host_arch.lower()}"
-            if self.tools.host_os == "Windows"
-            else ""
-        )
-        return (
-            f"{stub_type}-Stub-{self.python_version_tag}{win_suffix}"
-            f"-b{support_revision}.zip"
-        )
+        stub_type = "Console" if app.console_app else "GUI"
+        return f"{stub_type}-Stub-{self.python_version_tag}-b{support_revision}.zip"
 
-    def stub_binary_url(self, support_revision: str, is_console_app: bool) -> str:
+    def stub_binary_url(self, support_revision: str, app: FinalizedAppConfig) -> str:
         """The URL of the stub binary to use for apps of this type."""
         return (
             "https://briefcase-support.s3.amazonaws.com/python/"
             f"{self.python_version_tag}/"
             f"{self.platform}/"
-            f"{self.stub_binary_filename(support_revision, is_console_app)}"
+            f"{self.stub_binary_filename(support_revision, app)}"
         )
 
     def icon_targets(self, app: FinalizedAppConfig):
@@ -251,6 +274,7 @@ class CreateCommand(BaseCommand):
         # Remove the context items that describe the template
         extra_context.pop("template")
         extra_context.pop("template_branch")
+        extra_context.pop("template_hash")
 
         # Augment with some extra fields.
         extra_context.update(
@@ -286,12 +310,56 @@ class CreateCommand(BaseCommand):
         output_path = self.bundle_path(app).parent
         output_path.mkdir(parents=True, exist_ok=True)
 
+        # If the app defines a template hash, use it. Use the command's template
+        # hash if there's no template or branch override by the app.
+        if app.template_hash:
+            template_hash = app.template_hash
+        elif app.template is None and app.template_branch is None:
+            template_hash = self.app_template_hash
+        else:
+            template_hash = None
+
         self.generate_template(
             template=app.template or self.app_template_url,
             branch=app.template_branch,
             output_path=output_path,
             extra_context=extra_context,
+            template_hash=template_hash,
         )
+
+    def create_app_environment(
+        self,
+        app: FinalizedAppConfig,
+        platform: str,
+        arch: str,
+        env_manager: EnvManagerT | Literal["default"] | None = "default",
+        recreate: bool = True,
+        **kwargs,
+    ) -> VirtualEnvironment:
+        """Create an isolated virtual environment in which the app can be built.
+
+        :param app: The config object for the app
+        :param platform: The platform being targeted.
+        :param arch: The architecture for the environment.
+        :param env_manager: An explicit environment manager to use. Defaults to the
+            app's configured environment manager.
+        :param recreate: If the environment already exists, should it be re-created?
+            Defaults to True (i.e., recreate by default).
+        """
+        if env_manager == "default":
+            env_manager = app.env_manager
+
+        venv = self.tools.virtual_environment[env_manager](
+            app=app,
+            tools=self.tools,
+            base_path=self.base_path,
+            name=f"{platform}-{arch}",
+            platform=platform,
+            arch=arch,
+            **kwargs,
+        )
+        venv.prepare(recreate=recreate)
+        return venv
 
     def _unpack_support_package(self, support_file_path, support_path):
         """Unpack a support package into a specific location.
@@ -365,15 +433,30 @@ class CreateCommand(BaseCommand):
                     )
                 except AttributeError:
                     pass
+
+                # If there is a custom support package, check for a custom
+                # hash as well.
+                try:
+                    support_package_hash = app.support_package_hash
+                except AttributeError:
+                    support_package_hash = None
+
             except AttributeError:
                 # If the app specifies a support revision, use it;
                 # otherwise, use the support revision named by the template
                 try:
                     support_revision = app.support_revision
+                    # The support revision was pinned; check for a custom
+                    # hash as well.
+                    try:
+                        support_package_hash = app.support_package_hash
+                    except AttributeError:
+                        support_package_hash = None
                 except AttributeError:
                     # No support revision specified; use the template-specified version
                     try:
                         support_revision = self.support_revision(app)
+                        support_package_hash = self.support_package_hash(app)
                     except KeyError:
                         # No template-specified support revision
                         raise MissingSupportPackage(
@@ -409,6 +492,7 @@ class CreateCommand(BaseCommand):
                     url=support_package_url,
                     download_path=download_path,
                     role="support package",
+                    expected_hash=support_package_hash,
                 )
             else:
                 return Path(support_package_url)
@@ -483,18 +567,32 @@ class CreateCommand(BaseCommand):
                     )
                 except AttributeError:
                     pass
+
+                # A stub binary URL was speciried; check for a custom
+                # hash as well.
+                try:
+                    stub_binary_hash = app.stub_binary_hash
+                except AttributeError:
+                    stub_binary_hash = None
+
             except AttributeError:
                 # If the app specifies a support revision, use it; otherwise, use the
                 # support revision named by the template. This value *must* exist, as
                 # stub binary handling won't be triggered at all unless it is present.
                 try:
                     stub_binary_revision = app.stub_binary_revision
+                    # A stub binary revision was speciried; check for a custom
+                    # hash as well.
+                    try:
+                        stub_binary_hash = app.stub_binary_hash
+                    except AttributeError:
+                        stub_binary_hash = None
+
                 except AttributeError:
                     stub_binary_revision = self.stub_binary_revision(app)
+                    stub_binary_hash = self.stub_binary_hash(app)
 
-                stub_binary_url = self.stub_binary_url(
-                    stub_binary_revision, app.console_app
-                )
+                stub_binary_url = self.stub_binary_url(stub_binary_revision, app=app)
                 custom_stub_binary = False
                 self.console.info(f"Using stub binary {stub_binary_url}")
 
@@ -518,6 +616,7 @@ class CreateCommand(BaseCommand):
                     url=stub_binary_url,
                     download_path=download_path,
                     role="stub binary",
+                    expected_hash=stub_binary_hash,
                 )
             else:
                 return Path(stub_binary_url)
@@ -569,133 +668,49 @@ class CreateCommand(BaseCommand):
                         f.write(f"{requirement}\n")
 
             if requirement_installer_args_path:
-                pip_args = "\n".join(self._extra_pip_args(app))
+                pip_args = "\n".join(
+                    str(arg)
+                    for arg in self.tools.file.resolve_relative_args(
+                        app.requirement_installer_args,
+                        self.base_path,
+                    )
+                )
                 requirement_installer_args_path.write_text(
                     f"{pip_args}\n", encoding="utf-8"
                 )
 
-    def _pip_requires(self, app: FinalizedAppConfig, requires: list[str]):
-        """Convert the list of requirements to be passed to pip into its final form.
-
-        :param app: The app configuration
-        :param requires: The user-specified list of app requirements
-        :returns: The final list of requirement arguments to pass to pip
-        """
-        return requires
-
-    def _extra_pip_args(self, app: FinalizedAppConfig):
-        """Any additional arguments that must be passed to pip when installing packages.
-
-        :param app: The app configuration
-        :returns: A list of additional arguments
-        """
-        args: list[str] = []
-        for argument in app.requirement_installer_args:
-            to_append = argument
-            if relative_path_matcher.match(argument) and self.tools.file.is_local_path(
-                argument
-            ):
-                abs_path = os.path.abspath(self.base_path / argument)
-                if Path(abs_path).exists():
-                    to_append = abs_path
-
-            args.append(to_append)
-
-        return args
-
-    def _pip_install(
-        self,
-        app: FinalizedAppConfig,
-        app_packages_path: Path,
-        pip_args: list[str],
-        install_hint: str = "",
-        **pip_kwargs,
-    ):
-        """Invoke pip to install a set of requirements.
-
-        :param app: The app configuration
-        :param app_packages_path: The full path of the app_packages folder into which
-            requirements should be installed.
-        :param pip_args: The list of arguments (including the list of requirements to
-            install) to pass to pip. This is in addition to the default arguments that
-            disable pip version checks, forces upgrades, and installs into the nominated
-            ``app_packages`` path.
-        :param install_hint: Additional hint information to provide in the exception
-            message if the pip install call fails.
-        :param pip_kwargs: Any additional keyword arguments to pass to
-            ``subprocess.run`` when invoking pip.
-        """
-        try:
-            self.tools[app].app_context.run(
-                [
-                    sys.executable,
-                    "-u",
-                    "-X",
-                    "utf8",
-                    "-m",
-                    "pip",
-                    "install",
-                    "--disable-pip-version-check",
-                    "--upgrade",
-                    "--no-user",
-                    f"--target={app_packages_path}",
-                ]
-                + (["-vv"] if self.console.is_deep_debug else [])
-                + self._extra_pip_args(app)
-                + pip_args,
-                check=True,
-                encoding="UTF-8",
-                **pip_kwargs,
-            )
-        except subprocess.CalledProcessError as e:
-            raise RequirementsInstallError(install_hint=install_hint) from e
-
     def _install_app_requirements(
         self,
         app: FinalizedAppConfig,
+        venv: VirtualEnvironment,
         requires: list[str],
         app_packages_path: Path,
-        *,
-        progress_message: str = "Installing app requirements...",
-        pip_args: list[str] | None = None,
-        pip_kwargs: dict[str, dict[str, str | None]] | None = None,
-        install_hint: str = "",
     ):
-        """Install requirements for the app with pip.
+        """Install requirements for the app.
 
         :param app: The app configuration
+        :param venv: The virtual environment where requirements should be installed
         :param requires: The list of requirements to install
         :param app_packages_path: The full path of the app_packages folder into which
             requirements should be installed.
-        :param progress_message: The waitbar progress message to display to the user.
-        :param pip_args: Any additional command line arguments to use when invoking pip.
-        :param pip_kwargs: Any additional keyword arguments to pass to the subprocess
-            when invoking pip.
-        :param install_hint: Additional hint information to provide in the exception
-            message if the pip install call fails.
         """
-        # Clear existing dependency directory
-        if app_packages_path.is_dir():
-            self.tools.shutil.rmtree(app_packages_path)
-            self.tools.os.mkdir(app_packages_path)
-
         # Install requirements
-        if requires:
-            with self.console.wait_bar(progress_message):
-                self._pip_install(
-                    app,
-                    app_packages_path=app_packages_path,
-                    pip_args=(
-                        ([] if pip_args is None else pip_args)
-                        + self._pip_requires(app, requires)
-                    ),
-                    install_hint=install_hint,
-                    **(pip_kwargs or {}),
-                )
-        else:
-            self.console.info("No application requirements.")
+        with (
+            self.console.wait_bar("Installing app requirements..."),
+        ):
+            venv.install_requirements(
+                requires,
+                allow_editable=False,
+                require_binary=self.require_binary_installs,
+                install_path=app_packages_path,
+                extra_installer_args=app.requirement_installer_args,
+            )
 
-    def install_app_requirements(self, app: FinalizedAppConfig):
+    def install_app_requirements(
+        self,
+        app: FinalizedAppConfig,
+        venv: VirtualEnvironment,
+    ):
         """Handle requirements for the app.
 
         This will result in either (in preferential order):
@@ -735,7 +750,12 @@ class CreateCommand(BaseCommand):
         else:
             try:
                 app_packages_path = self.app_packages_path(app)
-                self._install_app_requirements(app, requires, app_packages_path)
+                if requires:
+                    self._install_app_requirements(
+                        app, venv, requires, app_packages_path
+                    )
+                else:
+                    self.console.info("No application requirements.")
             except KeyError as e:
                 raise BriefcaseCommandError(
                     "Application path index file does not define "
@@ -965,6 +985,11 @@ class CreateCommand(BaseCommand):
         self.console.info("Generating application template...", prefix=app.app_name)
         self.generate_app_template(app=app)
 
+        # Verify that the app configuration is valid. This needs to happen *after*
+        # the template is generated, because verification may require files from
+        # the template (such as a Dockerfile).
+        self.verify_app(app)
+
         # External apps (apps that define 'external_package_path') need the packaging
         # metadata from the template, but not the app content, dependencies, support
         # package etc. App *resources* are installed, because they might be required for
@@ -984,8 +1009,16 @@ class CreateCommand(BaseCommand):
                 prefix=app.app_name,
             )
         else:
-            self.console.info("Installing support package...", prefix=app.app_name)
-            self.install_app_support_package(app=app)
+            self.console.info("Creating app environment...", prefix=app.app_name)
+            venv = self.create_app_environment(
+                app=app,
+                platform=self.platform,
+                arch=self.tools.host_arch,
+            )
+
+            if not venv.provides_python:
+                self.console.info("Installing support package...", prefix=app.app_name)
+                self.install_app_support_package(app=app)
 
             try:
                 # If the platform uses a stub binary, the template will define a binary
@@ -998,20 +1031,22 @@ class CreateCommand(BaseCommand):
                 self.console.info("Installing stub binary...", prefix=app.app_name)
                 self.install_stub_binary(app=app)
 
-            # Verify the app after the app template and support package
-            # are in place since the app tools may be dependent on them.
-            self.verify_app(app)
-
             self.console.info("Installing application code...", prefix=app.app_name)
             self.install_app_code(app=app)
 
             self.console.info("Installing requirements...", prefix=app.app_name)
-            self.install_app_requirements(app=app)
+            self.install_app_requirements(app=app, venv=venv)
 
             self.console.info(
                 "Installing application resources...", prefix=app.app_name
             )
             self.install_app_resources(app=app)
+
+            if venv.provides_python:
+                self.console.info(
+                    "Installing managed Python environment...", prefix=app.app_name
+                )
+                self.install_managed_python_env(app=app, venv=venv)
 
             self.console.info("Removing unneeded app content...", prefix=app.app_name)
             self.cleanup_app_content(app=app)

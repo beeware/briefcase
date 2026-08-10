@@ -5,27 +5,37 @@ from unittest import mock
 import pytest
 from git import exc as git_exceptions
 
-from briefcase.exceptions import BriefcaseCommandError, InvalidTemplateBranch
+from briefcase.exceptions import (
+    BriefcaseCommandError,
+    CorruptContentError,
+    InvalidTemplateBranch,
+)
 
 from ...utils import create_file
+from ..conftest import TEMPLATE_COMMIT_HEXSHA
+
+MATCHING_HASH = f"sha1:{TEMPLATE_COMMIT_HEXSHA}"
 
 
 def test_non_url(base_command, mock_git):
     """If the provided template isn't a URL, don't try to update."""
     base_command.tools.git = mock_git
+    base_command.tools.file.check_hash = mock.MagicMock()
 
     cached_template = base_command.update_cookiecutter_cache(
         template="/path/to/template",
         branch="special",
+        template_hash=MATCHING_HASH,
     )
 
     assert cached_template == "/path/to/template"
-    # No git actions are performed
+    # No git actions are performed, and the hash is never checked.
     assert base_command.tools.git.Repo.call_count == 0
+    base_command.tools.file.check_hash.assert_not_called()
 
 
 def test_new_repo_template(base_command, mock_git):
-    """If a previously unknown URL template is specified it is used."""
+    """If a previously unknown URL template is specified it is used, and verified."""
     base_command.tools.git = mock_git
 
     # There won't be a cookiecutter cache, so there won't be
@@ -34,6 +44,7 @@ def test_new_repo_template(base_command, mock_git):
     cached_template = base_command.update_cookiecutter_cache(
         template="https://example.com/magic/special-template.git",
         branch="special",
+        template_hash=MATCHING_HASH,
     )
 
     # The template that will be used is the original URL
@@ -46,6 +57,10 @@ def test_new_repo_template(base_command, mock_git):
         filter=["blob:none"],
         no_checkout=True,
     )
+
+    # The resolved head was checked out, since the hash matched.
+    head = mock_git.Repo.clone_from.return_value.remote.return_value.refs["special"]
+    head.checkout.assert_called_once_with()
 
 
 def test_new_repo_template_interrupt(base_command, mock_git):
@@ -65,6 +80,7 @@ def test_new_repo_template_interrupt(base_command, mock_git):
         base_command.update_cookiecutter_cache(
             template="https://example.com/magic/special-template.git",
             branch="special",
+            template_hash=MATCHING_HASH,
         )
 
     # The template directory should be cleaned up
@@ -89,6 +105,7 @@ def test_new_repo_template_mkdir_interrupt(base_command, mock_git):
         base_command.update_cookiecutter_cache(
             template="https://example.com/magic/special-template.git",
             branch="special",
+            template_hash=MATCHING_HASH,
         )
 
     # The template directory shouldn't exist
@@ -114,6 +131,7 @@ def test_new_repo_invalid_template_url(base_command, mock_git):
         base_command.update_cookiecutter_cache(
             template="https://example.com/magic/special-template.git",
             branch="special",
+            template_hash=MATCHING_HASH,
         )
 
     # The cookiecutter cache location will be interrogated.
@@ -196,16 +214,18 @@ def test_repo_clone_error(stderr_string, error_message, base_command, mock_git):
         base_command.update_cookiecutter_cache(
             template=repository,
             branch="briefcase-template",
+            template_hash=MATCHING_HASH,
         )
 
 
 def test_existing_repo_template(base_command, mock_git):
-    """If a previously known URL template is specified it is used."""
+    """If a previously known URL template is specified it is used, and verified."""
     base_command.tools.git = mock_git
 
     mock_repo = mock.MagicMock()
     mock_remote = mock.MagicMock()
     mock_remote_head = mock.MagicMock()
+    mock_remote_head.commit.hexsha = TEMPLATE_COMMIT_HEXSHA
 
     # Git returns a Repo, that repo can return a remote, and it has
     # heads that can be accessed.
@@ -223,6 +243,7 @@ def test_existing_repo_template(base_command, mock_git):
     cached_template = base_command.update_cookiecutter_cache(
         template="https://example.com/magic/special-template.git",
         branch="special",
+        template_hash=MATCHING_HASH,
     )
 
     # The cookiecutter cache location will be interrogated.
@@ -238,7 +259,7 @@ def test_existing_repo_template(base_command, mock_git):
     # The right branch was accessed
     mock_remote.refs.__getitem__.assert_called_once_with("special")
 
-    # The remote head was checked out.
+    # The remote head was checked out, since the hash matched.
     mock_remote_head.checkout.assert_called_once_with()
 
     # The template that will be used is the original URL
@@ -265,6 +286,7 @@ def test_existing_repo_template_corrupted(base_command, mock_git):
     cached_template = base_command.update_cookiecutter_cache(
         template="https://example.com/magic/special-template.git",
         branch="special",
+        template_hash=MATCHING_HASH,
     )
 
     # The template that will be used is the original URL
@@ -293,6 +315,7 @@ def test_existing_repo_template_with_different_url(base_command, mock_git):
     mock_repo = mock.MagicMock()
     mock_remote = mock.MagicMock()
     mock_remote_head = mock.MagicMock()
+    mock_remote_head.commit.hexsha = TEMPLATE_COMMIT_HEXSHA
 
     # Git returns a Repo, that repo can return a remote, and it has
     # heads that can be accessed.
@@ -310,6 +333,7 @@ def test_existing_repo_template_with_different_url(base_command, mock_git):
     cached_template = base_command.update_cookiecutter_cache(
         template="https://example.com/magic/special-template.git",
         branch="special",
+        template_hash=MATCHING_HASH,
     )
 
     # The cookiecutter cache location will be interrogated.
@@ -340,6 +364,7 @@ def test_offline_repo_template(base_command, mock_git, capsys):
     mock_repo = mock.MagicMock()
     mock_remote = mock.MagicMock()
     mock_remote_head = mock.MagicMock()
+    mock_remote_head.commit.hexsha = TEMPLATE_COMMIT_HEXSHA
 
     # Git returns a Repo, that repo can return a remote, and it has
     # heads that can be accessed. However, calling fetch on the remote
@@ -357,7 +382,9 @@ def test_offline_repo_template(base_command, mock_git, capsys):
 
     # Update the cache
     cached_template = base_command.update_cookiecutter_cache(
-        template="https://example.com/magic/special-template.git", branch="special"
+        template="https://example.com/magic/special-template.git",
+        branch="special",
+        template_hash=MATCHING_HASH,
     )
 
     # The cookiecutter cache location will be interrogated.
@@ -408,6 +435,7 @@ def test_cached_missing_branch_template(base_command, mock_git):
         base_command.update_cookiecutter_cache(
             template="https://example.com/magic/special-template.git",
             branch="invalid",
+            template_hash=MATCHING_HASH,
         )
 
     # The cookiecutter cache location will be interrogated.
@@ -447,7 +475,9 @@ def test_git_repo_with_missing_origin_remote(base_command, mock_git):
         match=r"Unable to check out template branch\.",
     ):
         base_command.update_cookiecutter_cache(
-            template="https://example.com/magic/special-template.git", branch="special"
+            template="https://example.com/magic/special-template.git",
+            branch="special",
+            template_hash=MATCHING_HASH,
         )
 
     # The cookiecutter cache location will be interrogated.
@@ -457,3 +487,106 @@ def test_git_repo_with_missing_origin_remote(base_command, mock_git):
     mock_repo.remote.assert_called_once_with(name="origin")
     mock_remote.set_url.assert_not_called()
     mock_remote.fetch.assert_not_called()
+
+
+def test_hash_mismatch(base_command, mock_git):
+    """If the commit doesn't match the expected hash, an error is raised."""
+    base_command.tools.git = mock_git
+
+    mock_repo = mock.MagicMock()
+    mock_remote = mock.MagicMock()
+    mock_remote_head = mock.MagicMock()
+    mock_remote_head.commit.hexsha = TEMPLATE_COMMIT_HEXSHA
+
+    base_command.tools.git.Repo.return_value = mock_repo
+    mock_repo.remote.return_value = mock_remote
+    mock_remote.refs.__getitem__.return_value = mock_remote_head
+    mock_remote.url = "https://example.com/magic/special-template.git"
+
+    cached_path = base_command.template_cache_path(
+        "https://example.com/magic/special-template.git"
+    )
+    cached_path.mkdir(parents=True)
+
+    with pytest.raises(CorruptContentError) as exc_info:
+        base_command.update_cookiecutter_cache(
+            template="https://example.com/magic/special-template.git",
+            branch="v1.2.3",
+            template_hash="sha1:0000000000000000000000000000000000000000",
+        )
+
+    assert exc_info.value.expected_hash == (
+        "sha1:0000000000000000000000000000000000000000"
+    )
+    assert exc_info.value.actual_hash == MATCHING_HASH
+
+    # The mismatched commit was never checked out.
+    mock_remote_head.checkout.assert_not_called()
+
+
+def test_warn_on_no_template_hash(base_command, mock_git, capsys):
+    """If no template_hash is provided, a warning is logged, but checkout proceeds."""
+    base_command.tools.git = mock_git
+
+    mock_repo = mock.MagicMock()
+    mock_remote = mock.MagicMock()
+    mock_remote_head = mock.MagicMock()
+    mock_remote_head.commit.hexsha = TEMPLATE_COMMIT_HEXSHA
+
+    base_command.tools.git.Repo.return_value = mock_repo
+    mock_repo.remote.return_value = mock_remote
+    mock_remote.refs.__getitem__.return_value = mock_remote_head
+    mock_remote.url = "https://example.com/magic/special-template.git"
+
+    cached_path = base_command.template_cache_path(
+        "https://example.com/magic/special-template.git"
+    )
+    cached_path.mkdir(parents=True)
+
+    cached_template = base_command.update_cookiecutter_cache(
+        template="https://example.com/magic/special-template.git",
+        branch="special",
+    )
+
+    assert cached_template == cached_path
+    mock_remote_head.checkout.assert_called_once_with()
+    assert (
+        "will not be verified as no reference hash has been provided"
+        in capsys.readouterr().out
+    )
+
+
+def test_unverified_template_hash_skips_check(base_command, mock_git, capsys):
+    """An 'unverified:<reason>' template_hash skips verification silently."""
+    base_command.tools.git = mock_git
+
+    mock_repo = mock.MagicMock()
+    mock_remote = mock.MagicMock()
+    mock_remote_head = mock.MagicMock()
+    mock_remote_head.commit.hexsha = TEMPLATE_COMMIT_HEXSHA
+
+    base_command.tools.git.Repo.return_value = mock_repo
+    mock_repo.remote.return_value = mock_remote
+    mock_remote.refs.__getitem__.return_value = mock_remote_head
+    mock_remote.url = "https://example.com/magic/special-template.git"
+
+    cached_path = base_command.template_cache_path(
+        "https://example.com/magic/special-template.git"
+    )
+    cached_path.mkdir(parents=True)
+
+    cached_template = base_command.update_cookiecutter_cache(
+        template="https://example.com/magic/special-template.git",
+        branch="special",
+        template_hash="unverified:this template has no stable hash",
+    )
+
+    assert cached_template == cached_path
+    mock_remote_head.checkout.assert_called_once_with()
+    # Verification is skipped silently: no warning about a missing hash, and
+    # no error about a mismatched hash. (The unrelated "Using existing
+    # template" info log still fires, as it does on every successful
+    # checkout, regardless of hash verification outcome.)
+    output = capsys.readouterr().out
+    assert "will not be verified" not in output
+    assert "does not match the expected hash" not in output

@@ -3,6 +3,7 @@ import subprocess
 import sys
 import tarfile
 from pathlib import Path
+from textwrap import dedent
 from unittest import mock
 
 import pytest
@@ -15,13 +16,14 @@ from ....utils import create_file, create_tgz_file
 
 
 @pytest.fixture
-def package_command(dummy_console, first_app, tmp_path):
+def package_command(mock_tools, dummy_console, first_app, tmp_path):
     command = LinuxSystemPackageCommand(
         console=dummy_console,
+        tools=mock_tools,
         base_path=tmp_path / "base_path",
         data_path=tmp_path / "briefcase",
     )
-    command.tools.home_path = tmp_path / "home"
+    mock_tools.host_os = "Linux"
 
     # Mock ABI from packaging system
     command._pkg_abi = "wonky"
@@ -29,21 +31,21 @@ def package_command(dummy_console, first_app, tmp_path):
     # Mock the app context
     command.tools.app_tools[first_app].app_context = mock.MagicMock()
 
-    # Mock shutil
-    command.tools.shutil = mock.MagicMock()
-
     # Make the mock copy still copy
-    command.tools.shutil.copy = mock.MagicMock(side_effect=shutil.copy)
+    command.tools.shutil.copy.side_effect = shutil.copy
 
     # Make the mock make_archive still package tarballs
-    command.tools.shutil.make_archive = mock.MagicMock(side_effect=shutil.make_archive)
+    command.tools.shutil.make_archive.side_effect = shutil.make_archive
 
     # Make the mock rmtree still remove content
-    command.tools.shutil.rmtree = mock.MagicMock(side_effect=shutil.rmtree)
+    command.tools.shutil.rmtree.side_effect = shutil.rmtree
 
     # Mock not using docker
     command.target_image = None
     command.extra_docker_build_args = []
+
+    # Accept the default "Don't sign" selection for the signing menu.
+    command.console.values = [""]
 
     return command
 
@@ -165,7 +167,13 @@ def test_verify_docker(package_command, first_app_pkg, monkeypatch):
     ["HISTORY", "NEWS.txt"],
 )
 @pytest.mark.skipif(sys.platform == "win32", reason="Can't build PKGs on Windows")
-def test_pkg_package(package_command, first_app_pkg, tmp_path, changelog_filename):
+def test_pkg_package(
+    package_command,
+    first_app_pkg,
+    mock_gpg,
+    tmp_path,
+    changelog_filename,
+):
     """A pkg app can be packaged."""
     bundle_path = tmp_path / "base_path/build/first-app/somevendor/surprising"
 
@@ -185,26 +193,25 @@ def test_pkg_package(package_command, first_app_pkg, tmp_path, changelog_filenam
     # The PKGBUILD file is written
     assert (bundle_path / "pkgbuild/PKGBUILD").exists()
     with (bundle_path / "pkgbuild/PKGBUILD").open(encoding="utf-8") as f:
-        assert f.read() == "\n".join(
-            [
-                "# Maintainer: Megacorp <maintainer@example.com>",
-                'export PACKAGER="Megacorp <maintainer@example.com>"',
-                "pkgname=first-app",
-                "pkgver=0.0.1",
-                "pkgrel=1",
-                'pkgdesc="Description for the app"',
-                "arch=('wonky')",
-                'url="https://example.com/first-app"',
-                "license=('Unknown')",
-                "depends=('glibc>=2.99' 'python3')",
-                "changelog=CHANGELOG",
-                'source=("$pkgname-$pkgver.tar.gz")',
-                "md5sums=('SKIP')",
-                "options=('!strip')",
-                "package() {",
-                '    cp -r "$srcdir/$pkgname-$pkgver/usr/" "$pkgdir"/usr/',
-                "}",
-            ]
+        assert f.read() == dedent(
+            """\
+            # Maintainer: Megacorp <maintainer@example.com>
+            export PACKAGER="Megacorp <maintainer@example.com>"
+            pkgname=first-app
+            pkgver=0.0.1
+            pkgrel=1
+            pkgdesc="Description for the app"
+            arch=('wonky')
+            url="https://example.com/first-app"
+            license=('Unknown')
+            depends=('glibc>=2.99' 'python3')
+            changelog=CHANGELOG
+            source=("$pkgname-$pkgver.tar.gz")
+            md5sums=('SKIP')
+            options=('!strip')
+            package() {
+                cp -r "$srcdir/$pkgname-$pkgver/usr/" "$pkgdir"/usr/
+            }"""
         )
 
     # A source tarball was created with the right content
@@ -258,7 +265,7 @@ def test_pkg_package(package_command, first_app_pkg, tmp_path, changelog_filenam
 
 
 @pytest.mark.skipif(sys.platform == "win32", reason="Can't build PKGs on Windows")
-def test_pkg_re_package(package_command, first_app_pkg, tmp_path):
+def test_pkg_re_package(package_command, first_app_pkg, mock_gpg, tmp_path):
     """A pkg app that has previously been packaged can be re-packaged."""
     bundle_path = tmp_path / "base_path/build/first-app/somevendor/surprising"
 
@@ -281,26 +288,25 @@ def test_pkg_re_package(package_command, first_app_pkg, tmp_path):
     # The PKGBUILD file is written
     assert (bundle_path / "pkgbuild/PKGBUILD").exists()
     with (bundle_path / "pkgbuild/PKGBUILD").open(encoding="utf-8") as f:
-        assert f.read() == "\n".join(
-            [
-                "# Maintainer: Megacorp <maintainer@example.com>",
-                'export PACKAGER="Megacorp <maintainer@example.com>"',
-                "pkgname=first-app",
-                "pkgver=0.0.1",
-                "pkgrel=1",
-                'pkgdesc="Description for the app"',
-                "arch=('wonky')",
-                'url="https://example.com/first-app"',
-                "license=('Unknown')",
-                "depends=('glibc>=2.99' 'python3')",
-                "changelog=CHANGELOG",
-                'source=("$pkgname-$pkgver.tar.gz")',
-                "md5sums=('SKIP')",
-                "options=('!strip')",
-                "package() {",
-                '    cp -r "$srcdir/$pkgname-$pkgver/usr/" "$pkgdir"/usr/',
-                "}",
-            ]
+        assert f.read() == dedent(
+            """\
+            # Maintainer: Megacorp <maintainer@example.com>
+            export PACKAGER="Megacorp <maintainer@example.com>"
+            pkgname=first-app
+            pkgver=0.0.1
+            pkgrel=1
+            pkgdesc="Description for the app"
+            arch=('wonky')
+            url="https://example.com/first-app"
+            license=('Unknown')
+            depends=('glibc>=2.99' 'python3')
+            changelog=CHANGELOG
+            source=("$pkgname-$pkgver.tar.gz")
+            md5sums=('SKIP')
+            options=('!strip')
+            package() {
+                cp -r "$srcdir/$pkgname-$pkgver/usr/" "$pkgdir"/usr/
+            }"""
         )
 
     # A source tarball was created with the right content
@@ -354,7 +360,7 @@ def test_pkg_re_package(package_command, first_app_pkg, tmp_path):
 
 
 @pytest.mark.skipif(sys.platform == "win32", reason="Can't build PKGs on Windows")
-def test_pkg_package_no_description(package_command, first_app_pkg, tmp_path):
+def test_pkg_package_no_description(package_command, first_app_pkg, mock_gpg, tmp_path):
     """A pkg app without a description raises an error."""
     bundle_path = tmp_path / "base_path/build/first-app/somevendor/surprising"
 
@@ -375,7 +381,12 @@ def test_pkg_package_no_description(package_command, first_app_pkg, tmp_path):
 
 
 @pytest.mark.skipif(sys.platform == "win32", reason="Can't build PKGs on Windows")
-def test_pkg_package_extra_requirements(package_command, first_app_pkg, tmp_path):
+def test_pkg_package_extra_requirements(
+    package_command,
+    first_app_pkg,
+    mock_gpg,
+    tmp_path,
+):
     """A pkg app can be packaged with extra runtime requirements and config features."""
     bundle_path = tmp_path / "base_path/build/first-app/somevendor/surprising"
 
@@ -392,26 +403,25 @@ def test_pkg_package_extra_requirements(package_command, first_app_pkg, tmp_path
     # The PKGBUILD file is written
     assert (bundle_path / "pkgbuild/PKGBUILD").exists()
     with (bundle_path / "pkgbuild/PKGBUILD").open(encoding="utf-8") as f:
-        assert f.read() == "\n".join(
-            [
-                "# Maintainer: Megacorp <maintainer@example.com>",
-                'export PACKAGER="Megacorp <maintainer@example.com>"',
-                "pkgname=first-app",
-                "pkgver=0.0.1",
-                "pkgrel=1",
-                'pkgdesc="Description for the app"',
-                "arch=('wonky')",
-                'url="https://example.com/first-app"',
-                "license=('Unknown')",
-                "depends=('glibc>=2.99' 'python3' 'first' 'second')",
-                "changelog=CHANGELOG",
-                'source=("$pkgname-$pkgver.tar.gz")',
-                "md5sums=('SKIP')",
-                "options=('!strip')",
-                "package() {",
-                '    cp -r "$srcdir/$pkgname-$pkgver/usr/" "$pkgdir"/usr/',
-                "}",
-            ]
+        assert f.read() == dedent(
+            """\
+            # Maintainer: Megacorp <maintainer@example.com>
+            export PACKAGER="Megacorp <maintainer@example.com>"
+            pkgname=first-app
+            pkgver=0.0.1
+            pkgrel=1
+            pkgdesc="Description for the app"
+            arch=('wonky')
+            url="https://example.com/first-app"
+            license=('Unknown')
+            depends=('glibc>=2.99' 'python3' 'first' 'second')
+            changelog=CHANGELOG
+            source=("$pkgname-$pkgver.tar.gz")
+            md5sums=('SKIP')
+            options=('!strip')
+            package() {
+                cp -r "$srcdir/$pkgname-$pkgver/usr/" "$pkgdir"/usr/
+            }"""
         )
 
     # A source tarball was created
@@ -438,7 +448,7 @@ def test_pkg_package_extra_requirements(package_command, first_app_pkg, tmp_path
 
 
 @pytest.mark.skipif(sys.platform == "win32", reason="Can't build PKGs on Windows")
-def test_pkg_package_failure(package_command, first_app_pkg, tmp_path):
+def test_pkg_package_failure(package_command, first_app_pkg, mock_gpg, tmp_path):
     """If a packaging doesn't succeed, an error is raised."""
     bundle_path = tmp_path / "base_path/build/first-app/somevendor/surprising"
 
@@ -483,7 +493,7 @@ def test_pkg_package_failure(package_command, first_app_pkg, tmp_path):
 
 
 @pytest.mark.skipif(sys.platform == "win32", reason="Can't build PKGs on Windows")
-def test_no_changelog(package_command, first_app_pkg, tmp_path):
+def test_no_changelog(package_command, first_app_pkg, mock_gpg, tmp_path):
     """If a packaging doesn't succeed, an error is raised."""
     bundle_path = tmp_path / "base_path/build/first-app/somevendor/surprising"
 
@@ -517,6 +527,7 @@ def test_no_changelog(package_command, first_app_pkg, tmp_path):
 def test_external_pkg_package(
     package_command,
     external_first_app_pkg,
+    mock_gpg,
     tmp_path,
 ):
     """An external app can be packaged as a PKD."""
@@ -531,26 +542,25 @@ def test_external_pkg_package(
     # The PKGBUILD file is written
     assert (bundle_path / "pkgbuild/PKGBUILD").exists()
     with (bundle_path / "pkgbuild/PKGBUILD").open(encoding="utf-8") as f:
-        assert f.read() == "\n".join(
-            [
-                "# Maintainer: Megacorp <maintainer@example.com>",
-                'export PACKAGER="Megacorp <maintainer@example.com>"',
-                "pkgname=first-app",
-                "pkgver=0.0.1",
-                "pkgrel=1",
-                'pkgdesc="Description for the app"',
-                "arch=('wonky')",
-                'url="https://example.com/first-app"',
-                "license=('Unknown')",
-                "depends=('glibc>=2.99' 'python3')",
-                "changelog=CHANGELOG",
-                'source=("$pkgname-$pkgver.tar.gz")',
-                "md5sums=('SKIP')",
-                "options=('!strip')",
-                "package() {",
-                '    cp -r "$srcdir/$pkgname-$pkgver/usr/" "$pkgdir"/usr/',
-                "}",
-            ]
+        assert f.read() == dedent(
+            """\
+            # Maintainer: Megacorp <maintainer@example.com>
+            export PACKAGER="Megacorp <maintainer@example.com>"
+            pkgname=first-app
+            pkgver=0.0.1
+            pkgrel=1
+            pkgdesc="Description for the app"
+            arch=('wonky')
+            url="https://example.com/first-app"
+            license=('Unknown')
+            depends=('glibc>=2.99' 'python3')
+            changelog=CHANGELOG
+            source=("$pkgname-$pkgver.tar.gz")
+            md5sums=('SKIP')
+            options=('!strip')
+            package() {
+                cp -r "$srcdir/$pkgname-$pkgver/usr/" "$pkgdir"/usr/
+            }"""
         )
 
     # A source tarball was created with the right content

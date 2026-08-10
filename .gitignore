@@ -18,7 +18,7 @@ distribute-*
 .coverage
 .coverage.*
 coverage.xml
-venv*
+/venv*
 .vscode/
 .eggs/
 .tox/
@@ -58,3 +58,5 @@ logs/
 .specify/workflow.yml
 /specs/
 /docs/superpowers/
+/.superpowers/
+/.worktrees/

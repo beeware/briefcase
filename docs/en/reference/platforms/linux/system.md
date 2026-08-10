@@ -91,6 +91,22 @@ The Linux system app template includes a `LICENSE` and `CHANGELOG` file, with st
 
 The Linux system app template also includes an initial draft manfile for your app. This manfile will be populated with the [`description`][] and [`long_description`][] of your app. You may wish to add more details on app usage. If you need full control over the man page content, you can provide your own troff-formatted man page using the [`man_page`][] configuration option.
 
+## Code signing
+
+Linux system packages can be signed using a GPG signing identity. See the [how-to guide on Linux code signing](../../../how-to/code-signing/linux.md) for instructions on generating and obtaining a GPG signing identity.
+
+The identity used to sign the package can be specified with the `-i` / `--identity` option, as a fingerprint, key ID, or name or email address. If no identity is specified, Briefcase will prompt you to select an identity from the secret keys available on the system, or to opt out of signing. If only one secret key is available, it is offered as the default selection.
+
+Signing is performed as follows, depending on the packaging format:
+
+- `.deb` packages are signed with [`debsigs`](https://manpages.debian.org/bookworm/debsigs/debsigs.1.en.html), embedding an `origin` signature in the package. The `debsigs` tool must be installed.
+- `.rpm` packages are signed with [`rpmsign`](https://rpm.org/), embedding a signature in the package header. The `rpm-sign` tool must be installed.
+- `.pkg.tar.zst` packages are signed with `gpg`, producing a detached signature in a `.sig` file alongside the package; both files must be distributed together. The `gnupg` tool must be installed.
+
+If the relevant signing tool is not installed, Briefcase will report an error suggesting how to install it. If no signing identity is available, or if `--adhoc-sign` is used, the package will be produced without a signature.
+
+Signing is not supported when building with Docker (i.e., using the `--target` option); in this case, the package must be produced without a signature.
+
 ## Additional options
 
 The following options can be provided at the command line when producing Deb packages:
@@ -206,7 +222,6 @@ RUN <second command run as root>
 
 USER brutus
 """
-
 ```
 
 ## Platform quirks
@@ -214,3 +229,7 @@ USER brutus
 ### Local path references and Docker builds
 
 Docker builds are not able to reference local paths in the [`requires`][] and [`requirement_installer_args`][] configurations. This is because the Docker container only has access to specific file paths on the host system. See [issue \#2018](https://github.com/beeware/briefcase/issues/2081) for more discussion of the problem, and some possible workarounds.
+
+### Environment managers and Docker builds
+
+If an application defines the use of an environment manager (using the [`env_manager`][] setting), and Docker is used to build the application, the environment manager will be ignored, and raw `pip` installs will be used.

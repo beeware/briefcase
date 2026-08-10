@@ -9,7 +9,7 @@ from briefcase.commands import (
     PublishCommand,
     UpdateCommand,
 )
-from briefcase.config import BaseConfig
+from briefcase.config import FinalizedAppConfig
 from briefcase.exceptions import BriefcaseCommandError
 from briefcase.integrations.rcedit import RCEdit
 from briefcase.integrations.windows_sdk import WindowsSDK
@@ -35,6 +35,7 @@ class WindowsAppMixin(WindowsMixin):
 
 class WindowsAppCreateCommand(WindowsAppMixin, WindowsCreateCommand):
     description = "Create and populate a Windows app."
+    app_template_hash = "sha1:84df4f525fbcf377c39b697ddce970c607fb14d0"
 
 
 class WindowsAppUpdateCommand(WindowsAppCreateCommand, UpdateCommand):
@@ -59,7 +60,7 @@ class WindowsAppBuildCommand(WindowsAppMixin, BuildCommand):
         with suppress(BriefcaseCommandError):
             WindowsSDK.verify(tools=self.tools)
 
-    def build_app(self, app: BaseConfig, **kwargs):
+    def build_app(self, app: FinalizedAppConfig, **kwargs):
         """Build the application.
 
         :param app: The config object for the app

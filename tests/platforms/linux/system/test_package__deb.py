@@ -2,6 +2,7 @@ import shutil
 import subprocess
 import sys
 from pathlib import Path
+from textwrap import dedent
 from unittest import mock
 
 import pytest
@@ -17,13 +18,14 @@ from ....utils import create_file
 
 
 @pytest.fixture
-def package_command(dummy_console, first_app, tmp_path):
+def package_command(mock_tools, dummy_console, first_app, tmp_path):
     command = LinuxSystemPackageCommand(
         console=dummy_console,
+        tools=mock_tools,
         base_path=tmp_path / "base_path",
         data_path=tmp_path / "briefcase",
     )
-    command.tools.home_path = tmp_path / "home"
+    mock_tools.host_os = "Linux"
 
     # Mock ABI from packaging system
     command._deb_abi = "wonky"
@@ -31,14 +33,15 @@ def package_command(dummy_console, first_app, tmp_path):
     # Mock the app context
     command.tools.app_tools[first_app].app_context = mock.MagicMock()
 
-    # Mock shutil
-    command.tools.shutil = mock.MagicMock()
     # Make the mock rmtree still remove content
     command.tools.shutil.rmtree.side_effect = shutil.rmtree
 
     # Mock not using docker
     command.target_image = None
     command.extra_docker_build_args = []
+
+    # Accept the default "Don't sign" selection for the signing menu.
+    command.console.values = [""]
 
     return command
 
@@ -153,7 +156,7 @@ def test_verify_docker(package_command, first_app_deb, monkeypatch):
 
 
 @pytest.mark.skipif(sys.platform == "win32", reason="Can't build debs on Windows")
-def test_deb_package(package_command, first_app_deb, tmp_path):
+def test_deb_package(package_command, first_app_deb, mock_gpg, tmp_path):
     """A deb app can be packaged."""
     bundle_path = tmp_path / "base_path/build/first-app/somevendor/surprising"
 
@@ -163,24 +166,20 @@ def test_deb_package(package_command, first_app_deb, tmp_path):
     # The control file is written
     assert (bundle_path / "first-app-0.0.1/DEBIAN/control").exists()
     with (bundle_path / "first-app-0.0.1/DEBIAN/control").open(encoding="utf-8") as f:
-        assert (
-            f.read()
-            == "\n".join(
-                [
-                    "Package: first-app",
-                    "Version: 0.0.1",
-                    "Architecture: wonky",
-                    "Maintainer: Megacorp <maintainer@example.com>",
-                    "Homepage: https://example.com/first-app",
-                    "Description: The first simple app \\ demonstration",
-                    " Long description",
-                    " for the app",
-                    "Depends: libc6 (>=2.99), libpython3.10",
-                    "Section: utils",
-                    "Priority: optional",
-                ]
-            )
-            + "\n"
+        assert f.read() == dedent(
+            """\
+            Package: first-app
+            Version: 0.0.1
+            Architecture: wonky
+            Maintainer: Megacorp <maintainer@example.com>
+            Homepage: https://example.com/first-app
+            Description: The first simple app \\ demonstration
+             Long description
+             for the app
+            Depends: libc6 (>=2.99), libpython3.10
+            Section: utils
+            Priority: optional
+            """
         )
 
     package_command.tools.app_tools[
@@ -203,7 +202,7 @@ def test_deb_package(package_command, first_app_deb, tmp_path):
     )
 
 
-def test_deb_re_package(package_command, first_app_deb, tmp_path):
+def test_deb_re_package(package_command, first_app_deb, mock_gpg, tmp_path):
     """A deb app that has previously been packaged can be re-packaged."""
     bundle_path = tmp_path / "base_path/build/first-app/somevendor/surprising"
 
@@ -216,24 +215,20 @@ def test_deb_re_package(package_command, first_app_deb, tmp_path):
     # The control file is re-written
     assert (bundle_path / "first-app-0.0.1/DEBIAN/control").exists()
     with (bundle_path / "first-app-0.0.1/DEBIAN/control").open(encoding="utf-8") as f:
-        assert (
-            f.read()
-            == "\n".join(
-                [
-                    "Package: first-app",
-                    "Version: 0.0.1",
-                    "Architecture: wonky",
-                    "Maintainer: Megacorp <maintainer@example.com>",
-                    "Homepage: https://example.com/first-app",
-                    "Description: The first simple app \\ demonstration",
-                    " Long description",
-                    " for the app",
-                    "Depends: libc6 (>=2.99), libpython3.10",
-                    "Section: utils",
-                    "Priority: optional",
-                ]
-            )
-            + "\n"
+        assert f.read() == dedent(
+            """\
+            Package: first-app
+            Version: 0.0.1
+            Architecture: wonky
+            Maintainer: Megacorp <maintainer@example.com>
+            Homepage: https://example.com/first-app
+            Description: The first simple app \\ demonstration
+             Long description
+             for the app
+            Depends: libc6 (>=2.99), libpython3.10
+            Section: utils
+            Priority: optional
+            """
         )
 
     package_command.tools.app_tools[
@@ -257,7 +252,12 @@ def test_deb_re_package(package_command, first_app_deb, tmp_path):
 
 
 @pytest.mark.skipif(sys.platform == "win32", reason="Can't build debs on Windows")
-def test_deb_package_underscore(package_command, underscore_app_deb, tmp_path):
+def test_deb_package_underscore(
+    package_command,
+    underscore_app_deb,
+    mock_gpg,
+    tmp_path,
+):
     """A deb app can be packaged."""
     package_command.tools.app_tools[underscore_app_deb].app_context = mock.MagicMock()
 
@@ -271,24 +271,20 @@ def test_deb_package_underscore(package_command, underscore_app_deb, tmp_path):
     with (bundle_path / "underscore_app-0.0.1/DEBIAN/control").open(
         encoding="utf-8"
     ) as f:
-        assert (
-            f.read()
-            == "\n".join(
-                [
-                    "Package: underscore-app",
-                    "Version: 0.0.1",
-                    "Architecture: wonky",
-                    "Maintainer: Megacorp <maintainer@example.com>",
-                    "Homepage: https://example.com/underscore_app",
-                    "Description: The first simple app \\ demonstration",
-                    " Long description",
-                    " for the app",
-                    "Depends: libc6 (>=2.99), libpython3.10",
-                    "Section: utils",
-                    "Priority: optional",
-                ]
-            )
-            + "\n"
+        assert f.read() == dedent(
+            """\
+            Package: underscore-app
+            Version: 0.0.1
+            Architecture: wonky
+            Maintainer: Megacorp <maintainer@example.com>
+            Homepage: https://example.com/underscore_app
+            Description: The first simple app \\ demonstration
+             Long description
+             for the app
+            Depends: libc6 (>=2.99), libpython3.10
+            Section: utils
+            Priority: optional
+            """
         )
 
     package_command.tools.app_tools[
@@ -312,7 +308,12 @@ def test_deb_package_underscore(package_command, underscore_app_deb, tmp_path):
     )
 
 
-def test_deb_package_no_long_description(package_command, first_app_deb, tmp_path):
+def test_deb_package_no_long_description(
+    package_command,
+    first_app_deb,
+    mock_gpg,
+    tmp_path,
+):
     """A deb app without a long description raises an error."""
     bundle_path = tmp_path / "base_path/build/first-app/somevendor/surprising"
 
@@ -345,7 +346,12 @@ def test_multiline_long_description(input, output):
     assert debian_multiline_description(input) == output
 
 
-def test_deb_package_extra_requirements(package_command, first_app_deb, tmp_path):
+def test_deb_package_extra_requirements(
+    package_command,
+    first_app_deb,
+    mock_gpg,
+    tmp_path,
+):
     """A deb app can be packaged with extra runtime requirements and configuration
     options."""
     bundle_path = tmp_path / "base_path/build/first-app/somevendor/surprising"
@@ -361,24 +367,20 @@ def test_deb_package_extra_requirements(package_command, first_app_deb, tmp_path
     # The control file is written
     assert (bundle_path / "first-app-0.0.1/DEBIAN/control").exists()
     with (bundle_path / "first-app-0.0.1/DEBIAN/control").open(encoding="utf-8") as f:
-        assert (
-            f.read()
-            == "\n".join(
-                [
-                    "Package: first-app",
-                    "Version: 0.0.1",
-                    "Architecture: wonky",
-                    "Maintainer: Megacorp <maintainer@example.com>",
-                    "Homepage: https://example.com/first-app",
-                    "Description: The first simple app \\ demonstration",
-                    " Long description",
-                    " for the app",
-                    "Depends: libc6 (>=2.99), libpython3.10, first, second (>=1.2.3)",
-                    "Section: Funny stuff",
-                    "Priority: optional",
-                ]
-            )
-            + "\n"
+        assert f.read() == dedent(
+            """\
+            Package: first-app
+            Version: 0.0.1
+            Architecture: wonky
+            Maintainer: Megacorp <maintainer@example.com>
+            Homepage: https://example.com/first-app
+            Description: The first simple app \\ demonstration
+             Long description
+             for the app
+            Depends: libc6 (>=2.99), libpython3.10, first, second (>=1.2.3)
+            Section: Funny stuff
+            Priority: optional
+            """
         )
 
     package_command.tools.app_tools[
@@ -401,7 +403,7 @@ def test_deb_package_extra_requirements(package_command, first_app_deb, tmp_path
     )
 
 
-def test_deb_package_failure(package_command, first_app_deb, tmp_path):
+def test_deb_package_failure(package_command, first_app_deb, mock_gpg, tmp_path):
     """If a packaging doesn't succeed, an error is raised."""
     bundle_path = tmp_path / "base_path/build/first-app/somevendor/surprising"
 
@@ -421,24 +423,20 @@ def test_deb_package_failure(package_command, first_app_deb, tmp_path):
     # The control file is written
     assert (bundle_path / "first-app-0.0.1/DEBIAN/control").exists()
     with (bundle_path / "first-app-0.0.1/DEBIAN/control").open(encoding="utf-8") as f:
-        assert (
-            f.read()
-            == "\n".join(
-                [
-                    "Package: first-app",
-                    "Version: 0.0.1",
-                    "Architecture: wonky",
-                    "Maintainer: Megacorp <maintainer@example.com>",
-                    "Homepage: https://example.com/first-app",
-                    "Description: The first simple app \\ demonstration",
-                    " Long description",
-                    " for the app",
-                    "Depends: libc6 (>=2.99), libpython3.10",
-                    "Section: utils",
-                    "Priority: optional",
-                ]
-            )
-            + "\n"
+        assert f.read() == dedent(
+            """\
+            Package: first-app
+            Version: 0.0.1
+            Architecture: wonky
+            Maintainer: Megacorp <maintainer@example.com>
+            Homepage: https://example.com/first-app
+            Description: The first simple app \\ demonstration
+             Long description
+             for the app
+            Depends: libc6 (>=2.99), libpython3.10
+            Section: utils
+            Priority: optional
+            """
         )
 
     # The call to package was made
@@ -460,7 +458,12 @@ def test_deb_package_failure(package_command, first_app_deb, tmp_path):
 
 
 @pytest.mark.skipif(sys.platform == "win32", reason="Can't build debs on Windows")
-def test_external_deb_package_docker(package_command, external_first_app_deb, tmp_path):
+def test_external_deb_package_docker(
+    package_command,
+    external_first_app_deb,
+    mock_gpg,
+    tmp_path,
+):
     """An external app cannot be packaged as a deb using Docker."""
     bundle_path = tmp_path / "base_path/build/first-app/somevendor/surprising"
     package_path = tmp_path / "base_path/external/package-deb"
@@ -471,24 +474,20 @@ def test_external_deb_package_docker(package_command, external_first_app_deb, tm
     # The control file is written
     assert (package_path / "DEBIAN/control").exists()
     with (package_path / "DEBIAN/control").open(encoding="utf-8") as f:
-        assert (
-            f.read()
-            == "\n".join(
-                [
-                    "Package: first-app",
-                    "Version: 0.0.1",
-                    "Architecture: wonky",
-                    "Maintainer: Megacorp <maintainer@example.com>",
-                    "Homepage: https://example.com/first-app",
-                    "Description: The first simple app \\ demonstration",
-                    " Long description",
-                    " for the app",
-                    "Depends: libc6 (>=2.99), libpython3.10",
-                    "Section: utils",
-                    "Priority: optional",
-                ]
-            )
-            + "\n"
+        assert f.read() == dedent(
+            """\
+            Package: first-app
+            Version: 0.0.1
+            Architecture: wonky
+            Maintainer: Megacorp <maintainer@example.com>
+            Homepage: https://example.com/first-app
+            Description: The first simple app \\ demonstration
+             Long description
+             for the app
+            Depends: libc6 (>=2.99), libpython3.10
+            Section: utils
+            Priority: optional
+            """
         )
 
     package_command.tools.app_tools[
