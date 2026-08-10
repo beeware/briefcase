@@ -2,7 +2,7 @@
 requires = [
     # keep versions in sync with automation/pyproject.toml
     "setuptools==83.0.0",
-    "setuptools_scm==10.2.0",
+    "setuptools_scm==10.2.1",
 ]
 build-backend = "setuptools.build_meta"
 
@@ -101,11 +101,11 @@ dependencies = [
 # Extras used by developers *of* briefcase are pinned to specific versions to
 # ensure environment consistency.
 pre-commit = [
-    "pre-commit == 4.6.0",
+    "pre-commit == 4.6.1",
 ]
 
 setuptools-scm = [
-    "setuptools_scm==10.2.0",
+    "setuptools_scm==10.2.1",
 ]
 
 towncrier = [
@@ -113,11 +113,11 @@ towncrier = [
 ]
 
 tox-uv = [
-    "tox-uv == 1.35.2",
+    "tox-uv == 1.36.0",
 ]
 
 ty = [
-    "ty == 0.0.61",
+    "ty == 0.0.65",
 ]
 
 dev = [
@@ -127,7 +127,7 @@ dev = [
 ]
 
 test = [
-    "coverage[toml] == 7.15.2",
+    "coverage[toml] == 7.15.3",
     "coverage-conditional-plugin == 0.9.0",
     "httpx-retries == 0.6.0",
     "pytest == 9.1.1",
