@@ -25,6 +25,7 @@ coverage.xml
 /local
 __pycache__/
 .ruff_cache/
+.venv/
 
 /pip-wheel-metadata
 # IntelliJ Idea family of suites

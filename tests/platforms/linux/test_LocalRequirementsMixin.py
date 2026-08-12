@@ -448,7 +448,8 @@ def test_install_app_requirements_with_bad_local(
     # pip was *not* invoked inside docker.
     create_command.tools.subprocess.run.assert_not_called()
 
-    # The local requirements path exists, and is empty. It has been purged, but not refilled.
+    # The local requirements path exists, and is empty.
+    # It has been purged, but not refilled.
     local_requirements_path = create_command.local_requirements_path(first_app_config)
     assert local_requirements_path.exists()
     assert len(list(local_requirements_path.iterdir())) == 0
@@ -482,7 +483,8 @@ def test_install_app_requirements_with_missing_local_build(
     # pip was *not* invoked inside docker.
     create_command.tools.subprocess.run.assert_not_called()
 
-    # The local requirements path exists, and is empty. It has been purged, but not refilled.
+    # The local requirements path exists, and is empty.
+    # It has been purged, but not refilled.
     local_requirements_path = create_command.local_requirements_path(first_app_config)
     assert local_requirements_path.exists()
     assert len(list(local_requirements_path.iterdir())) == 0
@@ -522,7 +524,8 @@ def test_install_app_requirements_with_bad_local_file(
     # pip was *not* invoked inside docker.
     create_command.tools.subprocess.run.assert_not_called()
 
-    # The local requirements path exists, and is empty. It has been purged, but not refilled.
+    # The local requirements path exists, and is empty.
+    # It has been purged, but not refilled.
     local_requirements_path = create_command.local_requirements_path(first_app_config)
     assert local_requirements_path.exists()
     assert len(list(local_requirements_path.iterdir())) == 0

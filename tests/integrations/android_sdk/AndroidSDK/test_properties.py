@@ -141,7 +141,10 @@ def test_bad_emulator_abi(mock_tools, android_sdk, host_os, host_arch):
 
     with pytest.raises(
         BriefcaseCommandError,
-        match=rf"The Android emulator does not currently support {host_os} {host_arch} hardware.",
+        match=(
+            rf"The Android emulator does not currently support {host_os} "
+            rf"{host_arch} hardware."
+        ),
     ):
         _ = android_sdk.emulator_abi
 
