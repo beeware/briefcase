@@ -126,25 +126,27 @@ The following options can be provided at the command line when producing Android
 
 #### `-d <device>` / `--device <device>`
 
-The device or emulator to target. Can be specified as:
+The device or emulator to target. Can be specified in one of the following forms:
 
-* `@` followed by an AVD name (e.g., `@beePhone`); or
+* The serial number of a connected physical device. You must first set up the device as described [here](https://developer.android.com/studio/run/device).
 
-* a device ID (a hexadecimal identifier associated with a specific hardware device); or
+* `@` followed by the name of an existing Android virtual device (AVD) (e.g., `@beePhone`)
 
-* a JSON dictionary specifying the properties of a device that will be created. This dictionary must have, at a minimum, an AVD name:
+* A JSON dictionary specifying the properties of an AVD that will be created. This dictionary must have, at a minimum, an AVD name:
 
-  ```console
-  $ briefcase run -d '{"avd":"new-device"}'
-  ```
+    ```console
+    $ briefcase run -d '{"avd":"new-device"}'
+    ```
 
-  You may also specify:
+    You may also specify:
 
-  * `device_type` (e.g., `pixel`) the type of device to emulate.
-  * `skin` (e.g., `pixel_3a`) - the skin to apply to the emulator.
-  * `system_image` (e.g., `system-images;android-31;default;arm64-v8a`) - the Android system image to use in the emulator.
+    * `device_type` (e.g., `pixel`) the type of device to emulate.
+    * `skin` (e.g., `pixel_3a`) - the skin to apply to the emulator.
+    * `system_image` (e.g., `system-images;android-31;default;arm64-v8a`) - the Android system image to use in the emulator.
 
-  If no device type is specified, a default device with a default skin will be used. If no system image is specified, a default system image will be used. If a device type is specified, but no *skin* is specified, a "skinless" device will be created.
+    If no device type is specified, a default device with a default skin will be used. If no system image is specified, a default system image will be used. If a device type is specified, but no *skin* is specified, a "skinless" device will be created.
+
+If this option is not provided, Briefcase will ask whether you want to use an existing device, or create a new one.
 
 #### `--Xemulator=<value>`
 
