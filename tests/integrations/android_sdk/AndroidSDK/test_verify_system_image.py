@@ -1,5 +1,6 @@
 import platform
 from subprocess import CalledProcessError
+from textwrap import dedent
 
 import pytest
 
@@ -85,15 +86,12 @@ def test_existing_system_image(mock_tools, android_sdk):
     mock_tools.host_arch = "AMD64" if platform.system() == "Windows" else "x86_64"
 
     # Mock sdkmanager reporting the system image as installed
-    mock_tools.subprocess.check_output.return_value = (
+    mock_tools.subprocess.check_output.return_value = dedent("""\
         "Installed packages:\n"
-        "  Path                                    | Version | "
-        "Description                    | Location\n"
-        "  -------                                 | ------- | "
-        "-------                        | -------\n"
-        "  system-images;android-31;default;x86_64 | 5       | "
-        "Intel x86_64 Atom System Image | system-images/android-31/default/x86_64\n"
-    )
+        "  Path                                    | Version | Description                    | Location\n"
+        "  -------                                 | ------- | -------                        | -------\n"
+        "  system-images;android-31;default;x86_64 | 5       | Intel x86_64 Atom System Image | system-images/android-31/default/x86_64\n"
+    """)  # noqa: E501
 
     # Verify the system image that we already have
     android_sdk.verify_system_image("system-images;android-31;default;x86_64")

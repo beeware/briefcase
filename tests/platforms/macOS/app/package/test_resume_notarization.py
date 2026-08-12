@@ -295,8 +295,8 @@ def test_resume_notarize_pkg(
         "distribution file",
     )
 
-    # 2 calls are made to determine identity -
-    # the app identity, then the installer identity.
+    # 2 calls are made to determine identity - the
+    # app identity, then the installer identity.
     package_command.select_identity.side_effect = [
         sekrit_identity,
         sekrit_installer_identity,
@@ -816,8 +816,8 @@ def test_resume_notarize_from_marker_rejected(
     # The marker exists on disk, ready to be auto-detected.
     assert marker_path.exists()
 
-    # Resume notarization.
-    # The marker is auto-detected, but the notarization is rejected.
+    # Resume notarization. The marker is auto-detected,
+    # but the notarization is rejected.
     with pytest.raises(
         BriefcaseCommandError,
         match=r"Notarization was rejected: Bad mojo",

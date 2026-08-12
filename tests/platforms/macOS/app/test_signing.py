@@ -266,8 +266,8 @@ def test_select_app_identity_no_adhoc(dummy_command):
 
 def test_select_installer_identity(dummy_command):
     """The user can select from a list of installer identities."""
-    # get_identities is invoked twice -
-    # once with app identities, and once with all identities.
+    # get_identities is invoked twice - once with app
+    # identities, and once with all identities.
     dummy_command.get_identities.side_effect = [
         {
             "38EBD6F8903EC63C238B04C1067833814CE47CA3": (
@@ -316,8 +316,8 @@ def test_select_installer_identity(dummy_command):
 def test_installer_identity_matching_app(dummy_command):
     """The list of possible installer identities includes non-app identities from the
     same team."""
-    # get_identities is invoked twice -
-    # once with app identities, and once with all identities.
+    # get_identities is invoked twice - once with app
+    # identities, and once with all identities.
     dummy_command.get_identities.side_effect = [
         {
             "38EBD6F8903EC63C238B04C1067833814CE47CA3": (
@@ -385,8 +385,8 @@ def test_installer_identity_matching_app(dummy_command):
 def test_installer_identity_no_match(dummy_command):
     """The list of possible installer identities includes non-app identities from the
     same team."""
-    # get_identities is invoked twice -
-    # once with app identities, and once with all identities.
+    # get_identities is invoked twice - once with app
+    # identities, and once with all identities.
     dummy_command.get_identities.side_effect = [
         {
             "38EBD6F8903EC63C238B04C1067833814CE47CA3": (

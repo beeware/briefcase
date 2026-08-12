@@ -170,8 +170,8 @@ def test_pkg_package(package_command, first_app_pkg, tmp_path, changelog_filenam
     """A pkg app can be packaged."""
     bundle_path = tmp_path / "base_path/build/first-app/somevendor/surprising"
 
-    # Remove CHANGELOG made in conftest.py and
-    # replace with another possible changelog format
+    # Remove CHANGELOG made in conftest.py and replace
+    # with another possible changelog format
     base_path = tmp_path / "base_path"
     old_changelog = base_path / "CHANGELOG"
     new_changelog = base_path / changelog_filename
@@ -501,8 +501,8 @@ def test_no_changelog(package_command, first_app_pkg, tmp_path):
     # The CHANGELOG file will not be copied
     assert not (bundle_path / "pkgbuild/CHANGELOG").exists()
 
-    # The PKGBUILD file will not exist
-    # (as existence of changelog is checked before writing the PKGBUILD file)
+    # The PKGBUILD file will not exist (as existence of changelog
+    # is checked before writing the PKGBUILD file)
     assert not (bundle_path / "pkgbuild/PKGBUILD").exists()
 
     # No source tarball was created

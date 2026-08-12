@@ -111,8 +111,8 @@ def test_x11_is_display_tcp(
     ("is_socket_outcomes", "is_tcp_outcomes", "expected_display_num"),
     [
         ([False], [False], 50),
-        # Due to short-circuiting,
-        # only the first iterator is consumed if it returns False
+        # Due to short-circuiting, only the first
+        # iterator is consumed if it returns False
         ([True, False], [False], 51),
         ([True, True, False, True, False], [False, False, False], 52),
         ([True] * 248 + [False, False], [True, False], 299),

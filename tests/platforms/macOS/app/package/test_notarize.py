@@ -98,10 +98,9 @@ def test_notarize_app(
     package_command.notarize(first_app_zip, identity=sekrit_identity)
 
     # As a result of mocking ditto, the zip archive won't *actually* be created;
-    # and as a result of mocking os, it won't *actually* be deleted either - but we can
-    # verify that it *would* have been deleted.
-    # ditto will also be called when finalizing,
-    # to create the actual distribution artefact.
+    # and as a result of mocking os, it won't *actually* be deleted either - but
+    # we can verify that it *would* have been deleted. ditto will also be called
+    # when finalizing, to create the actual distribution artefact.
     assert package_command.ditto_archive.mock_calls == [
         mock.call(app_path, archive_path),
         mock.call(app_path, tmp_path / "base_path/dist/First App-0.0.1.app.zip"),

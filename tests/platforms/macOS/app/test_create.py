@@ -46,7 +46,7 @@ def create_command(dummy_console, mock_other_venv, tmp_path, first_app_templated
             {
                 "info": {},
                 "entitlements": {
-                    ("com.apple.security.cs.allow-unsigned-executable-memory"): True,
+                    "com.apple.security.cs.allow-unsigned-executable-memory": True,
                     "com.apple.security.cs.disable-library-validation": True,
                 },
             },
@@ -65,7 +65,7 @@ def create_command(dummy_console, mock_other_venv, tmp_path, first_app_templated
                     "NSCustomPermission": "Custom message",
                 },
                 "entitlements": {
-                    ("com.apple.security.cs.allow-unsigned-executable-memory"): True,
+                    "com.apple.security.cs.allow-unsigned-executable-memory": True,
                     "com.apple.security.cs.disable-library-validation": True,
                     "com.apple.vm.networking": True,
                 },
@@ -85,7 +85,7 @@ def create_command(dummy_console, mock_other_venv, tmp_path, first_app_templated
                     )
                 },
                 "entitlements": {
-                    ("com.apple.security.cs.allow-unsigned-executable-memory"): True,
+                    "com.apple.security.cs.allow-unsigned-executable-memory": True,
                     "com.apple.security.cs.disable-library-validation": True,
                     "com.apple.security.device.bluetooth": True,
                 },
@@ -103,7 +103,7 @@ def create_command(dummy_console, mock_other_venv, tmp_path, first_app_templated
                     "NSCameraUsageDescription": "I need to see you",
                 },
                 "entitlements": {
-                    ("com.apple.security.cs.allow-unsigned-executable-memory"): True,
+                    "com.apple.security.cs.allow-unsigned-executable-memory": True,
                     "com.apple.security.cs.disable-library-validation": True,
                     "com.apple.security.device.camera": True,
                 },
@@ -121,7 +121,7 @@ def create_command(dummy_console, mock_other_venv, tmp_path, first_app_templated
                     "NSMicrophoneUsageDescription": "I need to hear you",
                 },
                 "entitlements": {
-                    ("com.apple.security.cs.allow-unsigned-executable-memory"): True,
+                    "com.apple.security.cs.allow-unsigned-executable-memory": True,
                     "com.apple.security.cs.disable-library-validation": True,
                     "com.apple.security.device.microphone": True,
                 },
@@ -141,9 +141,9 @@ def create_command(dummy_console, mock_other_venv, tmp_path, first_app_templated
                     ),
                 },
                 "entitlements": {
-                    ("com.apple.security.cs.allow-unsigned-executable-memory"): True,
+                    "com.apple.security.cs.allow-unsigned-executable-memory": True,
                     "com.apple.security.cs.disable-library-validation": True,
-                    ("com.apple.security.personal-information.location"): True,
+                    "com.apple.security.personal-information.location": True,
                 },
             },
         ),
@@ -161,9 +161,9 @@ def create_command(dummy_console, mock_other_venv, tmp_path, first_app_templated
                     ),
                 },
                 "entitlements": {
-                    ("com.apple.security.cs.allow-unsigned-executable-memory"): True,
+                    "com.apple.security.cs.allow-unsigned-executable-memory": True,
                     "com.apple.security.cs.disable-library-validation": True,
-                    ("com.apple.security.personal-information.location"): True,
+                    "com.apple.security.personal-information.location": True,
                 },
             },
         ),
@@ -181,9 +181,9 @@ def create_command(dummy_console, mock_other_venv, tmp_path, first_app_templated
                     ),
                 },
                 "entitlements": {
-                    ("com.apple.security.cs.allow-unsigned-executable-memory"): True,
+                    "com.apple.security.cs.allow-unsigned-executable-memory": True,
                     "com.apple.security.cs.disable-library-validation": True,
-                    ("com.apple.security.personal-information.location"): True,
+                    "com.apple.security.personal-information.location": True,
                 },
             },
         ),
@@ -202,9 +202,9 @@ def create_command(dummy_console, mock_other_venv, tmp_path, first_app_templated
                     ),
                 },
                 "entitlements": {
-                    ("com.apple.security.cs.allow-unsigned-executable-memory"): True,
+                    "com.apple.security.cs.allow-unsigned-executable-memory": True,
                     "com.apple.security.cs.disable-library-validation": True,
-                    ("com.apple.security.personal-information.location"): True,
+                    "com.apple.security.personal-information.location": True,
                 },
             },
         ),
@@ -223,9 +223,9 @@ def create_command(dummy_console, mock_other_venv, tmp_path, first_app_templated
                     ),
                 },
                 "entitlements": {
-                    ("com.apple.security.cs.allow-unsigned-executable-memory"): True,
+                    "com.apple.security.cs.allow-unsigned-executable-memory": True,
                     "com.apple.security.cs.disable-library-validation": True,
-                    ("com.apple.security.personal-information.location"): True,
+                    "com.apple.security.personal-information.location": True,
                 },
             },
         ),
@@ -244,9 +244,9 @@ def create_command(dummy_console, mock_other_venv, tmp_path, first_app_templated
                     ),
                 },
                 "entitlements": {
-                    ("com.apple.security.cs.allow-unsigned-executable-memory"): True,
+                    "com.apple.security.cs.allow-unsigned-executable-memory": True,
                     "com.apple.security.cs.disable-library-validation": True,
-                    ("com.apple.security.personal-information.location"): True,
+                    "com.apple.security.personal-information.location": True,
                 },
             },
         ),
@@ -266,9 +266,9 @@ def create_command(dummy_console, mock_other_venv, tmp_path, first_app_templated
                     ),
                 },
                 "entitlements": {
-                    ("com.apple.security.cs.allow-unsigned-executable-memory"): True,
+                    "com.apple.security.cs.allow-unsigned-executable-memory": True,
                     "com.apple.security.cs.disable-library-validation": True,
-                    ("com.apple.security.personal-information.location"): True,
+                    "com.apple.security.personal-information.location": True,
                 },
             },
         ),
@@ -284,9 +284,9 @@ def create_command(dummy_console, mock_other_venv, tmp_path, first_app_templated
                     "NSPhotoLibraryUsageDescription": ("I need to see your library"),
                 },
                 "entitlements": {
-                    ("com.apple.security.cs.allow-unsigned-executable-memory"): True,
+                    "com.apple.security.cs.allow-unsigned-executable-memory": True,
                     "com.apple.security.cs.disable-library-validation": True,
-                    ("com.apple.security.personal-information.photo_library"): True,
+                    "com.apple.security.personal-information.photo_library": True,
                 },
             },
         ),
@@ -310,9 +310,9 @@ def create_command(dummy_console, mock_other_venv, tmp_path, first_app_templated
                     "NSCustomMessage": "Custom message",
                 },
                 "entitlements": {
-                    ("com.apple.security.cs.allow-unsigned-executable-memory"): True,
+                    "com.apple.security.cs.allow-unsigned-executable-memory": True,
                     "com.apple.security.cs.disable-library-validation": False,
-                    ("com.apple.security.personal-information.location"): False,
+                    "com.apple.security.personal-information.location": False,
                     "com.apple.vm.networking": True,
                 },
             },
@@ -1146,10 +1146,8 @@ def test_install_support_package(
     assert (bundle_path / "support/Python.xcframework/Info.plist").exists()
     assert (
         bundle_path
-        / (
-            "support/Python.xcframework/macos-arm64_x86_64/"
-            "Python.framework/Versions/Current/Python"
-        )
+        / "support/Python.xcframework/macos-arm64_x86_64/"
+        / "Python.framework/Versions/Current/Python"
     ).is_file()
     assert (
         bundle_path

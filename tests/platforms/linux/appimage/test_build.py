@@ -51,8 +51,8 @@ def build_command(dummy_console, tmp_path, first_app_config):
     command.use_docker = False
     command.extra_docker_build_args = []
 
-    # Reset `os` mock without `spec`
-    # so tests can run on Windows where os.getuid doesn't exist.
+    # Reset `os` mock without `spec` so tests can
+    # run on Windows where os.getuid doesn't exist.
     command.tools.os = mock.MagicMock()
     # Mock user and group IDs for docker image
     command.tools.os.environ = mock.MagicMock()
