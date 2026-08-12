@@ -50,23 +50,23 @@ def test_ditto(
             "First App.app/Contents/Frameworks/Extras.framework/",
             "First App.app/Contents/Frameworks/Extras.framework/Extras",
             "First App.app/Contents/Frameworks/Extras.framework/Resources/",
-            ("First App.app/Contents/Frameworks/Extras.framework/Resources/Info.plist"),
+            "First App.app/Contents/Frameworks/Extras.framework/Resources/Info.plist",
             "First App.app/Contents/Frameworks/Extras.framework/Versions/",
-            ("First App.app/Contents/Frameworks/Extras.framework/Versions/1.2/"),
-            ("First App.app/Contents/Frameworks/Extras.framework/Versions/1.2/Extras"),
-            ("First App.app/Contents/Frameworks/Extras.framework/Versions/1.2/libs/"),
+            "First App.app/Contents/Frameworks/Extras.framework/Versions/1.2/",
+            "First App.app/Contents/Frameworks/Extras.framework/Versions/1.2/Extras",
+            "First App.app/Contents/Frameworks/Extras.framework/Versions/1.2/libs/",
             (
                 "First App.app/Contents/Frameworks/Extras.framework/"
                 "Versions/1.2/libs/extras.dylib"
             ),
-            ("First App.app/Contents/Frameworks/Extras.framework/Versions/Current"),
+            "First App.app/Contents/Frameworks/Extras.framework/Versions/Current",
             "First App.app/Contents/Info.plist",
             "First App.app/Contents/MacOS/",
             "First App.app/Contents/MacOS/First App",
             "First App.app/Contents/Resources/",
             "First App.app/Contents/Resources/app_packages/",
             "First App.app/Contents/Resources/app_packages/Extras.app/",
-            ("First App.app/Contents/Resources/app_packages/Extras.app/Contents/"),
+            "First App.app/Contents/Resources/app_packages/Extras.app/Contents/",
             (
                 "First App.app/Contents/Resources/app_packages/Extras.app/"
                 "Contents/MacOS/"
@@ -86,7 +86,7 @@ def test_ditto(
                 "First App.app/Contents/Resources/app_packages/subfolder/"
                 "second_dylib.dylib"
             ),
-            ("First App.app/Contents/Resources/app_packages/subfolder/second_so.so"),
+            "First App.app/Contents/Resources/app_packages/subfolder/second_so.so",
             "First App.app/Contents/Resources/app_packages/unknown.binary",
         ]
 

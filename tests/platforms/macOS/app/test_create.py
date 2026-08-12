@@ -132,7 +132,7 @@ def create_command(dummy_console, mock_other_venv, tmp_path, first_app_templated
         # Coarse location permissions
         (
             {
-                "coarse_location": ("I need to know roughly where you are"),
+                "coarse_location": "I need to know roughly where you are",
             },
             {},
             {},
@@ -172,7 +172,7 @@ def create_command(dummy_console, mock_other_venv, tmp_path, first_app_templated
         # Background location permissions
         (
             {
-                "background_location": ("I always need to know where you are"),
+                "background_location": "I always need to know where you are",
             },
             {},
             {},
@@ -192,8 +192,8 @@ def create_command(dummy_console, mock_other_venv, tmp_path, first_app_templated
         # Coarse location background permissions
         (
             {
-                "coarse_location": ("I need to know roughly where you are"),
-                "background_location": ("I always need to know where you are"),
+                "coarse_location": "I need to know roughly where you are",
+                "background_location": "I always need to know where you are",
             },
             {},
             {},
@@ -214,7 +214,7 @@ def create_command(dummy_console, mock_other_venv, tmp_path, first_app_templated
         (
             {
                 "fine_location": "I need to know exactly where you are",
-                "background_location": ("I always need to know where you are"),
+                "background_location": "I always need to know where you are",
             },
             {},
             {},
@@ -234,7 +234,7 @@ def create_command(dummy_console, mock_other_venv, tmp_path, first_app_templated
         # Coarse and fine location permissions
         (
             {
-                "coarse_location": ("I need to know roughly where you are"),
+                "coarse_location": "I need to know roughly where you are",
                 "fine_location": "I need to know exactly where you are",
             },
             {},
@@ -255,9 +255,9 @@ def create_command(dummy_console, mock_other_venv, tmp_path, first_app_templated
         # Coarse and fine background location permissions
         (
             {
-                "coarse_location": ("I need to know roughly where you are"),
+                "coarse_location": "I need to know roughly where you are",
                 "fine_location": "I need to know exactly where you are",
-                "background_location": ("I always need to know where you are"),
+                "background_location": "I always need to know where you are",
             },
             {},
             {},
@@ -283,7 +283,7 @@ def create_command(dummy_console, mock_other_venv, tmp_path, first_app_templated
             {},
             {
                 "info": {
-                    "NSPhotoLibraryUsageDescription": ("I need to see your library"),
+                    "NSPhotoLibraryUsageDescription": "I need to see your library",
                 },
                 "entitlements": {
                     "com.apple.security.cs.allow-unsigned-executable-memory": True,
@@ -302,7 +302,7 @@ def create_command(dummy_console, mock_other_venv, tmp_path, first_app_templated
                 "NSLocationUsageDescription": "Platform specific",
             },
             {
-                ("com.apple.security.personal-information.location"): False,
+                "com.apple.security.personal-information.location": False,
                 "com.apple.security.cs.disable-library-validation": False,
                 "com.apple.vm.networking": True,
             },

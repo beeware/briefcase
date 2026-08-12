@@ -440,7 +440,7 @@ def test_incompatible_min_os_version(
         # Background location permissions
         (
             {
-                "background_location": ("I always need to know where you are"),
+                "background_location": "I always need to know where you are",
             },
             {},
             {
@@ -459,7 +459,7 @@ def test_incompatible_min_os_version(
         (
             {
                 "coarse_location": "I need to know roughly where you are",
-                "background_location": ("I always need to know where you are"),
+                "background_location": "I always need to know where you are",
             },
             {},
             {
@@ -479,7 +479,7 @@ def test_incompatible_min_os_version(
         (
             {
                 "fine_location": "I need to know exactly where you are",
-                "background_location": ("I always need to know where you are"),
+                "background_location": "I always need to know where you are",
             },
             {},
             {
@@ -516,7 +516,7 @@ def test_incompatible_min_os_version(
             {
                 "coarse_location": "I need to know roughly where you are",
                 "fine_location": "I need to know exactly where you are",
-                "background_location": ("I always need to know where you are"),
+                "background_location": "I always need to know where you are",
             },
             {},
             {
@@ -540,7 +540,7 @@ def test_incompatible_min_os_version(
             {},
             {
                 "info": {
-                    "NSPhotoLibraryAddUsageDescription": ("I need to see your library")
+                    "NSPhotoLibraryAddUsageDescription": "I need to see your library"
                 }
             },
         ),

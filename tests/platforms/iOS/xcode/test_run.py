@@ -301,10 +301,8 @@ def test_run_app_simulator_booted_underscore(
                     "install",
                     "2D3503A3-6EB9-4B37-9B17-C7EFEF2FA32D",
                     tmp_path
-                    / (
-                        "base_path/build/first_app/ios/xcode/build/"
-                        "Debug-iphonesimulator/First App.app"
-                    ),
+                    / "base_path/build/first_app/ios/xcode/build"
+                    / "Debug-iphonesimulator/First App.app",
                 ],
             ),
             mock.call(
