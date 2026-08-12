@@ -310,6 +310,11 @@ known-third-party = ["build"]
 # debugger module *needs* to have debugpy trace imports.
 "debugger/src/briefcase_debugger/debugpy.py" = ["T100"]
 "debugger/tests/test_debugpy.py" = ["T100"]
+
+# A standalone maintenance script, not part of the briefcase package; it
+# *needs* to print its output for a maintainer to read.
+"scripts/update_template_hashes.py" = ["T201"]
+
 # PERF402: list copies, to be fixed in future changes
 "tests/commands/run/test_LogFilter.py" = ["PERF402"]
 "tests/platforms/macOS/test_XcodeBuildFilter.py" = ["PERF402"]
