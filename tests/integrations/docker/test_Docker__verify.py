@@ -199,14 +199,15 @@ def test_docker_unknown_version(mock_tools, user_mapping_run_calls, capsys):
 def test_docker_exists_but_process_lacks_permission_to_use_it(mock_tools):
     """If the docker daemon isn't running, the check fails."""
     error_message = dedent("""\
-Client:
- Debug Mode: false
+        Client:
+        Debug Mode: false
 
-Server:
-ERROR: Got permission denied while trying to connect to the Docker daemon socket at unix:///var/run/docker.sock:
+        Server:
+        ERROR: Got permission denied while trying to connect to the Docker daemon socket at unix:///var/run/docker.sock:
 
-Get http://%2Fvar%2Frun%2Fdocker.sock/v1.40/info: dial unix /var/run/docker.sock: connect: permission denied
-errors pretty printing info""")  # noqa: E501
+        Get http://%2Fvar%2Frun%2Fdocker.sock/v1.40/info: dial unix /var/run/docker.sock: connect: permission denied
+errors pretty printing info
+    """)  # noqa: E501
 
     mock_tools.subprocess.check_output.side_effect = [
         VALID_DOCKER_VERSION,
@@ -226,22 +227,24 @@ errors pretty printing info""")  # noqa: E501
 @pytest.mark.parametrize(
     "error_message",
     [
+        # Mac
         dedent("""\
-Client:
- Debug Mode: false
+            Client:
+            Debug Mode: false
 
-Server:
-ERROR: Error response from daemon: dial unix docker.raw.sock: connect: connection refused
-errors pretty printing info
-"""),  # noqa: E501  # this is the error shown on mac
+            Server:
+            ERROR: Error response from daemon: dial unix docker.raw.sock: connect: connection refused
+            errors pretty printing info
+        """),  # noqa: E501
+        # Linux
         dedent("""\
-Client:
- Debug Mode: false
+            Client:
+            Debug Mode: false
 
-Server:
-ERROR: Cannot connect to the Docker daemon at unix:///var/run/docker.sock. Is the docker daemon running?
-errors pretty printing info"""),  # noqa: E501
-        # this is the error show on linux
+            Server:
+            ERROR: Cannot connect to the Docker daemon at unix:///var/run/docker.sock. Is the docker daemon running?
+            errors pretty printing info
+        """),  # noqa: E501
     ],
 )
 def test_docker_exists_but_is_not_running(error_message, mock_tools):
