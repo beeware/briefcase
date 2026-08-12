@@ -269,3 +269,6 @@ jobs:
           # Pygame hasn't published Windows ARM64 wheels
           - framework: "pygame"
             runner-os: "windows-11-arm"
+          # PySide6 is unstable on Windows ARM64 (see #2969)
+          - framework: "pyside6"
+            runner-os: "windows-11-arm"
