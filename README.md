@@ -1,3 +1,94 @@
+import platform
+import subprocess
+import tkinter as tk
+from tkinter import messagebox
+
+
+def check_device():
+  # محاكاة فحص المواصفات (يمكن ربطها بقاعدة بيانات للهواتف لاحقاً)
+  phone_name = entry_phone.get()
+
+  if not phone_name:
+    messagebox.showerror("خطأ", "الرجاء إدخال اسم أو معالج الهاتف!")
+    return
+
+  # قاعدة بيانات بسيطة كمثال لفحص الدعم
+  supported_gpus = ["snapdragon 8", "dimensity 9", "apple a16", "apple a17"]
+
+  # نتيجة وهمية للفحص (تطويرها لاحقاً لتعمل على الأندرويد الفعلي)
+  result_text.config(
+      text=(
+          f"الجهاز: {phone_name}\nالحالة: يدعم تشغيل بيس 2027 بكفاءة عالية! 🎮🔥"
+      ),
+      fg="#00ffff",
+  )
+
+
+# إعداد النافذة الرئيسية
+root = tk.Tk()
+root.title("كلاوس لايفر جيمز - فاحص أجهزة بيس 2027")
+root.geometry("450x550")
+root.config(bg="#0f0f1a")
+
+# العنوان الرئيسي
+title_label = tk.Label(
+    root,
+    text="GAMING - PES 2027",
+    font=("Arial", 18, "bold"),
+    bg="#0f0f1a",
+    fg="#ff4757",
+)
+title_label.pack(pady=20)
+
+# صورة شعار أو وصف فرعي
+sub_label = tk.Label(
+    root,
+    text="افحص هاتفك واعرف إذا كان يدعم اللعبة",
+    font=("Arial", 12),
+    bg="#0f0f1a",
+    fg="#ffffff",
+)
+sub_label.pack(pady=5)
+
+# حقل إدخال اسم الهاتف
+entry_phone = tk.Entry(
+    root,
+    font=("Arial", 14),
+    bg="#1e1e2f",
+    fg="#ffffff",
+    insertbackground="white",
+    justify="center",
+)
+entry_phone.pack(pady=20, ipadx=10, ipady=5)
+entry_phone.insert(0, "أدخل اسم هاتفك هنا...")
+
+# زر الفحص بتصميم يحاكي ألوان قناتك
+btn_check = tk.Button(
+    root,
+    text="فحص الهاتف الآن",
+    font=("Arial", 14, "bold"),
+    bg="#ff4757",
+    fg="#ffffff",
+    activebackground="#ff6b81",
+    activeforeground="#ffffff",
+    relief="flat",
+    command=check_device,
+)
+btn_check.pack(pady=15, ipadx=20, ipady=5)
+
+# مساحة عرض النتيجة
+result_text = tk.Label(
+    root,
+    text="",
+    font=("Arial", 12, "bold"),
+    bg="#0f0f1a",
+    fg="#00ffff",
+    justify="center",
+)
+result_text.pack(pady=30)
+
+# تشغيل التطبيق
+root.mainloop()
 [<img src="https://beeware.org/project/briefcase/briefcase.png" width="72" alt="logo" />](https://beeware.org/briefcase)
 
 # Briefcase
