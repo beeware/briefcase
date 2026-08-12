@@ -17,7 +17,7 @@ from briefcase.exceptions import (
 from briefcase.integrations.android_sdk import AndroidSDK
 from briefcase.integrations.base import ToolCache
 
-from ..conftest import SDK_MGR_DL_VER, SDK_MGR_VER
+from ..conftest import CMDLINE_TOOLS_SHA256, SDK_MGR_DL_VER, SDK_MGR_VER
 
 SDKMANAGER_FILENAME = (
     "sdkmanager.bat" if platform.system() == "Windows" else "sdkmanager"
@@ -511,6 +511,7 @@ def test_download_sdk(mock_tools, tmp_path, capsys):
         url=url,
         download_path=mock_tools.base_path,
         role="Android SDK Command-Line Tools",
+        expected_hash=f"sha256:{CMDLINE_TOOLS_SHA256[mock_tools._test_download_tag]}",
     )
 
     mock_tools.shutil.unpack_archive.assert_called_once_with(
@@ -573,6 +574,7 @@ def test_upgrade_existing_sdk(mock_tools, tmp_path, capsys):
         url=url,
         download_path=mock_tools.base_path,
         role="Android SDK Command-Line Tools",
+        expected_hash=f"sha256:{CMDLINE_TOOLS_SHA256[mock_tools._test_download_tag]}",
     )
 
     mock_tools.shutil.unpack_archive.assert_called_once_with(
@@ -646,6 +648,7 @@ def test_download_sdk_legacy_install(mock_tools, tmp_path):
         url=url,
         download_path=mock_tools.base_path,
         role="Android SDK Command-Line Tools",
+        expected_hash=f"sha256:{CMDLINE_TOOLS_SHA256[mock_tools._test_download_tag]}",
     )
 
     mock_tools.shutil.unpack_archive.assert_called_once_with(
@@ -720,6 +723,7 @@ def test_download_sdk_if_sdkmanager_not_executable(mock_tools, tmp_path):
         url=url,
         download_path=mock_tools.base_path,
         role="Android SDK Command-Line Tools",
+        expected_hash=f"sha256:{CMDLINE_TOOLS_SHA256[mock_tools._test_download_tag]}",
     )
 
     mock_tools.shutil.unpack_archive.assert_called_once_with(
@@ -754,6 +758,7 @@ def test_raises_networkfailure_on_connectionerror(mock_tools):
         url=url,
         download_path=mock_tools.base_path,
         role="Android SDK Command-Line Tools",
+        expected_hash=f"sha256:{CMDLINE_TOOLS_SHA256[mock_tools._test_download_tag]}",
     )
     # But no unpack occurred
     assert mock_tools.shutil.unpack_archive.call_count == 0
@@ -781,6 +786,7 @@ def test_detects_bad_zipfile(mock_tools, tmp_path):
         url=url,
         download_path=mock_tools.base_path,
         role="Android SDK Command-Line Tools",
+        expected_hash=f"sha256:{CMDLINE_TOOLS_SHA256[mock_tools._test_download_tag]}",
     )
     mock_tools.shutil.unpack_archive.assert_called_once_with(
         filename=cache_file,

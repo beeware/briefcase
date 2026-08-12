@@ -14,7 +14,7 @@ repos:
       - id: docformatter
         args: [--in-place, --black]
   - repo: https://github.com/astral-sh/ruff-pre-commit
-    rev: v0.16.0
+    rev: v0.16.1
     hooks:
       - id: ruff-format
       - id: ruff-check
@@ -28,6 +28,6 @@ repos:
       args: ["--skip=CODE_OF_CONDUCT.md"]
 
   - repo: https://github.com/zizmorcore/zizmor-pre-commit
-    rev: v1.28.0
+    rev: v1.29.0
     hooks:
       - id: zizmor

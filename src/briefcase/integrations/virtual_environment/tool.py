@@ -1,9 +1,10 @@
 from briefcase.config import EnvManagerT
 from briefcase.integrations.base import Tool, ToolCache
 from briefcase.integrations.virtual_environment.base import VirtualEnvironment
+from briefcase.integrations.virtual_environment.conda import CondaVirtualEnvironment
 from briefcase.integrations.virtual_environment.noop import NoOpVirtualEnvironment
-from briefcase.integrations.virtual_environment.std_venv import VenvVirtualEnvironment
 from briefcase.integrations.virtual_environment.uv import UvVirtualEnvironment
+from briefcase.integrations.virtual_environment.venv import VenvVirtualEnvironment
 
 
 class VirtualEnvironmentManager(Tool):
@@ -34,6 +35,7 @@ class VirtualEnvironmentManager(Tool):
         """
         EnvManagerClass = {
             None: NoOpVirtualEnvironment,
+            "conda": CondaVirtualEnvironment,
             "uv": UvVirtualEnvironment,
             "venv": VenvVirtualEnvironment,
         }[env_manager]

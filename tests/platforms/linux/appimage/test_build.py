@@ -123,6 +123,10 @@ def test_verify_tools_download_failure(build_command):
         url="https://github.com/linuxdeploy/linuxdeploy/releases/download/continuous/linuxdeploy-x86_64.AppImage",
         download_path=build_command.tools.base_path,
         role="linuxdeploy",
+        expected_hash=(
+            "unverified:linuxdeploy uses a rolling 'continuous' release with no "
+            "stable hash"
+        ),
     )
 
     # But it failed, so the file won't be made executable...

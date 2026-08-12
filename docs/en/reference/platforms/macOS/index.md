@@ -322,3 +322,7 @@ info."UIDesignRequiresCompatibility" = true
 ```
 
 Once you've made this change, re-run `briefcase create` for your application.
+
+### Universal apps and Conda
+
+If you are using Conda as an environment manager for your app, you *cannot* build a universal app. This is because Conda packages do not provide universal binaries, and merging separate platform-specific Conda environments to produce a universal Conda environment is not a simple task. Therefore, you *must* add `universal_build = false` to your macOS configuration if you are using Conda as your environment manager.

@@ -165,6 +165,7 @@ class GradleMixin(_MixinBase):
 
 class GradleCreateCommand(GradleMixin, CreateCommand):
     description = "Create and populate an Android Gradle project."
+    app_template_hash = "sha1:bb641a9bda6d82ca074689936be1c09d7d655349"
     hidden_app_properties: Collection[str] = {"permission", "feature"}
 
     def support_package_filename(self, support_revision):
@@ -523,7 +524,7 @@ class GradleRunCommand(GradleMixin, RunCommand):
 
             # Install the latest APK file onto the device.
             with self.console.wait_bar("Installing new app version..."):
-                adb.install_apk(self.binary_path(app))
+                adb.install_apk(self.binary_path(app), package)
 
             if revoke_permissions:
                 # Revoke specified app permissions to ensure a reproducible

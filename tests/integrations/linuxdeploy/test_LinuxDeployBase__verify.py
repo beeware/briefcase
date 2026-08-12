@@ -109,6 +109,7 @@ def test_verify_does_not_exist(mock_tools, tmp_path):
         url="https://example.com/path/to/linuxdeploy-dummy-wonky.AppImage",
         download_path=tmp_path / "tools/somewhere",
         role="Dummy plugin",
+        expected_hash=None,
     )
     # The downloaded file will be made executable
     mock_tools.os.chmod.assert_called_with(appimage_path, 0o755)
@@ -133,6 +134,7 @@ def test_verify_does_not_exist_non_appimage(mock_tools, tmp_path):
         url="https://example.com/path/to/linuxdeploy-dummy.sh",
         download_path=tmp_path / "tools/somewhere",
         role="Dummy plugin",
+        expected_hash=None,
     )
     # The downloaded file will be made executable
     mock_tools.os.chmod.assert_called_with(tool_path, 0o755)
@@ -158,4 +160,5 @@ def test_verify_linuxdeploy_download_failure(mock_tools, tmp_path):
         url="https://example.com/path/to/linuxdeploy-dummy-wonky.AppImage",
         download_path=tmp_path / "tools/somewhere",
         role="Dummy plugin",
+        expected_hash=None,
     )

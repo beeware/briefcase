@@ -13,7 +13,13 @@ from briefcase.exceptions import (
     NetworkFailure,
 )
 
-from ...utils import create_file, create_tgz_file, create_zip_file, mock_zip_download
+from ...utils import (
+    create_file,
+    create_tgz_file,
+    create_toml_file,
+    create_zip_file,
+    mock_zip_download,
+)
 
 
 @pytest.mark.parametrize(
@@ -51,6 +57,7 @@ def test_install_stub_binary_formal_name(
         download_path=create_command.data_path / "stub",
         url=f"https://briefcase-support.s3.amazonaws.com/python/3.X/Tester/{stub_name}-3.X-b37.zip",
         role="stub binary",
+        expected_hash=f"sha256:{'b' * 64}",
     )
 
     # Confirm the right file was unpacked
@@ -98,6 +105,7 @@ def test_install_stub_binary(
         download_path=create_command.data_path / "stub",
         url=f"https://briefcase-support.s3.amazonaws.com/python/3.X/Tester/{stub_name}-3.X-b37.zip",
         role="stub binary",
+        expected_hash=f"sha256:{'b' * 64}",
     )
 
     # Confirm the right file was unpacked
@@ -148,6 +156,7 @@ def test_install_stub_binary_unpack_failure(
         download_path=create_command.data_path / "stub",
         url=f"https://briefcase-support.s3.amazonaws.com/python/3.X/Tester/{stub_name}-3.X-b37.zip",
         role="stub binary",
+        expected_hash=f"sha256:{'b' * 64}",
     )
 
     # Confirm the right file was unpacked
@@ -158,16 +167,21 @@ def test_install_stub_binary_unpack_failure(
 
 
 @pytest.mark.parametrize("console_app", [True, False])
+@pytest.mark.parametrize("stub_binary_hash", [f"sha256:{'d' * 64}", None])
 def test_install_pinned_stub_binary(
     create_command,
     myapp,
     console_app,
+    stub_binary_hash,
     stub_binary_revision_path_index,
     tmp_path,
 ):
     """The stub binary revision can be pinned."""
     # Pin the stub binary revision
     myapp.stub_binary_revision = 42
+    if stub_binary_hash:
+        # If you pin the revision, you should also pin the hash.
+        myapp.stub_binary_hash = stub_binary_hash
 
     # Mock the app type
     myapp.console_app = console_app
@@ -187,11 +201,12 @@ def test_install_pinned_stub_binary(
     # Install the stub binary
     create_command.install_stub_binary(myapp)
 
-    # Confirm the right URL was used
+    # Confirm the right URL and hash were used
     create_command.tools.file.download.assert_called_with(
         download_path=create_command.data_path / "stub",
         url=f"https://briefcase-support.s3.amazonaws.com/python/3.X/Tester/{stub_name}-3.X-b42.zip",
         role="stub binary",
+        expected_hash=stub_binary_hash,
     )
 
     # Confirm the right file was unpacked
@@ -230,15 +245,20 @@ def test_install_stub_binary_missing(
         create_command.install_stub_binary(myapp)
 
 
+@pytest.mark.parametrize("stub_binary_hash", [f"sha256:{'d' * 64}", None])
 def test_install_custom_stub_binary_url(
     create_command,
     myapp,
+    stub_binary_hash,
     stub_binary_revision_path_index,
     tmp_path,
 ):
     """A stub binary can be downloaded and unpacked where it is needed."""
     # Provide an app-specific override of the stub binary as a URL
     myapp.stub_binary = "https://example.com/custom/My-Stub.zip"
+    if stub_binary_hash:
+        # If you provide a stub binary URL, you should also provide the hash.
+        myapp.stub_binary_hash = stub_binary_hash
 
     # Mock download.file to return a stub binary
     create_command.tools.file.download = mock.MagicMock(
@@ -260,6 +280,7 @@ def test_install_custom_stub_binary_url(
         / "stub/986428ef9d5a1852fc15d4367f19aa328ad530686056e9d83cdde03407c0bceb",
         url="https://example.com/custom/My-Stub.zip",
         role="stub binary",
+        expected_hash=stub_binary_hash,
     )
 
     # Confirm the right file was unpacked
@@ -485,6 +506,7 @@ def test_install_custom_stub_binary_with_invalid_url(
         ),
         url=url,
         role="stub binary",
+        expected_hash=None,  # custom binary URL, so there's no hash.
     )
 
 
@@ -532,3 +554,37 @@ def test_install_custom_stub_binary_with_invalid_filepath(
 
     # The file isn't an archive, so it hasn't been unpacked.
     create_command.tools.shutil.unpack_archive.assert_not_called()
+
+
+def test_install_stub_binary_no_template_hash(create_command, myapp, bundle_path):
+    """A template can publish a stub revision without a hash."""
+    create_toml_file(
+        bundle_path / "briefcase.toml",
+        {
+            "paths": {
+                "app_path": "path/to/app",
+                "app_requirements_path": "path/to/requirements.txt",
+                "stub_binary_revision": 37,
+            }
+        },
+    )
+
+    myapp.console_app = True
+    stub_name = "Console-Stub"
+
+    create_command.tools.file.download = mock.MagicMock(
+        side_effect=mock_zip_download(
+            f"{stub_name}-3.X-b37.zip",
+            [(create_command.exe_name("Stub"), "stub binary")],
+        )
+    )
+    create_command.tools.shutil = mock.MagicMock(wraps=shutil)
+
+    create_command.install_stub_binary(myapp)
+
+    create_command.tools.file.download.assert_called_with(
+        download_path=create_command.data_path / "stub",
+        url=f"https://briefcase-support.s3.amazonaws.com/python/3.X/Tester/{stub_name}-3.X-b37.zip",
+        role="stub binary",
+        expected_hash=None,
+    )

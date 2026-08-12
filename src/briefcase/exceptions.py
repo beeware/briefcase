@@ -133,6 +133,24 @@ class BadNetworkResourceError(BriefcaseCommandError):
         super().__init__(msg=f"Unable to download {url} (status code {status_code})")
 
 
+class CorruptContentError(BriefcaseCommandError):
+    def __init__(self, role, expected_hash, actual_hash):
+        self.role = role
+        self.expected_hash = expected_hash
+        self.actual_hash = actual_hash
+        super().__init__(
+            msg=(
+                f"Unable to download {role}; the downloaded content does not\n"
+                "match the expected hash.\n"
+                "\n"
+                f"    Expected: {expected_hash}\n"
+                f"    Actual:   {actual_hash}\n"
+                "\n"
+                "The download may have been corrupted or tampered with.\n"
+            )
+        )
+
+
 class MissingToolError(BriefcaseCommandError):
     def __init__(self, tool):
         self.tool = tool

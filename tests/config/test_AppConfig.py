@@ -52,6 +52,11 @@ def test_minimal_AppConfig():
     # The object has a meaningful REPL
     assert repr(config) == "<org.beeware.myapp v1.2.3 DraftAppConfig>"
 
+    # No template details have been set
+    assert config.template is None
+    assert config.template_branch is None
+    assert config.template_hash is None
+
 
 def test_minimal_external_AppConfig():
     """A simple config for an external app can be defined."""
@@ -110,6 +115,7 @@ def test_extra_attrs():
         license="MIT",
         license_files=["LICENSE"],
         template="/path/to/template",
+        template_hash="sha1:abc123",
         sources=["src/myapp"],
         requires=["first", "second", "third"],
         env_manager="venv",
@@ -133,6 +139,7 @@ def test_extra_attrs():
     assert config.description == "A simple app"
     assert config.long_description == "A longer description\nof the app"
     assert config.template == "/path/to/template"
+    assert config.template_hash == "sha1:abc123"
     assert config.requires == ["first", "second", "third"]
     assert config.license == "MIT"
     assert config.license_files == ["LICENSE"]

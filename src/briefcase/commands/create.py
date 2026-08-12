@@ -125,6 +125,9 @@ class CreateCommand(BaseCommand):
     # app properties that won't be exposed to the context
     hidden_app_properties: Collection[str] = {"permission"}
 
+    # The expected commit hash of this platform's default template.
+    app_template_hash: str = "sha1:invalid - override on subclass"
+
     @property
     def app_template_url(self) -> str:
         """The URL for a cookiecutter repository to use when creating apps."""
@@ -271,6 +274,7 @@ class CreateCommand(BaseCommand):
         # Remove the context items that describe the template
         extra_context.pop("template")
         extra_context.pop("template_branch")
+        extra_context.pop("template_hash")
 
         # Augment with some extra fields.
         extra_context.update(
@@ -306,11 +310,21 @@ class CreateCommand(BaseCommand):
         output_path = self.bundle_path(app).parent
         output_path.mkdir(parents=True, exist_ok=True)
 
+        # If the app defines a template hash, use it. Use the command's template
+        # hash if there's no template or branch override by the app.
+        if app.template_hash:
+            template_hash = app.template_hash
+        elif app.template is None and app.template_branch is None:
+            template_hash = self.app_template_hash
+        else:
+            template_hash = None
+
         self.generate_template(
             template=app.template or self.app_template_url,
             branch=app.template_branch,
             output_path=output_path,
             extra_context=extra_context,
+            template_hash=template_hash,
         )
 
     def create_app_environment(
@@ -419,15 +433,30 @@ class CreateCommand(BaseCommand):
                     )
                 except AttributeError:
                     pass
+
+                # If there is a custom support package, check for a custom
+                # hash as well.
+                try:
+                    support_package_hash = app.support_package_hash
+                except AttributeError:
+                    support_package_hash = None
+
             except AttributeError:
                 # If the app specifies a support revision, use it;
                 # otherwise, use the support revision named by the template
                 try:
                     support_revision = app.support_revision
+                    # The support revision was pinned; check for a custom
+                    # hash as well.
+                    try:
+                        support_package_hash = app.support_package_hash
+                    except AttributeError:
+                        support_package_hash = None
                 except AttributeError:
                     # No support revision specified; use the template-specified version
                     try:
                         support_revision = self.support_revision(app)
+                        support_package_hash = self.support_package_hash(app)
                     except KeyError:
                         # No template-specified support revision
                         raise MissingSupportPackage(
@@ -463,6 +492,7 @@ class CreateCommand(BaseCommand):
                     url=support_package_url,
                     download_path=download_path,
                     role="support package",
+                    expected_hash=support_package_hash,
                 )
             else:
                 return Path(support_package_url)
@@ -537,14 +567,30 @@ class CreateCommand(BaseCommand):
                     )
                 except AttributeError:
                     pass
+
+                # A stub binary URL was speciried; check for a custom
+                # hash as well.
+                try:
+                    stub_binary_hash = app.stub_binary_hash
+                except AttributeError:
+                    stub_binary_hash = None
+
             except AttributeError:
                 # If the app specifies a support revision, use it; otherwise, use the
                 # support revision named by the template. This value *must* exist, as
                 # stub binary handling won't be triggered at all unless it is present.
                 try:
                     stub_binary_revision = app.stub_binary_revision
+                    # A stub binary revision was speciried; check for a custom
+                    # hash as well.
+                    try:
+                        stub_binary_hash = app.stub_binary_hash
+                    except AttributeError:
+                        stub_binary_hash = None
+
                 except AttributeError:
                     stub_binary_revision = self.stub_binary_revision(app)
+                    stub_binary_hash = self.stub_binary_hash(app)
 
                 stub_binary_url = self.stub_binary_url(stub_binary_revision, app=app)
                 custom_stub_binary = False
@@ -570,6 +616,7 @@ class CreateCommand(BaseCommand):
                     url=stub_binary_url,
                     download_path=download_path,
                     role="stub binary",
+                    expected_hash=stub_binary_hash,
                 )
             else:
                 return Path(stub_binary_url)
@@ -969,8 +1016,9 @@ class CreateCommand(BaseCommand):
                 arch=self.tools.host_arch,
             )
 
-            self.console.info("Installing support package...", prefix=app.app_name)
-            self.install_app_support_package(app=app)
+            if not venv.provides_python:
+                self.console.info("Installing support package...", prefix=app.app_name)
+                self.install_app_support_package(app=app)
 
             try:
                 # If the platform uses a stub binary, the template will define a binary
@@ -993,6 +1041,12 @@ class CreateCommand(BaseCommand):
                 "Installing application resources...", prefix=app.app_name
             )
             self.install_app_resources(app=app)
+
+            if venv.provides_python:
+                self.console.info(
+                    "Installing managed Python environment...", prefix=app.app_name
+                )
+                self.install_managed_python_env(app=app, venv=venv)
 
             self.console.info("Removing unneeded app content...", prefix=app.app_name)
             self.cleanup_app_content(app=app)
