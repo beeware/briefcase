@@ -398,7 +398,7 @@ def test_run_console_app_passthrough(run_command, first_app, tmp_path):
             [
                 tmp_path
                 / "base_path/build/first-app/somevendor/surprising/"
-                / "first-app-0.0.1/usr/bin/first-app"
+                / "first-app-0.0.1/usr/bin/first-app",
                 "foo",
                 "--bar",
             ],

@@ -87,10 +87,10 @@ def test_existing_system_image(mock_tools, android_sdk):
 
     # Mock sdkmanager reporting the system image as installed
     mock_tools.subprocess.check_output.return_value = dedent("""\
-        "Installed packages:\n"
-        "  Path                                    | Version | Description                    | Location\n"
-        "  -------                                 | ------- | -------                        | -------\n"
-        "  system-images;android-31;default;x86_64 | 5       | Intel x86_64 Atom System Image | system-images/android-31/default/x86_64\n"
+        Installed packages:
+          Path                                    | Version | Description                    | Location
+          -------                                 | ------- | -------                        | -------
+          system-images;android-31;default;x86_64 | 5       | Intel x86_64 Atom System Image | system-images/android-31/default/x86_64
     """)  # noqa: E501
 
     # Verify the system image that we already have
