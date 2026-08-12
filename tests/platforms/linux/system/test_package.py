@@ -127,7 +127,7 @@ def test_build_env_abi_failure(package_command, first_app, format):
         ("arch", "system", "pkg"),
         # Explicit output format is preserved
         ("debian", "deb", "deb"),
-        ("redhat", "rpm", "rpm"),
+        ("rhel", "rpm", "rpm"),
         ("arch", "pkg", "pkg"),
         # This is technically possible, but probably ill-advised
         ("debian", "rpm", "rpm"),
@@ -174,7 +174,7 @@ def test_unknown_packaging_format(package_command, first_app):
         ("arch", "system", "pkg", ["gnupg"]),
         # Explicit output format is preserved, and adds the signing tool
         ("debian", "deb", "deb", ["debsigs"]),
-        ("redhat", "rpm", "rpm", ["rpm-sign"]),
+        ("rhel", "rpm", "rpm", ["rpm-sign"]),
         ("arch", "pkg", "pkg", ["gnupg"]),
         # On SUSE, rpmsign is provided by rpm-build, which is already installed
         # by the Docker image; no additional package is needed.

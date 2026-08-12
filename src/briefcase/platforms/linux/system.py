@@ -43,6 +43,22 @@ from briefcase.platforms.linux import (
     parse_freedesktop_os_release,
 )
 
+# The tools used to sign a package, keyed by packaging format. Each entry is a
+# triple of (tool name, executable name, package name).
+_SIGNING_TOOLS = {
+    "deb": ("debsigs", "debsigs", "debsigs"),
+    "rpm": ("rpmsign", "rpmsign", "rpm-sign"),
+    "pkg": ("gpg", "gpg", "gnupg"),
+}
+
+# The packaging format implied by each system vendor base.
+_SYSTEM_PACKAGING_FORMATS = {
+    DEBIAN: "deb",
+    RHEL: "rpm",
+    ARCH: "pkg",
+    SUSE: "rpm",
+}
+
 
 class LinuxSystemAppConfig(FinalizedAppConfig):
     """A FinalizedAppConfig with Linux system packaging attributes.
@@ -388,6 +404,19 @@ class LinuxSystemMixin(LinuxMixin):
             system_verify,
             system_installer,
         )
+
+    def _signing_tool(self, app: LinuxSystemAppConfig) -> tuple[str, str, str]:
+        """Utility method returning the tool used to sign a package.
+
+        :param app: The app being packaged
+        :returns: A triple of (tool name, executable name, package name) for the tool
+            used to sign the package.
+        :raises KeyError: If the packaging format cannot be determined.
+        """
+        packaging_format = getattr(app, "packaging_format", None)
+        if packaging_format == "system":
+            packaging_format = _SYSTEM_PACKAGING_FORMATS.get(app.target_vendor_base)
+        return _SIGNING_TOOLS[packaging_format]
 
     def verify_system_packages(self, app: LinuxSystemAppConfig):
         """Verify that the required system packages are installed.
@@ -740,24 +769,13 @@ Install Docker Engine and try again or run Briefcase on an Arch host system.
         :returns: The list of packages that must be installed in the Docker image to
             provide the signing tool.
         """
-        packaging_format = getattr(app, "packaging_format", None)
-        if packaging_format == "system":
-            packaging_format = {
-                DEBIAN: "deb",
-                RHEL: "rpm",
-                ARCH: "pkg",
-                SUSE: "rpm",
-            }.get(app.target_vendor_base)
+        try:
+            package_name = self._signing_tool(app)[2]
+        except KeyError:
+            # An unknown packaging format has no signing tool that can be identified.
+            return []
 
-        package_name = {
-            "deb": "debsigs",
-            "rpm": "rpm-sign",
-            "pkg": "gnupg",
-        }.get(packaging_format)
-
-        if package_name is None or (
-            package_name == "rpm-sign" and app.target_vendor_base == SUSE
-        ):
+        if package_name == "rpm-sign" and app.target_vendor_base == SUSE:
             # On SUSE, rpmsign is provided by rpm-build, which is already
             # installed by the Docker image; there is no `rpm-sign` package.
             return []
@@ -1104,19 +1122,6 @@ class LinuxSystemSigningMixin(_MixinBase):
         "available on the system."
     )
 
-    def _signing_tool(self, app: LinuxSystemAppConfig) -> tuple[str, str, str]:
-        """Utility method returning the tool used to sign a package.
-
-        :param app: The app being packaged
-        :returns: A triple of (tool name, executable name, package name) for the tool
-            used to sign the package.
-        """
-        return {
-            "deb": ("debsigs", "debsigs", "debsigs"),
-            "rpm": ("rpmsign", "rpmsign", "rpm-sign"),
-            "pkg": ("gpg", "gpg", "gnupg"),
-        }[app.packaging_format]
-
     def _verify_signing_tool(self, app: LinuxSystemAppConfig):
         """Verify that the app environment contains the signing tool.
 
@@ -1253,13 +1258,24 @@ or
 
         subprocess_kwargs: dict[str, Any] = {}
         key_file_path: Path | None = None
-        if isinstance(self.tools[app].app_context, DockerAppContext):
+        if self.use_docker:
             # When packaging inside Docker, the secret key must be made available
-            # to the container. Export the key to the data path (which is mounted
-            # into the container), then import it and sign the package in a single
+            # to the container. Export the key to the bundle path (which is mounted
+            # in to the container), then import it and sign the package in a single
             # container run, so the key is not retained in the image or container.
-            key_file_path = self.data_path / f"{app.app_name}-signing-key.gpg"
+            key_file_path = self.bundle_path(app) / "signing-key.gpg"
             subprocess_kwargs["mounts"] = [(self.dist_path, "/dist")]
+            # The bundle folder is mounted at /app, and the dist folder at /dist;
+            # rewrite the sign command to use the container paths directly.
+            signature_path = self.signature_path(app)
+            container_dist_path = f"/dist/{dist_path.name}"
+            container_signature_path = f"/dist/{signature_path.name}"
+            sign_command = [
+                arg.replace(str(dist_path), container_dist_path).replace(
+                    str(signature_path), container_signature_path
+                )
+                for arg in sign_command
+            ]
 
         try:
             if key_file_path is not None:
@@ -1271,7 +1287,12 @@ or
                     " && ".join(
                         " ".join(shlex.quote(arg) for arg in command)
                         for command in [
-                            ["gpg", "--batch", "--import", str(key_file_path)],
+                            [
+                                "gpg",
+                                "--batch",
+                                "--import",
+                                f"/app/{key_file_path.name}",
+                            ],
                             sign_command,
                         ]
                     ),
@@ -1386,13 +1407,7 @@ class LinuxSystemPackageCommand(
         # This must be done before the app context is verified, so the Docker
         # image can be built with the tools needed to package and sign the app.
         if app.packaging_format == "system":
-            app.packaging_format = {
-                DEBIAN: "deb",
-                RHEL: "rpm",
-                ARCH: "pkg",
-                SUSE: "rpm",
-            }.get(app.target_vendor_base)
-
+            app.packaging_format = _SYSTEM_PACKAGING_FORMATS.get(app.target_vendor_base)
         if app.packaging_format is None:
             raise BriefcaseCommandError(
                 "Briefcase doesn't know the system packaging format for "

@@ -16,6 +16,8 @@ def make_docker_context(package_command, first_app):
     app_context = DockerAppContext(tools=package_command.tools, app=first_app)
     app_context.run = mock.MagicMock()
     package_command.tools[first_app].app_context = app_context
+    # Enable Docker for the command.
+    package_command.target_image = "somevendor:surprising"
     return app_context
 
 
@@ -107,7 +109,7 @@ def test_sign_package_error(package_command, first_app):
                 "debsigs",
                 "--sign=origin",
                 f"--default-key={JANE}",
-                "/path/to/dist/first-app.deb",
+                "/dist/first-app.deb",
             ],
         ),
         (
@@ -117,7 +119,7 @@ def test_sign_package_error(package_command, first_app):
                 "--define",
                 f"_gpg_name {JANE}",
                 "--addsign",
-                "/path/to/dist/first-app.rpm",
+                "/dist/first-app.rpm",
             ],
         ),
         (
@@ -128,8 +130,8 @@ def test_sign_package_error(package_command, first_app):
                 "-u",
                 JANE,
                 "--output",
-                "/path/to/dist/first-app.pkg.tar.zst.sig",
-                "/path/to/dist/first-app.pkg.tar.zst",
+                "/dist/first-app.pkg.tar.zst.sig",
+                "/dist/first-app.pkg.tar.zst",
             ],
         ),
     ],
@@ -155,7 +157,7 @@ def test_sign_package_in_docker(
         )
     make_docker_context(package_command, first_app)
 
-    key_file_path = package_command.data_path / f"{first_app.app_name}-signing-key.gpg"
+    key_file_path = package_command.bundle_path(first_app) / "signing-key.gpg"
     key_file_path.touch()
 
     package_command.sign_package(first_app, identity=JANE)
@@ -163,7 +165,7 @@ def test_sign_package_in_docker(
     mock_gpg.export_secret_key.assert_called_once_with(JANE, key_file_path)
     package_command.tools.os.chmod.assert_called_once_with(key_file_path, 0o600)
 
-    import_command = ["gpg", "--batch", "--import", str(key_file_path)]
+    import_command = ["gpg", "--batch", "--import", "/app/signing-key.gpg"]
     command = " && ".join(
         " ".join(shlex.quote(arg) for arg in cmd)
         for cmd in [import_command, sign_command]
@@ -188,10 +190,10 @@ def test_sign_package_error_in_docker(package_command, first_app, mock_gpg):
     app_context = make_docker_context(package_command, first_app)
     app_context.run.side_effect = subprocess.CalledProcessError(
         returncode=1,
-        cmd=["sh", "-c", "gpg --batch --import /path/to/key && debsigs"],
+        cmd=["sh", "-c", "gpg --batch --import /app/signing-key.gpg && debsigs"],
     )
 
-    key_file_path = package_command.data_path / f"{first_app.app_name}-signing-key.gpg"
+    key_file_path = package_command.bundle_path(first_app) / "signing-key.gpg"
     key_file_path.touch()
 
     with pytest.raises(
@@ -214,7 +216,7 @@ def test_sign_package_key_export_error_in_docker(package_command, first_app, moc
     make_docker_context(package_command, first_app)
     mock_gpg.export_secret_key.side_effect = BriefcaseCommandError("boom")
 
-    key_file_path = package_command.data_path / f"{first_app.app_name}-signing-key.gpg"
+    key_file_path = package_command.bundle_path(first_app) / "signing-key.gpg"
     key_file_path.touch()
 
     with pytest.raises(BriefcaseCommandError, match=r"boom"):
