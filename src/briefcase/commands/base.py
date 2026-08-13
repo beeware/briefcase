@@ -260,8 +260,7 @@ a custom location for Briefcase's tools.
                 # allow normal interactions without attempting to sandbox them.
                 if platform.system() == "Windows":  # pragma: no-cover-if-not-windows
                     subprocess.run(
-                        ["mkdir", data_path],
-                        shell=True,
+                        ["cmd.exe", "/c", "mkdir", data_path],
                         check=True,
                         stdout=subprocess.DEVNULL,
                         stderr=subprocess.DEVNULL,
