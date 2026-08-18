@@ -59,4 +59,3 @@ def test_project_name_defaults_to_app_name(convert_command, monkeypatch):
     }
     convert_command.build_app_context(overrides.copy())
     mock_input_project_name.assert_called_once_with("custom-app", override_value=None)
-    
