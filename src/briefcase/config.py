@@ -1277,7 +1277,7 @@ def resolve_dynamic_pep621_config(base_path, dynamic, console):
         ) from e
 
 
-def merge_pep621_config(global_config, pep621_config,console):
+def merge_pep621_config(global_config, pep621_config, console):
     """Merge a PEP621 configuration into a Briefcase configuration."""
 
     if requires_python := pep621_config.get("requires-python"):
@@ -1397,9 +1397,7 @@ def parse_config(config_file: Path, platform, output_format, console):
     # `project_name` for PEP621 compliance.
     pep621_config = pyproject.get("project", {})
     if dynamic := pep621_config.pop("dynamic", []):
-        pep621_config.update(
-            resolve_dynamic_pep621_config(base_path, dynamic, console)
-        )
+        pep621_config.update(resolve_dynamic_pep621_config(base_path, dynamic, console))
     merge_pep621_config(global_config, pep621_config, console)
 
     # For consistent results, sort the platforms and formats
