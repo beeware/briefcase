@@ -11,6 +11,15 @@ def test_empty():
 
     assert briefcase_config == {"key": "value"}
 
+def test_no_project_name_no_pep621_name():
+    "If neither a legacy project_name nor a PEP621 name is present, nothing changes"
+    briefcase_config = {"key": "value"}
+
+    merge_pep621_config(briefcase_config, {"other": "thingy"}, Mock())
+
+    assert briefcase_config == {"key": "value"}
+    assert "project_name" not in briefcase_config
+
 
 def test_base_keys():
     "If the PEP621 config provides keys, they are added"
