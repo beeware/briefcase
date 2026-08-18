@@ -355,6 +355,7 @@ def test_test_dependencies_with_requires():
         "test_requires": ["dep1", "dep2", "first", "second"],
     }
 
+
 def test_valid_legacy_project_name_no_warning():
     "A valid legacy project_name doesn't raise a warning"
     briefcase_config = {"key": "value", "project_name": "valid-project-name"}
