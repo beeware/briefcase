@@ -359,7 +359,7 @@ class NewCommand(BaseCommand):
         )
 
         project_name = self.input_project_name(
-            formal_name, project_overrides.pop("project_name", None)
+            app_name, project_overrides.pop("project_name", None)
         )
 
         description = self.console.text_question(

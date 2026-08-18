@@ -135,7 +135,7 @@ def test_question_sequence_with_no_user_input(new_command):
         "module_name": "helloworld",
         "source_dir": "src/helloworld",
         "test_source_dir": "tests",
-        "project_name": "Hello World",
+        "project_name": "helloworld",
         "url": "https://example.com/helloworld",
     }
 
