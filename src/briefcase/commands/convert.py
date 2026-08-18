@@ -564,7 +564,7 @@ class ConvertCommand(NewCommand):
             module_name, override_value=project_overrides.pop("test_source_dir", None)
         )
         project_name = self.input_project_name(
-            formal_name, override_value=project_overrides.pop("project_name", None)
+            app_name, override_value=project_overrides.pop("project_name", None)
         )
         description = self.input_description(
             override_value=project_overrides.pop("description", None)

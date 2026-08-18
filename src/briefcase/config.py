@@ -14,6 +14,7 @@ from urllib.parse import urlparse
 from build import BuildBackendException
 from build.util import project_wheel_metadata
 from packaging.licenses import InvalidLicenseExpression, canonicalize_license_expression
+from packaging.utils import canonicalize_name
 from packaging.version import InvalidVersion, Version
 
 if sys.version_info >= (3, 11):  # pragma: no-cover-if-lt-py311
@@ -1276,7 +1277,7 @@ def resolve_dynamic_pep621_config(base_path, dynamic, console):
         ) from e
 
 
-def merge_pep621_config(global_config, pep621_config):
+def merge_pep621_config(global_config, pep621_config, console):
     """Merge a PEP621 configuration into a Briefcase configuration."""
 
     if requires_python := pep621_config.get("requires-python"):
@@ -1304,6 +1305,21 @@ def merge_pep621_config(global_config, pep621_config):
     maybe_update("license-files", "license-files")
     maybe_update("url", "urls", "Homepage")
     maybe_update("version", "version")
+
+    # PEP621's `name` maps to Briefcase's `project_name`. A pre-existing
+    # (legacy) `project_name` in the Briefcase config takes priority, but its
+    # value is checked for PEP621 name compliance; if it isn't compliant, a
+    # warning is raised, since this may become an error in a future version
+    # of Briefcase.
+    if "project_name" in global_config:
+        legacy_name = global_config["project_name"]
+        if not is_valid_pep508_name(legacy_name):
+            console.warning(
+                f"{legacy_name!r} is not a valid PEP621 project name. "
+                "This will be an error in a future version of Briefcase."
+            )
+    elif name := pep621_config.get("name"):
+        global_config["project_name"] = canonicalize_name(name)
 
     # Use the details of the first author as the Briefcase author.
     if "author" not in global_config:
@@ -1376,16 +1392,13 @@ def parse_config(config_file: Path, platform, output_format, console):
     except KeyError as e:
         raise BriefcaseConfigError("No tool.briefcase section in pyproject.toml") from e
 
-    # Merge the PEP621 configuration (if it exists)
-    try:
-        pep621_config = pyproject["project"]
-        if dynamic := pep621_config.pop("dynamic", []):
-            pep621_config.update(
-                resolve_dynamic_pep621_config(base_path, dynamic, console)
-            )
-        merge_pep621_config(global_config, pep621_config)
-    except KeyError:
-        pass
+    # Merge the PEP621 configuration (if it exists). Even without a PEP621
+    # `[project]` table, the merge step still checks any legacy
+    # `project_name` for PEP621 compliance.
+    pep621_config = pyproject.get("project", {})
+    if dynamic := pep621_config.pop("dynamic", []):
+        pep621_config.update(resolve_dynamic_pep621_config(base_path, dynamic, console))
+    merge_pep621_config(global_config, pep621_config, console)
 
     # For consistent results, sort the platforms and formats
     all_platforms = sorted(get_platforms().keys())

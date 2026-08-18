@@ -281,6 +281,7 @@ class NewCommand(BaseCommand):
             ),
             description="Project Name",
             default=formal_name,
+            validator=self.validate_app_name,
             override_value=override_value,
         )
 
@@ -359,7 +360,7 @@ class NewCommand(BaseCommand):
         )
 
         project_name = self.input_project_name(
-            formal_name, project_overrides.pop("project_name", None)
+            app_name, project_overrides.pop("project_name", None)
         )
 
         description = self.console.text_question(
