@@ -11,7 +11,7 @@ def test_question_sequence(new_command):
         "My Application",  # formal name
         "",  # app name - accept the default
         "org.beeware",  # bundle ID
-        "My Project",  # project name
+        "my-project",  # project name
         "Cool stuff",  # description
         "Grace Hopper",  # author
         "grace@navy.mil",  # author email
@@ -35,7 +35,7 @@ def test_question_sequence(new_command):
         "module_name": "myapplication",
         "source_dir": "src/myapplication",
         "test_source_dir": "tests",
-        "project_name": "My Project",
+        "project_name": "my-project",
         "url": "https://navy.mil/myapplication",
     }
 
@@ -51,7 +51,7 @@ def test_question_sequence_with_overrides(new_command):
             "formal_name": "My Override App",
             "app_name": "myoverrideapp",
             "bundle": "net.example",
-            "project_name": "My Override Project",
+            "project_name": "my-override-project",
             "description": "My override description",
             "author": "override, author",
             "author_email": "author@override.tld",
@@ -72,7 +72,7 @@ def test_question_sequence_with_overrides(new_command):
         "module_name": "myoverrideapp",
         "source_dir": "src/myoverrideapp",
         "test_source_dir": "tests",
-        "project_name": "My Override Project",
+        "project_name": "my-override-project",
         "url": "https://override.example.com",
     }
 
@@ -90,7 +90,7 @@ def test_question_sequence_with_bad_license_override(new_command):
             "formal_name": "My Override App",
             "app_name": "myoverrideapp",
             "bundle": "net.example",
-            "project_name": "My Override Project",
+            "project_name": "my-override-project",
             "description": "My override description",
             "author": "override, author",
             "author_email": "author@override.tld",
@@ -111,7 +111,7 @@ def test_question_sequence_with_bad_license_override(new_command):
         "module_name": "myoverrideapp",
         "source_dir": "src/myoverrideapp",
         "test_source_dir": "tests",
-        "project_name": "My Override Project",
+        "project_name": "my-override-project",
         "url": "https://override.example.com",
     }
 

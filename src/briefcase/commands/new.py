@@ -281,6 +281,7 @@ class NewCommand(BaseCommand):
             ),
             description="Project Name",
             default=formal_name,
+            validator=self.validate_app_name,
             override_value=override_value,
         )
 
