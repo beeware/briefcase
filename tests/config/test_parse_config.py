@@ -754,6 +754,37 @@ def test_pep_621_merge(tmp_path):
     }
 
 
+def test_invalid_legacy_project_name_warns(tmp_path):
+    """An invalid legacy project_name (not PEP621-compliant) raises a warning."""
+    config_file = create_file(
+        tmp_path / "pyproject.toml",
+        """
+        [tool.briefcase]
+        project_name = "My Invalid Project Name!"
+        bundle = "com.example"
+        license = "MIT"
+
+        [tool.briefcase.app.my_app]
+        """,
+    )
+
+    console = Mock()
+    _, apps = parse_config(
+        config_file,
+        platform="macOS",
+        output_format="app",
+        console=console,
+    )
+
+    # The invalid project_name is preserved as-is...
+    assert apps["my_app"]["project_name"] == "My Invalid Project Name!"
+    # ...but the user is warned that it isn't PEP621 compliant.
+    console.warning.assert_called_once()
+    warning_text = console.warning.call_args[0][0]
+    assert "My Invalid Project Name!" in warning_text
+    assert "not a valid PEP621 project name" in warning_text
+
+
 def test_long_description_warning(tmp_path):
     """A description longer than the recommended length raises a warning."""
     long_description = "This is a needlessly long app description " + ("x" * 50)
@@ -1515,6 +1546,7 @@ def test_pep621_empty_dynamic(monkeypatch, tmp_path):
         "license_files": [],
         "formal_name": "Awesome Application",
         "long_description": "The application is very awesome",
+        "project_name": "awesome",
     }
 
 
@@ -1587,6 +1619,7 @@ def test_pep621_dynamic(monkeypatch, tmp_path):
         "requires": ["toga>=0.5.3"],
         "url": "https://example.com/",
         "version": "1.2.3",
+        "project_name": "awesome",
     }
 
 

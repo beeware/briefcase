@@ -1,3 +1,5 @@
+from unittest.mock import Mock
+
 from briefcase.config import merge_pep621_config
 
 
@@ -5,7 +7,7 @@ def test_empty():
     "Merging a PEP621 config with no interesting keys causes no changes"
     briefcase_config = {"key": "value"}
 
-    merge_pep621_config(briefcase_config, {"other": "thingy"})
+    merge_pep621_config(briefcase_config, {"other": "thingy"},Mock())
 
     assert briefcase_config == {"key": "value"}
 
@@ -23,6 +25,7 @@ def test_base_keys():
             "license": {"text": "BSD License"},
             "requires-python": ">=3.9",
         },
+        Mock()
     )
 
     assert briefcase_config == {
@@ -53,6 +56,7 @@ def test_base_keys_override():
             "urls": {"Homepage": "https://example.com"},
             "license": {"text": "GPL3"},
         },
+        Mock()
     )
 
     assert briefcase_config == {
@@ -73,6 +77,7 @@ def test_missing_subkeys():
         {
             "urls": {"Sponsorship": "https://example.com"},
         },
+        Mock()
     )
 
     assert briefcase_config == {"key": "value"}
@@ -88,6 +93,7 @@ def test_specified_license_file():
         {
             "license": {"file": "license.txt"},
         },
+        Mock()
     )
 
     assert briefcase_config == {"key": "value", "license": {"file": "license.txt"}}
@@ -100,6 +106,7 @@ def test_empty_authors():
     merge_pep621_config(
         briefcase_config,
         {"authors": []},
+        Mock()
     )
 
     assert briefcase_config == {
@@ -121,6 +128,7 @@ def test_single_author():
                 }
             ]
         },
+        Mock()
     )
 
     assert briefcase_config == {
@@ -148,6 +156,7 @@ def test_multiple_authors():
                 },
             ]
         },
+        Mock()
     )
 
     assert briefcase_config == {
@@ -170,6 +179,7 @@ def test_mising_author_name():
                 }
             ]
         },
+        Mock()
     )
 
     assert briefcase_config == {
@@ -191,6 +201,7 @@ def test_missing_author_email():
                 }
             ]
         },
+        Mock()
     )
 
     assert briefcase_config == {
@@ -213,6 +224,7 @@ def test_existing_author_name():
                 }
             ]
         },
+        Mock()
     )
 
     assert briefcase_config == {
@@ -236,6 +248,7 @@ def test_existing_author_email():
                 }
             ]
         },
+        Mock()
     )
 
     assert briefcase_config == {
@@ -252,6 +265,7 @@ def test_no_dependencies():
     merge_pep621_config(
         briefcase_config,
         {},
+        Mock()
     )
 
     assert briefcase_config == {
@@ -267,6 +281,7 @@ def test_dependencies_without_requires():
     merge_pep621_config(
         briefcase_config,
         {"dependencies": ["dep1", "dep2"]},
+        Mock()
     )
 
     assert briefcase_config == {
@@ -281,7 +296,7 @@ def test_dependencies_with_requires():
 
     merge_pep621_config(
         briefcase_config,
-        {"dependencies": ["dep1", "dep2"]},
+        {"dependencies": ["dep1", "dep2"]},Mock()
     )
 
     assert briefcase_config == {
@@ -297,7 +312,7 @@ def test_no_test_dependencies():
 
     merge_pep621_config(
         briefcase_config,
-        {},
+        {},Mock()
     )
 
     assert briefcase_config == {
@@ -312,7 +327,7 @@ def test_optional_non_test_dependencies():
 
     merge_pep621_config(
         briefcase_config,
-        {"optional-dependencies": {"other": ["dep1", "dep2"]}},
+        {"optional-dependencies": {"other": ["dep1", "dep2"]}},Mock()
     )
 
     assert briefcase_config == {
@@ -328,7 +343,7 @@ def test_test_dependencies_without_requires():
 
     merge_pep621_config(
         briefcase_config,
-        {"optional-dependencies": {"test": ["dep1", "dep2"]}},
+        {"optional-dependencies": {"test": ["dep1", "dep2"]}},Mock()
     )
 
     assert briefcase_config == {
@@ -343,7 +358,7 @@ def test_test_dependencies_with_requires():
 
     merge_pep621_config(
         briefcase_config,
-        {"optional-dependencies": {"test": ["dep1", "dep2"]}},
+        {"optional-dependencies": {"test": ["dep1", "dep2"]}},Mock()
     )
 
     assert briefcase_config == {
