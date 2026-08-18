@@ -7,7 +7,7 @@ def test_empty():
     "Merging a PEP621 config with no interesting keys causes no changes"
     briefcase_config = {"key": "value"}
 
-    merge_pep621_config(briefcase_config, {"other": "thingy"},Mock())
+    merge_pep621_config(briefcase_config, {"other": "thingy"}, Mock())
 
     assert briefcase_config == {"key": "value"}
 
@@ -25,7 +25,7 @@ def test_base_keys():
             "license": {"text": "BSD License"},
             "requires-python": ">=3.9",
         },
-        Mock()
+        Mock(),
     )
 
     assert briefcase_config == {
@@ -56,7 +56,7 @@ def test_base_keys_override():
             "urls": {"Homepage": "https://example.com"},
             "license": {"text": "GPL3"},
         },
-        Mock()
+        Mock(),
     )
 
     assert briefcase_config == {
@@ -77,7 +77,7 @@ def test_missing_subkeys():
         {
             "urls": {"Sponsorship": "https://example.com"},
         },
-        Mock()
+        Mock(),
     )
 
     assert briefcase_config == {"key": "value"}
@@ -93,7 +93,7 @@ def test_specified_license_file():
         {
             "license": {"file": "license.txt"},
         },
-        Mock()
+        Mock(),
     )
 
     assert briefcase_config == {"key": "value", "license": {"file": "license.txt"}}
@@ -103,11 +103,7 @@ def test_empty_authors():
     "If the author list is empty, no author is recorded"
     briefcase_config = {"key": "value"}
 
-    merge_pep621_config(
-        briefcase_config,
-        {"authors": []},
-        Mock()
-    )
+    merge_pep621_config(briefcase_config, {"authors": []}, Mock())
 
     assert briefcase_config == {
         "key": "value",
@@ -128,7 +124,7 @@ def test_single_author():
                 }
             ]
         },
-        Mock()
+        Mock(),
     )
 
     assert briefcase_config == {
@@ -156,7 +152,7 @@ def test_multiple_authors():
                 },
             ]
         },
-        Mock()
+        Mock(),
     )
 
     assert briefcase_config == {
@@ -179,7 +175,7 @@ def test_mising_author_name():
                 }
             ]
         },
-        Mock()
+        Mock(),
     )
 
     assert briefcase_config == {
@@ -201,7 +197,7 @@ def test_missing_author_email():
                 }
             ]
         },
-        Mock()
+        Mock(),
     )
 
     assert briefcase_config == {
@@ -224,7 +220,7 @@ def test_existing_author_name():
                 }
             ]
         },
-        Mock()
+        Mock(),
     )
 
     assert briefcase_config == {
@@ -248,7 +244,7 @@ def test_existing_author_email():
                 }
             ]
         },
-        Mock()
+        Mock(),
     )
 
     assert briefcase_config == {
@@ -262,11 +258,7 @@ def test_no_dependencies():
     "If there are no global dependencies, requires are used as is."
     briefcase_config = {"key": "value", "requires": ["first", "second"]}
 
-    merge_pep621_config(
-        briefcase_config,
-        {},
-        Mock()
-    )
+    merge_pep621_config(briefcase_config, {}, Mock())
 
     assert briefcase_config == {
         "key": "value",
@@ -278,11 +270,7 @@ def test_dependencies_without_requires():
     "If the global config doesn't specify requirements, dependencies are used as is"
     briefcase_config = {"key": "value"}
 
-    merge_pep621_config(
-        briefcase_config,
-        {"dependencies": ["dep1", "dep2"]},
-        Mock()
-    )
+    merge_pep621_config(briefcase_config, {"dependencies": ["dep1", "dep2"]}, Mock())
 
     assert briefcase_config == {
         "key": "value",
@@ -294,10 +282,7 @@ def test_dependencies_with_requires():
     "If the global config specify requirements, requires augments dependencies"
     briefcase_config = {"key": "value", "requires": ["first", "second"]}
 
-    merge_pep621_config(
-        briefcase_config,
-        {"dependencies": ["dep1", "dep2"]},Mock()
-    )
+    merge_pep621_config(briefcase_config, {"dependencies": ["dep1", "dep2"]}, Mock())
 
     assert briefcase_config == {
         "key": "value",
@@ -310,10 +295,7 @@ def test_no_test_dependencies():
     is."""
     briefcase_config = {"key": "value", "test_requires": ["first", "second"]}
 
-    merge_pep621_config(
-        briefcase_config,
-        {},Mock()
-    )
+    merge_pep621_config(briefcase_config, {}, Mock())
 
     assert briefcase_config == {
         "key": "value",
@@ -326,8 +308,7 @@ def test_optional_non_test_dependencies():
     briefcase_config = {"key": "value", "requires": ["first", "second"]}
 
     merge_pep621_config(
-        briefcase_config,
-        {"optional-dependencies": {"other": ["dep1", "dep2"]}},Mock()
+        briefcase_config, {"optional-dependencies": {"other": ["dep1", "dep2"]}}, Mock()
     )
 
     assert briefcase_config == {
@@ -342,8 +323,7 @@ def test_test_dependencies_without_requires():
     briefcase_config = {"key": "value"}
 
     merge_pep621_config(
-        briefcase_config,
-        {"optional-dependencies": {"test": ["dep1", "dep2"]}},Mock()
+        briefcase_config, {"optional-dependencies": {"test": ["dep1", "dep2"]}}, Mock()
     )
 
     assert briefcase_config == {
@@ -357,8 +337,7 @@ def test_test_dependencies_with_requires():
     briefcase_config = {"key": "value", "test_requires": ["first", "second"]}
 
     merge_pep621_config(
-        briefcase_config,
-        {"optional-dependencies": {"test": ["dep1", "dep2"]}},Mock()
+        briefcase_config, {"optional-dependencies": {"test": ["dep1", "dep2"]}}, Mock()
     )
 
     assert briefcase_config == {
