@@ -34,7 +34,8 @@ def test_overrides_are_used(convert_command):
 
 
 def test_project_name_defaults_to_app_name(convert_command, monkeypatch):
-    """If no project_name override is given, the project name defaults to the app name, not the formal name."""
+    """If no project_name override is given, the project name defaults to the app name,
+    not the formal name."""
     (convert_command.base_path / "src/custom_app").mkdir(parents=True)
     (convert_command.base_path / "src/custom_app/__main__.py").write_text(
         "", encoding="utf-8"
@@ -57,5 +58,4 @@ def test_project_name_defaults_to_app_name(convert_command, monkeypatch):
         "app_type": "GUI",
     }
     convert_command.build_app_context(overrides.copy())
-
     mock_input_project_name.assert_called_once_with("custom-app", override_value=None)
