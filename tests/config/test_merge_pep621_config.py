@@ -11,6 +11,7 @@ def test_empty():
 
     assert briefcase_config == {"key": "value"}
 
+
 def test_no_project_name_no_pep621_name():
     "If neither a legacy project_name nor a PEP621 name is present, nothing changes"
     briefcase_config = {"key": "value"}
