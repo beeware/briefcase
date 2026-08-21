@@ -48,7 +48,8 @@ def test_verify_signing_tool_missing(
         BriefcaseCommandError,
         match=(
             rf"Can't find the {tool_name} tools. "
-            rf"Try running `sudo apt install {package_name}`."
+            rf"Try running `sudo apt install {package_name}`. "
+            r"Alternatively, use `--adhoc-sign` to skip signing the package."
         ),
     ):
         package_command._verify_signing_tool(first_app)
@@ -68,7 +69,10 @@ def test_verify_signing_tool_missing_unknown_vendor(package_command, first_app):
 
     with pytest.raises(
         BriefcaseCommandError,
-        match=r"Can't find the debsigs tool. Install this first to sign the deb.",
+        match=(
+            r"Can't find the debsigs tool. Install this first to sign the deb. "
+            r"Alternatively, use `--adhoc-sign` to skip signing the package."
+        ),
     ):
         package_command._verify_signing_tool(first_app)
 

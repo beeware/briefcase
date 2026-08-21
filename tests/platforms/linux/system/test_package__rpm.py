@@ -161,6 +161,9 @@ def test_verify_docker(package_command, first_app_rpm, monkeypatch):
     # rpmbuild was not inspected
     rpmbuild.exists.assert_not_called()
 
+    # The signing tool has been added to the image requirements
+    assert first_app_rpm.system_requires == ["rpm-sign"]
+
 
 @pytest.mark.parametrize(
     "changelog_filename",

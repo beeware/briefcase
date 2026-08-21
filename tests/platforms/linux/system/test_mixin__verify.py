@@ -1,5 +1,7 @@
 from unittest.mock import MagicMock
 
+import pytest
+
 import briefcase.platforms.linux.system
 from briefcase.integrations.docker import Docker, DockerAppContext
 from briefcase.integrations.subprocess import Subprocess
@@ -114,6 +116,90 @@ def test_linux_docker(create_command, first_app_config, tmp_path, monkeypatch):
 
     # Python will *not* be verified a second time.
     create_command.verify_docker_python.assert_not_called()
+
+
+@pytest.mark.parametrize(
+    ("vendor_base", "packaging_format", "expected_requires"),
+    [
+        # The signing tool is added to the image requirements for a known format
+        ("debian", "system", ["debsigs"]),
+        ("rhel", "system", ["rpm-sign"]),
+        ("arch", "system", ["gnupg"]),
+        # On SUSE, rpmsign is provided by rpm-build, which is already installed
+        # by the Docker image; no additional package is needed.
+        ("suse", "system", []),
+        # An unknown vendor resolves to no packaging format; no signing tool
+        ("basevendor", "system", []),
+        # A concrete packaging format is used as-is
+        ("debian", "deb", ["debsigs"]),
+    ],
+)
+def test_linux_docker_adds_signing_tool(
+    create_command,
+    first_app_config,
+    tmp_path,
+    monkeypatch,
+    vendor_base,
+    packaging_format,
+    expected_requires,
+):
+    """If Docker is enabled on Linux, the signing tool is added to the image
+    requirements.
+
+    This must happen during any command's app tool verification, because the Docker
+    image is built before the signing identity is selected; if the signing tool isn't in
+    the image, signing a package built with Docker will fail.
+    """
+    create_command.tools.host_os = "Linux"
+    create_command.target_image = "somevendor:surprising"
+    create_command.extra_docker_build_args = []
+
+    # Force a dummy vendor:codename for test purposes.
+    first_app_config.target_vendor = "somevendor"
+    first_app_config.target_codename = "surprising"
+    first_app_config.target_vendor_base = vendor_base
+    first_app_config.packaging_format = packaging_format
+    first_app_config.python_version_tag = "3"
+
+    # Mock Docker tool verification
+    mock__version_compat = MagicMock(spec=Docker._version_compat)
+    mock__user_access = MagicMock(spec=Docker._user_access)
+    mock__buildx_installed = MagicMock(spec=Docker._buildx_installed)
+    mock__is_user_mapping_enabled = MagicMock(spec=Docker._is_user_mapping_enabled)
+    monkeypatch.setattr(
+        briefcase.platforms.linux.system.Docker,
+        "_version_compat",
+        mock__version_compat,
+    )
+    monkeypatch.setattr(
+        briefcase.platforms.linux.system.Docker,
+        "_user_access",
+        mock__user_access,
+    )
+    monkeypatch.setattr(
+        briefcase.platforms.linux.system.Docker,
+        "_buildx_installed",
+        mock__buildx_installed,
+    )
+    monkeypatch.setattr(
+        briefcase.platforms.linux.system.Docker,
+        "_is_user_mapping_enabled",
+        mock__is_user_mapping_enabled,
+    )
+    mock_docker_app_context_verify = MagicMock(spec=DockerAppContext.verify)
+    monkeypatch.setattr(
+        briefcase.platforms.linux.system.DockerAppContext,
+        "verify",
+        mock_docker_app_context_verify,
+    )
+    create_command.verify_docker_python = MagicMock()
+
+    # Verify the tools
+    create_command.verify_tools()
+    create_command.verify_app_tools(app=first_app_config)
+
+    # The signing tool has been added to the image requirements
+    assert getattr(first_app_config, "system_requires", None) == expected_requires
 
 
 def test_non_linux_docker(create_command, first_app_config, tmp_path, monkeypatch):
