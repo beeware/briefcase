@@ -1258,27 +1258,19 @@ or
 
         subprocess_kwargs: dict[str, Any] = {}
         key_file_path: Path | None = None
-        if self.use_docker:
-            # When packaging inside Docker, the secret key must be made available
-            # to the container. Export the key to the bundle path (which is mounted
-            # in to the container), then import it and sign the package in a single
-            # container run, so the key is not retained in the image or container.
-            key_file_path = self.bundle_path(app) / "signing-key.gpg"
-            subprocess_kwargs["mounts"] = [(self.dist_path, "/dist")]
-            # The bundle folder is mounted at /app, and the dist folder at /dist;
-            # rewrite the sign command to use the container paths directly.
-            signature_path = self.signature_path(app)
-            container_dist_path = f"/dist/{dist_path.name}"
-            container_signature_path = f"/dist/{signature_path.name}"
-            sign_command = [
-                arg.replace(str(dist_path), container_dist_path).replace(
-                    str(signature_path), container_signature_path
-                )
-                for arg in sign_command
-            ]
 
         try:
-            if key_file_path is not None:
+            if self.use_docker:
+                # When packaging inside Docker, the secret key must be made available
+                # to the container. Export the key to the bundle path (which is mounted
+                # in to the container), then import it and sign the package in a single
+                # container run, so the key is not retained in the image or container.
+                #
+                # The bundle and dist folders are mounted in to the container, and the
+                # Docker layer rewrites the host paths in the commands to their
+                # container equivalents.
+                key_file_path = self.bundle_path(app) / "signing-key.gpg"
+                subprocess_kwargs["mounts"] = [(self.dist_path, "/dist")]
                 self.tools.gnupg.export_secret_key(identity, key_file_path)
                 self.tools.os.chmod(key_file_path, 0o600)
                 sign_command = [
@@ -1287,12 +1279,7 @@ or
                     " && ".join(
                         " ".join(shlex.quote(arg) for arg in command)
                         for command in [
-                            [
-                                "gpg",
-                                "--batch",
-                                "--import",
-                                f"/app/{key_file_path.name}",
-                            ],
+                            ["gpg", "--batch", "--import", str(key_file_path)],
                             sign_command,
                         ]
                     ),
@@ -1309,7 +1296,7 @@ or
                 f"{app.app_name}."
             ) from e
         finally:
-            if key_file_path is not None:
+            if self.use_docker:
                 key_file_path.unlink(missing_ok=True)
 
     def clean_dist_folder(self, app, **options):

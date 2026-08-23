@@ -109,7 +109,7 @@ def test_sign_package_error(package_command, first_app):
                 "debsigs",
                 "--sign=origin",
                 f"--default-key={JANE}",
-                "/dist/first-app.deb",
+                "/path/to/dist/first-app.deb",
             ],
         ),
         (
@@ -119,7 +119,7 @@ def test_sign_package_error(package_command, first_app):
                 "--define",
                 f"_gpg_name {JANE}",
                 "--addsign",
-                "/dist/first-app.rpm",
+                "/path/to/dist/first-app.rpm",
             ],
         ),
         (
@@ -130,8 +130,8 @@ def test_sign_package_error(package_command, first_app):
                 "-u",
                 JANE,
                 "--output",
-                "/dist/first-app.pkg.tar.zst.sig",
-                "/dist/first-app.pkg.tar.zst",
+                "/path/to/dist/first-app.pkg.tar.zst.sig",
+                "/path/to/dist/first-app.pkg.tar.zst",
             ],
         ),
     ],
@@ -143,7 +143,11 @@ def test_sign_package_in_docker(
     format,
     sign_command,
 ):
-    """A package is signed inside a Docker container after importing the signing key."""
+    """A package is signed inside a Docker container after importing the signing key.
+
+    The sign command uses host paths; the Docker layer is responsible for rewriting them
+    to their container equivalents.
+    """
     first_app.packaging_format = format
     dist_path = Path("/path/to/dist/first-app.pkg.tar.zst")
     if format == "deb":
@@ -165,7 +169,7 @@ def test_sign_package_in_docker(
     mock_gpg.export_secret_key.assert_called_once_with(JANE, key_file_path)
     package_command.tools.os.chmod.assert_called_once_with(key_file_path, 0o600)
 
-    import_command = ["gpg", "--batch", "--import", "/app/signing-key.gpg"]
+    import_command = ["gpg", "--batch", "--import", str(key_file_path)]
     command = " && ".join(
         " ".join(shlex.quote(arg) for arg in cmd)
         for cmd in [import_command, sign_command]
@@ -190,7 +194,7 @@ def test_sign_package_error_in_docker(package_command, first_app, mock_gpg):
     app_context = make_docker_context(package_command, first_app)
     app_context.run.side_effect = subprocess.CalledProcessError(
         returncode=1,
-        cmd=["sh", "-c", "gpg --batch --import /app/signing-key.gpg && debsigs"],
+        cmd=["sh", "-c", "gpg --batch --import signing-key.gpg && debsigs"],
     )
 
     key_file_path = package_command.bundle_path(first_app) / "signing-key.gpg"
