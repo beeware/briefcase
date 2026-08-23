@@ -289,11 +289,14 @@ def test_properties_unknown_basevendor(create_command, first_app_config):
     }
     # A different vendor and version that will be ignored
     first_app_config.ubuntu = {
-        "surprise_1": "YYYY",
+        "surprise_1": "ZZZZ",
         "jammy": {
             "surprise_1": "ZZZZ",
         },
     }
+
+    # An explicit packaging format; the vendor base can't be resolved to one
+    first_app_config.packaging_format = "deb"
 
     finalized_config = create_command.finalize_app_config(first_app_config)
 
@@ -700,6 +703,31 @@ def test_packaging_format_resolution(
     finalized_config = create_command.finalize_app_config(first_app_config)
 
     assert finalized_config.packaging_format == output_format
+
+
+def test_packaging_format_resolution_absent(create_command, first_app_config, tmp_path):
+    """If no packaging format is specified, the format implied by the vendor base is
+    used."""
+    create_command.target_image = None
+    create_command.target_glibc_version = MagicMock(return_value="2.42")
+
+    create_command.tools.platform.freedesktop_os_release = MagicMock(
+        return_value=parse_freedesktop_os_release(
+            dedent(
+                """\
+                ID=somevendor
+                VERSION_CODENAME=surprising
+                ID_LIKE=debian
+                """
+            )
+        )
+    )
+
+    # No packaging format has been specified on the app configuration
+
+    finalized_config = create_command.finalize_app_config(first_app_config)
+
+    assert finalized_config.packaging_format == "deb"
 
 
 def test_packaging_format_resolution_unknown_vendor(

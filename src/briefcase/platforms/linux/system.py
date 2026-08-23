@@ -302,10 +302,11 @@ class LinuxSystemMixin(LinuxMixin):
 
         self.console.verbose(f"Targeting Python{app.python_version_tag}")
 
-        # If "system" packaging format was selected, determine what that means.
-        # This must be done before the app tools are verified, so the Docker
-        # image can be built with the tools needed to package and sign the app.
-        if getattr(app, "packaging_format", None) == "system":
+        # If no packaging format was selected (or the "system" alias was used),
+        # determine what that means. This must be done before the app tools are
+        # verified, so the Docker image can be built with the tools needed to
+        # package and sign the app.
+        if getattr(app, "packaging_format", None) in (None, "system"):
             app.packaging_format = _SYSTEM_PACKAGING_FORMATS.get(app.target_vendor_base)
             if app.packaging_format is None:
                 raise BriefcaseCommandError(
