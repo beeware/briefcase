@@ -101,39 +101,11 @@ def test_sign_package_error(package_command, first_app):
 
 
 @pytest.mark.parametrize(
-    ("format", "sign_command"),
+    ("format", "extension"),
     [
-        (
-            "deb",
-            [
-                "debsigs",
-                "--sign=origin",
-                f"--default-key={JANE}",
-                "/path/to/dist/first-app.deb",
-            ],
-        ),
-        (
-            "rpm",
-            [
-                "rpmsign",
-                "--define",
-                f"_gpg_name {JANE}",
-                "--addsign",
-                "/path/to/dist/first-app.rpm",
-            ],
-        ),
-        (
-            "pkg",
-            [
-                "gpg",
-                "--detach-sign",
-                "-u",
-                JANE,
-                "--output",
-                "/path/to/dist/first-app.pkg.tar.zst.sig",
-                "/path/to/dist/first-app.pkg.tar.zst",
-            ],
-        ),
+        ("deb", "deb"),
+        ("rpm", "rpm"),
+        ("pkg", "pkg.tar.zst"),
     ],
 )
 def test_sign_package_in_docker(
@@ -141,7 +113,7 @@ def test_sign_package_in_docker(
     first_app,
     mock_gpg,
     format,
-    sign_command,
+    extension,
 ):
     """A package is signed inside a Docker container after importing the signing key.
 
@@ -149,16 +121,36 @@ def test_sign_package_in_docker(
     to their container equivalents.
     """
     first_app.packaging_format = format
-    dist_path = Path("/path/to/dist/first-app.pkg.tar.zst")
-    if format == "deb":
-        dist_path = Path("/path/to/dist/first-app.deb")
-    elif format == "rpm":
-        dist_path = Path("/path/to/dist/first-app.rpm")
+    dist_path = Path("/path/to/dist") / f"first-app.{extension}"
     package_command.distribution_path = mock.MagicMock(return_value=dist_path)
-    if format == "pkg":
-        package_command.signature_path = mock.MagicMock(
-            return_value=Path("/path/to/dist/first-app.pkg.tar.zst.sig")
-        )
+    if format == "deb":
+        sign_command = [
+            "debsigs",
+            "--sign=origin",
+            f"--default-key={JANE}",
+            str(dist_path),
+        ]
+    elif format == "rpm":
+        sign_command = [
+            "rpmsign",
+            "--define",
+            f"_gpg_name {JANE}",
+            "--addsign",
+            str(dist_path),
+        ]
+    else:
+        signature_path = Path(f"{dist_path}.sig")
+        package_command.signature_path = mock.MagicMock(return_value=signature_path)
+        sign_command = [
+            "gpg",
+            "--detach-sign",
+            "-u",
+            JANE,
+            "--output",
+            str(signature_path),
+            str(dist_path),
+        ]
+
     make_docker_context(package_command, first_app)
 
     key_file_path = package_command.bundle_path(first_app) / "signing-key.gpg"
