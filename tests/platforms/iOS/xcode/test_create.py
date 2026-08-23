@@ -124,7 +124,8 @@ def test_install_requirements(
         install_path=bundle_path / "app_packages.iphoneos",
         install_hint=(
             "\n\n"
-            "This may be because the `iphoneos` wheels that are available are not compatible\n"
+            "This may be because the `iphoneos` wheels that are available "
+            "are not compatible\n"
             "with Python 3.X and a minimum iOS version of 12.0.\n"
         ),
     )
@@ -141,7 +142,8 @@ def test_install_requirements(
         install_hint=(
             "\n\n"
             "This may indicate that an `iphoneos` wheel could be found, but an\n"
-            "`iphonesimulator` wheel could not be found; or that the `iphonesimulator`\n"
+            "`iphonesimulator` wheel could not be found; or that the "
+            "`iphonesimulator`\n"
             "binary wheels that are available are not compatible with\n"
             "Python 3.X and a minimum iOS version of 12.0.\n"
         ),
@@ -375,7 +377,9 @@ def test_incompatible_min_os_version(
             {},
             {
                 "info": {
-                    "NSBluetoothAlwaysUsageDescription": "I need to connect to bluetooth device."
+                    "NSBluetoothAlwaysUsageDescription": (
+                        "I need to connect to bluetooth device."
+                    )
                 },
             },
         ),
@@ -412,7 +416,9 @@ def test_incompatible_min_os_version(
             {
                 "info": {
                     "NSLocationDefaultAccuracyReduced": True,
-                    "NSLocationWhenInUseUsageDescription": "I need to know roughly where you are",
+                    "NSLocationWhenInUseUsageDescription": (
+                        "I need to know roughly where you are"
+                    ),
                 }
             },
         ),
@@ -425,7 +431,9 @@ def test_incompatible_min_os_version(
             {
                 "info": {
                     "NSLocationDefaultAccuracyReduced": False,
-                    "NSLocationWhenInUseUsageDescription": "I need to know exactly where you are",
+                    "NSLocationWhenInUseUsageDescription": (
+                        "I need to know exactly where you are"
+                    ),
                 }
             },
         ),
@@ -437,8 +445,12 @@ def test_incompatible_min_os_version(
             {},
             {
                 "info": {
-                    "NSLocationWhenInUseUsageDescription": "I always need to know where you are",
-                    "NSLocationAlwaysAndWhenInUseUsageDescription": "I always need to know where you are",
+                    "NSLocationWhenInUseUsageDescription": (
+                        "I always need to know where you are"
+                    ),
+                    "NSLocationAlwaysAndWhenInUseUsageDescription": (
+                        "I always need to know where you are"
+                    ),
                     "UIBackgroundModes": ["processing", "location"],
                 }
             },
@@ -453,8 +465,12 @@ def test_incompatible_min_os_version(
             {
                 "info": {
                     "NSLocationDefaultAccuracyReduced": True,
-                    "NSLocationWhenInUseUsageDescription": "I need to know roughly where you are",
-                    "NSLocationAlwaysAndWhenInUseUsageDescription": "I always need to know where you are",
+                    "NSLocationWhenInUseUsageDescription": (
+                        "I need to know roughly where you are"
+                    ),
+                    "NSLocationAlwaysAndWhenInUseUsageDescription": (
+                        "I always need to know where you are"
+                    ),
                     "UIBackgroundModes": ["processing", "location"],
                 }
             },
@@ -469,8 +485,12 @@ def test_incompatible_min_os_version(
             {
                 "info": {
                     "NSLocationDefaultAccuracyReduced": False,
-                    "NSLocationWhenInUseUsageDescription": "I need to know exactly where you are",
-                    "NSLocationAlwaysAndWhenInUseUsageDescription": "I always need to know where you are",
+                    "NSLocationWhenInUseUsageDescription": (
+                        "I need to know exactly where you are"
+                    ),
+                    "NSLocationAlwaysAndWhenInUseUsageDescription": (
+                        "I always need to know where you are"
+                    ),
                     "UIBackgroundModes": ["processing", "location"],
                 }
             },
@@ -485,7 +505,9 @@ def test_incompatible_min_os_version(
             {
                 "info": {
                     "NSLocationDefaultAccuracyReduced": False,
-                    "NSLocationWhenInUseUsageDescription": "I need to know exactly where you are",
+                    "NSLocationWhenInUseUsageDescription": (
+                        "I need to know exactly where you are"
+                    ),
                 }
             },
         ),
@@ -500,8 +522,12 @@ def test_incompatible_min_os_version(
             {
                 "info": {
                     "NSLocationDefaultAccuracyReduced": False,
-                    "NSLocationWhenInUseUsageDescription": "I need to know exactly where you are",
-                    "NSLocationAlwaysAndWhenInUseUsageDescription": "I always need to know where you are",
+                    "NSLocationWhenInUseUsageDescription": (
+                        "I need to know exactly where you are"
+                    ),
+                    "NSLocationAlwaysAndWhenInUseUsageDescription": (
+                        "I always need to know where you are"
+                    ),
                     "UIBackgroundModes": ["processing", "location"],
                 }
             },

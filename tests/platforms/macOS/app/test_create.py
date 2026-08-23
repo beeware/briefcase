@@ -82,7 +82,9 @@ def create_command(dummy_console, mock_other_venv, tmp_path, first_app_templated
             {},
             {
                 "info": {
-                    "NSBluetoothAlwaysUsageDescription": "I need to connect to bluetooth device."
+                    "NSBluetoothAlwaysUsageDescription": (
+                        "I need to connect to bluetooth device."
+                    )
                 },
                 "entitlements": {
                     "com.apple.security.cs.allow-unsigned-executable-memory": True,
@@ -136,7 +138,9 @@ def create_command(dummy_console, mock_other_venv, tmp_path, first_app_templated
             {},
             {
                 "info": {
-                    "NSLocationUsageDescription": "I need to know roughly where you are",
+                    "NSLocationUsageDescription": (
+                        "I need to know roughly where you are"
+                    ),
                 },
                 "entitlements": {
                     "com.apple.security.cs.allow-unsigned-executable-memory": True,
@@ -154,7 +158,9 @@ def create_command(dummy_console, mock_other_venv, tmp_path, first_app_templated
             {},
             {
                 "info": {
-                    "NSLocationUsageDescription": "I need to know exactly where you are",
+                    "NSLocationUsageDescription": (
+                        "I need to know exactly where you are"
+                    ),
                 },
                 "entitlements": {
                     "com.apple.security.cs.allow-unsigned-executable-memory": True,
@@ -172,7 +178,9 @@ def create_command(dummy_console, mock_other_venv, tmp_path, first_app_templated
             {},
             {
                 "info": {
-                    "NSLocationUsageDescription": "I always need to know where you are",
+                    "NSLocationUsageDescription": (
+                        "I always need to know where you are"
+                    ),
                 },
                 "entitlements": {
                     "com.apple.security.cs.allow-unsigned-executable-memory": True,
@@ -191,7 +199,9 @@ def create_command(dummy_console, mock_other_venv, tmp_path, first_app_templated
             {},
             {
                 "info": {
-                    "NSLocationUsageDescription": "I always need to know where you are",
+                    "NSLocationUsageDescription": (
+                        "I always need to know where you are"
+                    ),
                 },
                 "entitlements": {
                     "com.apple.security.cs.allow-unsigned-executable-memory": True,
@@ -210,7 +220,9 @@ def create_command(dummy_console, mock_other_venv, tmp_path, first_app_templated
             {},
             {
                 "info": {
-                    "NSLocationUsageDescription": "I always need to know where you are",
+                    "NSLocationUsageDescription": (
+                        "I always need to know where you are"
+                    ),
                 },
                 "entitlements": {
                     "com.apple.security.cs.allow-unsigned-executable-memory": True,
@@ -229,7 +241,9 @@ def create_command(dummy_console, mock_other_venv, tmp_path, first_app_templated
             {},
             {
                 "info": {
-                    "NSLocationUsageDescription": "I need to know exactly where you are",
+                    "NSLocationUsageDescription": (
+                        "I need to know exactly where you are"
+                    ),
                 },
                 "entitlements": {
                     "com.apple.security.cs.allow-unsigned-executable-memory": True,
@@ -249,7 +263,9 @@ def create_command(dummy_console, mock_other_venv, tmp_path, first_app_templated
             {},
             {
                 "info": {
-                    "NSLocationUsageDescription": "I always need to know where you are",
+                    "NSLocationUsageDescription": (
+                        "I always need to know where you are"
+                    ),
                 },
                 "entitlements": {
                     "com.apple.security.cs.allow-unsigned-executable-memory": True,
@@ -389,7 +405,8 @@ def test_generate_app_template_formal_name_mismatch(create_command, first_app):
     with pytest.raises(
         BriefcaseCommandError,
         match=(
-            r"The app bundle referenced by external_package_path \(Unexpected Name.app\)\n"
+            r"The app bundle referenced by external_package_path "
+            r"\(Unexpected Name.app\)\n"
             r"does not match the formal name of the app \('First App'\)."
         ),
     ):
@@ -1354,7 +1371,8 @@ def test_install_support_package(
     assert (bundle_path / "support/Python.xcframework/Info.plist").exists()
     assert (
         bundle_path
-        / "support/Python.xcframework/macos-arm64_x86_64/Python.framework/Versions/Current/Python"
+        / "support/Python.xcframework/macos-arm64_x86_64/"
+        / "Python.framework/Versions/Current/Python"
     ).is_file()
     assert (
         bundle_path

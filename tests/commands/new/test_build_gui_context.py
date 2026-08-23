@@ -88,7 +88,6 @@ system_runtime_requires = [
     # Dependencies that GTK looks for at runtime
     "libcanberra-gtk3-module",
     # Needed to provide WebKit2 at runtime
-    # Note: Debian 11 requires gir1.2-webkit2-4.0 instead
     # "gir1.2-webkit2-4.1",
 ]
 """,
@@ -108,7 +107,7 @@ system_runtime_requires = [
     # Dependencies that GTK looks for at runtime
     "libcanberra-gtk3",
     # Needed to provide WebKit2 at runtime
-    # "webkit2gtk3",
+    # "webkit2gtk4.1",
 ]
 """,
         "pyproject_table_linux_system_suse": """\

@@ -293,7 +293,10 @@ def test_build_app_invalid_extra_pyscript_toml_content(
     # Building the web app raises an error
     with pytest.raises(
         BriefcaseConfigError,
-        match=r"Briefcase configuration error: Extra pyscript.toml content isn't valid TOML: Expected",
+        match=(
+            r"Briefcase configuration error: Extra pyscript.toml "
+            r"content isn't valid TOML: Expected"
+        ),
     ):
         build_command.build_app(first_app_generated)
 

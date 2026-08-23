@@ -1,7 +1,7 @@
 [build-system]
 requires = [
     # keep versions in sync with automation/pyproject.toml
-    "setuptools==83.0.0",
+    "setuptools==84.0.0",
     "setuptools_scm==10.2.1",
 ]
 build-backend = "setuptools.build_meta"
@@ -117,7 +117,7 @@ tox-uv = [
 ]
 
 ty = [
-    "ty == 0.0.65",
+    "ty == 0.0.69",
 ]
 
 dev = [
@@ -127,7 +127,7 @@ dev = [
 ]
 
 test = [
-    "coverage[toml] == 7.15.3",
+    "coverage[toml] == 7.15.4",
     "coverage-conditional-plugin == 0.9.0",
     "httpx-retries == 0.6.0",
     "pytest == 9.1.1",
@@ -310,12 +310,11 @@ known-third-party = ["build"]
 # debugger module *needs* to have debugpy trace imports.
 "debugger/src/briefcase_debugger/debugpy.py" = ["T100"]
 "debugger/tests/test_debugpy.py" = ["T100"]
+
 # A standalone maintenance script, not part of the briefcase package; it
 # *needs* to print its output for a maintainer to read.
 "scripts/update_template_hashes.py" = ["T201"]
-# E501: line too long, to be fixed in future changes
-"tests/integrations/*" = ["E501"]
-"tests/platforms/*" = ["E501"]
+
 # PERF402: list copies, to be fixed in future changes
 "tests/commands/run/test_LogFilter.py" = ["PERF402"]
 "tests/platforms/macOS/test_XcodeBuildFilter.py" = ["PERF402"]

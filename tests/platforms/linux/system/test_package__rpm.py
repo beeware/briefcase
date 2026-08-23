@@ -180,7 +180,8 @@ def test_rpm_package(
     """A rpm app can be packaged."""
     bundle_path = tmp_path / "base_path/build/first-app/somevendor/surprising"
 
-    # Remove CHANGELOG made in conftest.py and replace with another possible changelog format
+    # Remove CHANGELOG made in conftest.py and replace
+    # with another possible changelog format
     base_path = tmp_path / "base_path"
     old_changelog = base_path / "CHANGELOG"
     new_changelog = base_path / changelog_filename
@@ -474,7 +475,10 @@ def test_rpm_package_no_long_description(
     # Packaging the app will fail
     with pytest.raises(
         BriefcaseCommandError,
-        match=r"App configuration does not define `long_description`. Red Hat projects require a long description.",
+        match=(
+            r"App configuration does not define `long_description`. "
+            r"Red Hat projects require a long description."
+        ),
     ):
         package_command.package_app(first_app_rpm)
 
