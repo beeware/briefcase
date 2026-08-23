@@ -43,14 +43,6 @@ from briefcase.platforms.linux import (
     parse_freedesktop_os_release,
 )
 
-# The tools used to sign a package, keyed by packaging format. Each entry is a
-# triple of (tool name, executable name, package name).
-_SIGNING_TOOLS = {
-    "deb": ("debsigs", "debsigs", "debsigs"),
-    "rpm": ("rpmsign", "rpmsign", "rpm-sign"),
-    "pkg": ("gpg", "gpg", "gnupg"),
-}
-
 # The packaging format implied by each system vendor base.
 _SYSTEM_PACKAGING_FORMATS = {
     DEBIAN: "deb",
@@ -290,6 +282,18 @@ class LinuxSystemMixin(LinuxMixin):
 
         self.console.verbose(f"Targeting Python{app.python_version_tag}")
 
+        # If "system" packaging format was selected, determine what that means.
+        # This must be done before the app tools are verified, so the Docker
+        # image can be built with the tools needed to package and sign the app.
+        if getattr(app, "packaging_format", None) == "system":
+            app.packaging_format = _SYSTEM_PACKAGING_FORMATS.get(app.target_vendor_base)
+            if app.packaging_format is None:
+                raise BriefcaseCommandError(
+                    "Briefcase doesn't know the system packaging format for "
+                    f"{app.target_vendor}. You may be able to build a package "
+                    "by manually specifying a format with -p/--packaging-format"
+                )
+
         return LinuxSystemAppConfig(super().finalize_app_config(app, **kwargs))
 
     def _deb_devirtualize(self, package: str) -> str:
@@ -413,10 +417,18 @@ class LinuxSystemMixin(LinuxMixin):
             used to sign the package.
         :raises KeyError: If the packaging format cannot be determined.
         """
+        # The packaging format may not be set on a draft app config.
         packaging_format = getattr(app, "packaging_format", None)
-        if packaging_format == "system":
-            packaging_format = _SYSTEM_PACKAGING_FORMATS.get(app.target_vendor_base)
-        return _SIGNING_TOOLS[packaging_format]
+        tool_name, executable_name, package_name = {
+            "deb": ("debsigs", "debsigs", "debsigs"),
+            "rpm": ("rpmsign", "rpmsign", "rpm-sign"),
+            "pkg": ("gpg", "gpg", "gnupg"),
+        }[packaging_format]
+        if packaging_format == "rpm" and app.target_vendor_base == SUSE:
+            # On SUSE, rpmsign is provided by rpm-build; there is no separate
+            # `rpm-sign` package.
+            package_name = "rpm-build"
+        return tool_name, executable_name, package_name
 
     def verify_system_packages(self, app: LinuxSystemAppConfig):
         """Verify that the required system packages are installed.
@@ -757,30 +769,6 @@ Install Docker Engine and try again or run Briefcase on an Arch host system.
                 f"({system_version!r})."
             )
 
-    def _docker_signing_tool(self, app: LinuxSystemAppConfig) -> list[str]:
-        """Utility method returning the packages needed to install the signing tool in a
-        Docker image.
-
-        The Docker image is built before the signing identity is selected, so the
-        signing tool must be installed in the image for the signing step to be able to
-        run inside the container.
-
-        :param app: The app being packaged
-        :returns: The list of packages that must be installed in the Docker image to
-            provide the signing tool.
-        """
-        try:
-            package_name = self._signing_tool(app)[2]
-        except KeyError:
-            # An unknown packaging format has no signing tool that can be identified.
-            return []
-
-        if package_name == "rpm-sign" and app.target_vendor_base == SUSE:
-            # On SUSE, rpmsign is provided by rpm-build, which is already
-            # installed by the Docker image; there is no `rpm-sign` package.
-            return []
-        return [package_name]
-
     def verify_app_tools(self, app: FinalizedAppConfig):
         """Verify App environment is prepared and available.
 
@@ -803,9 +791,14 @@ Install Docker Engine and try again or run Briefcase on an Arch host system.
             if system_requires is None:
                 system_requires = []
                 app.system_requires = system_requires
-            for package in self._docker_signing_tool(app):
-                if package not in system_requires:
-                    system_requires.append(package)
+            try:
+                _, _, package_name = self._signing_tool(app)
+            except KeyError:
+                # An unknown packaging format has no signing tool that can be
+                # identified.
+                package_name = None
+            if package_name is not None and package_name not in system_requires:
+                system_requires.append(package_name)
 
             DockerAppContext.verify(
                 tools=self.tools,
@@ -1390,18 +1383,6 @@ class LinuxSystemPackageCommand(
 
     def verify_app_tools(self, app: FinalizedAppConfig):
         app = cast(LinuxSystemAppConfig, app)
-        # If "system" packaging format was selected, determine what that means.
-        # This must be done before the app context is verified, so the Docker
-        # image can be built with the tools needed to package and sign the app.
-        if app.packaging_format == "system":
-            app.packaging_format = _SYSTEM_PACKAGING_FORMATS.get(app.target_vendor_base)
-        if app.packaging_format is None:
-            raise BriefcaseCommandError(
-                "Briefcase doesn't know the system packaging format for "
-                f"{app.target_vendor}. You may be able to build a package "
-                "by manually specifying a format with -p/--packaging-format"
-            )
-
         super().verify_app_tools(app)
 
         if not self.use_docker:

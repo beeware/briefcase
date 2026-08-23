@@ -643,3 +643,90 @@ def test_finalized_attrs(create_command, first_app_config):
     assert finalized_config.debugger is debugger
     assert finalized_config.debugger_host == "some-host"
     assert finalized_config.debugger_port == 8765
+
+
+@pytest.mark.parametrize(
+    ("os_release", "input_format", "output_format"),
+    [
+        # System packaging maps to the format implied by the vendor base
+        (
+            "ID=somevendor\nVERSION_CODENAME=surprising\nID_LIKE=debian\n",
+            "system",
+            "deb",
+        ),
+        (
+            "ID=fedora\nVERSION_CODENAME=\nID_LIKE=rhel\n",
+            "system",
+            "rpm",
+        ),
+        (
+            "ID=somevendor\nVERSION_CODENAME=surprising\nID_LIKE=suse\n",
+            "system",
+            "rpm",
+        ),
+        (
+            "ID=cachyos\nVERSION_ID=20230625.0.160368\n",
+            "system",
+            "pkg",
+        ),
+        # An explicit packaging format is preserved, even if it doesn't match
+        # the vendor base
+        (
+            "ID=somevendor\nVERSION_CODENAME=surprising\nID_LIKE=debian\n",
+            "rpm",
+            "rpm",
+        ),
+    ],
+)
+def test_packaging_format_resolution(
+    create_command,
+    first_app_config,
+    tmp_path,
+    os_release,
+    input_format,
+    output_format,
+):
+    """If "system" packaging format was selected, it is resolved to the format implied
+    by the vendor base; explicit formats are preserved."""
+    create_command.target_image = None
+    create_command.target_glibc_version = MagicMock(return_value="2.42")
+
+    create_command.tools.platform.freedesktop_os_release = MagicMock(
+        return_value=parse_freedesktop_os_release(os_release)
+    )
+
+    first_app_config.packaging_format = input_format
+
+    finalized_config = create_command.finalize_app_config(first_app_config)
+
+    assert finalized_config.packaging_format == output_format
+
+
+def test_packaging_format_resolution_unknown_vendor(
+    create_command,
+    first_app_config,
+    tmp_path,
+):
+    """If the vendor base can't be determined, an unknown "system" packaging format
+    raises an error."""
+    create_command.target_image = None
+    create_command.target_glibc_version = MagicMock(return_value="2.42")
+
+    create_command.tools.platform.freedesktop_os_release = MagicMock(
+        return_value=parse_freedesktop_os_release(
+            dedent(
+                """\
+                ID=somevendor
+                VERSION_CODENAME=surprising
+                """
+            )
+        )
+    )
+
+    first_app_config.packaging_format = "system"
+
+    with pytest.raises(
+        BriefcaseCommandError,
+        match=r"Briefcase doesn't know the system packaging format for somevendor.",
+    ):
+        create_command.finalize_app_config(first_app_config)

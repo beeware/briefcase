@@ -122,16 +122,15 @@ def test_linux_docker(create_command, first_app_config, tmp_path, monkeypatch):
     ("vendor_base", "packaging_format", "expected_requires"),
     [
         # The signing tool is added to the image requirements for a known format
-        ("debian", "system", ["debsigs"]),
-        ("rhel", "system", ["rpm-sign"]),
-        ("arch", "system", ["gnupg"]),
-        # On SUSE, rpmsign is provided by rpm-build, which is already installed
-        # by the Docker image; no additional package is needed.
-        ("suse", "system", []),
-        # An unknown vendor resolves to no packaging format; no signing tool
-        ("basevendor", "system", []),
-        # A concrete packaging format is used as-is
         ("debian", "deb", ["debsigs"]),
+        ("rhel", "rpm", ["rpm-sign"]),
+        ("arch", "pkg", ["gnupg"]),
+        # On SUSE, rpmsign is provided by rpm-build; there is no `rpm-sign`
+        # package
+        ("suse", "rpm", ["rpm-build"]),
+        # An unresolved "system" packaging format has no signing tool; format
+        # resolution happens during app config finalization.
+        ("basevendor", "system", []),
     ],
 )
 def test_linux_docker_adds_signing_tool(

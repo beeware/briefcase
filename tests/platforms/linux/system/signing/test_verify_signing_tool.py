@@ -55,6 +55,28 @@ def test_verify_signing_tool_missing(
         package_command._verify_signing_tool(first_app)
 
 
+def test_verify_signing_tool_missing_suse(package_command, first_app):
+    """On SUSE, the missing tool hint for rpmsign names the rpm-build package."""
+    first_app.packaging_format = "rpm"
+    first_app.target_vendor_base = "suse"
+    package_command.tools[
+        first_app
+    ].app_context.check_output.side_effect = subprocess.CalledProcessError(
+        returncode=1,
+        cmd=["sh", "-c", "command -v rpmsign"],
+    )
+
+    with pytest.raises(
+        BriefcaseCommandError,
+        match=(
+            r"Can't find the rpmsign tools. "
+            r"Try running `sudo zypper install rpm-build`\. "
+            r"Alternatively, use `--adhoc-sign` to skip signing the package."
+        ),
+    ):
+        package_command._verify_signing_tool(first_app)
+
+
 def test_verify_signing_tool_missing_unknown_vendor(package_command, first_app):
     """If the signing tool isn't installed on an unknown vendor, a generic error is
     raised."""

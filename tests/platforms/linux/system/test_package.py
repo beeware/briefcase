@@ -119,79 +119,26 @@ def test_build_env_abi_failure(package_command, first_app, format):
 
 
 @pytest.mark.parametrize(
-    ("base_vendor", "input_format", "output_format"),
+    ("base_vendor", "packaging_format", "expected_requires"),
     [
-        # System packaging maps to known formats
-        ("debian", "system", "deb"),
-        ("rhel", "system", "rpm"),
-        ("arch", "system", "pkg"),
-        # Explicit output format is preserved
-        ("debian", "deb", "deb"),
-        ("rhel", "rpm", "rpm"),
-        ("arch", "pkg", "pkg"),
-        # This is technically possible, but probably ill-advised
-        ("debian", "rpm", "rpm"),
-        # Unknown base vendor, but explicit packaging format
-        (None, "deb", "deb"),
-        (None, "rpm", "rpm"),
-        (None, "pkg", "pkg"),
-    ],
-)
-def test_adjust_packaging_format(
-    package_command,
-    first_app,
-    base_vendor,
-    input_format,
-    output_format,
-):
-    """The packaging format can be adjusted based on host system knowledge."""
-    first_app.target_vendor_base = base_vendor
-    first_app.packaging_format = input_format
-
-    package_command.verify_app_tools(first_app)
-
-    assert first_app.packaging_format == output_format
-
-
-def test_unknown_packaging_format(package_command, first_app):
-    """An unknown packaging format raises an error."""
-    first_app.target_vendor_base = None
-    first_app.packaging_format = "system"
-
-    with pytest.raises(
-        BriefcaseCommandError,
-        match=r"Briefcase doesn't know the system packaging format for somevendor.",
-    ):
-        package_command.verify_app_tools(first_app)
-
-
-@pytest.mark.parametrize(
-    ("base_vendor", "input_format", "output_format", "expected_requires"),
-    [
-        # System packaging maps to known formats, and adds the signing tool
-        ("debian", "system", "deb", ["debsigs"]),
-        ("rhel", "system", "rpm", ["rpm-sign"]),
-        ("arch", "system", "pkg", ["gnupg"]),
-        # Explicit output format is preserved, and adds the signing tool
-        ("debian", "deb", "deb", ["debsigs"]),
-        ("rhel", "rpm", "rpm", ["rpm-sign"]),
-        ("arch", "pkg", "pkg", ["gnupg"]),
-        # On SUSE, rpmsign is provided by rpm-build, which is already installed
-        # by the Docker image; no additional package is needed.
-        ("suse", "system", "rpm", []),
+        # Known formats add the signing tool for that format
+        ("debian", "deb", ["debsigs"]),
+        ("rhel", "rpm", ["rpm-sign"]),
+        ("arch", "pkg", ["gnupg"]),
+        # On SUSE, rpmsign is provided by rpm-build; there is no `rpm-sign` package
+        ("suse", "rpm", ["rpm-build"]),
     ],
 )
 def test_docker_packaging_format_adjusts_signing_tools(
     package_command,
     first_app,
     base_vendor,
-    input_format,
-    output_format,
+    packaging_format,
     expected_requires,
 ):
     """When using Docker, the signing tool is added to the image requirements."""
     first_app.target_vendor_base = base_vendor
-    first_app.packaging_format = input_format
+    first_app.packaging_format = packaging_format
     package_command.target_image = "somevendor:surprising"
     package_command.extra_docker_build_args = []
     package_command.verify_docker_python = mock.MagicMock()
@@ -199,7 +146,6 @@ def test_docker_packaging_format_adjusts_signing_tools(
 
     package_command.verify_app_tools(first_app)
 
-    assert first_app.packaging_format == output_format
     assert getattr(first_app, "system_requires", []) == expected_requires
 
 
