@@ -9,6 +9,7 @@ from collections.abc import Collection
 from pathlib import Path
 from typing import Any, cast
 
+from briefcase.channels.base import BasePublicationChannel
 from briefcase.commands import (
     BuildCommand,
     CreateCommand,
@@ -50,6 +51,25 @@ _SYSTEM_PACKAGING_FORMATS = {
     ARCH: "pkg",
     SUSE: "rpm",
 }
+
+
+def _resolve_system_packaging_format(
+    app: AppConfig | FinalizedAppConfig,
+    packaging_format: str,
+) -> str:
+    """Resolve the "system" packaging format alias to a concrete format.
+
+    When the user hasn't explicitly selected a packaging format, the "system" alias is
+    used. The concrete format implied by the app's target is determined during app
+    finalization; this returns that value.
+
+    :param app: The app configuration
+    :param packaging_format: The packaging format requested on the command line
+    :returns: The concrete packaging format to use
+    """
+    if packaging_format == "system":
+        return getattr(app, "packaging_format", "system")
+    return packaging_format
 
 
 class LinuxSystemAppConfig(FinalizedAppConfig):
@@ -1361,6 +1381,29 @@ class LinuxSystemPackageCommand(
     def packaging_formats(self):
         return ["deb", "rpm", "pkg", "system"]
 
+    def _package_app(
+        self,
+        app: FinalizedAppConfig,
+        update: bool,
+        packaging_format: str,
+        **options,
+    ) -> dict | None:
+        """Internal method to invoke packaging on a single app.
+
+        If the user hasn't specified a concrete packaging format, the format determined
+        during app finalization is used, rather than the raw "system" alias.
+
+        :param app: The application to package
+        :param update: Should the application be updated (and rebuilt) first?
+        :param packaging_format: The format of the packaging artefact to create.
+        """
+        return super()._package_app(
+            app,
+            update,
+            _resolve_system_packaging_format(app, packaging_format),
+            **options,
+        )
+
     def _verify_packaging_tools(self, app: LinuxSystemAppConfig):
         """Verify that the local environment contains the packaging tools."""
         tool_name, executable_name, package_name = {
@@ -1757,6 +1800,32 @@ no extension).
 
 class LinuxSystemPublishCommand(LinuxSystemDockerMixin, PublishCommand):
     description = "Publish a Linux system project."
+
+    def _publish_app(
+        self,
+        app: FinalizedAppConfig,
+        update: bool,
+        packaging_format: str,
+        channel: BasePublicationChannel,
+        **options,
+    ) -> dict | None:
+        """Internal method to publish a single app.
+
+        If the user hasn't specified a concrete packaging format, the format determined
+        during app finalization is used, rather than the raw "system" alias.
+
+        :param app: The application to publish
+        :param update: Should the application be updated (and rebuilt) first?
+        :param packaging_format: The format of the packaging artefact to create.
+        :param channel: The resolved BasePublicationChannel instance
+        """
+        return super()._publish_app(
+            app,
+            update,
+            _resolve_system_packaging_format(app, packaging_format),
+            channel,
+            **options,
+        )
 
 
 # Declare the briefcase command bindings
