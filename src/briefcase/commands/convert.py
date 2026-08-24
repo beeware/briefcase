@@ -501,22 +501,22 @@ class ConvertCommand(NewCommand):
         # otherwise check the license file
         if "text" in self.pep621_data.get("license", {}):
             default = get_license_from_text(
-                self.pep621_data["license"]["text"], default="Other"
+                self.pep621_data["license"]["text"], default="LicenseRef-Other"
             )
             default_source = "the PEP621 formatted pyproject.toml"
         elif "file" in self.pep621_data.get("license", {}):
             license_text = (
                 self.base_path / self.pep621_data["license"]["file"]
             ).read_text(encoding="utf-8")
-            default = get_license_from_text(license_text, default="Other")
+            default = get_license_from_text(license_text, default="LicenseRef-Other")
             default_source = "the license file"
         elif (self.base_path / "LICENSE").exists():
             license_text = (self.base_path / "LICENSE").read_text(encoding="utf-8")
-            default = get_license_from_text(license_text, default="Other")
+            default = get_license_from_text(license_text, default="LicenseRef-Other")
             default_source = "the license file"
         elif (self.base_path / "LICENCE").exists():
             license_text = (self.base_path / "LICENCE").read_text(encoding="utf-8")
-            default = get_license_from_text(license_text, default="Other")
+            default = get_license_from_text(license_text, default="LicenseRef-Other")
             default_source = "the license file"
         else:
             return None, intro

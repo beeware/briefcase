@@ -14,7 +14,7 @@ def test_overrides_are_used(convert_command):
         "bundle": "com.bundle",
         "author": "author",
         "author_email": "author_email",
-        "license": "Other",
+        "license": "LicenseRef-Other",
         "app_type": "GUI",
         "leftover": "leftover",
     }
