@@ -28,7 +28,7 @@ LICENSE_OPTIONS = {
     "GPL-2.0+": "GNU General Public License v2.0 or later (GPL-2.0+)",
     "GPL-3.0": "GNU General Public License v3.0 only (GPL-3.0)",
     "GPL-3.0+": "GNU General Public License v3.0 or later (GPL-3.0+)",
-    "Proprietary": "Proprietary",
+    "LicenseRef-Proprietary": "Proprietary",
     "Other": "Other",
 }
 DEFAULT_LICENSE = "BSD-3-Clause"

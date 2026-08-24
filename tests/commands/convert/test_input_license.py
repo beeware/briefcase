@@ -181,4 +181,7 @@ def test_no_license_hint(convert_command, monkeypatch):
 
 
 def test_override_is_used(convert_command):
-    assert convert_command.input_license("Proprietary") == "Proprietary"
+    assert (
+        convert_command.input_license("LicenseRef-Proprietary")
+        == "LicenseRef-Proprietary"
+    )
