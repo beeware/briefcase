@@ -730,31 +730,63 @@ def test_packaging_format_resolution_absent(create_command, first_app_config, tm
     assert finalized_config.packaging_format == "deb"
 
 
+@pytest.mark.parametrize(
+    ("target_image", "expected_format"),
+    [
+        # Docker builds need a concrete format to determine the tools that
+        # must be installed in the target image
+        (
+            "somevendor:surprising",
+            None,
+        ),
+        # Native builds don't need a packaging format until the app is packaged
+        (
+            None,
+            "system",
+        ),
+    ],
+)
 def test_packaging_format_resolution_unknown_vendor(
     create_command,
     first_app_config,
     tmp_path,
+    target_image,
+    expected_format,
 ):
-    """If the vendor base can't be determined, an unknown "system" packaging format
-    raises an error."""
-    create_command.target_image = None
+    """If the vendor base can't be determined, Docker builds raise an error; native
+    builds retain the unresolved "system" packaging format."""
+    create_command.target_image = target_image
+    if target_image:
+        create_command.tools.docker = MagicMock()
+        create_command.tools.docker.check_output.return_value = dedent(
+            """\
+            ID=somevendor
+            VERSION_CODENAME=surprising
+            """
+        )
     create_command.target_glibc_version = MagicMock(return_value="2.42")
 
-    create_command.tools.platform.freedesktop_os_release = MagicMock(
-        return_value=parse_freedesktop_os_release(
-            dedent(
-                """\
-                ID=somevendor
-                VERSION_CODENAME=surprising
-                """
+    if not target_image:
+        create_command.tools.platform.freedesktop_os_release = MagicMock(
+            return_value=parse_freedesktop_os_release(
+                dedent(
+                    """\
+                    ID=somevendor
+                    VERSION_CODENAME=surprising
+                    """
+                )
             )
         )
-    )
 
     first_app_config.packaging_format = "system"
 
-    with pytest.raises(
-        BriefcaseCommandError,
-        match=r"Briefcase doesn't know the system packaging format for somevendor.",
-    ):
-        create_command.finalize_app_config(first_app_config)
+    if expected_format is None:
+        with pytest.raises(
+            BriefcaseCommandError,
+            match=r"Briefcase doesn't know the system packaging format for somevendor.",
+        ):
+            create_command.finalize_app_config(first_app_config)
+    else:
+        finalized_config = create_command.finalize_app_config(first_app_config)
+
+        assert finalized_config.packaging_format == "system"

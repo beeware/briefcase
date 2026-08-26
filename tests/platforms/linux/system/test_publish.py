@@ -39,12 +39,19 @@ def publish_command(mock_tools, dummy_console, first_app, tmp_path):
     return command
 
 
+def test_default_format(publish_command):
+    """No default packaging format is defined; the app configuration determines the
+    format."""
+    assert publish_command.default_packaging_format is None
+
+
 @pytest.mark.parametrize(
     ("packaging_format", "expected"),
     [
-        # The "system" alias uses the finalized packaging format
-        ("system", "rpm"),
-        # An explicit format is passed through and annotated onto the app
+        # If no packaging format is specified, the finalized packaging format on
+        # the app is retained
+        (None, "rpm"),
+        # An explicit format is annotated onto the app
         ("deb", "deb"),
     ],
 )
@@ -55,7 +62,8 @@ def test_publish_app_packaging_format(
     expected,
     tmp_path,
 ):
-    """The packaging format requested on the command line is resolved before use."""
+    """The packaging format requested on the command line is used; if none is given, the
+    app's finalized packaging format is preserved."""
     # The app has been finalized with a concrete packaging format.
     first_app.packaging_format = "rpm"
 
@@ -75,11 +83,15 @@ def test_publish_app_packaging_format(
         channel=channel,
     )
 
-    # The concrete packaging format was annotated onto the app, and used when
+    # The expected packaging format was annotated onto the app, and used when
     # triggering the package command.
     assert first_app.packaging_format == expected
     assert publish_command.actions == [
-        ("package", "first-app", {"update": False, "packaging_format": expected})
+        (
+            "package",
+            "first-app",
+            {"update": False, "packaging_format": packaging_format},
+        )
     ]
 
     # The app was published to the requested channel.

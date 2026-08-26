@@ -77,8 +77,10 @@ class PublishCommand(BaseCommand):
         """
         state = None
 
-        # Annotate the packaging format onto the app
-        app.packaging_format = packaging_format
+        # Annotate the packaging format onto the app. If no packaging format was
+        # specified, the format determined during app finalization is used.
+        if packaging_format:
+            app.packaging_format = packaging_format
 
         if update or not self.distribution_path(app).exists():
             state = self.package_command(

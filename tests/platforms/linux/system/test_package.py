@@ -3,13 +3,9 @@ from unittest import mock
 
 import pytest
 
-from briefcase.config import AppConfig
 from briefcase.exceptions import BriefcaseCommandError
 from briefcase.integrations.subprocess import Subprocess
-from briefcase.platforms.linux.system import (
-    LinuxSystemPackageCommand,
-    _resolve_system_packaging_format,
-)
+from briefcase.platforms.linux.system import LinuxSystemPackageCommand
 
 
 @pytest.fixture
@@ -40,83 +36,28 @@ def test_formats(package_command):
     assert package_command.packaging_formats == ["deb", "rpm", "pkg", "system"]
 
 
-@pytest.mark.parametrize(
-    ("packaging_format", "app_packaging_format", "expected"),
-    [
-        # An explicit format passes through untouched
-        ("deb", "rpm", "deb"),
-        ("rpm", None, "rpm"),
-        ("pkg", "deb", "pkg"),
-        # The "system" alias resolves to the app's finalized packaging format
-        ("system", "deb", "deb"),
-        ("system", "rpm", "rpm"),
-        ("system", "pkg", "pkg"),
-        # If the app has no finalized packaging format, the alias is retained
-        ("system", None, "system"),
-    ],
-)
-def test_resolve_system_packaging_format(
-    packaging_format,
-    app_packaging_format,
-    expected,
-):
-    """The "system" packaging format alias is resolved to a concrete format."""
-    kwargs = {}
-    if app_packaging_format is not None:
-        kwargs["packaging_format"] = app_packaging_format
-    app = AppConfig(
-        app_name="first",
-        formal_name="First App",
-        bundle="com.example",
-        version="0.0.1",
-        description="The first simple app",
-        license={"file": "LICENSE"},
-        sources=["src/first"],
-        **kwargs,
-    )
-
-    assert _resolve_system_packaging_format(app, packaging_format) == expected
+def test_default_format(package_command):
+    """No default packaging format is defined; the app configuration determines the
+    format."""
+    assert package_command.default_packaging_format is None
 
 
-@pytest.mark.parametrize(
-    ("packaging_format", "expected"),
-    [
-        # The "system" alias uses the finalized packaging format
-        ("system", "rpm"),
-        # An explicit format is passed through and annotated onto the app
-        ("deb", "deb"),
-    ],
-)
-def test_package_app_packaging_format(
-    package_command,
-    first_app,
-    packaging_format,
-    expected,
-    tmp_path,
-):
-    """The packaging format requested on the command line is resolved before use."""
-    # The app has been finalized with a concrete packaging format.
-    first_app.packaging_format = "rpm"
+def test_verify_packaging_tools_unknown_format(package_command, first_app):
+    """An unresolved packaging format raises an error naming the vendor."""
+    # Restore the real implementation of _verify_packaging_tools
+    del package_command._verify_packaging_tools
 
-    # Take the resume path to avoid needing build artifacts, and mock out the
-    # actual packaging step.
-    package_command.can_resume = mock.MagicMock(return_value=True)
-    package_command.verify_resume_app = mock.MagicMock()
-    package_command.package_app = mock.MagicMock()
-    package_command.distribution_path = mock.MagicMock(
-        return_value=tmp_path / "base_path" / "dist" / f"first-app.{expected}"
-    )
+    first_app.packaging_format = "system"
 
-    package_command._package_app(
-        first_app,
-        update=False,
-        packaging_format=packaging_format,
-    )
-
-    # The concrete packaging format was annotated onto the app, and the
-    # packaging step was invoked.
-    assert first_app.packaging_format == expected
-    package_command.package_app.assert_called_once_with(first_app)
+    with pytest.raises(
+        BriefcaseCommandError,
+        match=(
+            r"Briefcase doesn't know the system packaging format for somevendor. "
+            r"You may be able to build a package by manually specifying a format "
+            r"with -p/--packaging-format"
+        ),
+    ):
+        package_command._verify_packaging_tools(first_app)
 
 
 @pytest.mark.parametrize(
