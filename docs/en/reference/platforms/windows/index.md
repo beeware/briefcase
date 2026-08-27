@@ -219,7 +219,7 @@ If this setting is undefined, or set to an empty string, the installer will not 
 
 Windows MSI installers are able to present a panel of optional features to the user as part of the installation or uninstallation process. These features are binary flags which can then be used by a [post-install script][post_install_script] to perform additional installation behaviors, or by a [pre-uninstall script][pre_uninstall_script] to perform additional uninstallation behaviors.
 
-Installer and uninstaller options are defined using a TOML array of tables. Up to 4 installer options and 4 uninstaller options can be defined. Each option is in a group named `[[ toga.briefcase.app.<app name>.install_option ]]` or `[[ toga.briefcase.app.<app name>.uninstall_option ]]`, which must define the following keys:
+Installer and uninstaller options are defined using a TOML array of tables. Up to 4 installer options and 4 uninstaller options can be defined. Each option is in a group named `[[ tool.briefcase.app.<app name>.install_option ]]` or `[[ tool.briefcase.app.<app name>.uninstall_option ]]`, which must define the following keys:
 
 ### `install_option.name` / `uninstall_option.name`
 
@@ -236,6 +236,20 @@ A longer description of the purpose of the option, as a string.
 ### `install_option.default` / `uninstall_option.default`
 
 A Boolean describing the initial value of the option in the GUI. If not provided, defaults to `False`.
+
+### `install_option.system` / `uninstall_option.system`
+
+The install scope for which the option is relevant. The value can be:
+
+* `true` to display the option only when installing for all users;
+* `false` to display the option only when installing for the current user; or
+* `"both"` to display the option for both install scopes.
+
+If this setting is not defined, it defaults to `"both"`.
+
+The install scope is selected by the user during installation, or fixed by the [`system_installer`][] setting. The scope of an installed app is reused when displaying uninstall options.
+
+If an option is not displayed for the selected scope, its configured default value is still provided to the post-install or pre-uninstall script.
 
 ### Using options
 
