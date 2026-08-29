@@ -774,9 +774,9 @@ connection.
         except KeyError:
             self.tools.console.debug(f"Device {avd!r} doesn't define a skin.")
 
-    def list_available_system_images(self, min_api_level: int) -> list[str]:
-        """Returns a sorted list of system image package identifiers available for the
-        current architecture and minimum Android version.
+    def list_available_system_images(self, min_api_level: int) -> set[str]:
+        """Returns a set of system image package identifiers available for the current
+        architecture and minimum Android version.
 
         e.g., ``{"system-images;android-31;default;x86_64"}``
 
@@ -810,7 +810,7 @@ connection.
                 # Non-numeric API level (e.g. CANARY, CinnamonBun) always include.
                 pass
             images.append(package)
-        return sorted(set(images))
+        return set(images)
 
     def list_installed_system_images(self) -> set[str]:
         """Returns a set of installed system image package identifiers.
@@ -1232,13 +1232,18 @@ a default name '{default_avd}'.
         )
         if not available_images:
             raise BriefcaseCommandError(
-                f"""\
-No Android system images are available for your architecture
-({self.emulator_abi}).
+                "\n".join(
+                    Console.dedent_and_wrap(
+                        f"""
+                        No Android system images are available for your architecture
+                        ({self.emulator_abi}).
 
-This may be caused by a network connectivity issue or an unsupported
-architecture. Check your network connection and re-run `briefcase run android`.
-"""
+                        This may be caused by min_os_version being set higher than any
+                        available system image. Check the min_os_version setting in
+                        your pyproject.toml and re-run `briefcase run android`.
+                        """
+                    )
+                )
             )
 
         # Parse available images once for use in both selection questions.
@@ -1246,14 +1251,18 @@ architecture. Check your network connection and re-run `briefcase run android`.
 
         # Ask the user to select an API level.
         api_levels = sorted(
-            {api_level for api_level, _, abi in parsed_images},
+            {api_level for api_level, _, _ in parsed_images},
             key=_api_level_sort_key,
         )
         api_level = self.tools.console.selection_question(
             intro="Select the API level for the emulator:",
             description="API level",
             options=api_levels,
-            default=self.DEFAULT_API_LEVEL,
+            default=(
+                self.DEFAULT_API_LEVEL
+                if self.DEFAULT_API_LEVEL in api_levels
+                else api_levels[0]
+            ),
         )
 
         # Ask the user to select a tag for the chosen API level.
