@@ -165,6 +165,39 @@ def test_default_name_with_collisions(mock_tools, android_sdk, tmp_path):
     assert avd == "beePhone3"
 
 
+def test_image_type_fallback_when_default_not_available(
+    mock_tools, android_sdk, tmp_path
+):
+    """If the default type is not available for the selected API level, the first
+    available type is used as the default."""
+    mock_tools.console.values = [
+        "",  # default emulator name
+        "3",  # select android-CANARY (option 3 in the sorted list)
+        "",  # accept first available type (google_apis, since "default" isn't available)
+    ]
+
+    # Mock the internal emulator creation method
+    android_sdk._create_emulator = MagicMock()
+
+    # Create a mock app
+    app = MagicMock()
+    del app.min_os_version  # ensure getattr fallback is used
+
+    # Create the emulator
+    avd = android_sdk.create_emulator(app)
+
+    # The expected device AVD was created.
+    assert avd == "beePhone"
+
+    # The call was made with the first available type, not "default"
+    android_sdk._create_emulator.assert_called_once_with(
+        avd="beePhone",
+        device_type="pixel",
+        skin="pixel_7_pro",
+        system_image="system-images;android-CANARY;google_apis;x86_64",
+    )
+
+
 def test_system_image_selection(mock_tools, android_sdk, tmp_path):
     """The user can select an Android version and image type."""
     mock_tools.console.values = [

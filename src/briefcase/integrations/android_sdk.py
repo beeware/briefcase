@@ -1265,14 +1265,14 @@ a default name '{default_avd}'.
             ),
         )
 
-        # Ask the user to select a tag for the chosen API level.
+        # Ask the user to select system image type for the chosen API level.
         tags = sorted(
             {tag for level, tag, _ in parsed_images if level == api_level},
             key=lambda x: (0 if x == "default" else 1, x),
         )
         tag = self.tools.console.selection_question(
-            intro="Select the system image tag:",
-            description="Tag",
+            intro="Select the system image type:",
+            description="Type",
             options=tags,
             default=self.DEFAULT_TAG if self.DEFAULT_TAG in tags else tags[0],
         )
