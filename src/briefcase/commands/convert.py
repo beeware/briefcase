@@ -113,19 +113,19 @@ class ConvertCommand(NewCommand):
 
         default = "hello-world"
 
-        project_name = self.pep621_data.get("name")
-        if project_name and is_valid_app_name(project_name) and override_value is None:
-            # Project name is usable as-is (e.g., "foobar", "foo-bar")
+        pep621_name = self.pep621_data.get("name")
+        if pep621_name and is_valid_app_name(pep621_name) and override_value is None:
+            # PEP621 name is usable as-is (e.g., "foobar", "foo-bar")
             self.console.divider(title="App name")
             self.console.prompt()
             self.console.prompt(
-                f"Using value from PEP621 formatted pyproject.toml {project_name!r}"
+                f"Using value from PEP621 formatted pyproject.toml {pep621_name!r}"
             )
-            return project_name
-        elif project_name and is_valid_app_name(
-            canonicalized_name := canonicalize_name(project_name)
+            return pep621_name
+        elif pep621_name and is_valid_app_name(
+            canonicalized_name := canonicalize_name(pep621_name)
         ):
-            # Canonicalized project name is valid
+            # Canonicalized PEP621 name is valid
             # (e.g., "test.name" -> "test-name", "test-app_name" -> "test-app-name")
             intro += (
                 "\n\nBased on the project name from your PEP621 formatted "
