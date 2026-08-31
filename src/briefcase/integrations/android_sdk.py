@@ -45,7 +45,7 @@ def _parse_system_image(package: str):
     """Parse a system image package identifier into its components.
 
     :param package: e.g. ``"system-images;android-31;default;x86_64"``
-    :returns: A tuple of (api_level, tag, abi) or None if invalid.
+    :returns: A tuple of (api_level, image_type, abi) or None if invalid.
     """
     parts = package.split(";")
     if len(parts) != 4 or parts[0] != "system-images":
@@ -248,14 +248,14 @@ class AndroidSDK(ManagedTool):
         return "android-31"
 
     @property
-    def DEFAULT_TAG(self) -> str:
+    def DEFAULT_IMAGE_TYPE(self) -> str:
         return "default"
 
     @property
     def DEFAULT_SYSTEM_IMAGE(self) -> str:
         return (
             f"system-images;{self.DEFAULT_API_LEVEL}"
-            f";{self.DEFAULT_TAG};{self.emulator_abi}"
+            f";{self.DEFAULT_IMAGE_TYPE};{self.emulator_abi}"
         )
 
     @classmethod
@@ -1266,18 +1266,24 @@ a default name '{default_avd}'.
         )
 
         # Ask the user to select system image type for the chosen API level.
-        tags = sorted(
-            {tag for level, tag, _ in parsed_images if level == api_level},
+        image_types = sorted(
+            {
+                image_type
+                for level, image_type, _ in parsed_images
+                if level == api_level
+            },
             key=lambda x: (0 if x == "default" else 1, x),
         )
-        tag = self.tools.console.selection_question(
+        image_type = self.tools.console.selection_question(
             intro="Select the system image type:",
             description="Type",
-            options=tags,
-            default=self.DEFAULT_TAG if self.DEFAULT_TAG in tags else tags[0],
+            options=image_types,
+            default=self.DEFAULT_IMAGE_TYPE
+            if self.DEFAULT_IMAGE_TYPE in image_types
+            else image_types[0],
         )
 
-        system_image = f"system-images;{api_level};{tag};{self.emulator_abi}"
+        system_image = f"system-images;{api_level};{image_type};{self.emulator_abi}"
 
         self._create_emulator(
             avd=avd,
