@@ -74,7 +74,7 @@ def test_create_emulator(
         "annoying!",  # a name with non-alpha characters
         "new-emulator",  # A valid name!
         "2",  # Android API level selection (android-34)
-        "1",  # tag selection (default)
+        "1",  # image type selection (default)
     ]
 
     # Mock the initial output of an AVD config file.
@@ -203,7 +203,7 @@ def test_system_image_selection(mock_tools, android_sdk, tmp_path):
     mock_tools.console.values = [
         "",  # default emulator name
         "2",  # select API level 34 (option 2 in the list)
-        "2",  # tag selection (google_apis option 2 in the list)
+        "2",  # image type selection (google_apis option 2 in the list)
     ]
 
     # Mock the internal emulator creation method
@@ -249,7 +249,7 @@ def test_create_emulator_with_min_os_version(mock_tools, android_sdk, tmp_path):
     mock_tools.console.values = [
         "new-emulator",  # emulator name
         "2",  # API level selection (android-34)
-        "1",  # tag selection (default)
+        "1",  # image type selection (default)
     ]
     # Mock the initial output of an AVD config file.
     avd_config_path = tmp_path / "home/.android/avd/new-emulator.avd/config.ini"

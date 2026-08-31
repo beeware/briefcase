@@ -33,10 +33,10 @@ def test_list_available_system_images(mock_tools, android_sdk):
     )
 
     # android-23 is filtered out (below minimum API level 24)
-    assert result == [
+    assert result == {
         "system-images;android-31;default;x86_64",
         "system-images;android-34;default;x86_64",
-    ]
+    }
     mock_tools.subprocess.check_output.assert_called_once_with(
         [android_sdk.sdkmanager_path, "--list"],
         env=android_sdk.env,
@@ -59,10 +59,10 @@ def test_list_available_system_images_custom_min_api_level(mock_tools, android_s
     result = android_sdk.list_available_system_images(min_api_level=28)
 
     # android-26 and android-27 are filtered out (below custom minimum of 28)
-    assert result == [
+    assert result == {
         "system-images;android-28;default;x86_64",
         "system-images;android-31;default;x86_64",
-    ]
+    }
 
 
 def test_list_available_system_images_dotted_version(mock_tools, android_sdk):
@@ -79,9 +79,9 @@ def test_list_available_system_images_dotted_version(mock_tools, android_sdk):
         min_api_level=ANDROID_MIN_OS_VERSION
     )
 
-    assert result == [
+    assert result == {
         "system-images;android-36.1;default;x86_64",
-    ]
+    }
 
 
 def test_list_available_system_images_dotted_version_below_minimum(
@@ -104,9 +104,9 @@ def test_list_available_system_images_dotted_version_below_minimum(
     )
 
     # android-23.1 is filtered out (below minimum API level 24)
-    assert result == [
+    assert result == {
         "system-images;android-31;default;x86_64",
-    ]
+    }
 
 
 def test_list_available_system_images_named_version(mock_tools, android_sdk):
@@ -124,9 +124,9 @@ def test_list_available_system_images_named_version(mock_tools, android_sdk):
         min_api_level=ANDROID_MIN_OS_VERSION
     )
 
-    assert result == [
+    assert result == {
         "system-images;android-CANARY;google_apis;x86_64",
-    ]
+    }
 
 
 def test_list_available_system_images_other_abi(mock_tools, android_sdk):
@@ -145,9 +145,9 @@ def test_list_available_system_images_other_abi(mock_tools, android_sdk):
     )
 
     # Only x86_64 images returned (fixture sets host_arch to x86_64)
-    assert result == [
+    assert result == {
         "system-images;android-34;default;x86_64",
-    ]
+    }
 
 
 def test_list_available_system_images_duplicates(mock_tools, android_sdk):
@@ -165,13 +165,13 @@ def test_list_available_system_images_duplicates(mock_tools, android_sdk):
         min_api_level=ANDROID_MIN_OS_VERSION
     )
 
-    assert result == [
+    assert result == {
         "system-images;android-31;default;x86_64",
-    ]
+    }
 
 
 def test_no_available_system_images(mock_tools, android_sdk):
-    """If no system images are available, an empty list is returned."""
+    """If no system images are available, an empty set is returned."""
     mock_tools.subprocess.check_output.return_value = (
         "Available Packages:\n"
         "  Path                                        | Version | Description\n"
@@ -183,7 +183,7 @@ def test_no_available_system_images(mock_tools, android_sdk):
         min_api_level=ANDROID_MIN_OS_VERSION
     )
 
-    assert result == []
+    assert result == set()
 
 
 def test_list_available_system_images_failure(mock_tools, android_sdk):
@@ -212,6 +212,6 @@ def test_list_available_system_images_malformed_package(mock_tools, android_sdk)
     )
 
     # Malformed entry is skipped
-    assert result == [
+    assert result == {
         "system-images;android-31;default;x86_64",
-    ]
+    }
