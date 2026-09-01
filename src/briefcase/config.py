@@ -338,6 +338,15 @@ def validate_install_options_config(config, opt_type, **others):
             # Options are booleans, and are False by default
             option["default"] = bool(config_item.get("default", False))
 
+            system = config_item.get("system", "both")
+            if not isinstance(system, bool) and system != "both":
+                raise BriefcaseConfigError(
+                    f"System setting for {opt_type} option {name!r} must be a "
+                    "boolean or 'both'."
+                )
+
+            option["system"] = system
+
     return options
 
 
