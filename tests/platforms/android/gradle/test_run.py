@@ -104,6 +104,33 @@ def test_device_option(run_command):
     assert overrides == {}
 
 
+def test_device_selection_option(run_command):
+    """The -d option with no argument can be parsed."""
+    options, overrides = run_command.parse_options(["-d"])
+
+    assert options == {
+        "device_or_avd": None,
+        "appname": None,
+        "update": False,
+        "update_requirements": False,
+        "update_resources": False,
+        "update_support": False,
+        "update_stub": False,
+        "no_update": False,
+        "test_mode": False,
+        "debugger": None,
+        "debugger_host": "localhost",
+        "debugger_port": 5678,
+        "passthrough": [],
+        "extra_emulator_args": None,
+        "shutdown_on_exit": False,
+        "revoke_permissions": None,
+        "forward_ports": None,
+        "reverse_ports": None,
+    }
+    assert overrides == {}
+
+
 def test_extra_emulator_args_option(run_command):
     """The -d option can be parsed."""
     options, overrides = run_command.parse_options(
@@ -111,7 +138,7 @@ def test_extra_emulator_args_option(run_command):
     )
 
     assert options == {
-        "device_or_avd": None,
+        "device_or_avd": "auto",
         "appname": None,
         "update": False,
         "update_requirements": False,
@@ -138,7 +165,7 @@ def test_shutdown_on_exit_option(run_command):
     options, overrides = run_command.parse_options(["--shutdown-on-exit"])
 
     assert options == {
-        "device_or_avd": None,
+        "device_or_avd": "auto",
         "appname": None,
         "update": False,
         "update_requirements": False,
@@ -170,7 +197,7 @@ def test_revoke_permission_option(run_command):
     )
 
     assert options == {
-        "device_or_avd": None,
+        "device_or_avd": "auto",
         "appname": None,
         "update": False,
         "update_requirements": False,
@@ -202,7 +229,7 @@ def test_forward_ports_option(run_command):
     )
 
     assert options == {
-        "device_or_avd": None,
+        "device_or_avd": "auto",
         "appname": None,
         "update": False,
         "update_requirements": False,
@@ -231,7 +258,7 @@ def test_reverse_ports_option(run_command):
     )
 
     assert options == {
-        "device_or_avd": None,
+        "device_or_avd": "auto",
         "appname": None,
         "update": False,
         "update_requirements": False,
