@@ -91,9 +91,9 @@ The following options can be provided at the command line when producing iOS pro
 
 ### run
 
-#### `-d <device>` / `--device <device>`
+#### `-d [<device>]` / `--device [<device>]`
 
-The device simulator to target. Can be either a UDID, a device name (e.g., `"iPhone 11"`), or a device name and OS version (`"iPhone 11::iOS 13.3"`).
+The device simulator to target. Can be either a UDID, a device name (e.g., `"iPhone 11"`), a device name and OS version (`"iPhone 11::iOS 13.3"`), or `auto`. `auto` is the default behavior; Briefcase will automatically select an "entry level" iPhone simulator (e.g., an iPhone SE, or iPhone 16e) on the most recent available iOS version. To see the full list of available simulators and select from that list, provide `-d`/`--device` with no value.
 
 ## Application configuration
 
