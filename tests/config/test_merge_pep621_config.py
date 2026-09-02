@@ -1,3 +1,5 @@
+import pytest
+
 from briefcase.config import merge_pep621_config
 
 
@@ -17,6 +19,7 @@ def test_base_keys():
     merge_pep621_config(
         briefcase_config,
         {
+            "name": "My.Project",
             "description": "It's cool",
             "version": "1.2.3",
             "urls": {"Homepage": "https://example.com"},
@@ -27,12 +30,23 @@ def test_base_keys():
 
     assert briefcase_config == {
         "key": "value",
+        "project_name": "my-project",
         "description": "It's cool",
         "version": "1.2.3",
         "license": {"text": "BSD License"},
         "url": "https://example.com",
         "requires_python": ">=3.9",
     }
+
+
+def test_invalid_legacy_project_name_warns():
+    "An invalid legacy project name raises a forward-looking warning."
+    briefcase_config = {"project_name": "Not A Valid Name"}
+
+    with pytest.warns(FutureWarning, match="not a valid PEP 621 project name"):
+        merge_pep621_config(briefcase_config, {"name": "valid-name"})
+
+    assert briefcase_config["project_name"] == "Not A Valid Name"
 
 
 def test_base_keys_override():
