@@ -95,10 +95,17 @@ class iOSXcodeMixin(iOSXcodePassiveMixin):
             "-d",
             "--device",
             dest="udid",
+            nargs="?",
+            default="auto",
+            const=None,
             help=(
-                "The device to target; either a UDID, "
-                'a device name ("iPhone 11"), '
-                'or a device name and OS version ("iPhone 11::iOS 13.3")'
+                "The device to target; either a UDID, a device name "
+                '("iPhone 11"), a device name and OS version '
+                '("iPhone 11::iOS 13.3"), or "auto" (the default) to '
+                'automatically select a recent "SE-class" device on the '
+                "most recently released iOS version. Provide -d with no "
+                "value to select from the full list of available "
+                "simulators."
             ),
             required=False,
         )
@@ -106,7 +113,11 @@ class iOSXcodeMixin(iOSXcodePassiveMixin):
     def select_target_device(self, udid_or_device=None):
         """Select the target device to use for iOS builds.
 
-        Interrogates the system to get the list of available simulators
+        Interrogates the system to get the list of available simulators.
+
+        If the user has specified "auto", a recent "SE-class" iPhone simulator
+        is selected automatically, on the most recent iOS version, without
+        prompting.
 
         If there is only a single iOS version available, that version
         will be selected automatically.
@@ -115,12 +126,16 @@ class iOSXcodeMixin(iOSXcodePassiveMixin):
         automatically.
 
         If the user has specified a device at the command line, it will be
-        used in preference to any
+        used in preference to any of the above.
 
-        :param udid_or_device: The device to target. Can be a device UUID, a
-            device name ("iPhone 11"), or a device name and OS version
-            ("iPhone 11::13.3"). If ``None``, the user will be asked to select
-            a device at runtime.
+        :param udid_or_device: The device to target. Can be:
+            - `None` (default if -d/--device was specified with no value)
+            - The literal string `"auto"` (case-insensitive); automatically
+              select a recent "SE-class" simulator on the most recent
+              available iOS version, without prompting.
+            - A device UUID.
+            - A device name (e.g. `"iPhone 11"`).
+            - A device name and OS version (e.g. `"iPhone 11::iOS 13.3"`).
         :returns: A tuple containing the udid, iOS version, and device name
             for the selected device.
         """
@@ -147,8 +162,51 @@ class iOSXcodeMixin(iOSXcodePassiveMixin):
 
         except (ValueError, TypeError) as e:
             # Provided value wasn't a UDID.
-            # It must be a device or device+version
-            if udid_or_device and "::" in udid_or_device:
+            if udid_or_device and udid_or_device.lower() == "auto":
+                # No -d/--device value, or "-d auto": automatically select a
+                # recent "SE-class" device on the most recent iOS version,
+                # without prompting.
+                if not simulators:
+                    raise BriefcaseCommandError("No iOS simulators available.") from e
+
+                # simulators is keyed by iOS version tags of the form
+                # "iOS 15.5"; pick the tag with the highest version number.
+                iOS_tag = max(
+                    simulators,
+                    key=lambda tag: tuple(int(v) for v in tag.split()[-1].split(".")),
+                )
+                devices = simulators[iOS_tag]
+
+                matches = [
+                    (candidate_udid, name)
+                    for candidate_udid, name in devices.items()
+                    if name.startswith("iPhone SE ")
+                    or (name.startswith("iPhone ") and name.endswith("e"))
+                ]
+                if matches:
+                    # If multiple SE-class devices match, pick
+                    # deterministically (alphabetically last device name).
+                    udid, device = max(matches, key=lambda item: item[1])
+                else:
+                    raise BriefcaseCommandError(
+                        "Unable to automatically select an iOS simulator; "
+                        'no "SE-class" iPhone simulator (e.g., an iPhone SE, '
+                        'or a similar "entry level" device) is available on '
+                        f"{iOS_tag}, and the choice is ambiguous.\n"
+                        "\n"
+                        "Specify a device explicitly with -d/--device, or use "
+                        "-d with no value to select from the full list of "
+                        "available simulators."
+                    ) from e
+
+                # iOS_tag will be of the form "iOS 15.5"
+                # Drop the "iOS" prefix when reporting the version.
+                iOS_version = iOS_tag.split(" ", 1)[-1]
+                self.console.info(
+                    f"Automatically selected {device} simulator on {iOS_tag}"
+                )
+                return udid, iOS_version, device
+            elif udid_or_device and "::" in udid_or_device:
                 # A device name::version.
                 device, iOS_tag = udid_or_device.split("::")
 
@@ -553,14 +611,16 @@ class iOSXcodeRunCommand(iOSXcodeMixin, RunCommand):
         app: FinalizedAppConfig,
         *,
         passthrough: list[str],
-        udid=None,
+        udid: str | None = None,
         **options,
     ) -> dict | None:
         """Start the application.
 
         :param app: The config object for the app
         :param passthrough: The list of arguments to pass to the app
-        :param udid: The device UDID to target. If ``None``, the user will
+        :param udid: The device UDID, name, or name::version to target. If
+            `"auto"`, a recent "SE-class" simulator on the most recent iOS
+            version will be selected automatically. If `None`, the user will
             be asked to select a device at runtime.
         """
         try:
