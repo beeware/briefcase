@@ -1,13 +1,9 @@
 import shutil
 import subprocess
 import sys
+import tomllib
 from textwrap import dedent
 from unittest import mock
-
-if sys.version_info >= (3, 11):  # pragma: no-cover-if-lt-py311
-    import tomllib
-else:  # pragma: no-cover-if-gte-py311
-    import tomli as tomllib
 
 import pytest
 

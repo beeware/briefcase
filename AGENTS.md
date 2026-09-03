@@ -9,7 +9,7 @@ Briefcase converts Python projects into standalone native applications for macOS
 
 ## Quick Reference
 
-- **Language**: Python >= 3.10 (3.10–3.14 supported)
+- **Language**: Python >= 3.11 (3.11–3.15 supported)
 - **Docstrings**: Sphinx style with Markdown content
 - **Dev environment**: Python 3.13 virtualenv with `dev` dependency group
 - **License**: BSD-3-Clause
@@ -109,12 +109,11 @@ Do not make changes to AGENTS.md unless specifically directed to do so.
 
 ```python
 class macOSAppBuildCommand(
-    macOSAppMixin,          # format-specific paths/behavior
-    macOSSigningMixin,      # platform signing logic
+    macOSAppMixin,  # format-specific paths/behavior
+    macOSSigningMixin,  # platform signing logic
     AppPackagesMergeMixin,  # utility mixin
-    BuildCommand,           # base command from commands/
-):
-    ...
+    BuildCommand,  # base command from commands/
+): ...
 ```
 
 ### Platform module conventions
@@ -174,6 +173,7 @@ class DummyBuildCommand(BuildCommand):
     def build(self, app, **kwargs):
         self.actions.append(("build", app.app_name))
         return {}
+
 
 # Then assert exact action sequence:
 assert build_command.actions == [

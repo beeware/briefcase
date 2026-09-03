@@ -11,7 +11,7 @@ from collections import defaultdict
 from collections.abc import Collection, Mapping
 from functools import cached_property
 from pathlib import Path
-from typing import TYPE_CHECKING, TypeVar
+from typing import TYPE_CHECKING, Self, TypeVar
 
 import httpx
 from cookiecutter.main import cookiecutter
@@ -44,10 +44,6 @@ if TYPE_CHECKING:
     from briefcase.integrations.wix import WiX
     from briefcase.integrations.xcode import Xcode, XcodeCliTools
 
-    try:
-        from typing import Self
-    except ImportError:  # pragma: no-cover-if-gte-py311
-        from typing_extensions import Self
 
 ToolT = TypeVar("ToolT", bound="Tool")
 ManagedToolT = TypeVar("ManagedToolT", bound="ManagedTool")
@@ -258,10 +254,7 @@ class ToolCache(Mapping):
 
         :returns: a character encoding (upper-cased), e.g. UTF-8. Defaults to UTF-8.
         """
-        if sys.version_info < (3, 11):  # pragma: no-cover-if-gte-py311
-            encoding = locale.getdefaultlocale()[1]  # deprecated in Python 3.11
-        else:  # pragma: no-cover-if-lt-py311
-            encoding = locale.getencoding()
+        encoding = locale.getencoding()
 
         if not encoding:
             encoding = DEFAULT_SYSTEM_ENCODING

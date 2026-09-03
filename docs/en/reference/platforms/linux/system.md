@@ -115,7 +115,7 @@ The following options can be provided at the command line when producing Deb pac
 
 A Docker base image identifier for the Linux distribution you want to target. The identifier will be in the pattern `<vendor>:<codename>` (e.g., `debian:buster` or `ubuntu:jammy`). You can also use the version number in place of the code name (e.g., `debian:10`, `ubuntu:22.04`, or `fedora:37`). Whichever form you choose, you should be consistent; no normalization of code name and version is performed, so `ubuntu:jammy` and `ubuntu:22.04` will be identified as different versions (even though they the same version).
 
-You can specify any identifier you want, provided the distribution is still supported by the vendor, and system Python is Python 3.10 or later.
+You can specify any identifier you want, provided the distribution is still supported by the vendor, and system Python is Python 3.11 or later.
 
 The following Linux vendors are known to work as Docker targets:
 
