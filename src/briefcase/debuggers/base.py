@@ -80,7 +80,7 @@ class DebuggerConfig(TypedDict):
     app_packages_path_mappings: AppPackagesPathMappings | None
 
 
-class DebuggerConnectionMode(str, enum.Enum):
+class DebuggerConnectionMode(enum.StrEnum):
     SERVER = "server"
     CLIENT = "client"
 
