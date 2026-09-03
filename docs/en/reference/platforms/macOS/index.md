@@ -63,7 +63,7 @@ Configuration options between the [.app bundle][app-bundle] and [macOS Xcode pro
 
 ## Prerequisites  { #macos-prerequisites }
 
-Briefcase requires installing Python 3.11+. You will also need a method for managing virtual environments (such as `venv`).
+Briefcase requires installing Python {{ min_python_version }} or later. You will also need a method for managing virtual environments (such as `venv`).
 
 ## Packaging format
 
