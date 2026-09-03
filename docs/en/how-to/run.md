@@ -4,7 +4,7 @@ Briefcase can be installed and run in a few different ways depending on your pre
 
 ## Default installation
 
-The standard way to install Briefcase is into a Python virtual environment. 
+The standard way to install Briefcase is into a Python virtual environment.
 
 1. Create and activate a virtual environment:
 
@@ -12,7 +12,7 @@ The standard way to install Briefcase is into a Python virtual environment.
     # On macOS and Linux
     python -m venv venv
     source venv/bin/activate
-    
+
     # On Windows
     python -m venv venv
     venv\Scripts\activate
