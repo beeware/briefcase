@@ -47,8 +47,8 @@ def main():
     def pyproject_table_briefcase_app_extra_content(self):
         return """
 requires = [
-    "PySide6-Essentials~=6.8",
-    # "PySide6-Addons~=6.8",
+    "PySide6-Essentials~=6.11",
+    # "PySide6-Addons~=6.11",
 ]
 test_requires = [
 {% if cookiecutter.test_framework == "pytest" %}
