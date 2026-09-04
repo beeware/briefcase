@@ -2,24 +2,13 @@ import errno
 import re
 import subprocess
 import sys
+import tomllib
 import webbrowser
 from http.server import SimpleHTTPRequestHandler, ThreadingHTTPServer
 from pathlib import Path, PurePosixPath
 from textwrap import dedent, indent
 from typing import Any
 from zipfile import ZipFile
-
-from briefcase.console import Console
-from briefcase.exceptions import (
-    BriefcaseCommandError,
-    BriefcaseConfigError,
-    UnsupportedCommandError,
-)
-
-if sys.version_info >= (3, 11):  # pragma: no-cover-if-lt-py311
-    import tomllib
-else:  # pragma: no-cover-if-gte-py311
-    import tomli as tomllib
 
 import tomli_w
 
@@ -34,6 +23,12 @@ from briefcase.commands import (
     UpdateCommand,
 )
 from briefcase.config import FinalizedAppConfig
+from briefcase.console import Console
+from briefcase.exceptions import (
+    BriefcaseCommandError,
+    BriefcaseConfigError,
+    UnsupportedCommandError,
+)
 
 # Banner templates (Constants used in write_inserts)
 HTML_BANNER = (

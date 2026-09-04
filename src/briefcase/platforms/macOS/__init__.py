@@ -7,12 +7,14 @@ import plistlib
 import re
 import subprocess
 import time
+import tomllib
 from collections.abc import Collection
 from contextlib import suppress
 from pathlib import Path
 from signal import SIGTERM
 from typing import TYPE_CHECKING
 
+import tomli_w
 from packaging.version import Version
 
 from briefcase.config import EnvManagerT, FinalizedAppConfig
@@ -40,13 +42,6 @@ except ImportError:  # pragma: no-cover-if-is-macos
     # On non-macOS platforms, dmgbuild won't be installed.
     # Allow the plugin to be loaded; raise an error when tools are verified.
     dmgbuild = None
-
-import tomli_w
-
-try:
-    import tomllib
-except ImportError:  # pragma: no-cover-if-gte-py311
-    import tomli as tomllib  # type: ignore[no-redef]
 
 
 DEFAULT_OUTPUT_FORMAT = "app"

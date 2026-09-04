@@ -10,7 +10,7 @@ Yes! You can use both `uvx` and `pipx` to run Briefcase without permanently inst
 
 ## What versions of Python are supported?
 
-Python 3.10 or higher.
+Python {{ min_python_version }} or higher.
 
 ## What platforms does Briefcase support?
 
@@ -31,7 +31,7 @@ Briefcase's platform support is built on a [plugin system][platform-interface], 
 Briefcase adds a [PEP566](https://peps.python.org/pep-0566/) metadata file when it installs your app's code. The metadata can be retrieved at runtime as described in the [Accessing Briefcase packaging metadata at runtime][access-packaging-metadata] how-to. You can determine if your app was packaged with Briefcase by testing for the existence of the `Briefcase-Version` tag:
 
 ```python
-in_briefcase = 'Briefcase-Version' in metadata
+in_briefcase = "Briefcase-Version" in metadata
 ```
 
 ## Can I use third-party Python packages in my app?

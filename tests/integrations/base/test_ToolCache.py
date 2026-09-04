@@ -255,14 +255,7 @@ def test_is_32bit_python(dummy_console, maxsize, is_32bit, monkeypatch, tmp_path
 )
 def test_system_encoding(simple_tools, mock_encoding, expected_encoding, monkeypatch):
     """The expected system encoding is returned."""
-    if sys.version_info < (3, 11):
-        monkeypatch.setattr(
-            locale, "getdefaultlocale", MagicMock(return_value=("aa_BB", mock_encoding))
-        )
-    else:
-        monkeypatch.setattr(
-            locale, "getencoding", MagicMock(return_value=mock_encoding)
-        )
+    monkeypatch.setattr(locale, "getencoding", MagicMock(return_value=mock_encoding))
     monkeypatch.setattr(
         briefcase.integrations.base, "DEFAULT_SYSTEM_ENCODING", "ISO-4242"
     )

@@ -5,6 +5,7 @@ import keyword
 import re
 import subprocess
 import sys
+import tomllib
 import unicodedata
 from email.utils import getaddresses
 from pathlib import Path
@@ -15,11 +16,6 @@ from build import BuildBackendException
 from build.util import project_wheel_metadata
 from packaging.licenses import InvalidLicenseExpression, canonicalize_license_expression
 from packaging.version import InvalidVersion, Version
-
-if sys.version_info >= (3, 11):  # pragma: no-cover-if-lt-py311
-    import tomllib
-else:  # pragma: no-cover-if-gte-py311
-    import tomli as tomllib
 
 from briefcase.debuggers.base import BaseDebugger
 from briefcase.platforms import get_output_formats, get_platforms
