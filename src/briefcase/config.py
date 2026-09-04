@@ -7,6 +7,7 @@ import subprocess
 import sys
 import tomllib
 import unicodedata
+import warnings
 from email.utils import getaddresses
 from pathlib import Path
 from typing import Literal
@@ -15,6 +16,7 @@ from urllib.parse import urlparse
 from build import BuildBackendException
 from build.util import project_wheel_metadata
 from packaging.licenses import InvalidLicenseExpression, canonicalize_license_expression
+from packaging.utils import InvalidName, canonicalize_name
 from packaging.version import InvalidVersion, Version
 
 from briefcase.debuggers.base import BaseDebugger
@@ -1302,6 +1304,24 @@ def merge_pep621_config(global_config, pep621_config):
             pass
         else:
             global_config[field] = datum
+
+    # Use the normalized PEP 621 name unless a legacy Briefcase project name
+    # has been provided explicitly.
+    if "project_name" in global_config:
+        try:
+            canonicalize_name(global_config["project_name"], validate=True)
+        except InvalidName:
+            warnings.warn(
+                "The Briefcase project_name is not a valid PEP 621 project name. "
+                "This may become an error in a future version of Briefcase.",
+                FutureWarning,
+                stacklevel=2,
+            )
+    elif project_name := pep621_config.get("name"):
+        global_config["project_name"] = canonicalize_name(
+            project_name,
+            validate=True,
+        )
 
     # Keys that map directly
     maybe_update("description", "description")
