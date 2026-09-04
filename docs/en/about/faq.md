@@ -2,7 +2,7 @@
 
 ## What versions of Python are supported?
 
-Python 3.11 or higher.
+Python {{ min_python_version }} or higher.
 
 ## What platforms does Briefcase support?
 
