@@ -1,12 +1,5 @@
 import shutil
-import sys
 from unittest import mock
-
-if sys.version_info >= (3, 11):  # pragma: no-cover-if-lt-py311
-    pass
-else:  # pragma: no-cover-if-gte-py311
-    pass
-
 from zipfile import ZipFile
 
 import pytest

@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 import re
-import sys
+import tomllib
 from functools import cached_property, partial
 from pathlib import Path
 from shutil import copy2, copytree
@@ -10,17 +10,12 @@ from urllib.parse import urlparse
 
 from packaging.utils import canonicalize_name
 
-from ..config import get_license_from_text, is_valid_app_name
-from .new import LICENSE_OPTIONS, NewCommand, parse_project_overrides
-
-if sys.version_info >= (3, 11):  # pragma: no-cover-if-lt-py311
-    import tomllib
-else:  # pragma: no-cover-if-gte-py311
-    import tomli as tomllib
-
 from briefcase.bootstraps import EmptyBootstrap
 from briefcase.config import APP_NAME_SPEC, make_class_name, validate_url
 from briefcase.exceptions import BriefcaseCommandError
+
+from ..config import get_license_from_text, is_valid_app_name
+from .new import LICENSE_OPTIONS, NewCommand, parse_project_overrides
 
 
 class ConvertCommand(NewCommand):

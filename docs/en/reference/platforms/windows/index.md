@@ -61,7 +61,7 @@ Configuration options between the [Windows app folder][windows-app-folder] and [
 
 ## Prerequisites  { #windows-prerequisites }
 
-Briefcase requires installing Python 3.10+. You will also need a method for managing virtual environments (such as `venv`).
+Briefcase requires installing Python {{ min_python_version }} or later. You will also need a method for managing virtual environments (such as `venv`).
 
 ## Packaging format
 
