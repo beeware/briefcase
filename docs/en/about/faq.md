@@ -1,5 +1,13 @@
 # Frequently Asked Questions
 
+## How do I use Briefcase?
+
+See our [How to run Briefcase](../how-to/run.md) guide for details on how to install and invoke Briefcase using standard virtual environments or other tools.
+
+## Can I use uvx/pipx to run briefcase?
+
+Yes! You can use both `uvx` and `pipx` to run Briefcase without permanently installing it. See the [How to run Briefcase](../how-to/run.md) guide for specific instructions.
+
 ## What versions of Python are supported?
 
 Python {{ min_python_version }} or higher.
