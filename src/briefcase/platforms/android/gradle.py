@@ -397,9 +397,15 @@ class GradleRunCommand(GradleMixin, RunCommand):
             "-d",
             "--device",
             dest="device_or_avd",
+            nargs="?",
+            default="auto",
+            const=None,
             help=(
                 "The device to target; either a device ID for a physical device, "
-                " or an AVD name ('@emulatorName') "
+                "or an AVD name ('@emulatorName'), or 'auto' (the default) to "
+                'automatically select a default "BeePhone" emulator (creating one '
+                "if necessary). Provide -d with no value to select from the full "
+                "list of available simulators."
             ),
             required=False,
         )
@@ -458,7 +464,7 @@ class GradleRunCommand(GradleMixin, RunCommand):
         self,
         app: FinalizedAppConfig,
         passthrough: list[str],
-        device_or_avd=None,
+        device_or_avd: str | None = None,
         extra_emulator_args=None,
         shutdown_on_exit=False,
         revoke_permissions: list[str] | None = None,
@@ -470,8 +476,9 @@ class GradleRunCommand(GradleMixin, RunCommand):
 
         :param app: The config object for the app
         :param passthrough: The list of arguments to pass to the app
-        :param device_or_avd: The device to target. If ``None``, the user will
-            be asked to re-run the command selecting a specific device.
+        :param device_or_avd: The device to target. If `None`, the user will
+            be asked to re-run the command selecting a specific device. If `"auto"`,
+            a default "beePhone" device will be selected (and created if necessary).
         :param extra_emulator_args: Any additional arguments to pass to the emulator.
         :param shutdown_on_exit: Should the emulator be shut down on exit?
         :param revoke_permissions: A list of permissions to revoke before launching

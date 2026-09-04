@@ -155,3 +155,47 @@ def test_adb_for_device(mock_tools, android_sdk):
 
     assert adb.tools == mock_tools
     assert adb.device == "some-device"
+
+
+@pytest.mark.parametrize(
+    ("host_os", "host_arch", "emulator_abi"),
+    [
+        ("Darwin", "x86_64", "x86_64"),
+        ("Darwin", "arm64", "arm64-v8a"),
+        ("Windows", "AMD64", "x86_64"),
+        ("Linux", "x86_64", "x86_64"),
+        ("Linux", "aarch64", "arm64-v8a"),
+    ],
+)
+def test_default_system_image(
+    mock_tools,
+    android_sdk,
+    host_os,
+    host_arch,
+    emulator_abi,
+):
+    """The default system image takes default SDK and emulator ABI into account."""
+    # Mock the hardware and operating system
+    mock_tools.host_os = host_os
+    mock_tools.host_arch = host_arch
+
+    assert (
+        f"system-images;android-31;default;{emulator_abi}"
+        == android_sdk.DEFAULT_SYSTEM_IMAGE
+    )
+
+
+def test_default_skin(monkeypatch, android_sdk):
+    """The default skin is enabled under non-CI configurations."""
+    monkeypatch.delenv("CI", raising=False)
+
+    assert android_sdk.DEFAULT_DEVICE_SKIN == "pixel_7_pro"
+
+
+def test_default_skin_ci(monkeypatch, android_sdk):
+    """The default skin is disabled under CI configurations."""
+    # Ensure the test environment has no CI markers
+    # Explicitly set the test marker
+    monkeypatch.setenv("CI", "1")
+
+    assert android_sdk.DEFAULT_DEVICE_SKIN is None
