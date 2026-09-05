@@ -1068,3 +1068,26 @@ def test_create_before_package_external_app(
 
     # The dist folder has been created.
     assert (tmp_path / "base_path/dist").exists()
+
+
+def test_package_app_no_packaging_format(package_command, first_app):
+    """If no packaging format is specified, the finalized packaging format on the app is
+    retained."""
+    # The app has been finalized with a concrete packaging format
+    first_app.packaging_format = "pkg"
+
+    package_command._package_app(first_app, update=False, packaging_format=None)
+
+    # The packaging format was not modified
+    assert first_app.packaging_format == "pkg"
+
+
+def test_package_app_explicit_packaging_format(package_command, first_app):
+    """An explicitly specified packaging format is annotated onto the app."""
+    # The app has been finalized with a concrete packaging format
+    first_app.packaging_format = "pkg"
+
+    package_command._package_app(first_app, update=False, packaging_format="box")
+
+    # The explicit packaging format has been annotated onto the app
+    assert first_app.packaging_format == "box"
