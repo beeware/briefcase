@@ -4,6 +4,7 @@
 
 - [Tutorial](tutorial/index.md)
 - [How-to guides](how-to/index.md)
+    - [How to run Briefcase](how-to/run.md)
     - Obtaining a Code Signing identity
         - [Android](how-to/code-signing/android.md)
         - [Linux](how-to/code-signing/linux.md)
