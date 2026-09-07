@@ -267,6 +267,9 @@ When writing or editing any `.md` file, do not insert newlines mid-sentence or m
 - **Imports**: `from __future__ import annotations` used widely for PEP 604 unions
 - **Paths**: Always use `pathlib.Path` objects, never raw strings
 - **Function call formatting**: When a function call with more than one argument cannot fit on a single line, place each argument on its own line with a trailing comma on the last argument — do **not** use the "multiple arguments on one wrapped line" style that ruff also permits. Prefer:
+
+  <!-- fmt: off -->
+
   ```python
   my_function(
       arg1,
@@ -280,7 +283,13 @@ When writing or editing any `.md` file, do not insert newlines mid-sentence or m
       arg1, arg2, arg3
   )
   ```
+
+  <!-- fmt: on -->
+
 - **Long string arguments**: When a string argument must be split across lines to satisfy line length requirements, wrap the concatenated string literals in parentheses so it is clear the string is a single argument. Prefer:
+
+  <!-- fmt: off -->
+
   ```python
   my_function(
       (
@@ -290,7 +299,9 @@ When writing or editing any `.md` file, do not insert newlines mid-sentence or m
       second_argument,
   )
   ```
+
   over:
+
   ```python
   my_function(
       "this is a very long string "
@@ -298,6 +309,8 @@ When writing or editing any `.md` file, do not insert newlines mid-sentence or m
       second_argument,
   )
   ```
+
+  <!-- fmt: on -->
 
 ### Docstring formatting
 
