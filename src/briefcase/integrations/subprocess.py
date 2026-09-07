@@ -557,11 +557,6 @@ class Subprocess(Tool):
                 [str(arg) for arg in args], **self.final_kwargs(**kwargs)
             )
         except subprocess.CalledProcessError as e:
-            # If the caller redirected stdout and/or stderr, the output was never
-            # printed to the console; without logging it here, the log records a
-            # failure with no explanation. check_output() logs it in the same
-            # situation. When output wasn't redirected, these are None and
-            # _log_output() is a no-op.
             self._log_output(e.output, e.stderr)
             self._log_return_code(e.returncode)
             raise

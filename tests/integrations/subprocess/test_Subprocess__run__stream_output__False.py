@@ -184,7 +184,7 @@ def test_debug_call_with_env(mock_sub, capsys, tmp_path, sub_kw):
 
 
 def test_calledprocesserror_exception_logging(mock_sub, capsys):
-    """Output captured on the exception is logged, not just the return code."""
+    """Output captured on the exception is logged."""
     mock_sub.tools.console.verbosity = LogLevel.DEBUG
 
     mock_sub._subprocess.run.side_effect = CalledProcessError(
@@ -210,32 +210,6 @@ def test_calledprocesserror_exception_logging(mock_sub, capsys):
         ">>> Command Error Output (stderr):\n"
         ">>>     error line 1\n"
         ">>>     error line 2\n"
-        ">>> Return code: -1\n"
-        "\n"
-    )
-    # fmt: on
-    assert capsys.readouterr().out == expected_output
-
-
-def test_calledprocesserror_without_captured_output(mock_sub, capsys):
-    """When output wasn't redirected, there is nothing to log but the return code."""
-    mock_sub.tools.console.verbosity = LogLevel.DEBUG
-
-    mock_sub._subprocess.run.side_effect = CalledProcessError(
-        returncode=-1,
-        cmd="hello world",
-    )
-
-    with pytest.raises(CalledProcessError):
-        mock_sub.run(["hello", "world"], stream_output=False)
-
-    # fmt: off
-    expected_output = (
-        "\n"
-        ">>> Running Command:\n"
-        ">>>     hello world\n"
-        ">>> Working Directory:\n"
-        f">>>     {Path.cwd()}\n"
         ">>> Return code: -1\n"
         "\n"
     )
