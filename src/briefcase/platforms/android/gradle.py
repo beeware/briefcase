@@ -403,9 +403,9 @@ class GradleRunCommand(GradleMixin, RunCommand):
             help=(
                 "The device to target; either a device ID for a physical device, "
                 "or an AVD name ('@emulatorName'), or 'auto' (the default) to "
-                'automatically select a default "BeePhone" emulator (creating one '
+                'automatically select a default "beePhone" emulator (creating one '
                 "if necessary). Provide -d with no value to select from the full "
-                "list of available simulators."
+                "list of available emulators, or to create one interactively."
             ),
             required=False,
         )
