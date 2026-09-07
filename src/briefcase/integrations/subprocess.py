@@ -557,6 +557,7 @@ class Subprocess(Tool):
                 [str(arg) for arg in args], **self.final_kwargs(**kwargs)
             )
         except subprocess.CalledProcessError as e:
+            self._log_output(e.output, e.stderr)
             self._log_return_code(e.returncode)
             raise
         self._log_return_code(command_result.returncode)
