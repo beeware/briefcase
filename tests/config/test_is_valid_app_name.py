@@ -45,3 +45,16 @@ def test_is_valid_app_name(name):
 def test_is_invalid_app_name(name):
     """Test that invalid app names are rejected."""
     assert not is_valid_app_name(name)
+
+@pytest.mark.parametrize(
+    "app_name",
+    [
+        "my@app",
+        "app#name",
+        "hello$world",
+        "test!app",
+    ],
+)
+def test_invalid_app_name_special_characters(app_name):
+    """Verify that app names with special characters are considered invalid."""
+    assert not is_valid_app_name(app_name)

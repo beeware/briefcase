@@ -55,12 +55,15 @@ def get_module_name(app_name: str) -> str:
     return app_name.replace("-", "_")
 
 
+INVALID_APP_NAME_CHARS = set('!@#$%^&*()+={}[]|\\:;"\'<>,?/')
 def is_valid_app_name(app_name):
     module_name = get_module_name(app_name)
+    has_invalid_chars = any(char in INVALID_APP_NAME_CHARS for char in app_name)
     return (
         not is_reserved_keyword(app_name)
         and is_valid_pep508_name(module_name)
         and module_name.isidentifier()
+        and not has_invalid_chars
     )
 
 
