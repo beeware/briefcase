@@ -98,6 +98,7 @@ jarsigner
 JDK
 jks
 JSON
+Kerberos
 keychain
 Keychain
 keystore

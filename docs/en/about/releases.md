@@ -2,6 +2,48 @@
 
 <!-- towncrier release notes start -->
 
+## 0.4.5 (2026-09-07)
+
+### Features
+
+* Windows and macOS apps can now use `conda` to manage their Python environments. ([#596](https://github.com/beeware/briefcase/issues/596))
+* Windows, macOS, iOS and Linux System apps can now use `uv` to manage their Python environments. ([#2231](https://github.com/beeware/briefcase/issues/2231))
+* Linux system packages (`.deb`, `.rpm` and `.pkg.tar.zst`) can now be signed with a GPG signing identity, using the `--identity` option to `briefcase package`. Signing is not currently supported when building with Docker. ([#2396](https://github.com/beeware/briefcase/issues/2396))
+* MSI installers can now provide the option to create a desktop shortcut using the [`create_desktop_shortcut`][] option. ([#2914](https://github.com/beeware/briefcase/issues/2914))
+* You can now set the `BRIEFCASE_ALLOW_EMULATION` environment variable to allow Briefcase to run when using an x86_64 Python executable on ARM64 hardware. ([#2957](https://github.com/beeware/briefcase/issues/2957))
+* Apps now use an isolated environment when installing requirements. This removes a source of error where the environment running Briefcase could have an impact the packages installed into a standalone app. ([#2967](https://github.com/beeware/briefcase/issues/2967))
+* Downloads of pinned third-party tools (such as the Java JDK, and the Android SDK command-line tools) and binary artefacts used by Briefcase (such as the support packages and stub binaries) can now be verified against a known-good hash, so corrupted or tampered downloads will be identified. ([#2980](https://github.com/beeware/briefcase/issues/2980))
+* Templates cloned by Briefcase are now verified against a known-good commit hash, protecting against a tampered or unexpectedly moved template branch tag. User specified templates (or template branch configurations) can provide a hash for verification purposes. ([#2981](https://github.com/beeware/briefcase/issues/2981))
+* Windows MSI install and uninstall options can now be limited to current-user or all-user installs. ([#2986](https://github.com/beeware/briefcase/issues/2986))
+* `briefcase run iOS` now automatically selects a recent "entry level" iPhone simulator (e.g., an iPhone SE, or iPhone 16e) on the most recent available iOS version if `-d`/`--device` isn't provided. Use `-d auto` to request this behavior explicitly, or `-d` with no value to see the full list of available simulators as before. ([#3031](https://github.com/beeware/briefcase/issues/3031))
+* Support for Python 3.15 was added. ([#3035](https://github.com/beeware/briefcase/issues/3035))
+
+### Bugfixes
+
+* Installing an APK now gives a specific, actionable error message when installation fails due to the existing app being signed with a different key, or because a newer version is already installed on the device. ([#1362](https://github.com/beeware/briefcase/issues/1362))
+* Windows apps packaged as ZIP bundles are now safe from the "Mark of the Web". ([#1890](https://github.com/beeware/briefcase/issues/1890))
+* When a non-streamed subprocess call fails, any output captured on the exception is now written to the log. ([#1918](https://github.com/beeware/briefcase/issues/1918))
+* New PySide6 projects now include an optional Flatpak module snippet for the Kerberos libraries required by `QtWebEngineWidgets`. ([#2182](https://github.com/beeware/briefcase/issues/2182))
+* When the Briefcase stub binary starts the Python interpreter, default Python signal handlers are now correctly installed. This means Briefcase-packaged apps will no longer terminate when sent a `SIGPIPE`, `SIGXFZ` or `SIGXFSZ` signal (matching the default behavior of a Python interpreter). ([#3013](https://github.com/beeware/briefcase/issues/3013))
+* Projects created by the new project wizard no longer generate an empty `resources` folder. ([#3015](https://github.com/beeware/briefcase/issues/3015))
+* The project wizard now generates a valid SPDX identifier for a project with a "Proprietary" or "Other" license. ([#3016](https://github.com/beeware/briefcase/issues/3016))
+* The end-of-app life cycle for a macOS and iOS application now guarantees that the embedded Python interpreter is not finalized before Objective C code has had a chance to auto-release any objects that might be under management. This could lead to segmentation faults on application exit, especially when an Objective C object was orphaned and in a cyclical reference with a Python object. ([#3026](https://github.com/beeware/briefcase/issues/3026))
+* Windows MSI installers now uses "(App name) Installation" as the title for all pages of the installation wizard, and "(App name) Uninstallation" as the title for all pages of the uninstallation wizard. ([#3027](https://github.com/beeware/briefcase/issues/3027))
+
+### Backward Incompatible Changes
+
+* Windows apps now enforce the use of binary artefacts when installing Python dependencies. If you have a dependency that is only available as a source tarball, ask the upstream maintainer to publish a wheel on PyPI; alternatively, you can build a wheel locally (using `pip wheel`), and then add the directory that contains the wheel to your requirements using `requirement_installer_args`. ([#2967](https://github.com/beeware/briefcase/issues/2967))
+* Built-in support for PyGame has been removed. PyGame CE is still supported through the Briefcase plugin provided by the PyGame CE project. ([#3029](https://github.com/beeware/briefcase/issues/3029))
+* Python 3.10 is no longer supported. ([#3035](https://github.com/beeware/briefcase/issues/3035))
+
+### Documentation
+
+* Requirements for iOS icon formats have been clarified. ([#2942](https://github.com/beeware/briefcase/issues/2942))
+
+### Misc
+
+* [#2382](https://github.com/beeware/briefcase/issues/2382), [#2383](https://github.com/beeware/briefcase/issues/2383), [#2728](https://github.com/beeware/briefcase/issues/2728), [#2884](https://github.com/beeware/briefcase/issues/2884), [#2929](https://github.com/beeware/briefcase/issues/2929), [#2943](https://github.com/beeware/briefcase/issues/2943), [#2930](https://github.com/beeware/briefcase/issues/2930), [#2931](https://github.com/beeware/briefcase/issues/2931), [#2937](https://github.com/beeware/briefcase/issues/2937), [#2944](https://github.com/beeware/briefcase/issues/2944), [#2945](https://github.com/beeware/briefcase/issues/2945), [#2946](https://github.com/beeware/briefcase/issues/2946), [#2947](https://github.com/beeware/briefcase/issues/2947), [#2948](https://github.com/beeware/briefcase/issues/2948), [#2956](https://github.com/beeware/briefcase/issues/2956), [#2958](https://github.com/beeware/briefcase/issues/2958), [#2960](https://github.com/beeware/briefcase/issues/2960), [#2961](https://github.com/beeware/briefcase/issues/2961), [#2962](https://github.com/beeware/briefcase/issues/2962), [#2964](https://github.com/beeware/briefcase/issues/2964), [#2965](https://github.com/beeware/briefcase/issues/2965), [#2969](https://github.com/beeware/briefcase/issues/2969), [#2971](https://github.com/beeware/briefcase/issues/2971), [#2974](https://github.com/beeware/briefcase/issues/2974), [#2975](https://github.com/beeware/briefcase/issues/2975), [#2976](https://github.com/beeware/briefcase/issues/2976), [#2977](https://github.com/beeware/briefcase/issues/2977), [#2978](https://github.com/beeware/briefcase/issues/2978), [#2983](https://github.com/beeware/briefcase/issues/2983), [#2989](https://github.com/beeware/briefcase/issues/2989), [#2990](https://github.com/beeware/briefcase/issues/2990), [#2991](https://github.com/beeware/briefcase/issues/2991), [#2992](https://github.com/beeware/briefcase/issues/2992), [#2993](https://github.com/beeware/briefcase/issues/2993), [#2994](https://github.com/beeware/briefcase/issues/2994), [#2995](https://github.com/beeware/briefcase/issues/2995), [#2996](https://github.com/beeware/briefcase/issues/2996), [#2997](https://github.com/beeware/briefcase/issues/2997), [#2998](https://github.com/beeware/briefcase/issues/2998), [#3002](https://github.com/beeware/briefcase/issues/3002), [#3004](https://github.com/beeware/briefcase/issues/3004), [#3005](https://github.com/beeware/briefcase/issues/3005), [#3006](https://github.com/beeware/briefcase/issues/3006), [#3007](https://github.com/beeware/briefcase/issues/3007), [#3008](https://github.com/beeware/briefcase/issues/3008), [#3009](https://github.com/beeware/briefcase/issues/3009), [#3010](https://github.com/beeware/briefcase/issues/3010), [#3017](https://github.com/beeware/briefcase/issues/3017), [#3018](https://github.com/beeware/briefcase/issues/3018), [#3019](https://github.com/beeware/briefcase/issues/3019), [#3023](https://github.com/beeware/briefcase/issues/3023), [#3024](https://github.com/beeware/briefcase/issues/3024), [#3025](https://github.com/beeware/briefcase/issues/3025), [#3038](https://github.com/beeware/briefcase/issues/3038), [#3039](https://github.com/beeware/briefcase/issues/3039), [#3040](https://github.com/beeware/briefcase/issues/3040), [#3041](https://github.com/beeware/briefcase/issues/3041)
+
 ## 0.4.4 (2026-07-08)
 
 ### Bugfixes
