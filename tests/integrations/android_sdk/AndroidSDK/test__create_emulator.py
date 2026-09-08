@@ -26,6 +26,13 @@ def android_sdk(android_sdk) -> AndroidSDK:
             "idleEmulator",
         ]
     )
+    # Mock available system images
+    android_sdk.list_available_system_images = MagicMock(
+        return_value=[
+            "system-images;android-31;default;x86_64",
+            "system-images;android-34;default;x86_64",
+        ]
+    )
     return android_sdk
 
 
@@ -311,8 +318,12 @@ def test_default_name(mock_tools, android_sdk, tmp_path):
     # This test doesn't validate most of the test process;
     # it only checks that the emulator is created with the default name.
 
-    # User provides no input; default name will be used
-    mock_tools.console.values = [""]
+    # User provides no input; default name, system image and image type will be used.
+    mock_tools.console.values = [
+        "",
+        "",
+        "",
+    ]
 
     # Mock the initial output of an AVD config file.
     avd_config_path = tmp_path / "home/.android/avd/beePhone.avd/config.ini"
@@ -320,8 +331,12 @@ def test_default_name(mock_tools, android_sdk, tmp_path):
     with avd_config_path.open("w", encoding="utf-8") as f:
         f.write("hw.device.name=pixel\n")
 
+    # Create a mock app
+    app = MagicMock()
+    del app.min_os_version  # ensure getattr fallback is used
+
     # Create the emulator
-    avd = android_sdk.create_emulator()
+    avd = android_sdk.create_emulator(app)
 
     # The expected device AVD was created.
     assert avd == "beePhone"
@@ -340,8 +355,12 @@ def test_default_name_with_collisions(mock_tools, android_sdk, tmp_path):
             "beePhone",
         ]
     )
-    # User provides no input; default name will be used
-    mock_tools.console.values = [""]
+    # User provides no input; default name, system image and image type will be used.
+    mock_tools.console.values = [
+        "",
+        "",
+        "",
+    ]
 
     # Mock the initial output of an AVD config file.
     avd_config_path = tmp_path / "home/.android/avd/beePhone3.avd/config.ini"
@@ -349,8 +368,12 @@ def test_default_name_with_collisions(mock_tools, android_sdk, tmp_path):
     with avd_config_path.open("w", encoding="utf-8") as f:
         f.write("hw.device.name=pixel\n")
 
+    # Create a mock app
+    app = MagicMock()
+    del app.min_os_version  # ensure getattr fallback is used
+
     # Create the emulator
-    avd = android_sdk.create_emulator()
+    avd = android_sdk.create_emulator(app)
 
     # The expected device AVD was created.
     assert avd == "beePhone3"
