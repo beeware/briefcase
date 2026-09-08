@@ -319,7 +319,7 @@ or:
 
 class iOSXcodeCreateCommand(iOSXcodePassiveMixin, CreateCommand):
     description = "Create and populate a iOS Xcode project."
-    app_template_hash = "sha1:7131cedea8ed197c60c165204edbae38180eaa07"
+    app_template_hash = "sha1:9565386b12ede7bf5581a2dec319111b098ddaea"
 
     def permissions_context(
         self,
