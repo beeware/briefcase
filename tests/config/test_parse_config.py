@@ -726,12 +726,13 @@ def test_pep_621_merge(tmp_path):
         """,
     )
 
-    _, apps = parse_config(
-        config_file,
-        platform="macOS",
-        output_format="app",
-        console=Mock(),
-    )
+    with pytest.warns(FutureWarning, match="not a valid PEP 621 project name"):
+        _, apps = parse_config(
+            config_file,
+            platform="macOS",
+            output_format="app",
+            console=Mock(),
+        )
 
     awesome = apps["awesome"]
     assert awesome == {
@@ -1377,12 +1378,13 @@ def test_license_text_non_spdx(tmp_path):
     )
 
     console = Mock()
-    _, apps = parse_config(
-        config_path,
-        platform="macOS",
-        output_format="app",
-        console=console,
-    )
+    with pytest.warns(FutureWarning, match="not a valid PEP 621 project name"):
+        _, apps = parse_config(
+            config_path,
+            platform="macOS",
+            output_format="app",
+            console=console,
+        )
 
     assert apps["my_app"]["license"] == "LicenseRef-UnknownLicense"
     assert apps["my_app"]["license_files"] == []
@@ -1421,12 +1423,13 @@ def test_license_text_non_spdx_multiline(tmp_path):
     )
 
     console = Mock()
-    _, apps = parse_config(
-        config_path,
-        platform="macOS",
-        output_format="app",
-        console=console,
-    )
+    with pytest.warns(FutureWarning, match="not a valid PEP 621 project name"):
+        _, apps = parse_config(
+            config_path,
+            platform="macOS",
+            output_format="app",
+            console=console,
+        )
 
     assert apps["my_app"]["license"] == "LicenseRef-UnknownLicense"
     assert apps["my_app"]["license_files"] == ["build/license_text.my_app.txt"]
@@ -1510,6 +1513,7 @@ def test_pep621_empty_dynamic(monkeypatch, tmp_path):
     assert awesome == {
         "app_name": "awesome",
         "bundle": "com.example",
+        "project_name": "awesome",
         "version": "1.2.3",
         "license": "EUPL-1.2",
         "license_files": [],
@@ -1584,6 +1588,7 @@ def test_pep621_dynamic(monkeypatch, tmp_path):
         "formal_name": "Awesome Application",
         "license": "GPL-3.0",
         "license_files": [],
+        "project_name": "awesome",
         "requires": ["toga>=0.5.3"],
         "url": "https://example.com/",
         "version": "1.2.3",
