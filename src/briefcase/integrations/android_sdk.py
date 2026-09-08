@@ -1138,12 +1138,12 @@ In future, you can specify this device by running:
         # Get the list of existing emulators
         emulators = set(self.emulators())
 
-        default_avd = "beePhone"
+        default_avd = self.DEFAULT_AVD
         i = 1
         # Make sure the default name is unique
         while default_avd in emulators:
             i += 1
-            default_avd = f"beePhone{i}"
+            default_avd = f"{self.DEFAULT_AVD}-{i}"
 
         # Prompt for a device avd until a valid one is provided.
         avd = self.tools.console.text_question(
