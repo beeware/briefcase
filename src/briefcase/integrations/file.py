@@ -282,6 +282,13 @@ class File(Tool):
           doesn't match, a `CorruptContentError` is raised. Any fixed-length
           hash algorithm provided by hashlib can be used.
 
+        If the file is already present in the download cache, it is *not*
+        re-downloaded; however, its content is still re-hashed and compared
+        against `expected_hash` every time, so a corrupted or tampered cache
+        entry will still raise `CorruptContentError`. A console message
+        confirms when a hash has been checked and verified, for both cached
+        and freshly downloaded files.
+
         :param url: The URL to download
         :param download_path: The path to the download cache folder. This path
             will be created if it doesn't exist.
@@ -331,14 +338,31 @@ class File(Tool):
                 cache_name = cache_full_name.split("/")[-1]
                 filename = download_path / cache_name
 
+                if expected_hash is None:
+                    self.tools.console.warning(
+                        f"The integrity of {cache_name} will not be verified "
+                        "as no reference hash been provided."
+                    )
+
                 if filename.exists():
-                    self.tools.console.info(f"{cache_name} already downloaded")
-                else:
-                    if expected_hash is None:
-                        self.tools.console.warning(
-                            f"The integrity of {cache_name} will not be verified "
-                            "as no reference hash been provided."
+                    if algorithm is None:
+                        self.tools.console.info(f"{cache_name} already downloaded.")
+                    else:
+                        with filename.open("rb") as f:
+                            hash = hashlib.file_digest(f, algorithm)
+
+                        actual_digest = hash.hexdigest()
+                        if actual_digest.lower() != digest.lower():
+                            raise CorruptContentError(
+                                role=role or filename.name,
+                                expected_hash=f"{algorithm}:{digest}",
+                                actual_hash=f"{algorithm}:{actual_digest}",
+                            )
+                        self.tools.console.info(
+                            f"{cache_name} already downloaded; "
+                            f"hash verified ({algorithm})."
                         )
+                else:
                     self.tools.console.info(f"Downloading {cache_name}...")
                     self._fetch_and_write_content(
                         response,
@@ -488,11 +512,15 @@ class File(Tool):
                                 hasher.update(data)
                             progress_bar.update(task_id, advance=len(data))
 
-            if hasher is not None and hasher.hexdigest().lower() != digest.lower():
-                raise CorruptContentError(
-                    role=role or filename.name,
-                    expected_hash=f"{hasher.name}:{digest}",
-                    actual_hash=f"{hasher.name}:{hasher.hexdigest()}",
+            if hasher is not None:
+                if hasher.hexdigest().lower() != digest.lower():
+                    raise CorruptContentError(
+                        role=role or filename.name,
+                        expected_hash=f"{hasher.name}:{digest}",
+                        actual_hash=f"{hasher.name}:{hasher.hexdigest()}",
+                    )
+                self.tools.console.info(
+                    f"{filename.name} hash verified ({hasher.name})."
                 )
 
             # This file move short circuits to a file rename when the source and

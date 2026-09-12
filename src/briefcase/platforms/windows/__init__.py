@@ -184,7 +184,9 @@ class WindowsCreateCommand(CreateCommand):
 
     def support_package_filename(self, support_revision):
         arch = self.tools.host_arch.lower()
-        return f"python-{self.python_version_tag}.{support_revision}-embed-{arch}.zip"
+        return (
+            f"python-{self.python_version_tag}.{support_revision}-embeddable-{arch}.zip"
+        )
 
     def support_package_url(self, support_revision):
         micro = re.match(r"\d+", str(support_revision)).group(0)

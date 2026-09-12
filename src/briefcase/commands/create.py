@@ -289,6 +289,7 @@ class CreateCommand(BaseCommand):
                 "python_version": platform.python_version(),
                 # The host architecture
                 "host_arch": self.tools.host_arch,
+                "is_32bit_python": self.tools.is_32bit_python,
                 # Transformations of explicit properties into useful forms
                 "class_name": app.class_name,
                 "module_name": app.module_name,

@@ -61,6 +61,7 @@ def full_context():
         # Properties of the generating environment
         "python_version": platform.python_version(),
         "host_arch": "gothic",
+        "is_32bit_python": False,
         "briefcase_version": briefcase.__version__,
         # Properties of the template
         "template_source": (

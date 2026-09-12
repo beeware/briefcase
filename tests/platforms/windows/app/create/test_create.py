@@ -270,7 +270,7 @@ def test_support_package_url(create_command, revision, micro):
     expected_link = (
         f"https://www.python.org/ftp/python"
         f"/{sys.version_info.major}.{sys.version_info.minor}.{micro}"
-        f"/python-{sys.version_info.major}.{sys.version_info.minor}.{revision}-embed-{create_command.tools.host_arch.lower()}.zip"
+        f"/python-{sys.version_info.major}.{sys.version_info.minor}.{revision}-embeddable-{create_command.tools.host_arch.lower()}.zip"
     )
     assert create_command.support_package_url(revision) == expected_link
 

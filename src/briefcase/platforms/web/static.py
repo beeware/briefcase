@@ -69,7 +69,7 @@ class StaticWebMixin:
 
 class StaticWebCreateCommand(StaticWebMixin, CreateCommand):
     description = "Create and populate a static web project."
-    app_template_hash = "sha1:0a60fc2869e262723c6f3a00063af866236b20a7"
+    app_template_hash = "sha1:a0e3738018ab88546f7bf1009f4ab719e23c8ccf"
 
 
 class StaticWebUpdateCommand(StaticWebCreateCommand, UpdateCommand):

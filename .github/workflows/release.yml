@@ -13,6 +13,7 @@ jobs:
       id-token: write
       contents: read
       attestations: write
+      pull-requests: write
     name: CI
     uses: ./.github/workflows/ci.yml
     with:

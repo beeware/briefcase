@@ -221,11 +221,17 @@ def test_new_download_oneshot(
     with (mock_tools.base_path / "downloads/something.zip").open(encoding="utf-8") as f:
         assert f.read() == "all content"
 
-    # Verify that the expected warnings are output
+    # Verify that the expected warnings/confirmations are output
+    output = capsys.readouterr().out
     if hash_algorithm is None:
-        assert "will not be verified" in capsys.readouterr().out
+        assert "will not be verified" in output
+        assert "hash verified" not in output
+    elif hash_algorithm == "unverified":
+        assert "will not be verified" not in output
+        assert "hash verified" not in output
     else:
-        assert "will not be verified" not in capsys.readouterr().out
+        assert "will not be verified" not in output
+        assert f"hash verified ({hash_algorithm})" in output
 
 
 @pytest.mark.parametrize(
@@ -299,16 +305,23 @@ def test_new_download_chunked(mock_tools, file_perms, hash_algorithm, capsys):
     with (mock_tools.base_path / "something.zip").open(encoding="utf-8") as f:
         assert f.read() == "chunk-1;chunk-2;chunk-3;"
 
-    # Verify that the expected warnings are output
+    # Verify that the expected warnings/confirmations are output
+    output = capsys.readouterr().out
     if hash_algorithm is None:
-        assert "will not be verified" in capsys.readouterr().out
+        assert "will not be verified" in output
+        assert "hash verified" not in output
+    elif hash_algorithm == "unverified":
+        assert "will not be verified" not in output
+        assert "hash verified" not in output
     else:
-        assert "will not be verified" not in capsys.readouterr().out
+        assert "will not be verified" not in output
+        assert f"hash verified ({hash_algorithm})" in output
 
 
 @pytest.mark.parametrize("hash_algorithm", [None, "unverified", "sha256"])
 def test_already_downloaded(mock_tools, hash_algorithm, capsys):
-    """If the file already exists on disk, it isn't re-downloaded.
+    """If the file already exists on disk, it isn't re-downloaded, but its hash is re-
+    verified against expected_hash.
 
     The request is still made to derive the filename, but the content is never streamed.
     """
@@ -367,8 +380,73 @@ def test_already_downloaded(mock_tools, hash_algorithm, capsys):
     mock_tools.os.chmod.assert_not_called()
     mock_tools.os.remove.assert_not_called()
 
-    # No mention of verification
-    assert "will not be verified" not in capsys.readouterr().out
+    output = capsys.readouterr().out
+    if hash_algorithm is None:
+        # No hash was provided, so a warning is logged, and there's nothing to
+        # confirm as verified.
+        assert "will not be verified" in output
+        assert "already downloaded." in output
+        assert "already downloaded; hash verified" not in output
+    elif hash_algorithm == "unverified":
+        # Verification was deliberately skipped; no warning, nothing verified.
+        assert "will not be verified" not in output
+        assert "already downloaded." in output
+        assert "already downloaded; hash verified" not in output
+    else:
+        # A real hash was provided and matched; confirm it was verified.
+        assert "will not be verified" not in output
+        assert "already downloaded." not in output
+        assert f"already downloaded; hash verified ({hash_algorithm})" in output
+
+
+def test_already_downloaded_hash_mismatch(mock_tools, capsys):
+    """If the cached file's content doesn't match expected_hash, CorruptContentError is
+    raised, even though the file is already on disk."""
+    content = b"existing content"
+
+    # Create an existing file whose content doesn't match the expected hash
+    existing_file = mock_tools.base_path / "something.zip"
+    with existing_file.open("w", encoding="utf-8") as f:
+        f.write(content.decode())
+
+    url = "https://example.com/path/to/something.zip"
+
+    response = _make_httpx_response(
+        status_code=200,
+        url=url,
+        headers={"content-length": "100", "content-encoding": "gzip"},
+        stream=[b"definitely not gzip content"],
+    )
+    mock_tools.httpx.stream.return_value.__enter__.return_value = response
+
+    expected_hash = f"sha256:{'0' * 64}"
+
+    with pytest.raises(CorruptContentError) as exc_info:
+        mock_tools.file.download(
+            url=url,
+            download_path=mock_tools.base_path,
+            role="something",
+            expected_hash=expected_hash,
+        )
+
+    assert exc_info.value.role == "something"
+    assert exc_info.value.expected_hash == expected_hash
+    assert exc_info.value.actual_hash == (
+        f"sha256:{hashlib.sha256(content).hexdigest()}"
+    )
+
+    # The cached file was not touched
+    assert existing_file.exists()
+    with existing_file.open(encoding="utf-8") as f:
+        assert f.read() == content.decode()
+
+    # Temporary file was not created, moved, or deleted
+    mock_tools.shutil.move.assert_not_called()
+    mock_tools.os.chmod.assert_not_called()
+    mock_tools.os.remove.assert_not_called()
+
+    # No success confirmation was logged
+    assert "hash verified" not in capsys.readouterr().out
 
 
 def test_missing_resource(mock_tools):

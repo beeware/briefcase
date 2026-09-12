@@ -1,5 +1,18 @@
 # Command reference
 
+Briefcase has a number of sub-commands:
+
+* [`new`](./new.md) - Create a new project
+* [`convert`](./convert.md) - Convert an existing PEP 621 project into a Briefcase project
+* [`dev`](./dev.md) - Run the project in developer mode
+* [`create`](./create.md) - Create a scaffold for an application installer
+* [`build`](./build.md) - Compile/build an application.
+* [`update`](./update.md) - Update the code or dependencies for an application
+* [`run`](./run.md) - Run a complete standalone application
+* [`package`](./package.md) - Package an application for distribution
+* [`publish`](./publish.md) - Publish an application into a distribution channel
+* [`upgrade`](./upgrade.md) - Upgrade the tools managed by Briefcase
+
 ## Common options
 
 The following options are available to all commands:
