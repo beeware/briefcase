@@ -81,7 +81,7 @@ class NewCommand(BaseCommand):
     template_url = "https://github.com/beeware/briefcase-template"
 
     # The expected commit hash of the project template
-    template_hash = "sha1:32ad2fe2db8d92787acc74ee54788a38a56c4970"
+    template_hash = "sha1:476c396a300e6844d89f49de4dabfde202442776"
 
     def bundle_path(self, app):
         """A placeholder; New command doesn't have a bundle path."""

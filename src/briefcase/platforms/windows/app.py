@@ -35,7 +35,7 @@ class WindowsAppMixin(WindowsMixin):
 
 class WindowsAppCreateCommand(WindowsAppMixin, WindowsCreateCommand):
     description = "Create and populate a Windows app."
-    app_template_hash = "sha1:84df4f525fbcf377c39b697ddce970c607fb14d0"
+    app_template_hash = "sha1:39b4e92cc23bfd6f1eecb5a5ba03281bf40eccf7"
 
 
 class WindowsAppUpdateCommand(WindowsAppCreateCommand, UpdateCommand):

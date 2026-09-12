@@ -124,7 +124,7 @@ The following options can be provided at the command line when producing Android
 
 ### run
 
-#### `-d <device>` / `--device <device>`
+#### `-d [<device>]` / `--device [<device>]`
 
 The device or emulator to target. Can be specified in one of the following forms:
 
@@ -146,7 +146,9 @@ The device or emulator to target. Can be specified in one of the following forms
 
     If no device type is specified, a default device with a default skin will be used. If no system image is specified, a default system image will be used. If a device type is specified, but no *skin* is specified, a "skinless" device will be created.
 
-If this option is not provided, Briefcase will ask whether you want to use an existing device, or create a new one.
+* `auto` to select a default emulator device. Briefcase will create an emulator based on a recent Android version if one does not exist.
+
+If this option is not provided, `auto` will be used. To see the full list of available devices and emulators (including the option to create a new emulator) and select from that list, provide `-d`/`--device` with no value.
 
 #### `--Xemulator=<value>`
 

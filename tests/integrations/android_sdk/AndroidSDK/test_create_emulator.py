@@ -100,7 +100,7 @@ def test_default_name(mock_tools, android_sdk, tmp_path):
     avd = android_sdk.create_emulator()
 
     # The expected device AVD was created.
-    assert avd == "beePhone"
+    assert avd == "beePhone-31"
 
 
 def test_default_name_with_collisions(mock_tools, android_sdk, tmp_path):
@@ -111,8 +111,10 @@ def test_default_name_with_collisions(mock_tools, android_sdk, tmp_path):
     # Create some existing emulators that will collide with the default name.
     android_sdk.emulators = MagicMock(
         return_value=[
-            "beePhone2",
+            "beePhone-31-2",
             "runningEmulator",
+            "beePhone-35",
+            "beePhone-31",
             "beePhone",
         ]
     )
@@ -125,4 +127,4 @@ def test_default_name_with_collisions(mock_tools, android_sdk, tmp_path):
     avd = android_sdk.create_emulator()
 
     # The expected device AVD was created.
-    assert avd == "beePhone3"
+    assert avd == "beePhone-31-3"

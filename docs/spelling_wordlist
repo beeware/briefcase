@@ -98,6 +98,7 @@ jarsigner
 JDK
 jks
 JSON
+Kerberos
 keychain
 Keychain
 keystore
@@ -140,6 +141,7 @@ PDB
 PFX
 phablet
 PID
+pipx
 PNG
 PowerShell
 ppb
@@ -237,6 +239,7 @@ UTI
 UTIs
 UTTypeConformsTo
 uv
+uvx
 vendored
 Ventura
 venv
