@@ -346,12 +346,12 @@ def validate_install_options_config(config, opt_type, **others):
     return options
 
 
-VALID_BUNDLE_RE = re.compile(r"[a-zA-Z0-9-]+(\.[a-zA-Z0-9-]+)+$")
+VALID_BUNDLE_RE = re.compile(r"[a-zA-Z0-9-]+(\.[a-zA-Z0-9-]+)+")
 
 
 def is_valid_bundle_identifier(bundle):
     """Check if the bundle identifier follows the basic reversed domain name pattern."""
-    return VALID_BUNDLE_RE.match(bundle) is not None
+    return VALID_BUNDLE_RE.fullmatch(bundle) is not None
 
 
 def parse_boolean(value: str) -> bool:
