@@ -195,7 +195,7 @@ def test_new_download_oneshot(
         "GET",
         "https://example.com/support?useful=Yes",
         follow_redirects=True,
-        verify=mock_tools.file.ssl_context,
+        verify=True,
     )
     response.headers.get.assert_called_with("content-length")
     response.read.assert_called_once()
@@ -278,7 +278,7 @@ def test_new_download_chunked(mock_tools, file_perms, hash_algorithm, capsys):
         "GET",
         "https://example.com/support?useful=Yes",
         follow_redirects=True,
-        verify=mock_tools.file.ssl_context,
+        verify=True,
     )
     response.headers.get.assert_called_with("content-length")
     response.iter_bytes.assert_called_once_with(chunk_size=1048576)
@@ -363,7 +363,7 @@ def test_already_downloaded(mock_tools, hash_algorithm, capsys):
         "GET",
         url,
         follow_redirects=True,
-        verify=mock_tools.file.ssl_context,
+        verify=True,
     )
 
     # The request's Content-Disposition header is consumed to
@@ -472,7 +472,7 @@ def test_missing_resource(mock_tools):
         "GET",
         url,
         follow_redirects=True,
-        verify=mock_tools.file.ssl_context,
+        verify=True,
     )
     response.headers.get.assert_not_called()
 
@@ -508,7 +508,7 @@ def test_bad_resource(mock_tools):
         "GET",
         url,
         follow_redirects=True,
-        verify=mock_tools.file.ssl_context,
+        verify=True,
     )
     response.headers.get.assert_not_called()
 
@@ -547,7 +547,7 @@ def test_iter_bytes_connection_error(mock_tools):
         "GET",
         "https://example.com/something.zip?useful=Yes",
         follow_redirects=True,
-        verify=mock_tools.file.ssl_context,
+        verify=True,
     )
     response.headers.get.assert_called_with("content-length")
 
@@ -590,7 +590,7 @@ def test_connection_error(mock_tools):
         "GET",
         url,
         follow_redirects=True,
-        verify=mock_tools.file.ssl_context,
+        verify=True,
     )
 
     # The file doesn't exist as a result of the download failure
@@ -627,7 +627,7 @@ def test_redirect_connection_error(mock_tools):
         "GET",
         "https://example.com/something.zip?useful=Yes",
         follow_redirects=True,
-        verify=mock_tools.file.ssl_context,
+        verify=True,
     )
 
     # The file doesn't exist as a result of the download failure
@@ -665,7 +665,7 @@ def test_ssl_verification_error(mock_tools):
         "GET",
         "https://example.com/something.zip",
         follow_redirects=True,
-        verify=mock_tools.file.ssl_context,
+        verify=True,
     )
 
     # The file doesn't exist as a result of the download failure
@@ -702,7 +702,7 @@ def test_unknown_httpcore_connectionerror(mock_tools):
         "GET",
         "https://example.com/something.zip",
         follow_redirects=True,
-        verify=mock_tools.file.ssl_context,
+        verify=True,
     )
 
     # The file doesn't exist as a result of the download failure
@@ -738,7 +738,7 @@ def test_unknown_httpx_connectionerror(mock_tools):
         "GET",
         "https://example.com/something.zip",
         follow_redirects=True,
-        verify=mock_tools.file.ssl_context,
+        verify=True,
     )
 
     # The file doesn't exist as a result of the download failure

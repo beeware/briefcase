@@ -14,7 +14,6 @@ from email.message import Message
 from pathlib import Path
 
 import httpx2
-import truststore
 from tenacity import retry, retry_if_exception_type, stop_after_attempt, wait_fixed
 
 from briefcase.exceptions import (
@@ -104,16 +103,6 @@ class File(Tool):
                 lambda path: (path.parent, path.is_dir()),
             )
         )
-
-    @property
-    def ssl_context(self):
-        """The SSL context to use for downloads."""
-        try:
-            return self._ssl_context
-        except AttributeError:
-            self._ssl_context = truststore.SSLContext(ssl.PROTOCOL_TLS_CLIENT)
-
-            return self._ssl_context
 
     def is_scm_url(self, path):
         """Determine if the requirement is defined as a URL.
@@ -307,7 +296,7 @@ class File(Tool):
                 "GET",
                 url,
                 follow_redirects=True,
-                verify=self.ssl_context,
+                verify=True,
             ) as response:
                 if response.status_code == 404:
                     raise MissingNetworkResourceError(url=url)
