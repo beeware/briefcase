@@ -7,7 +7,7 @@ import sys
 from pathlib import Path
 from unittest.mock import MagicMock
 
-import httpx
+import httpx2
 import pytest
 from cookiecutter.main import cookiecutter
 
@@ -83,7 +83,7 @@ def test_third_party_tools_available():
     assert ToolCache.sys is sys
 
     assert ToolCache.cookiecutter is cookiecutter
-    assert ToolCache.httpx is httpx
+    assert ToolCache.httpx2 is httpx2
 
 
 def test_always_true(simple_tools, tmp_path):
