@@ -74,9 +74,9 @@ When you install Visual Studio, there are many optional components. You should e
     - All default packages
 - Desktop Development with C++
     - All default packages
-    - C++/CLI support for v143 build tools
-    - MSVC v143 VS 2022 C++ x64 build tools (if using x86-64)
-    - MSVC v143 VS 2022 C++ ARM64 build tools (if using ARM64)
+    - C++/CLI support (MSVC v14.50)
+    - MSVC Build Tools v14.50 for x64/x86 (if using x86-64)
+    - MSVC Build Tools v14.50 for ARM64/ARM64EC (if using ARM64)
 
 ## Application configuration
 
