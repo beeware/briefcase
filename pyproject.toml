@@ -71,7 +71,6 @@ dependencies = [
     "setuptools >= 60",
     "wheel >= 0.37",
     "build >= 0.10",
-    "truststore >= 0.10.1",
     #
     # For the remaining packages: We set the lower version limit to the lowest possible
     # version that satisfies our API needs. If the package uses semver, we set a limit
@@ -89,7 +88,7 @@ dependencies = [
     "platformdirs >= 2.6, < 5.0",
     "psutil >= 5.9, < 8.0",
     "python-dateutil >= 2.9.0.post0",  # transitive dependency (beeware/briefcase#1428)
-    "httpx >= 0.20, < 1.0",
+    "httpx2 >= 2.13, < 3.0",
     "rich >= 12.6, < 16.0",
     "tenacity >= 8.0, < 10.0",
     "tomli_w >= 1.0, < 2.0",
@@ -128,7 +127,6 @@ dev = [
 test = [
     "coverage[toml] == 7.16.0",
     "coverage-conditional-plugin == 0.9.0",
-    "httpx-retries == 0.6.0",
     "pytest == 9.1.1",
     "pytest-xdist == 3.8.0",
     {include-group = "setuptools-scm"},

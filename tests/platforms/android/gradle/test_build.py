@@ -4,7 +4,7 @@ from subprocess import CalledProcessError
 from textwrap import dedent
 from unittest.mock import MagicMock, PropertyMock
 
-import httpx
+import httpx2
 import pytest
 
 from briefcase.console import LogLevel
@@ -25,7 +25,7 @@ def build_command(dummy_console, tmp_path, first_app_generated, monkeypatch):
     command.tools.os = MagicMock(spec_set=os)
     command.tools.os.environ = {}
     command.tools.sys = MagicMock(spec_set=sys)
-    command.tools.httpx = MagicMock(spec_set=httpx)
+    command.tools.httpx2 = MagicMock(spec_set=httpx2)
     command.tools.subprocess = MagicMock(spec_set=Subprocess)
     monkeypatch.setattr(
         type(command.tools), "system_encoding", PropertyMock(return_value="ISO-42")

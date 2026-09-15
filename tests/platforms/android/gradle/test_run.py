@@ -7,7 +7,7 @@ import time
 from pathlib import Path
 from unittest import mock
 
-import httpx
+import httpx2
 import pytest
 
 from briefcase.console import LogLevel
@@ -50,7 +50,7 @@ def run_command(dummy_console, tmp_path, first_app_config, jdk):
 
     command.tools.os = mock.MagicMock(spec_set=os)
     command.tools.os.environ = {}
-    command.tools.httpx = mock.MagicMock(spec_set=httpx)
+    command.tools.httpx2 = mock.MagicMock(spec_set=httpx2)
     command.tools.subprocess = mock.MagicMock(spec_set=Subprocess)
     command.tools.sys = mock.MagicMock(spec_set=sys)
 
