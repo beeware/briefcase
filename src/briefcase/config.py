@@ -107,6 +107,11 @@ def make_class_name(formal_name):
     ):
         class_name = f"_{class_name}"
 
+    # A keyword is not a valid identifier, e.g. `class lambda(toga.App)`
+    # does not parse. Prepend an underscore, as above.
+    if keyword.iskeyword(class_name):
+        class_name = f"_{class_name}"
+
     return class_name
 
 
