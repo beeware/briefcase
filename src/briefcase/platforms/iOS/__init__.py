@@ -25,7 +25,7 @@ class iOSMixin(_MixinBase):
     platform_target_version: str | None = "0.3.20"
 
     def verify_tools(self):
-        Xcode.verify(self.tools, min_version=(13, 0, 0))
+        Xcode.verify(self.tools)
 
         # Verify superclass tools *after* xcode. This ensures we get the
         # git check *after* the xcode check.

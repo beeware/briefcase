@@ -204,7 +204,7 @@ def test_installed_no_minimum_version(xcode, mock_tools):
     """If Xcode is installed, but there's no minimum version, check is satisfied."""
     mock_tools.subprocess.check_output.side_effect = [
         xcode + "\n",  # xcode-select -p
-        "Xcode 11.2.1\nBuild version 11B500\n",  # xcodebuild -version
+        "Xcode 27.0\nBuild version 27A266a\n",  # xcodebuild -version
     ]
 
     # Check passes without an error.
@@ -236,7 +236,7 @@ def test_installed_extra_output(capsys, xcode, mock_tools):
     Xcode.ensure_xcode_is_installed(
         mock_tools,
         xcode_location=xcode,
-        min_version=(11, 1),
+        min_version="11.1",
     )
 
     # subprocess was invoked as expected
@@ -256,31 +256,31 @@ def test_installed_extra_output(capsys, xcode, mock_tools):
     ("min_version", "version"),
     [
         # Exact match
-        ((11, 2, 1), "11.2.1"),  # Exact match
-        ((11, 2), "11.2.0"),  # Exact match, implied revision.
-        ((11,), "11.0.0"),  # Exact match, implied minor version.
+        ("11.2.1", "11.2.1"),  # Exact match
+        ("11.2", "11.2.0"),  # Exact match, implied revision.
+        ("11", "11.0.0"),  # Exact match, implied minor version.
         # Rules still work for single digit versions
-        ((8, 2, 1), "8.2.1"),  # Exact match
-        ((8, 2), "8.2.0"),  # Exact match, implied revision.
-        ((8,), "8.0.0"),  # Exact match, implied minor version.
+        ("8.2.1", "8.2.1"),  # Exact match
+        ("8.2", "8.2.0"),  # Exact match, implied revision.
+        ("8", "8.0.0"),  # Exact match, implied minor version.
         # Exceeds version
-        ((11, 2, 1), "11.2.5"),  # Exceeds revision requirement
-        ((11, 2, 1), "11.3.0"),  # Exceeds minor requirement
-        ((11, 2, 1), "12.0.0"),  # Exceeds major requirement
-        ((11, 2), "11.2.5"),  # Exceeds implied revision requirement
-        ((11, 2), "11.3.0"),  # Exceeds minor requirement
-        ((11, 2), "12.0.0"),  # Exceeds major requirement
-        ((11,), "11.2.5"),  # Exceeds implied revision requirement
-        ((11,), "11.3.0"),  # Exceeds implied minor requirement
-        ((11,), "12.0.0"),  # Exceeds major requirement
+        ("11.2.1", "11.2.5"),  # Exceeds revision requirement
+        ("11.2.1", "11.3.0"),  # Exceeds minor requirement
+        ("11.2.1", "12.0.0"),  # Exceeds major requirement
+        ("11.2", "11.2.5"),  # Exceeds implied revision requirement
+        ("11.2", "11.3.0"),  # Exceeds minor requirement
+        ("11.2", "12.0.0"),  # Exceeds major requirement
+        ("11", "11.2.5"),  # Exceeds implied revision requirement
+        ("11", "11.3.0"),  # Exceeds implied minor requirement
+        ("11", "12.0.0"),  # Exceeds major requirement
         # 2 digit version number
         # exact match
-        ((11, 2, 0), "11.2"),  # Exact match.
-        ((11, 2), "11.2"),  # Exact match, implied revision.
+        ("11.2.0", "11.2"),  # Exact match.
+        ("11.2", "11.2"),  # Exact match, implied revision.
         # exceeds version
-        ((11, 1, 1), "11.2"),  # Exact match.
-        ((11, 1), "11.2"),  # Exact match, implied revision.
-        ((11,), "11.2"),  # Exact match, implied minor version.
+        ("11.1.1", "11.2"),  # Exact match.
+        ("11.1", "11.2"),  # Exact match, implied revision.
+        ("11", "11.2"),  # Exact match, implied minor version.
     ],
 )
 def test_installed_with_minimum_version_success(
@@ -326,12 +326,12 @@ def test_installed_with_minimum_version_success(
 @pytest.mark.parametrize(
     ("min_version", "version"),
     [
-        ((11, 2, 5), "11.2.1"),  # insufficient revision
-        ((11, 3), "11.2.1"),  # Insufficient micro version
-        ((12,), "11.2.1"),  # Insufficient major version
-        ((8, 2, 5), "8.2.1"),  # insufficient revision
-        ((8, 3), "8.2.1"),  # Insufficient micro version
-        ((9,), "8.2.1"),  # Insufficient major version
+        ("11.2.5", "11.2.1"),  # insufficient revision
+        ("11.3", "11.2.1"),  # Insufficient micro version
+        ("12", "11.2.1"),  # Insufficient major version
+        ("8.2.5", "8.2.1"),  # insufficient revision
+        ("8.3", "8.2.1"),  # Insufficient micro version
+        ("9", "8.2.1"),  # Insufficient major version
     ],
 )
 def test_installed_with_minimum_version_failure(
@@ -365,18 +365,22 @@ def test_installed_with_minimum_version_failure(
 
 
 def test_unexpected_version_output(capsys, xcode, mock_tools):
-    """If xcodebuild returns unexpected output, assume it's ok..."""
+    """If xcodebuild returns unexpected output, raise an error."""
     mock_tools.subprocess.check_output.side_effect = [
         xcode + "\n",  # xcode-select -p
         "Wibble Wibble Wibble\n",  # xcodebuild -version
     ]
 
-    # Check passes without an error...
-    Xcode.ensure_xcode_is_installed(
-        mock_tools,
-        min_version=(11, 2, 1),
-        xcode_location=xcode,
-    )
+    # Check raises an error
+    with pytest.raises(
+        BriefcaseCommandError,
+        match=r"Unable to determine the version of Xcode that is installed",
+    ):
+        Xcode.ensure_xcode_is_installed(
+            mock_tools,
+            min_version="11.2.1",
+            xcode_location=xcode,
+        )
 
     # subprocess was invoked as expected
     mock_tools.subprocess.check_output.assert_has_calls(
@@ -386,7 +390,3 @@ def test_unexpected_version_output(capsys, xcode, mock_tools):
         ],
         any_order=False,
     )
-
-    # ...but stdout contains a warning
-    out = capsys.readouterr().out
-    assert "************" in out

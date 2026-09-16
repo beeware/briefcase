@@ -672,17 +672,24 @@ class iOSXcodeRunCommand(iOSXcodeMixin, RunCommand):
             # We don't need to open the simulator to run the test suite.
             try:
                 with self.console.wait_bar("Opening simulator..."):
-                    self.tools.subprocess.run(
-                        [
-                            "open",
-                            "-a",
-                            "Simulator",
-                            "--args",
-                            "-CurrentDeviceUDID",
-                            udid,
-                        ],
-                        check=True,
-                    )
+                    if self.tools.xcode.version < Version("27.0"):
+                        self.tools.subprocess.run(
+                            [
+                                "open",
+                                "-a",
+                                "Simulator",
+                                "--args",
+                                "-CurrentDeviceUDID",
+                                udid,
+                            ],
+                            check=True,
+                        )
+                    else:
+                        self.console.warning("Device Hub")
+                        self.tools.subprocess.run(
+                            ["open", "-a", "Device Hub"],
+                            check=True,
+                        )
             except subprocess.CalledProcessError as e:
                 raise BriefcaseCommandError(
                     f"Unable to open {device} simulator running {iOS_version}"
@@ -807,6 +814,12 @@ class iOSXcodeRunCommand(iOSXcodeMixin, RunCommand):
                         raise BriefcaseCommandError(
                             f"Unable to determine PID of {label} {app.app_name}."
                         ) from e
+
+                if not app.test_mode and self.tools.xcode.version >= Version("27.0"):
+                    self.console.warning(
+                        "Device Hub has been started. You may need to select "
+                        f"the {device} device running iOS {iOS_version} in the GUI."
+                    )
 
                 # Start streaming logs for the app.
                 self.console.info(

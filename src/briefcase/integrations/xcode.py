@@ -5,6 +5,9 @@ import re
 import subprocess
 from collections.abc import Collection
 from pathlib import Path
+from textwrap import dedent
+
+from packaging.version import Version
 
 from briefcase.exceptions import BriefcaseCommandError, CommandOutputParseError
 from briefcase.integrations.base import Tool, ToolCache
@@ -22,21 +25,21 @@ class Xcode(Tool):
     name = "xcode"
     full_name = "Xcode"
     supported_host_os: Collection[str] = {"Darwin"}
+    version: Version
 
     @classmethod
     def verify_install(
         cls,
         tools: ToolCache,
-        min_version: tuple[int, int] | tuple[int, int, int] | None = None,
+        min_version: str = "13.0",
         **kwargs,
     ) -> Xcode:
         """Verify that Xcode and the command line developer tools are installed and
         ready for use.
 
-        We need Xcode, *and* the Xcode Command Line Tools. A completely clean
-        machine will have neither Xcode *nor* the Command Line Tools. However,
-        it's possible to install Xcode and *not* install the command line tools,
-        and vice versa.
+        We need Xcode, *and* the Xcode Command Line Tools. A completely clean machine
+        will have neither Xcode *nor* the Command Line Tools. However, it's possible to
+        install Xcode and *not* install the command line tools, and vice versa.
 
         We also need to ensure that an adequate version of Xcode is available.
 
@@ -45,9 +48,8 @@ class Xcode(Tool):
         Lastly, we ensure that the iOS simulator is installed.
 
         :param tools: ToolCache of available tools
-        :param min_version: The minimum allowed version of Xcode, specified as a
-            tuple of integers (e.g., (11, 2, 1)). Default: ``None``, meaning there
-            is no minimum version.
+        :param min_version: The minimum allowed version of Xcode, as a string. Defaults
+            to "13.0".
         """
         # short circuit since already verified and available
         if hasattr(tools, "xcode"):
@@ -63,7 +65,7 @@ class Xcode(Tool):
     def ensure_xcode_is_installed(
         cls,
         tools: ToolCache,
-        min_version: tuple[int, int] | tuple[int, int, int] | None = None,
+        min_version: str = "13.0",
         xcode_location: str = "/Applications/Xcode.app",
     ):
         """Determine if Xcode is installed; and if so, that it meets minimum version
@@ -73,9 +75,8 @@ class Xcode(Tool):
         that is installed doesn't meet the minimum requirement.
 
         :param tools: ToolCache of available tools
-        :param min_version: The minimum allowed version of Xcode, specified as a
-            tuple of integers (e.g., (11, 2, 1)). Default: ``None``, meaning there
-            is no minimum version.
+        :param min_version: The minimum allowed version of Xcode, as a string.
+            Defaults to "13.0".
         :param xcode_location: The location where we expect to find an Xcode install.
             Used for testing; defaults to ``/Applications/Xcode.app``.
         """
@@ -107,52 +108,39 @@ you can re-run Briefcase.
             #   command line tools instance
             output = tools.subprocess.check_output(["xcodebuild", "-version"], quiet=1)
 
-            if min_version is not None:
-                # Look for a line in the output that reads "Xcode X.Y.Z"
-                version_lines = [
-                    line for line in output.split("\n") if line.startswith("Xcode ")
-                ]
-                if version_lines:
-                    # Split the content after the first space
-                    # and split that content on the dots.
-                    # At this point, version lines *must* have at least one element,
-                    # and each line *must* have a string with at least one space,
-                    # so if either array lookup fails, something weird is happening.
-                    version_string = version_lines[0].split(" ")[1]
+            # Look for a line in the output that reads "Xcode X.Y.Z"
+            version_lines = [
+                line for line in output.split("\n") if line.startswith("Xcode ")
+            ]
+            if version_lines:
+                # Split the content after the first space and split that content
+                # on the dots.
+                cls.version = Version(version_lines[0].split(" ")[1])
 
-                    # Append 0's to fill any gaps caused by
-                    # version numbers that don't have a minor version.
-                    parsed_version = tuple(int(v) for v in version_string.split("."))
-                    version = (*parsed_version, 0, 0)
+                if cls.version < Version(min_version):
+                    raise BriefcaseCommandError(
+                        f"Xcode {min_version} is required; {cls.version} is installed. "
+                        f"Please update Xcode."
+                    )
+                else:
+                    # Version number is acceptable
+                    return cls.version
 
-                    if version < min_version:
-                        min_version = ".".join(str(v) for v in min_version)
-                        version = ".".join(str(v) for v in version)
-                        raise BriefcaseCommandError(
-                            f"Xcode {min_version} is required; {version} is installed. "
-                            f"Please update Xcode."
-                        )
-                    else:
-                        # Version number is acceptable
-                        return
-                tools.console.warning_banner(
-                    "Unable to determine the version of Xcode that is installed",
-                    """
-                        Briefcase will proceed, assuming everything is OK. If you
-                        experience problems, this is almost certainly the cause of
-                        those problems.
+            raise BriefcaseCommandError(
+                dedent("""\
+                    Unable to determine the version of Xcode that is installed.
 
-                        Please report this as a bug at:
+                    Please report this as a bug at:
 
-                            https://github.com/beeware/briefcase/issues/new
+                        https://github.com/beeware/briefcase/issues/new
 
-                        In your report, please include the output from running:
+                    In your report, please include the output from running:
 
-                            $ xcodebuild -version
+                        $ xcodebuild -version
 
-                        from the command prompt.
-                    """,
-                )
+                    from the command prompt.
+                """)
+            )
 
         except subprocess.CalledProcessError as e:
             if " is a command line tools instance" in e.output:
