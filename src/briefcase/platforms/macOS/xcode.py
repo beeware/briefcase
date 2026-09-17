@@ -33,7 +33,7 @@ class macOSXcodeMixin(macOSMixin):
     )
 
     def verify_tools(self):
-        Xcode.verify(self.tools, min_version=(13, 0, 0))
+        Xcode.verify(self.tools)
 
         # Verify superclass tools *after* xcode. This ensures we get the
         # git check *after* the xcode check.

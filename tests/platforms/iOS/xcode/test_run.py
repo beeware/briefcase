@@ -5,6 +5,7 @@ import time
 from unittest import mock
 
 import pytest
+from packaging.version import Version
 
 from briefcase.exceptions import BriefcaseCommandError
 from briefcase.integrations.subprocess import Subprocess
@@ -23,6 +24,9 @@ def run_command(dummy_console, tmp_path):
     command.tools.home_path = tmp_path / "home"
     command.tools.subprocess = mock.MagicMock(spec_set=Subprocess)
     command._stream_app_logs = mock.MagicMock()
+
+    command.tools.xcode = mock.MagicMock()
+    command.tools.xcode.version = Version("27.0")
 
     # To satisfy coverage, the stop function must be invoked
     # at least once when streaming app logs.
@@ -80,12 +84,36 @@ def test_run_multiple_devices_input_disabled(run_command, first_app_config):
 
 
 @pytest.mark.usefixtures("sleep_zero")
-def test_run_app_simulator_booted(run_command, first_app_config, tmp_path):
+@pytest.mark.parametrize(
+    ("xcode_version", "sim_start_args"),
+    [
+        (
+            "16.4",
+            [
+                "Simulator",
+                "--args",
+                "-CurrentDeviceUDID",
+                "2D3503A3-6EB9-4B37-9B17-C7EFEF2FA32D",
+            ],
+        ),
+        ("27.0", ["Device Hub"]),
+    ],
+)
+def test_run_app_simulator_booted(
+    run_command,
+    first_app_config,
+    xcode_version,
+    sim_start_args,
+    tmp_path,
+):
     """An iOS App can be started when the simulator is already booted."""
     # A valid target device will be selected.
     run_command.select_target_device = mock.MagicMock(
         return_value=("2D3503A3-6EB9-4B37-9B17-C7EFEF2FA32D", "13.2", "iPhone 11")
     )
+
+    # Set up the Xcode version
+    run_command.tools.xcode.version = Version(xcode_version)
 
     # Simulator is already booted
     run_command.get_device_state = mock.MagicMock(return_value=DeviceState.BOOTED)
@@ -120,10 +148,7 @@ def test_run_app_simulator_booted(run_command, first_app_config, tmp_path):
                 [
                     "open",
                     "-a",
-                    "Simulator",
-                    "--args",
-                    "-CurrentDeviceUDID",
-                    "2D3503A3-6EB9-4B37-9B17-C7EFEF2FA32D",
+                    *sim_start_args,
                 ],
                 check=True,
             ),
@@ -260,10 +285,7 @@ def test_run_app_simulator_booted_underscore(
                 [
                     "open",
                     "-a",
-                    "Simulator",
-                    "--args",
-                    "-CurrentDeviceUDID",
-                    "2D3503A3-6EB9-4B37-9B17-C7EFEF2FA32D",
+                    "Device Hub",
                 ],
                 check=True,
             ),
@@ -392,10 +414,7 @@ def test_run_app_with_passthrough(run_command, first_app_config, tmp_path):
                 [
                     "open",
                     "-a",
-                    "Simulator",
-                    "--args",
-                    "-CurrentDeviceUDID",
-                    "2D3503A3-6EB9-4B37-9B17-C7EFEF2FA32D",
+                    "Device Hub",
                 ],
                 check=True,
             ),
@@ -534,10 +553,7 @@ def test_run_app_simulator_shut_down(
                 [
                     "open",
                     "-a",
-                    "Simulator",
-                    "--args",
-                    "-CurrentDeviceUDID",
-                    "2D3503A3-6EB9-4B37-9B17-C7EFEF2FA32D",
+                    "Device Hub",
                 ],
                 check=True,
             ),
@@ -681,10 +697,7 @@ def test_run_app_simulator_shutting_down(run_command, first_app_config, tmp_path
                 [
                     "open",
                     "-a",
-                    "Simulator",
-                    "--args",
-                    "-CurrentDeviceUDID",
-                    "2D3503A3-6EB9-4B37-9B17-C7EFEF2FA32D",
+                    "Device Hub",
                 ],
                 check=True,
             ),
@@ -847,10 +860,7 @@ def test_run_app_simulator_open_failure(run_command, first_app_config):
                 [
                     "open",
                     "-a",
-                    "Simulator",
-                    "--args",
-                    "-CurrentDeviceUDID",
-                    "2D3503A3-6EB9-4B37-9B17-C7EFEF2FA32D",
+                    "Device Hub",
                 ],
                 check=True,
             ),
@@ -898,10 +908,7 @@ def test_run_app_simulator_uninstall_failure(run_command, first_app_config):
                 [
                     "open",
                     "-a",
-                    "Simulator",
-                    "--args",
-                    "-CurrentDeviceUDID",
-                    "2D3503A3-6EB9-4B37-9B17-C7EFEF2FA32D",
+                    "Device Hub",
                 ],
                 check=True,
             ),
@@ -970,10 +977,7 @@ def test_run_app_simulator_install_failure(run_command, first_app_config, tmp_pa
                 [
                     "open",
                     "-a",
-                    "Simulator",
-                    "--args",
-                    "-CurrentDeviceUDID",
-                    "2D3503A3-6EB9-4B37-9B17-C7EFEF2FA32D",
+                    "Device Hub",
                 ],
                 check=True,
             ),
@@ -1064,10 +1068,7 @@ def test_run_app_simulator_launch_failure(run_command, first_app_config, tmp_pat
                 [
                     "open",
                     "-a",
-                    "Simulator",
-                    "--args",
-                    "-CurrentDeviceUDID",
-                    "2D3503A3-6EB9-4B37-9B17-C7EFEF2FA32D",
+                    "Device Hub",
                 ],
                 check=True,
             ),
@@ -1191,10 +1192,7 @@ def test_run_app_simulator_no_pid(run_command, first_app_config, tmp_path):
                 [
                     "open",
                     "-a",
-                    "Simulator",
-                    "--args",
-                    "-CurrentDeviceUDID",
-                    "2D3503A3-6EB9-4B37-9B17-C7EFEF2FA32D",
+                    "Device Hub",
                 ],
                 check=True,
             ),
@@ -1320,10 +1318,7 @@ def test_run_app_simulator_non_integer_pid(run_command, first_app_config, tmp_pa
                 [
                     "open",
                     "-a",
-                    "Simulator",
-                    "--args",
-                    "-CurrentDeviceUDID",
-                    "2D3503A3-6EB9-4B37-9B17-C7EFEF2FA32D",
+                    "Device Hub",
                 ],
                 check=True,
             ),
