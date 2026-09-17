@@ -704,7 +704,7 @@ def test_pep_621_merge(tmp_path):
         test = ["pytest"]
 
         [tool.briefcase]
-        project_name = "Awesome app"
+        project_name = "awesome"
         bundle = "com.example"
         license = "MIT"
 
@@ -726,17 +726,16 @@ def test_pep_621_merge(tmp_path):
         """,
     )
 
-    with pytest.warns(FutureWarning, match="not a valid PEP 621 project name"):
-        _, apps = parse_config(
-            config_file,
-            platform="macOS",
-            output_format="app",
-            console=Mock(),
-        )
+    _, apps = parse_config(
+        config_file,
+        platform="macOS",
+        output_format="app",
+        console=Mock(),
+    )
 
     awesome = apps["awesome"]
     assert awesome == {
-        "project_name": "Awesome app",
+        "project_name": "awesome",
         "bundle": "com.example",
         "version": "1.2.3",
         "license": "MIT",
