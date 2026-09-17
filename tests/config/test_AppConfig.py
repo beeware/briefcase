@@ -244,6 +244,55 @@ def test_invalid_app_name(name):
 
 
 @pytest.mark.parametrize(
+    "formal_name",
+    [
+        "!!!",  # only punctuation
+        "...",  # only full stops
+        "$$$",  # only symbols
+        "   ",  # only whitespace
+        "\U0001f389",  # only an emoji
+    ],
+)
+def test_invalid_formal_name(formal_name):
+    """A formal name that yields no class name is rejected.
+
+    ``briefcase new`` already refuses these through ``validate_formal_name``; a
+    ``pyproject.toml`` written by hand did not go through that check, and
+    ``class_name`` then returned ``""``.
+    """
+    with pytest.raises(BriefcaseConfigError, match=r"is not a valid formal name\."):
+        DraftAppConfig(
+            app_name="myapp",
+            version="1.2.3",
+            bundle="org.beeware",
+            description="A simple app",
+            sources=["src/myapp"],
+            formal_name=formal_name,
+            license="MIT",
+            license_files=["LICENSE"],
+        )
+
+
+@pytest.mark.parametrize(
+    "formal_name",
+    ["My App", "\u4f60\u597d \u4e16\u754c", "24 Jump Street", "lambda"],
+)
+def test_valid_formal_name(formal_name):
+    """A formal name with at least one identifier character is accepted."""
+    config = DraftAppConfig(
+        app_name="myapp",
+        version="1.2.3",
+        bundle="org.beeware",
+        description="A simple app",
+        sources=["src/myapp"],
+        formal_name=formal_name,
+        license="MIT",
+        license_files=["LICENSE"],
+    )
+    assert config.class_name.isidentifier()
+
+
+@pytest.mark.parametrize(
     ("bundle", "app_name", "bundle_identifier"),
     [
         ("is", "myapp", "is.myapp"),

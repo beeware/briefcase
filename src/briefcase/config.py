@@ -678,6 +678,14 @@ class DraftAppConfig(AppConfig):
                 f"{self.app_name!r} is not a valid app name.\n\n{APP_NAME_SPEC}"
             )
 
+        if not make_class_name(self.formal_name):
+            raise BriefcaseConfigError(
+                f"{self.formal_name!r} is not a valid formal name.\n"
+                "\n"
+                "Formal names must include at least one valid Python identifier "
+                "character, because the app's class name is derived from them."
+            )
+
         if not is_valid_bundle_identifier(self.bundle_identifier):
             raise BriefcaseConfigError(
                 f"{self.bundle!r} is not a valid bundle identifier.\n"
