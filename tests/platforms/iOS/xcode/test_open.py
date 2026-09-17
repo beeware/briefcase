@@ -1,3 +1,4 @@
+import datetime
 import os
 import subprocess
 import sys
@@ -22,11 +23,13 @@ def open_command(dummy_console, tmp_path, first_app_config):
     command.tools.subprocess = MagicMock(spec_set=Subprocess)
 
     # Mock the call to verify the existence of the cmdline tools
+    # Guarantee using an up-to-date Xcode.
+    major = datetime.datetime.now(datetime.UTC).year % 100 + 1
     command.tools.subprocess.check_output.side_effect = [
         # xcode-select -p
         "/Applications/Xcode.app/Contents/Developer",
         # xcodebuild -version
-        "Xcode 13.0.0",
+        f"Xcode {major}.2",
         # xcode-select  --install
         subprocess.CalledProcessError(cmd=["xcode-select", "--install"], returncode=1),
         # /usr/bin/clang --version

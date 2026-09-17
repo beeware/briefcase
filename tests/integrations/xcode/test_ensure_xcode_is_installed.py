@@ -1,3 +1,4 @@
+import datetime
 import os
 import subprocess
 from textwrap import dedent
@@ -202,9 +203,11 @@ def test_installed_but_corrupted(xcode, mock_tools):
 
 def test_installed_no_minimum_version(xcode, mock_tools):
     """If Xcode is installed, but there's no minimum version, check is satisfied."""
+    # Mock using a guaranteed up-to-date Xcode
+    major = datetime.datetime.now(datetime.UTC).year % 100 + 1
     mock_tools.subprocess.check_output.side_effect = [
         xcode + "\n",  # xcode-select -p
-        "Xcode 27.0\nBuild version 27A266a\n",  # xcodebuild -version
+        f"Xcode {major}.2\nBuild version 27A266a\n",  # xcodebuild -version
     ]
 
     # Check passes without an error.
