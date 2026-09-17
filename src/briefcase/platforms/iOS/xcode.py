@@ -685,7 +685,6 @@ class iOSXcodeRunCommand(iOSXcodeMixin, RunCommand):
                             check=True,
                         )
                     else:
-                        self.console.warning("Device Hub")
                         self.tools.subprocess.run(
                             ["open", "-a", "Device Hub"],
                             check=True,
