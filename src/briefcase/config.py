@@ -64,11 +64,14 @@ def is_valid_app_name(app_name):
     )
 
 
-def make_class_name(formal_name):
-    """Construct a valid class name from a formal name.
+def derive_class_name(formal_name):
+    """Strip a formal name down to the characters a class name may contain.
+
+    Returns an empty string if nothing is left, which is what ``validate_formal_name``
+    tests for.
 
     :param formal_name: The formal name
-    :returns: The app's class name
+    :returns: The identifier characters of the formal name, or ""
     """
     # Identifiers (including class names) can be unicode.
     # https://docs.python.org/3/reference/lexical_analysis.html#identifiers
@@ -90,8 +93,7 @@ def make_class_name(formal_name):
     )
 
     # Normalize to NFKC form, then remove any character that isn't
-    # in the allowed categories, or is the underscore character;
-    # Capitalize the resulting word.
+    # in the allowed categories, or is the underscore character.
     class_name = "".join(
         ch
         for ch in unicodedata.normalize("NFKC", formal_name)
@@ -113,6 +115,19 @@ def make_class_name(formal_name):
         class_name = f"_{class_name}"
 
     return class_name
+
+
+def make_class_name(formal_name):
+    """Construct a valid class name from a formal name.
+
+    A formal name that contains no identifier characters at all, such as ``"!!!"``,
+    yields no class name; fall back to a generic one rather than returning an empty
+    string, which is not a valid class name.
+
+    :param formal_name: The formal name
+    :returns: The app's class name
+    """
+    return derive_class_name(formal_name) or "Briefcase"
 
 
 def validate_url(candidate):
@@ -676,14 +691,6 @@ class DraftAppConfig(AppConfig):
         if not is_valid_app_name(self.app_name):
             raise BriefcaseConfigError(
                 f"{self.app_name!r} is not a valid app name.\n\n{APP_NAME_SPEC}"
-            )
-
-        if not make_class_name(self.formal_name):
-            raise BriefcaseConfigError(
-                f"{self.formal_name!r} is not a valid formal name.\n"
-                "\n"
-                "Formal names must include at least one valid Python identifier "
-                "character, because the app's class name is derived from them."
             )
 
         if not is_valid_bundle_identifier(self.bundle_identifier):
