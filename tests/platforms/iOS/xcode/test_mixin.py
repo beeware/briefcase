@@ -1,3 +1,4 @@
+import datetime
 from unittest.mock import MagicMock
 
 import pytest
@@ -40,8 +41,27 @@ def test_distribution_path(create_command, first_app_config, tmp_path):
         create_command.distribution_path(first_app_config)
 
 
-def test_verify(create_command, monkeypatch):
+@pytest.mark.parametrize(
+    ("now", "min_version"),
+    [
+        # In late 2026, the minimum Xcode version is Xcode 26
+        (datetime.datetime(2026, 9, 14, tzinfo=datetime.UTC), "26.0"),
+        (datetime.datetime(2027, 2, 14, tzinfo=datetime.UTC), "26.0"),
+        # In April 2027, the minimum Xcode version becomes Xcode 27.
+        (datetime.datetime(2027, 4, 14, tzinfo=datetime.UTC), "27.0"),
+        (datetime.datetime(2027, 9, 14, tzinfo=datetime.UTC), "27.0"),
+        (datetime.datetime(2028, 2, 14, tzinfo=datetime.UTC), "27.0"),
+        # In April 2028, the minimum Xcode version becomes Xcode 28.
+        (datetime.datetime(2028, 4, 14, tzinfo=datetime.UTC), "28.0"),
+    ],
+)
+def test_verify(monkeypatch, create_command, now, min_version):
     """If you're on macOS, you can verify tools."""
+    # Patch the date
+    mock_datetime = MagicMock(wraps=datetime.datetime)
+    mock_datetime.now = MagicMock(return_value=now)
+    monkeypatch.setattr(datetime, "datetime", mock_datetime)
+
     create_command.tools.host_os = "Darwin"
 
     mock_ensure_xcode_is_installed = MagicMock()
@@ -68,7 +88,7 @@ def test_verify(create_command, monkeypatch):
     assert create_command.tools.xcode_cli is not None
     mock_ensure_xcode_is_installed.assert_called_once_with(
         tools=create_command.tools,
-        min_version=(13, 0, 0),
+        min_version=min_version,
     )
     mock_ensure_command_line_tools_are_installed.assert_called_once_with(
         tools=create_command.tools

@@ -27,6 +27,10 @@ def test_upgrade_exists(linuxdeploy, mock_tools, tmp_path):
         url="https://github.com/linuxdeploy/linuxdeploy/releases/download/continuous/linuxdeploy-i386.AppImage",
         download_path=tmp_path / "tools",
         role="linuxdeploy",
+        expected_hash=(
+            "unverified:linuxdeploy uses a rolling 'continuous' release with no "
+            "stable hash"
+        ),
     )
     # The downloaded file will be made executable
     mock_tools.os.chmod.assert_called_with(appimage_path, 0o755)
@@ -64,4 +68,8 @@ def test_upgrade_linuxdeploy_download_failure(linuxdeploy, mock_tools, tmp_path)
         url="https://github.com/linuxdeploy/linuxdeploy/releases/download/continuous/linuxdeploy-i386.AppImage",
         download_path=tmp_path / "tools",
         role="linuxdeploy",
+        expected_hash=(
+            "unverified:linuxdeploy uses a rolling 'continuous' release with no "
+            "stable hash"
+        ),
     )

@@ -41,11 +41,13 @@ CLI
 cmd
 CMD
 codebase
+Conda
 cookiecutter
 Cookiecutter
 cryptographic
 CTRL
 CVE
+Curve
 customizations
 datetime
 DBus
@@ -60,6 +62,7 @@ dmg
 DMGs
 DNS
 Dockerfile
+ECC
 drawable
 embeddable
 executables
@@ -76,6 +79,7 @@ geolocation
 GID
 git's
 GitPython's
+GPG
 gradle
 Gradle
 gradlew
@@ -94,10 +98,13 @@ jarsigner
 JDK
 jks
 JSON
+Kerberos
 keychain
 Keychain
 keystore
 keystores
+keyring
+keyserver
 linters
 Linux
 linuxdeploy
@@ -114,6 +121,7 @@ Manjaro
 manylinux
 MkDocs
 MSI
+MSIs
 Namespace
 Napari
 natively
@@ -133,6 +141,7 @@ PDB
 PFX
 phablet
 PID
+pipx
 PNG
 PowerShell
 ppb
@@ -169,7 +178,9 @@ ReST
 reStructuredText
 RGB
 RHEL
+RSA
 rpmbuild
+rpmsign
 rst
 RTF
 rumdl
@@ -189,6 +200,7 @@ SHA
 SKU
 socat
 SPDX
+squircle
 SSL
 stylesheet
 subdirectories
@@ -207,6 +219,7 @@ Toolset
 towncrier
 tox
 triaged
+troff
 Triaging
 TrustedPeople
 TrustedPublisher
@@ -225,8 +238,11 @@ UTF
 UTI
 UTIs
 UTTypeConformsTo
+uv
+uvx
 vendored
 Ventura
+venv
 verbing
 visionOS
 VM

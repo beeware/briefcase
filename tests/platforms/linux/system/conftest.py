@@ -1,9 +1,20 @@
+from unittest import mock
+
 import pytest
 
 from briefcase.config import DraftAppConfig
+from briefcase.integrations.gnupg import GnuPG
 from briefcase.platforms.linux.system import LinuxSystemCreateCommand
 
 from ....utils import create_file
+
+
+@pytest.fixture
+def mock_gpg(mock_tools):
+    """Adds a mocked GnuPG tool to the mock_tools, with no identities by default."""
+    mock_tools.gnupg = mock.MagicMock(spec_set=GnuPG)
+    mock_tools.gnupg.identities.return_value = {}
+    return mock_tools.gnupg
 
 
 @pytest.fixture

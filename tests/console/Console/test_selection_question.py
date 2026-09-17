@@ -100,6 +100,25 @@ def test_selection_question_default(console, index, default):
     assert result == default
 
 
+def test_selection_question_single_option_default(console):
+    # Return an empty response when prompted as though the user press entered
+    console.values = [""]
+
+    options = {"first": "The first option"}
+
+    result = console.selection_question(
+        description="Test",
+        intro="This is a test",
+        options=options,
+    )
+
+    # Input is requested once
+    assert console.prompts == ["Test [1]: "]
+
+    # The default single option is returned
+    assert result == "first"
+
+
 def test_override_used(console, capsys):
     """The override is used if valid."""
     override_value = "value"

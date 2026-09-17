@@ -13,20 +13,24 @@ from briefcase.integrations.cookiecutter import PListExtension
         ("Hello world", "<string>Hello world</string>"),
         (
             ["hello", "world", True],
-            "<array>\n"
-            "        <string>hello</string>\n"
-            "        <string>world</string>\n"
-            "        <true/>\n"
-            "    </array>",
+            (
+                "<array>\n"
+                "        <string>hello</string>\n"
+                "        <string>world</string>\n"
+                "        <true/>\n"
+                "    </array>"
+            ),
         ),
         (
             {"hello": "world", "goodbye": False},
-            "<dict>\n"
-            "        <key>hello</key>\n"
-            "        <string>world</string>\n"
-            "        <key>goodbye</key>\n"
-            "        <false/>\n"
-            "    </dict>",
+            (
+                "<dict>\n"
+                "        <key>hello</key>\n"
+                "        <string>world</string>\n"
+                "        <key>goodbye</key>\n"
+                "        <false/>\n"
+                "    </dict>"
+            ),
         ),
     ],
 )

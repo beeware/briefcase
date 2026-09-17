@@ -53,10 +53,11 @@ def test_convert_app_unused_project_overrides(
     convert_command.build_gui_context.assert_called_once_with(
         mock.ANY, {"unused": "override"}
     )
-    # Template is updated
+    # Template is updated, and its hash is verified
     convert_command.update_cookiecutter_cache.assert_called_once_with(
         template="https://github.com/beeware/briefcase-template",
         branch="v37.42.7",
+        template_hash=convert_command.template_hash,
     )
     # Cookiecutter is invoked
     convert_command.tools.cookiecutter.assert_called_once_with(
@@ -90,3 +91,199 @@ def test_convert_app_unused_project_overrides(
         "    unused = override"
     )
     assert unused_project_override_warning in capsys.readouterr().out
+
+
+def test_convert_app_with_template(
+    monkeypatch,
+    convert_command,
+    tmp_path,
+    capsys,
+):
+    """If a custom template is requested without a matching hash, a warning is
+    logged."""
+    monkeypatch.setattr(briefcase, "__version__", "37.42.7")
+    app_context = {
+        "formal_name": "My Application",
+        "class_name": "MyApplication",
+        "app_name": "myapplication",
+        "module_name": "mymodule",
+        "test_source_dir": "test_files",
+    }
+    convert_command.build_app_context = mock.MagicMock(return_value=app_context)
+    convert_command.build_gui_context = mock.MagicMock(
+        return_value={"gui_framework": "None"}
+    )
+    convert_command.update_cookiecutter_cache = mock.MagicMock(
+        return_value="https://example.com/other.git"
+    )
+    convert_command.tools.cookiecutter = mock.MagicMock(spec_set=cookiecutter)
+    convert_command.migrate_necessary_files = mock.MagicMock()
+
+    convert_command.convert_app(
+        tmp_path=tmp_path / "working",
+        template="https://example.com/other.git",
+        project_overrides={},
+    )
+
+    convert_command.update_cookiecutter_cache.assert_called_once_with(
+        template="https://example.com/other.git",
+        branch="v37.42.7",
+        template_hash=None,
+    )
+
+
+def test_convert_app_with_template_and_hash(
+    monkeypatch,
+    convert_command,
+    tmp_path,
+    capsys,
+):
+    """If a custom template is requested with a hash, content is verified."""
+    monkeypatch.setattr(briefcase, "__version__", "37.42.7")
+    app_context = {
+        "formal_name": "My Application",
+        "class_name": "MyApplication",
+        "app_name": "myapplication",
+        "module_name": "mymodule",
+        "test_source_dir": "test_files",
+    }
+    convert_command.build_app_context = mock.MagicMock(return_value=app_context)
+    convert_command.build_gui_context = mock.MagicMock(
+        return_value={"gui_framework": "None"}
+    )
+    convert_command.update_cookiecutter_cache = mock.MagicMock(
+        return_value="https://example.com/other.git"
+    )
+    convert_command.tools.cookiecutter = mock.MagicMock(spec_set=cookiecutter)
+    convert_command.migrate_necessary_files = mock.MagicMock()
+
+    convert_command.convert_app(
+        tmp_path=tmp_path / "working",
+        template="https://example.com/other.git",
+        template_hash="sha1:1234567890123456789012345678901234567890",
+        project_overrides={},
+    )
+
+    convert_command.update_cookiecutter_cache.assert_called_once_with(
+        template="https://example.com/other.git",
+        branch="v37.42.7",
+        template_hash="sha1:1234567890123456789012345678901234567890",
+    )
+
+
+def test_convert_app_with_branch(
+    monkeypatch,
+    convert_command,
+    tmp_path,
+    capsys,
+):
+    """If a custom template branch is requested without a matching hash, a warning is
+    logged."""
+    monkeypatch.setattr(briefcase, "__version__", "37.42.7")
+    app_context = {
+        "formal_name": "My Application",
+        "class_name": "MyApplication",
+        "app_name": "myapplication",
+        "module_name": "mymodule",
+        "test_source_dir": "test_files",
+    }
+    convert_command.build_app_context = mock.MagicMock(return_value=app_context)
+    convert_command.build_gui_context = mock.MagicMock(
+        return_value={"gui_framework": "None"}
+    )
+    convert_command.update_cookiecutter_cache = mock.MagicMock(
+        return_value="~/.cookiecutters/briefcase-template"
+    )
+    convert_command.tools.cookiecutter = mock.MagicMock(spec_set=cookiecutter)
+    convert_command.migrate_necessary_files = mock.MagicMock()
+
+    convert_command.convert_app(
+        tmp_path=tmp_path / "working",
+        template_branch="experimental",
+        project_overrides={},
+    )
+
+    convert_command.update_cookiecutter_cache.assert_called_once_with(
+        template="https://github.com/beeware/briefcase-template",
+        branch="experimental",
+        template_hash=None,
+    )
+
+
+def test_convert_app_with_branch_and_hash(
+    monkeypatch,
+    convert_command,
+    tmp_path,
+    capsys,
+):
+    """If a custom template is requested with a hash, content is verified."""
+    monkeypatch.setattr(briefcase, "__version__", "37.42.7")
+    app_context = {
+        "formal_name": "My Application",
+        "class_name": "MyApplication",
+        "app_name": "myapplication",
+        "module_name": "mymodule",
+        "test_source_dir": "test_files",
+    }
+    convert_command.build_app_context = mock.MagicMock(return_value=app_context)
+    convert_command.build_gui_context = mock.MagicMock(
+        return_value={"gui_framework": "None"}
+    )
+    convert_command.update_cookiecutter_cache = mock.MagicMock(
+        return_value="~/.cookiecutters/briefcase-template"
+    )
+    convert_command.tools.cookiecutter = mock.MagicMock(spec_set=cookiecutter)
+    convert_command.migrate_necessary_files = mock.MagicMock()
+
+    convert_command.convert_app(
+        tmp_path=tmp_path / "working",
+        template_branch="experimental",
+        template_hash="sha1:1234567890123456789012345678901234567890",
+        project_overrides={},
+    )
+
+    convert_command.update_cookiecutter_cache.assert_called_once_with(
+        template="https://github.com/beeware/briefcase-template",
+        branch="experimental",
+        template_hash="sha1:1234567890123456789012345678901234567890",
+    )
+
+
+def test_convert_app_with_all_template_details(
+    monkeypatch,
+    convert_command,
+    tmp_path,
+    capsys,
+):
+    """If a custom template and branch is requested with a hash, content is verified."""
+    monkeypatch.setattr(briefcase, "__version__", "37.42.7")
+    app_context = {
+        "formal_name": "My Application",
+        "class_name": "MyApplication",
+        "app_name": "myapplication",
+        "module_name": "mymodule",
+        "test_source_dir": "test_files",
+    }
+    convert_command.build_app_context = mock.MagicMock(return_value=app_context)
+    convert_command.build_gui_context = mock.MagicMock(
+        return_value={"gui_framework": "None"}
+    )
+    convert_command.update_cookiecutter_cache = mock.MagicMock(
+        return_value="~/.cookiecutters/briefcase-template"
+    )
+    convert_command.tools.cookiecutter = mock.MagicMock(spec_set=cookiecutter)
+    convert_command.migrate_necessary_files = mock.MagicMock()
+
+    convert_command.convert_app(
+        tmp_path=tmp_path / "working",
+        template="https://example.com/other.git",
+        template_branch="experimental",
+        template_hash="sha1:1234567890123456789012345678901234567890",
+        project_overrides={},
+    )
+
+    convert_command.update_cookiecutter_cache.assert_called_once_with(
+        template="https://example.com/other.git",
+        branch="experimental",
+        template_hash="sha1:1234567890123456789012345678901234567890",
+    )

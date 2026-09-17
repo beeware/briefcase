@@ -12,15 +12,17 @@ def option_config():
             "title": "First option",
             "description": "Do the first thing",
             "default": True,
+            "system": True,
         },
         {
             "name": "second",
             "title": "Second option",
             "description": "Do the second thing",
             "default": False,
+            "system": False,
         },
         # An option that is alphabetically second, but appears third,
-        # and has no explicit default.
+        # and has no explicit default or system scope.
         {
             "name": "default",
             "title": "Third option",
@@ -43,18 +45,48 @@ def test_install_options(option_config):
             "title": "First option",
             "description": "Do the first thing",
             "default": True,
+            "system": True,
         },
         "second": {
             "title": "Second option",
             "description": "Do the second thing",
             "default": False,
+            "system": False,
         },
         "default": {
             "title": "Third option",
             "description": "Do the third thing",
             "default": False,
+            "system": "both",
         },
     }
+
+
+@pytest.mark.parametrize(
+    "system",
+    [
+        None,
+        "user",
+        "system",
+        "Both",
+        0,
+        1,
+        [],
+        {},
+    ],
+)
+def test_invalid_system_scope(option_config, system):
+    """Install option system scopes must be booleans or ``"both"``."""
+    option_config[1]["system"] = system
+
+    with pytest.raises(
+        BriefcaseConfigError,
+        match=(
+            r"System setting for mystery option 'second' must be a boolean "
+            r"or 'both'\."
+        ),
+    ):
+        validate_install_options_config(option_config, "mystery")
 
 
 def test_missing_name(option_config):

@@ -7,7 +7,7 @@ import sys
 from pathlib import Path
 from unittest.mock import MagicMock
 
-import httpx
+import httpx2
 import pytest
 from cookiecutter.main import cookiecutter
 
@@ -21,7 +21,8 @@ def test_toolcache_typing():
     """Tool typing for ToolCache is correct."""
     # Tools that are intentionally not annotated in ToolCache.
     tools_unannotated = {"cookiecutter"}
-    # Tool names to exclude from the dynamic annotation checks; they are manually checked.
+    # Tool names to exclude from the dynamic annotation checks;
+    # they are manually checked.
     tool_names_skip_dynamic_check = {
         "app_context",  # Tested by the Docker module
         "git",  # An external API, not a Briefcase Tool
@@ -82,7 +83,7 @@ def test_third_party_tools_available():
     assert ToolCache.sys is sys
 
     assert ToolCache.cookiecutter is cookiecutter
-    assert ToolCache.httpx is httpx
+    assert ToolCache.httpx2 is httpx2
 
 
 def test_always_true(simple_tools, tmp_path):
@@ -254,14 +255,7 @@ def test_is_32bit_python(dummy_console, maxsize, is_32bit, monkeypatch, tmp_path
 )
 def test_system_encoding(simple_tools, mock_encoding, expected_encoding, monkeypatch):
     """The expected system encoding is returned."""
-    if sys.version_info < (3, 11):
-        monkeypatch.setattr(
-            locale, "getdefaultlocale", MagicMock(return_value=("aa_BB", mock_encoding))
-        )
-    else:
-        monkeypatch.setattr(
-            locale, "getencoding", MagicMock(return_value=mock_encoding)
-        )
+    monkeypatch.setattr(locale, "getencoding", MagicMock(return_value=mock_encoding))
     monkeypatch.setattr(
         briefcase.integrations.base, "DEFAULT_SYSTEM_ENCODING", "ISO-4242"
     )

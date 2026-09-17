@@ -9,6 +9,7 @@ import platform
 import re
 import subprocess
 import sys
+import tomllib
 from abc import ABC, abstractmethod
 from argparse import RawDescriptionHelpFormatter
 from collections.abc import Collection, Iterable
@@ -22,23 +23,18 @@ from packaging.specifiers import InvalidSpecifier, SpecifierSet
 from packaging.version import Version
 from platformdirs import PlatformDirs
 
-from briefcase.debuggers import get_debugger, get_debuggers
-
-if sys.version_info >= (3, 11):  # pragma: no-cover-if-lt-py311
-    import tomllib
-else:  # pragma: no-cover-if-gte-py311
-    import tomli as tomllib
-
 import briefcase
 from briefcase import __version__
 from briefcase.config import (
     AppConfig,
     DraftAppConfig,
+    EnvManagerT,
     FinalizedAppConfig,
     GlobalConfig,
     parse_config,
 )
 from briefcase.console import MAX_TEXT_WIDTH, Console
+from briefcase.debuggers import get_debugger, get_debuggers
 from briefcase.exceptions import (
     BriefcaseCommandError,
     BriefcaseConfigError,
@@ -52,7 +48,7 @@ from briefcase.exceptions import (
 from briefcase.integrations.base import ToolCache
 from briefcase.integrations.file import File
 from briefcase.integrations.subprocess import Subprocess
-from briefcase.integrations.virtual_environment import VirtualEnvironment
+from briefcase.integrations.virtual_environment import VirtualEnvironmentManager
 from briefcase.platforms import get_output_formats, get_platforms
 
 
@@ -136,6 +132,7 @@ class BaseCommand(ABC):
     cmd_line = "briefcase {command} {platform} {output_format}"
     supported_host_os: Collection[str] = {"Darwin", "Linux", "Windows"}
     supported_host_os_reason = f"This command is not supported on {platform.system()}."
+    supported_env_managers: Collection[EnvManagerT] = {"venv"}
 
     # defined by platform-specific subclasses
     command: str
@@ -154,7 +151,7 @@ class BaseCommand(ABC):
     def __init__(
         self,
         console: Console,
-        tools: ToolCache = None,
+        tools: ToolCache | None = None,
         apps: dict[str, AppConfig] | None = None,
         base_path: Path | None = None,
         data_path: Path | None = None,
@@ -183,11 +180,12 @@ class BaseCommand(ABC):
             console=console,
             base_path=self.data_path / "tools",
         )
+        self.validate_base_path()
         self.validate_python_version()
 
         # Immediately add tools that must be always available
         Subprocess.verify(tools=self.tools)
-        VirtualEnvironment.verify(tools=self.tools)
+        VirtualEnvironmentManager.verify(tools=self.tools)
         File.verify(tools=self.tools)
 
         if not is_clone:
@@ -279,6 +277,58 @@ a custom location for Briefcase's tools.
                 ) from e
 
         return Path(data_path)
+
+    def validate_base_path(self):
+        """Validate the Briefcase project path for known third-party tool issues."""
+        base_path = os.fsdecode(self.base_path)
+
+        if "," in base_path:
+            raise BriefcaseCommandError(
+                f"""
+The location of your Briefcase project:
+
+    {base_path}
+
+contains a comma. This will cause problems with some tools, preventing
+you from building and packaging applications.
+
+Move the project to a path that does not contain commas.
+
+"""
+            )
+
+        if (
+            platform.system() == "Windows"  # pragma: no-cover-if-not-windows
+            and "\u200e" in base_path
+        ):
+            raise BriefcaseCommandError(
+                f"""
+The location of your Briefcase project:
+
+    {base_path}
+
+contains a left-to-right mark character. This will cause problems with some
+tools on Windows, preventing you from building and packaging applications.
+
+Move the project to a path that does not container this character.
+
+"""
+            )
+
+        if " " in base_path:
+            self.console.warning_banner(
+                "Project path contains spaces",
+                f"""
+                    The location of your Briefcase project:
+
+                        {base_path}
+
+                    contains spaces. This can cause problems with some tools,
+                    preventing you from building and packaging applications.
+                    If you experience problems building or running the app,
+                    move the project to a path that doesn't contain spaces.
+                """,
+            )
 
     def validate_locale(self):
         """Validate the system's locale is compatible."""
@@ -547,6 +597,19 @@ a custom location for Briefcase's tools.
         """
         return self.path_index(app, "stub_binary_revision")
 
+    def stub_binary_hash(self, app: FinalizedAppConfig) -> str | None:
+        """Obtain the expected hash of the stub binary that the template publishes.
+
+        :param app: The config object for the app
+        :return: The expected hash of the stub binary, in
+            `"<algorithm>:<hexdigest>"` form, or `None` if the template doesn't
+            publish one.
+        """
+        try:
+            return self.path_index(app, "stub_binary_hash")
+        except KeyError:
+            return None
+
     def support_path(self, app: FinalizedAppConfig) -> Path:
         """Obtain the path into which the support package should be unpacked.
 
@@ -562,6 +625,19 @@ a custom location for Briefcase's tools.
         :return: The support revision required by the template.
         """
         return self.path_index(app, "support_revision")
+
+    def support_package_hash(self, app: FinalizedAppConfig) -> str | None:
+        """Obtain the expected hash of the support package that the template publishes.
+
+        :param app: The config object for the app
+        :return: The expected hash of the support package, in
+            `"<algorithm>:<hexdigest>"` form, or `None` if the template doesn't
+            publish one.
+        """
+        try:
+            return self.path_index(app, "support_package_hash")
+        except KeyError:
+            return None
 
     def cleanup_paths(self, app: FinalizedAppConfig) -> list[str]:
         """Obtain the paths generated by the app template that should be cleaned up
@@ -682,14 +758,21 @@ a custom location for Briefcase's tools.
         configuration, and performs any other app-specific platform configuration and
         verification that is required as a result of command-line arguments.
 
-        Platform overrides should call ``super().finalize_app_config(app, **kwargs)``
-        to construct the ``FinalizedAppConfig``.
+        Platform overrides should call `super().finalize_app_config(app, **kwargs)`
+        to construct the `FinalizedAppConfig`.
 
         :param app: The app configuration to finalize.
         :param kwargs: Runtime attributes forwarded to the FinalizedAppConfig
-            constructor (``test_mode``, ``debugger``, etc.).
+            constructor (`test_mode`, `debugger`, etc.).
         :returns: The finalized app configuration.
         """
+        if app.env_manager not in self.supported_env_managers:
+            raise BriefcaseConfigError(
+                f"{app.app_name!r} declares the use of a {app.env_manager!r} "
+                f"environment, but {self.platform} {self.output_format} "
+                f"projects do not support environments of that type."
+            )
+
         return FinalizedAppConfig(app, **kwargs)
 
     def resolve_apps(
@@ -1130,7 +1213,12 @@ Configuration file not found.
 Did you run Briefcase in a project directory that contains {filename.name!r}?"""
             ) from e
 
-    def update_cookiecutter_cache(self, template: str, branch="master"):
+    def update_cookiecutter_cache(
+        self,
+        template: str,
+        branch: str | None = "main",
+        template_hash: str | None = None,
+    ):
         """Ensure that we have a current checkout of a template path.
 
         If the path is a local path, use the path as is.
@@ -1139,7 +1227,10 @@ Did you run Briefcase in a project directory that contains {filename.name!r}?"""
         including checking out the required branch.
 
         :param template: The template URL or path.
-        :param branch: The template branch to use. Default: ``master``
+        :param branch: The template branch to use. Default: `main`
+        :param template_hash: The expected commit hash of the template's resolved
+            branch head, or `None`/`"unverified:<reason>"`. Ignored if `template`
+            is a local path. See `File.check_hash()` for the accepted format.
         :return: The path to the cached template. This may be the originally
             provided path if the template was a file path.
         """
@@ -1242,6 +1333,13 @@ Did you run Briefcase in a project directory that contains {filename.name!r}?"""
                         f"Using existing template (sha {head.commit.hexsha}, "
                         f"updated {head.commit.committed_datetime.strftime('%c')})"
                     )
+
+                    self.tools.file.check_hash(
+                        role="the template",
+                        expected_hash=template_hash,
+                        actual_hash=f"sha1:{head.commit.hexsha}",
+                    )
+
                     head.checkout()
                 except IndexError as e:
                     # No branch exists for the requested version.
@@ -1264,7 +1362,14 @@ Did you run Briefcase in a project directory that contains {filename.name!r}?"""
 
         return cached_template
 
-    def _generate_template(self, template, branch, output_path, extra_context):
+    def _generate_template(
+        self,
+        template,
+        branch,
+        output_path,
+        extra_context,
+        template_hash: str | None = None,
+    ):
         """Ensure the named template is up-to-date for the given branch, and roll out
         that template.
 
@@ -1272,12 +1377,15 @@ Did you run Briefcase in a project directory that contains {filename.name!r}?"""
         :param branch: The branch of the template to use
         :param output_path: The filesystem path where the template will be generated.
         :param extra_context: Extra context to pass to the cookiecutter template
+        :param template_hash: The expected commit hash of the template's resolved
+            branch head, or `None`/`"unverified:<reason>"`.
         """
         # Make sure we have an updated cookiecutter template,
         # checked out to the right branch
         cached_template = self.update_cookiecutter_cache(
             template=template,
             branch=branch,
+            template_hash=template_hash,
         )
 
         self.console.configure_stdlib_logging("cookiecutter")
@@ -1315,6 +1423,7 @@ Did you run Briefcase in a project directory that contains {filename.name!r}?"""
         branch: str | None,
         output_path: str | Path,
         extra_context: dict[str, str],
+        template_hash: str | None = None,
     ) -> None:
         # If a branch wasn't supplied through the --template-branch argument,
         # use the branch derived from the Briefcase version
@@ -1346,6 +1455,7 @@ Did you run Briefcase in a project directory that contains {filename.name!r}?"""
                 branch=template_branch,
                 output_path=output_path,
                 extra_context=extra_context,
+                template_hash=template_hash,
             )
         except InvalidTemplateBranch:
             # Only use the main template if we're on a development branch of briefcase
@@ -1354,7 +1464,7 @@ Did you run Briefcase in a project directory that contains {filename.name!r}?"""
                 raise
 
             # Development branches can use the main template.
-            self.console.info(
+            self.console.warning(
                 f"Template branch {template_branch} not found; "
                 f"falling back to development template"
             )
@@ -1365,6 +1475,7 @@ Did you run Briefcase in a project directory that contains {filename.name!r}?"""
                 branch="main",
                 output_path=output_path,
                 extra_context=extra_context,
+                template_hash=None,
             )
 
     def get_git_config_value(self, section: str, option: str) -> str | None:

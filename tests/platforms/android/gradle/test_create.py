@@ -150,7 +150,7 @@ def test_build_gradle_dependencies(
     assert context["build_gradle_dependencies"] == output
 
     assert (
-        "** WARNING: App does not define build_gradle_dependencies              **"
+        "WARNING: App does not define build_gradle_dependencies"
         in capsys.readouterr().out
     ) == has_warning
 

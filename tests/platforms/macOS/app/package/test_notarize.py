@@ -98,9 +98,9 @@ def test_notarize_app(
     package_command.notarize(first_app_zip, identity=sekrit_identity)
 
     # As a result of mocking ditto, the zip archive won't *actually* be created;
-    # and as a result of mocking os, it won't *actually* be deleted either - but we can
-    # verify that it *would* have been deleted. ditto will also be called when finalizing,
-    # to create the actual distribution artefact.
+    # and as a result of mocking os, it won't *actually* be deleted either - but
+    # we can verify that it *would* have been deleted. ditto will also be called
+    # when finalizing, to create the actual distribution artefact.
     assert package_command.ditto_archive.mock_calls == [
         mock.call(app_path, archive_path),
         mock.call(app_path, tmp_path / "base_path/dist/First App-0.0.1.app.zip"),
@@ -172,6 +172,9 @@ def test_notarize_app(
         ],
         check=True,
     )
+
+    # A successful notarization cleans up the notarization request marker.
+    assert not package_command.notarization_request_path(first_app_zip).exists()
 
 
 def test_notarize_dmg(
@@ -273,6 +276,9 @@ def test_notarize_dmg(
         ],
         check=True,
     )
+
+    # A successful notarization cleans up the notarization request marker.
+    assert not package_command.notarization_request_path(first_app_dmg).exists()
 
 
 def test_notarize_pkg(
@@ -379,6 +385,9 @@ def test_notarize_pkg(
         ],
         check=True,
     )
+
+    # A successful notarization cleans up the notarization request marker.
+    assert not package_command.notarization_request_path(first_app_pkg).exists()
 
 
 def test_notarize_unknown_credentials(
@@ -517,6 +526,9 @@ def test_notarize_unknown_credentials(
             check=True,
         ),
     ]
+
+    # A successful notarization cleans up the notarization request marker.
+    assert not package_command.notarization_request_path(first_app_dmg).exists()
 
 
 def test_credential_storage_failure_app(
@@ -718,7 +730,10 @@ def test_credential_storage_disabled_input_app(
     # The notarization call will fail with an error
     with pytest.raises(
         BriefcaseCommandError,
-        match=r"The keychain does not contain credentials for the profile briefcase-macOS-DEADBEEF.",
+        match=(
+            r"The keychain does not contain credentials "
+            r"for the profile briefcase-macOS-DEADBEEF."
+        ),
     ):
         package_command.notarize(first_app_zip, identity=sekrit_identity)
 
@@ -783,7 +798,10 @@ def test_credential_storage_disabled_input_dmg(
     # The notarization call will fail with an error
     with pytest.raises(
         BriefcaseCommandError,
-        match=r"The keychain does not contain credentials for the profile briefcase-macOS-DEADBEEF.",
+        match=(
+            r"The keychain does not contain credentials "
+            r"for the profile briefcase-macOS-DEADBEEF."
+        ),
     ):
         package_command.notarize(first_app_dmg, identity=sekrit_identity)
 
@@ -929,7 +947,10 @@ def test_app_submit_notarization_failure_with_credentials(
     # The notarization call will fail with an error
     with pytest.raises(
         BriefcaseCommandError,
-        match=r"Unable to submit build[/\\]first-app[/\\]macos[/\\]app[/\\]First App.app for notarization.",
+        match=(
+            r"Unable to submit build[/\\]first-app[/\\]"
+            r"macos[/\\]app[/\\]First App.app for notarization."
+        ),
     ):
         package_command.notarize(first_app_zip, identity=sekrit_identity)
 
@@ -1079,6 +1100,9 @@ def test_unknown_notarization_status_failure(
     # No staple attempt is made.
     package_command.tools.subprocess.run.assert_not_called()
 
+    # Notarization didn't succeed, so the marker is retained for a future resume.
+    assert package_command.notarization_request_path(first_app_dmg).exists()
+
 
 def test_stapling_failure(
     package_command,
@@ -1192,6 +1216,9 @@ def test_stapling_failure(
         check=True,
     )
 
+    # Notarization didn't succeed, so the marker is retained for a future resume.
+    assert package_command.notarization_request_path(first_app_dmg).exists()
+
 
 def test_interrupt_notarization(
     package_command,
@@ -1201,7 +1228,7 @@ def test_interrupt_notarization(
     tmp_path,
     capsys,
 ):
-    """If notarization is interrupted, the submission ID is output for the user."""
+    """If notarization is interrupted, a marker is written so it can be resumed."""
     # Mock the return values of subprocesses
     submission_id = str(uuid.uuid4())
     package_command.tools.subprocess.parse_output.side_effect = [
@@ -1222,8 +1249,10 @@ def test_interrupt_notarization(
     with pytest.raises(NotarizationInterrupted):
         package_command.notarize(first_app_dmg, identity=sekrit_identity)
 
+    # The user is told that the interrupted notarization will be resumed by
+    # rerunning the same command.
     assert (
-        f"briefcase package macOS app -p dmg --identity CAFEBEEF --resume {submission_id}"
+        "If notarization is interrupted, rerunning the same briefcase package"
         in capsys.readouterr().out
     )
 
@@ -1285,3 +1314,52 @@ def test_interrupt_notarization(
 
     # No stapling occurred
     package_command.tools.subprocess.run.assert_not_called()
+
+    # Notarization was interrupted, so the marker is retained so it can be resumed.
+    assert package_command.notarization_request_path(first_app_dmg).exists()
+
+
+def test_notarize_app_no_wait(
+    package_command,
+    first_app_zip,
+    sekrit_identity,
+    tmp_path,
+):
+    """With --no-wait, an app is submitted but notarization is not finalized."""
+    archive_path = tmp_path / "base_path/build/first-app/macos/app/First App.app.zip"
+
+    # Mock the creation of the ditto archive
+    package_command.ditto_archive = MagicMock()
+
+    # Mock the return values of subprocesses: only the submission is performed.
+    submission_id = str(uuid.uuid4())
+    package_command.tools.subprocess.parse_output.side_effect = [
+        # notarytool submit
+        {"id": submission_id},
+    ]
+
+    package_command.notarize(first_app_zip, identity=sekrit_identity, wait=False)
+
+    # Only the submission was made; notarization status was never checked.
+    assert package_command.tools.subprocess.parse_output.mock_calls == [
+        mock.call(
+            json_parser,
+            [
+                "xcrun",
+                "notarytool",
+                "submit",
+                archive_path,
+                "--keychain-profile",
+                "briefcase-macOS-DEADBEEF",
+                "--output-format",
+                "json",
+            ],
+            quiet=1,
+        ),
+    ]
+
+    # Notarization was not finalized, so nothing was stapled.
+    package_command.tools.subprocess.run.assert_not_called()
+
+    # The notarization request marker is left in place for a later resume.
+    assert package_command.notarization_request_path(first_app_zip).exists()

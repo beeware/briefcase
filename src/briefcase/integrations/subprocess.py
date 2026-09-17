@@ -93,7 +93,7 @@ def get_process_id_by_command(
         return matching_procs[0]["pid"]
     elif len(matching_procs) > 1:
         # return the ID of the most recently created matching process
-        pid = sorted(matching_procs, key=operator.itemgetter("create_time"))[-1]["pid"]
+        pid = max(matching_procs, key=operator.itemgetter("create_time"))["pid"]
         if console:
             console.info(
                 f"Multiple running instances of app found. "
@@ -200,7 +200,8 @@ class PopenOutputStreamer(threading.Thread):
 
                 if self.stop_flag.is_set():
                     break
-        except Exception as e:
+        except Exception as e:  # noqa: BLE001
+            # Report *any* error in the process.
             self.console.error(f"Error while streaming output: {type(e).__name__}: {e}")
             self.console.capture_stacktrace("Output thread")
 
@@ -252,8 +253,7 @@ class PopenOutputStreamer(threading.Thread):
 
         if self.filter_func is not None:
             try:
-                for filtered_line in self.filter_func(line.strip("\n")):
-                    filtered_output.append(filtered_line)
+                filtered_output.extend(self.filter_func(line.strip("\n")))
             except StopStreaming:
                 stop_streaming = True
         else:
@@ -557,6 +557,7 @@ class Subprocess(Tool):
                 [str(arg) for arg in args], **self.final_kwargs(**kwargs)
             )
         except subprocess.CalledProcessError as e:
+            self._log_output(e.output, e.stderr)
             self._log_return_code(e.returncode)
             raise
         self._log_return_code(command_result.returncode)

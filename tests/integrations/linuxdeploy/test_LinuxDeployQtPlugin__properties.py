@@ -63,3 +63,8 @@ def test_download_url(mock_tools, host_os, host_arch, linuxdeploy_arch):
         f"releases/download/continuous/linuxdeploy-plugin-qt-{linuxdeploy_arch}.AppImage"
     )
     assert_url_resolvable(linuxdeploy_qt_plugin.download_url)
+
+
+def test_download_hash(linuxdeploy_qt_plugin):
+    """The Qt plugin is a rolling release, so it cannot be hash-verified."""
+    assert linuxdeploy_qt_plugin.download_hash.startswith("unverified:")

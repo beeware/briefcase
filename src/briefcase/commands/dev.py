@@ -7,11 +7,11 @@ import sys
 from collections.abc import Mapping
 from pathlib import Path
 
-from briefcase.commands.create import _is_local_path
 from briefcase.commands.run import RunAppMixin
 from briefcase.config import FinalizedAppConfig
-from briefcase.exceptions import BriefcaseCommandError, RequirementsInstallError
-from briefcase.integrations.virtual_environment import VenvContext
+from briefcase.exceptions import BriefcaseCommandError
+from briefcase.integrations.subprocess import NativeAppContext
+from briefcase.integrations.virtual_environment import VirtualEnvironment
 
 from .base import BaseCommand
 from .create import write_dist_info
@@ -48,10 +48,6 @@ class DevCommand(RunAppMixin, BaseCommand):
             "win32": "windows",
         }[sys.platform]
 
-    def bundle_path(self, app):
-        """A placeholder; Dev command doesn't have a bundle path."""
-        raise NotImplementedError()
-
     def binary_path(self, app):
         """A placeholder; Dev command doesn't have a binary path."""
         raise NotImplementedError()
@@ -87,10 +83,15 @@ class DevCommand(RunAppMixin, BaseCommand):
             help="Run the app in test mode",
         )
 
+    def verify_app_tools(self, app: FinalizedAppConfig):
+        """Verify that tools needed to run the command for this app exist."""
+        super().verify_app_tools(app)
+        NativeAppContext.verify(tools=self.tools, app=app)
+
     def install_dev_requirements(
         self,
         app: FinalizedAppConfig,
-        venv: VenvContext,
+        venv: VirtualEnvironment,
         **options,
     ):
         """Install the requirements for the app dev.
@@ -102,7 +103,6 @@ class DevCommand(RunAppMixin, BaseCommand):
         :param venv: The context object used to run commands inside the virtual
             environment.
         """
-
         requires = app.requires or []
         if app.test_requires:
             requires.extend(app.test_requires)
@@ -110,43 +110,18 @@ class DevCommand(RunAppMixin, BaseCommand):
             self.console.info("No application requirements")
             return
 
-        require_args = []
-        for req in requires:
-            # Any requirement that is a local path, but *not* a reference to an archive
-            # file (zip, whl, etc), can be installed editable. If in doubt, install
-            # non-editable.
-            if _is_local_path(req) and not _is_archive(req):
-                require_args.extend(["-e", req])
-            else:
-                require_args.append(req)
-
         with self.console.wait_bar("Installing dev requirements..."):
-            try:
-                venv.run(
-                    [
-                        sys.executable,
-                        "-u",
-                        "-X",
-                        "utf8",
-                        "-m",
-                        "pip",
-                        "install",
-                        "--upgrade",
-                        *(["-vv"] if self.console.is_deep_debug else []),
-                        *require_args,
-                        *app.requirement_installer_args,
-                    ],
-                    check=True,
-                    encoding="UTF-8",
-                )
-            except subprocess.CalledProcessError as e:
-                raise RequirementsInstallError() from e
+            venv.install_requirements(
+                requires,
+                allow_editable=True,
+                extra_installer_args=app.requirement_installer_args,
+            )
 
     def run_dev_app(
         self,
         app: FinalizedAppConfig,
         env: dict,
-        venv: VenvContext,
+        venv: VirtualEnvironment,
         passthrough: list[str],
         **options,
     ):
@@ -247,14 +222,6 @@ class DevCommand(RunAppMixin, BaseCommand):
         ext = importlib.machinery.EXTENSION_SUFFIXES[0].split(".")[1]
         return f"dev.{ext}"
 
-    def venv_path(self, appname: str) -> Path:
-        """Return the path for the app's virtual environment.
-
-        :param app: The app config
-        :returns: Path where the venv should be located
-        """
-        return self.base_path / ".briefcase" / appname / self.venv_name
-
     def __call__(
         self,
         appname: str | None = None,
@@ -326,50 +293,46 @@ class DevCommand(RunAppMixin, BaseCommand):
 
         if isolated:
             self.console.info("Activating dev environment...", prefix=app.app_name)
+            env_manager = app.env_manager
+        else:
+            env_manager = None
 
-        with self.tools.virtual_environment.create(
-            venv_path=self.venv_path(app.app_name),
-            isolated=isolated,
-            recreate=update_requirements,
-        ) as venv:
-            if venv.created:
-                self.console.info("Installing requirements...", prefix=app.app_name)
-                try:
-                    self.install_dev_requirements(app, venv, **options)
-                except Exception:
-                    # If any problem occurs during installing requirements, remove the
-                    # venv; it will need to be re-created on the next run.
-                    venv.clean()
-                    raise
+        venv = self.tools.virtual_environment[env_manager](
+            name=self.venv_name,
+            app=app,
+            tools=self.tools,
+            platform=self.platform,
+            arch=self.tools.host_arch,
+            base_path=self.base_path,
+        )
+        created = venv.prepare(recreate=update_requirements)
 
-                write_dist_info(
-                    app,
-                    self.app_module_path(app).parent / app.dist_info_name,
+        if created:
+            self.console.info("Installing requirements...", prefix=app.app_name)
+            try:
+                self.install_dev_requirements(app, venv, **options)
+            except Exception:
+                # If any problem occurs during installing requirements, remove the
+                # venv; it will need to be re-created on the next run.
+                venv.clean()
+                raise
+
+            write_dist_info(
+                app,
+                self.app_module_path(app).parent / app.dist_info_name,
+            )
+
+        if run_app:
+            if app.test_mode:
+                self.console.info(
+                    "Running test suite in dev environment...", prefix=app.app_name
                 )
-
-            if run_app:
-                if app.test_mode:
-                    self.console.info(
-                        "Running test suite in dev environment...", prefix=app.app_name
-                    )
-                else:
-                    self.console.info("Starting in dev mode...", prefix=app.app_name)
-                return self.run_dev_app(
-                    app,
-                    env=self.get_environment(app),
-                    venv=venv,
-                    passthrough=[] if passthrough is None else passthrough,
-                    **options,
-                )
-
-
-def _is_archive(filename):
-    """Determine if the file is an archive file.
-
-    :param filename: The path to check
-    :returns: True if the file is an archive.
-    """
-    return any(
-        filename.endswith(ext)
-        for ext in [".tar.gz", ".tar.bz2", ".tar", ".zip", ".whl"]
-    )
+            else:
+                self.console.info("Starting in dev mode...", prefix=app.app_name)
+            return self.run_dev_app(
+                app,
+                env=self.get_environment(app),
+                venv=venv,
+                passthrough=[] if passthrough is None else passthrough,
+                **options,
+            )

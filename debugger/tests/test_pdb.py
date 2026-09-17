@@ -2,9 +2,10 @@ import json
 import os
 from unittest.mock import MagicMock
 
+import pytest
+
 import briefcase_debugger
 import briefcase_debugger.pdb
-import pytest
 
 
 def test_no_env_vars(monkeypatch, capsys):
@@ -30,9 +31,8 @@ def test_no_debugger_verbose(monkeypatch, capsys):
     briefcase_debugger.start_remote_debugger()
 
     captured = capsys.readouterr()
-    assert (
-        captured.out
-        == "No 'BRIEFCASE_DEBUGGER' environment variable found. Debugger not starting.\n"
+    assert captured.out == (
+        "No 'BRIEFCASE_DEBUGGER' environment variable found. Debugger not starting.\n"
     )
     assert captured.err == ""
 

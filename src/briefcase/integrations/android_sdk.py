@@ -11,6 +11,7 @@ from datetime import datetime
 from pathlib import Path
 
 from briefcase.config import PEP508_NAME_RE
+from briefcase.console import Console
 from briefcase.exceptions import (
     BriefcaseCommandError,
     IncompatibleToolError,
@@ -74,9 +75,9 @@ class AndroidSDK(ManagedTool):
         # A wrapper for testing purposes
         self.sleep = time.sleep
 
-    @property
-    def cmdline_tools_url(self) -> str:
-        """The Android SDK Command-Line Tools URL appropriate for the current machine.
+    def _cmdline_tools_platform_name(self) -> str:
+        """The platform name Google uses for command-line tools downloads for the
+        current machine.
 
         The SDK largely only supports typical development environments; if a machine is
         using an unsupported architecture, `sdkmanager` will error while installing the
@@ -84,7 +85,7 @@ class AndroidSDK(ManagedTool):
         that are unsupported by sdkmanager, users can set up their own SDK install.
         """
         try:
-            platform_name = {
+            return {
                 "Darwin": {
                     "arm64": "mac",
                     "x86_64": "mac",
@@ -101,10 +102,26 @@ class AndroidSDK(ManagedTool):
                 tool=self.full_name, env_var="ANDROID_HOME"
             ) from None
 
+    @property
+    def cmdline_tools_url(self) -> str:
+        """The Android SDK Command-Line Tools URL appropriate for the current
+        machine."""
+        platform_name = self._cmdline_tools_platform_name()
         return (
             f"https://dl.google.com/android/repository/"
             f"commandlinetools-{platform_name}-{self.SDK_MANAGER_DOWNLOAD_VER}_latest.zip"
         )
+
+    @property
+    def cmdline_tools_hash(self) -> str:
+        """The expected sha256 hash of the command-line tools download for the current
+        machine."""
+        hash = {
+            "mac": "5673201e6f3869f418eeed3b5cb6c4be7401502bd0aae1b12a29d164d647a54e",
+            "linux": "7ec965280a073311c339e571cd5de778b9975026cfcbe79f2b1cdcb1e15317ee",
+            "win": "98b565cb657b012dae6794cefc0f66ae1efb4690c699b78a614b4a6a3505b003",
+        }[self._cmdline_tools_platform_name()]
+        return f"sha256:{hash}"
 
     @property
     def cmdline_tools_path(self) -> Path:
@@ -180,11 +197,24 @@ class AndroidSDK(ManagedTool):
 
     @property
     def DEFAULT_DEVICE_SKIN(self) -> str:
+        # Skins are entirely cosmetic. In a CI environment, default to no skin.
+        if "CI" in os.environ:
+            return None
         return "pixel_7_pro"
 
     @property
+    def DEFAULT_ANDROID_SDK_LEVEL(self) -> int:
+        return 31
+
+    @property
     def DEFAULT_SYSTEM_IMAGE(self) -> str:
-        return f"system-images;android-31;default;{self.emulator_abi}"
+        sdk_level = self.DEFAULT_ANDROID_SDK_LEVEL
+        return f"system-images;android-{sdk_level};default;{self.emulator_abi}"
+
+    @property
+    def DEFAULT_AVD(self) -> str:
+        sdk_level = self.DEFAULT_ANDROID_SDK_LEVEL
+        return f"beePhone-{sdk_level}"
 
     @classmethod
     def sdk_path_from_env(cls, tools: ToolCache) -> tuple[str | None, str | None]:
@@ -387,6 +417,7 @@ class AndroidSDK(ManagedTool):
             url=self.cmdline_tools_url,
             download_path=self.tools.base_path,
             role="Android SDK Command-Line Tools",
+            expected_hash=self.cmdline_tools_hash,
         )
 
         # The cmdline-tools package *must* be installed as:
@@ -704,7 +735,7 @@ connection.
     def list_installed_system_images(self) -> set[str]:
         """Returns a set of installed system image package identifiers.
 
-        e.g., ``{"system-images;android-31;default;x86_64"}``
+        e.g., `{"system-images;android-31;default;x86_64"}`
         """
         try:
             output = self.tools.subprocess.check_output(
@@ -726,7 +757,7 @@ connection.
         """Verify that the required system image is installed.
 
         :param system_image: The SDKManager identifier for the system image (e.g.,
-            ``"system-images;android-31;default;x86_64"``)
+            `"system-images;android-31;default;x86_64"`)
         """
         # Look for the directory named as a system image.
         # If it exists, we already have the system image.
@@ -800,6 +831,7 @@ connection.
             url=skin_url,
             download_path=self.root_path,
             role=f"{skin} device skin",
+            expected_hash="unverified:Android emulator skins do not have a checksum",
         )
 
         # Unpack skin archive
@@ -896,15 +928,16 @@ connection.
         be validated, and then automatically selected.
 
         :param device_or_avd: The device or AVD to target. Can be a physical
-            device id (a hex string), an emulator id (``emulator-5554``), or an
-            emulator AVD name (``@robotfriend``), or a JSON payload describing
-            the properties of an emulator that will be created (e.g.,
-            ``'{"avd":"beePhone","device_type":"pixel","skin":"pixel_3a","system_image":"system-images;android-31;default;arm64-v8a"}'``)
-            If ``None``, the user will be asked to select a device from the list
-            available.
-        :returns: A tuple containing ``(device, name, avd)``. ``avd`` will only
+            device id (a hex string), an emulator id (`emulator-5554`), or an
+            emulator AVD name (`@robotfriend`), a JSON payload describing the
+            properties of an emulator that will be created (e.g.,
+            `'{"avd":"beePhone","device_type":"pixel","skin":"pixel_3a","system_image":"system-images;android-31;default;arm64-v8a"}'`)
+            or `auto` to select an appropriate device automatically (creating
+            one if necessary). If `None`, the user will be asked to select a
+            device from the list available.
+        :returns: A tuple containing `(device, name, avd)`. `avd` will only
             be provided if an emulator with that AVD is not currently running.
-            If ``device`` is None, a new emulator should be created.
+            If `device` is None, a new emulator should be created.
         """
         # If the device_or_avd starts with "{", it's a definition for a new
         # emulator to be created.
@@ -975,9 +1008,26 @@ connection.
                 choices[f"@{avd}"] = name
                 device_index[f"@{avd}"] = name
 
-        # If a device or AVD has been provided, check it against the available
-        # device list.
-        if device_or_avd:
+        if device_or_avd == "auto":
+            default_avd = f"@{self.DEFAULT_AVD}"
+            try:
+                name = device_index[default_avd]
+            except KeyError:
+                # The default AVD doesn't exist; create it.
+                self._create_emulator(
+                    avd=self.DEFAULT_AVD,
+                    device_type=self.DEFAULT_DEVICE_TYPE,
+                    skin=self.DEFAULT_DEVICE_SKIN,
+                    system_image=self.DEFAULT_SYSTEM_IMAGE,
+                )
+                name = f"{default_avd} (emulator)"
+
+            device = running_avds.get(self.DEFAULT_AVD)
+            return device, name, self.DEFAULT_AVD
+
+        elif device_or_avd:
+            # If a device or AVD has been provided, check it against the available
+            # device list.
             try:
                 name = device_index[device_or_avd]
 
@@ -1088,12 +1138,12 @@ In future, you can specify this device by running:
         # Get the list of existing emulators
         emulators = set(self.emulators())
 
-        default_avd = "beePhone"
+        default_avd = self.DEFAULT_AVD
         i = 1
         # Make sure the default name is unique
         while default_avd in emulators:
             i += 1
-            default_avd = f"beePhone{i}"
+            default_avd = f"{self.DEFAULT_AVD}-{i}"
 
         # Prompt for a device avd until a valid one is provided.
         avd = self.tools.console.text_question(
@@ -1415,7 +1465,7 @@ class ADB:
     def avd_name(self) -> str | None:
         """Get the AVD name for the device.
 
-        :returns: The AVD name for the device; or ``None`` if the device isn't
+        :returns: The AVD name for the device; or `None` if the device isn't
             an emulator
         """
         try:
@@ -1481,18 +1531,60 @@ class ADB:
                 raise InvalidDeviceError("device id", self.device) from e
             raise
 
-    def install_apk(self, apk_path: str | Path):
+    def install_apk(self, apk_path: str | Path, package: str):
         """Install an APK file on an Android device.
 
         :param apk_path: The path of the Android APK file to install.
+        :param package: The package name that the Android APK will install.
         :returns: `None` on success; raises an exception on failure.
         """
         try:
             self.run("install", "-r", apk_path)
         except subprocess.CalledProcessError as e:
-            raise BriefcaseCommandError(
-                f"Unable to install APK {apk_path} on {self.device}"
-            ) from e
+            output = e.output or ""
+            unable_to_install = f"Unable to install APK {apk_path} on {self.device}."
+
+            remedy = "\n".join(
+                Console.dedent_and_wrap(
+                    f"""
+                    To resolve this, run the following command to uninstall the
+                    existing app, then try again:
+
+                        "{self.tools.android_sdk.adb_path}" -s {self.device} """
+                    f"""uninstall {package}
+
+                    Warning: this will delete the app's existing data on the device.
+                    """
+                )
+            )
+
+            if "INSTALL_FAILED_UPDATE_INCOMPATIBLE" in output:
+                cause = "\n".join(
+                    Console.dedent_and_wrap(
+                        """
+                        The app currently installed on the device was signed with
+                        a different key than this APK (maybe because it was
+                        installed from a different computer).
+                        """
+                    )
+                )
+                raise BriefcaseCommandError(
+                    f"{unable_to_install}\n\n{cause}\n\n{remedy}"
+                ) from e
+            elif "INSTALL_FAILED_VERSION_DOWNGRADE" in output:
+                cause = "\n".join(
+                    Console.dedent_and_wrap(
+                        """
+                        A newer version of this app is already installed, and
+                        Android won't install an older version over it.
+                        """
+                    )
+                )
+                raise BriefcaseCommandError(
+                    f"{unable_to_install}\n\n{cause}\n\n{remedy}"
+                ) from e
+            else:
+                raise BriefcaseCommandError(unable_to_install) from e
 
     def force_stop_app(self, package: str):
         """Force-stop an app, specified as a package name.
@@ -1736,7 +1828,7 @@ Activity class not found while starting app.
         """Obtain the PID of a running app by package name.
 
         :param package: The package ID for the application (e.g.,
-            ``org.beeware.tutorial``)
+            `org.beeware.tutorial`)
         :returns: The PID of the given app as a string, or None if it isn't
         running.
         """

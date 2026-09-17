@@ -2,6 +2,7 @@ import os
 import subprocess
 import sys
 from pathlib import Path
+from textwrap import dedent
 from unittest import mock
 
 import pytest
@@ -82,15 +83,16 @@ def run_command(dummy_console, tmp_path, first_app, monkeypatch):
 def mock_linux_env(run_command, tmp_path, monkeypatch):
     """Mock a linux system environment."""
     # Mock the freedesktop ID environment
-    os_release = "\n".join(
-        [
-            "ID=somevendor",
-            "VERSION_CODENAME=surprising",
-            "ID_LIKE=debian",
-        ]
-    )
     run_command.tools.platform.freedesktop_os_release = mock.MagicMock(
-        return_value=parse_freedesktop_os_release(os_release)
+        return_value=parse_freedesktop_os_release(
+            dedent(
+                """\
+                ID=somevendor
+                VERSION_CODENAME=surprising
+                ID_LIKE=debian
+                """
+            )
+        )
     )
 
     # Mock the glibc version
@@ -139,7 +141,10 @@ def test_supported_host_os(run_command, first_app, sub_kw, tmp_path):
     # The process was started
     run_command.tools.subprocess._subprocess.Popen.assert_called_with(
         [
-            f"{tmp_path / 'base_path/build/first-app/somevendor/surprising/first-app-0.0.1/usr/bin/first-app'}"
+            str(
+                tmp_path / "base_path/build/first-app/somevendor/surprising/"
+                "first-app-0.0.1/usr/bin/first-app"
+            )
         ],
         cwd=f"{tmp_path / 'home'}",
         stdout=subprocess.PIPE,
@@ -250,7 +255,8 @@ def test_run_gui_app(run_command, first_app, sub_kw, tmp_path):
         [
             os.fsdecode(
                 tmp_path
-                / "base_path/build/first-app/somevendor/surprising/first-app-0.0.1/usr/bin/first-app"
+                / "base_path/build/first-app/somevendor/surprising/"
+                / "first-app-0.0.1/usr/bin/first-app"
             )
         ],
         cwd=os.fsdecode(tmp_path / "home"),
@@ -289,7 +295,8 @@ def test_run_gui_app_passthrough(run_command, first_app, sub_kw, tmp_path):
         [
             os.fsdecode(
                 tmp_path
-                / "base_path/build/first-app/somevendor/surprising/first-app-0.0.1/usr/bin/first-app"
+                / "base_path/build/first-app/somevendor/surprising/"
+                / "first-app-0.0.1/usr/bin/first-app"
             ),
             "foo",
             "--bar",
@@ -330,7 +337,8 @@ def test_run_gui_app_failed(run_command, first_app, sub_kw, tmp_path):
         [
             os.fsdecode(
                 tmp_path
-                / "base_path/build/first-app/somevendor/surprising/first-app-0.0.1/usr/bin/first-app"
+                / "base_path/build/first-app/somevendor/surprising/"
+                / "first-app-0.0.1/usr/bin/first-app"
             )
         ],
         cwd=os.fsdecode(tmp_path / "home"),
@@ -359,7 +367,8 @@ def test_run_console_app(run_command, first_app, tmp_path):
         mock.call(
             [
                 tmp_path
-                / "base_path/build/first-app/somevendor/surprising/first-app-0.0.1/usr/bin/first-app"
+                / "base_path/build/first-app/somevendor/surprising/"
+                / "first-app-0.0.1/usr/bin/first-app"
             ],
             cwd=tmp_path / "home",
             bufsize=1,
@@ -388,7 +397,8 @@ def test_run_console_app_passthrough(run_command, first_app, tmp_path):
         mock.call(
             [
                 tmp_path
-                / "base_path/build/first-app/somevendor/surprising/first-app-0.0.1/usr/bin/first-app",
+                / "base_path/build/first-app/somevendor/surprising/"
+                / "first-app-0.0.1/usr/bin/first-app",
                 "foo",
                 "--bar",
             ],
@@ -420,7 +430,8 @@ def test_run_console_app_failed(run_command, first_app, sub_kw, tmp_path):
         mock.call(
             [
                 tmp_path
-                / "base_path/build/first-app/somevendor/surprising/first-app-0.0.1/usr/bin/first-app"
+                / "base_path/build/first-app/somevendor/surprising/"
+                / "first-app-0.0.1/usr/bin/first-app"
             ],
             cwd=tmp_path / "home",
             bufsize=1,
@@ -583,7 +594,8 @@ def test_run_app_test_mode(
         [
             os.fsdecode(
                 tmp_path
-                / "base_path/build/first-app/somevendor/surprising/first-app-0.0.1/usr/bin/first-app"
+                / "base_path/build/first-app/somevendor/surprising/"
+                / "first-app-0.0.1/usr/bin/first-app"
             )
         ],
         cwd=os.fsdecode(tmp_path / "home"),
@@ -712,7 +724,8 @@ def test_run_app_test_mode_with_args(
         [
             os.fsdecode(
                 tmp_path
-                / "base_path/build/first-app/somevendor/surprising/first-app-0.0.1/usr/bin/first-app"
+                / "base_path/build/first-app/somevendor/surprising/"
+                / "first-app-0.0.1/usr/bin/first-app"
             ),
             "foo",
             "--bar",

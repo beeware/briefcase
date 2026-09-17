@@ -84,6 +84,9 @@ def test_existing_install(mock_tools, tmp_path):
         f"jdk-{JDK_RELEASE}+{JDK_BUILD}/OpenJDK17U-jdk_x64_linux_hotspot_{JDK_RELEASE}_{JDK_BUILD}.tar.gz",
         download_path=tmp_path / "tools",
         role="Java 17 JDK",
+        expected_hash=(
+            "sha256:992f96e7995075ac7636bb1a8de52b0c61d71ed3137fafc979ab96b4ab78dd75"
+        ),
     )
 
     # The archive was unpacked.
@@ -132,6 +135,9 @@ def test_macOS_existing_install(mock_tools, tmp_path):
         f"jdk-{JDK_RELEASE}+{JDK_BUILD}/OpenJDK17U-jdk_x64_mac_hotspot_{JDK_RELEASE}_{JDK_BUILD}.tar.gz",
         download_path=tmp_path / "tools",
         role="Java 17 JDK",
+        expected_hash=(
+            "sha256:a2a7bfd3a767fcaf35a2e96cc562e6a63cd695e08c1a896222303c4e978da3d6"
+        ),
     )
 
     # The archive was unpacked.
@@ -175,6 +181,9 @@ def test_download_fail(mock_tools, tmp_path):
         f"jdk-{JDK_RELEASE}+{JDK_BUILD}/OpenJDK17U-jdk_x64_linux_hotspot_{JDK_RELEASE}_{JDK_BUILD}.tar.gz",
         download_path=tmp_path / "tools",
         role="Java 17 JDK",
+        expected_hash=(
+            "sha256:992f96e7995075ac7636bb1a8de52b0c61d71ed3137fafc979ab96b4ab78dd75"
+        ),
     )
 
     # No attempt was made to unpack the archive
@@ -216,6 +225,9 @@ def test_unpack_fail(mock_tools, tmp_path):
         f"jdk-{JDK_RELEASE}+{JDK_BUILD}/OpenJDK17U-jdk_x64_linux_hotspot_{JDK_RELEASE}_{JDK_BUILD}.tar.gz",
         download_path=tmp_path / "tools",
         role="Java 17 JDK",
+        expected_hash=(
+            "sha256:992f96e7995075ac7636bb1a8de52b0c61d71ed3137fafc979ab96b4ab78dd75"
+        ),
     )
 
     # The archive was unpacked.

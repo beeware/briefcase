@@ -315,7 +315,7 @@ def test_default_name(mock_tools, android_sdk, tmp_path):
     mock_tools.console.values = [""]
 
     # Mock the initial output of an AVD config file.
-    avd_config_path = tmp_path / "home/.android/avd/beePhone.avd/config.ini"
+    avd_config_path = tmp_path / "home/.android/avd/beePhone-31.avd/config.ini"
     avd_config_path.parent.mkdir(parents=True)
     with avd_config_path.open("w", encoding="utf-8") as f:
         f.write("hw.device.name=pixel\n")
@@ -324,7 +324,7 @@ def test_default_name(mock_tools, android_sdk, tmp_path):
     avd = android_sdk.create_emulator()
 
     # The expected device AVD was created.
-    assert avd == "beePhone"
+    assert avd == "beePhone-31"
 
 
 def test_default_name_with_collisions(mock_tools, android_sdk, tmp_path):
@@ -335,8 +335,10 @@ def test_default_name_with_collisions(mock_tools, android_sdk, tmp_path):
     # Create some existing emulators that will collide with the default name.
     android_sdk.emulators = MagicMock(
         return_value=[
-            "beePhone2",
+            "beePhone-31-2",
             "runningEmulator",
+            "beePhone-35",
+            "beePhone-31",
             "beePhone",
         ]
     )
@@ -344,7 +346,7 @@ def test_default_name_with_collisions(mock_tools, android_sdk, tmp_path):
     mock_tools.console.values = [""]
 
     # Mock the initial output of an AVD config file.
-    avd_config_path = tmp_path / "home/.android/avd/beePhone3.avd/config.ini"
+    avd_config_path = tmp_path / "home/.android/avd/beePhone-31-3.avd/config.ini"
     avd_config_path.parent.mkdir(parents=True)
     with avd_config_path.open("w", encoding="utf-8") as f:
         f.write("hw.device.name=pixel\n")
@@ -353,4 +355,4 @@ def test_default_name_with_collisions(mock_tools, android_sdk, tmp_path):
     avd = android_sdk.create_emulator()
 
     # The expected device AVD was created.
-    assert avd == "beePhone3"
+    assert avd == "beePhone-31-3"

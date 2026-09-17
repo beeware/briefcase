@@ -2,24 +2,13 @@ import errno
 import re
 import subprocess
 import sys
+import tomllib
 import webbrowser
 from http.server import SimpleHTTPRequestHandler, ThreadingHTTPServer
 from pathlib import Path, PurePosixPath
 from textwrap import dedent, indent
 from typing import Any
 from zipfile import ZipFile
-
-from briefcase.console import Console
-from briefcase.exceptions import (
-    BriefcaseCommandError,
-    BriefcaseConfigError,
-    UnsupportedCommandError,
-)
-
-if sys.version_info >= (3, 11):  # pragma: no-cover-if-lt-py311
-    import tomllib
-else:  # pragma: no-cover-if-gte-py311
-    import tomli as tomllib
 
 import tomli_w
 
@@ -34,6 +23,12 @@ from briefcase.commands import (
     UpdateCommand,
 )
 from briefcase.config import FinalizedAppConfig
+from briefcase.console import Console
+from briefcase.exceptions import (
+    BriefcaseCommandError,
+    BriefcaseConfigError,
+    UnsupportedCommandError,
+)
 
 # Banner templates (Constants used in write_inserts)
 HTML_BANNER = (
@@ -74,6 +69,7 @@ class StaticWebMixin:
 
 class StaticWebCreateCommand(StaticWebMixin, CreateCommand):
     description = "Create and populate a static web project."
+    app_template_hash = "sha1:a0e3738018ab88546f7bf1009f4ab719e23c8ccf"
 
 
 class StaticWebUpdateCommand(StaticWebCreateCommand, UpdateCommand):

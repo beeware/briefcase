@@ -12,7 +12,7 @@ from briefcase.exceptions import (
 from briefcase.integrations.wix import WiX
 
 from ...utils import assert_url_resolvable
-from .conftest import WIX_DOWNLOAD_URL, WIX_EXE_PATH
+from .conftest import WIX_DOWNLOAD_URL, WIX_EXE_PATH, WIX_SHA256
 
 
 def test_short_circuit(mock_tools):
@@ -121,6 +121,7 @@ def assert_download(mock_tools, wix_path):
         url=WIX_DOWNLOAD_URL,
         download_path=wix_path.parent,
         role="WiX",
+        expected_hash=WIX_SHA256,
     )
 
     # The download was unpacked.
@@ -177,6 +178,7 @@ def test_download_fail(mock_tools, tmp_path):
         url=WIX_DOWNLOAD_URL,
         download_path=tmp_path / "tools",
         role="WiX",
+        expected_hash=WIX_SHA256,
     )
 
     # ... but the unpack didn't happen
@@ -203,6 +205,7 @@ def test_unpack_fail(capsys, mock_tools, wix_path):
         url=WIX_DOWNLOAD_URL,
         download_path=wix_path.parent,
         role="WiX",
+        expected_hash=WIX_SHA256,
     )
 
     # The download was unpacked.

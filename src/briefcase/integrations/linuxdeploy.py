@@ -5,7 +5,7 @@ import shlex
 from abc import ABC, abstractmethod
 from collections.abc import Collection
 from pathlib import Path
-from typing import TypeVar
+from typing import Self, TypeVar
 from urllib.parse import urlparse
 
 from briefcase.exceptions import (
@@ -44,6 +44,20 @@ class LinuxDeployBase(ABC):
     @abstractmethod
     def download_url(self) -> str:
         """The URL where the tool/plugin can be downloaded."""
+
+    @property
+    def download_hash(self) -> str | None:
+        """The expected hash of the downloaded tool/plugin, in
+        `"<algorithm>:<hexdigest>"` form, or an `"unverified:<reason>"` marker if the
+        download cannot be hash-verified.
+
+        Defaults to `None` (no hash configured, so `File.download()` will warn).
+        Subclasses with a stable, verifiable download should override this to
+        provide a real hash; subclasses whose download is deliberately
+        unverifiable should override this to provide an `"unverified:<reason>"`
+        marker.
+        """
+        return None
 
     @property
     @abstractmethod
@@ -88,6 +102,7 @@ class LinuxDeployBase(ABC):
             url=self.download_url,
             download_path=self.file_path,
             role=self.full_name,
+            expected_hash=self.download_hash,
         )
         self.prepare_executable()
 
@@ -105,11 +120,11 @@ class LinuxDeployBase(ABC):
 
     @classmethod
     def verify_install(
-        cls: type[LinuxDeployT],
+        cls,
         tools: ToolCache,
         install: bool = True,
         **kwargs,
-    ) -> LinuxDeployT:
+    ) -> Self:
         """Verify that linuxdeploy tool or plugin is available.
 
         :param tools: ToolCache of available tools
@@ -125,7 +140,7 @@ class LinuxDeployBase(ABC):
         if not is_plugin and hasattr(tools, "linuxdeploy"):
             return tools.linuxdeploy
 
-        tool: LinuxDeployT = cls(tools=tools, **kwargs)
+        tool: Self = cls(tools=tools, **kwargs)
         if not tool.exists():
             if install:
                 tools.console.info(
@@ -232,6 +247,13 @@ class LinuxDeployGtkPlugin(LinuxDeployPluginBase, ManagedTool):
             f"master/{self.file_name}"
         )
 
+    @property
+    def download_hash(self) -> str:
+        return (
+            "unverified:linuxdeploy GTK plugin is downloaded from the master "
+            "branch, which has no stable hash"
+        )
+
 
 class LinuxDeployQtPlugin(LinuxDeployPluginBase, ManagedTool):
     name = "linuxdeploy_qt_plugin"
@@ -246,6 +268,13 @@ class LinuxDeployQtPlugin(LinuxDeployPluginBase, ManagedTool):
         return (
             "https://github.com/linuxdeploy/linuxdeploy-plugin-qt/"
             f"releases/download/continuous/{self.file_name}"
+        )
+
+    @property
+    def download_hash(self) -> str:
+        return (
+            "unverified:linuxdeploy Qt plugin uses a rolling 'continuous' "
+            "release with no stable hash"
         )
 
 
@@ -358,6 +387,13 @@ class LinuxDeploy(LinuxDeployBase, ManagedTool):
         return (
             "https://github.com/linuxdeploy/linuxdeploy/"
             f"releases/download/continuous/{self.file_name}"
+        )
+
+    @property
+    def download_hash(self) -> str:
+        return (
+            "unverified:linuxdeploy uses a rolling 'continuous' release with no "
+            "stable hash"
         )
 
     @property

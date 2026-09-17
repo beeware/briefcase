@@ -61,6 +61,6 @@ universal_build = true
 min_os_version = "13.0"
 requires = [
     "PySide6-Addons~=6.8",
-    "std-nslog~=1.0.3",
+    "std-nslog~=2.0.0",
 ]
 """

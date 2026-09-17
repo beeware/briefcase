@@ -8,6 +8,8 @@ from importlib import metadata
 
 from briefcase.bootstraps import BaseGuiBootstrap
 from briefcase.config import (
+    APP_NAME_SPEC,
+    get_module_name,
     is_valid_app_name,
     is_valid_bundle_identifier,
     make_class_name,
@@ -26,8 +28,8 @@ LICENSE_OPTIONS = {
     "GPL-2.0+": "GNU General Public License v2.0 or later (GPL-2.0+)",
     "GPL-3.0": "GNU General Public License v3.0 only (GPL-3.0)",
     "GPL-3.0+": "GNU General Public License v3.0 or later (GPL-3.0+)",
-    "Proprietary": "Proprietary",
-    "Other": "Other",
+    "LicenseRef-Proprietary": "Proprietary",
+    "LicenseRef-Other": "Other",
 }
 DEFAULT_LICENSE = "BSD-3-Clause"
 
@@ -75,6 +77,12 @@ class NewCommand(BaseCommand):
 
     OTHER_FRAMEWORKS = "Other frameworks"
 
+    # The default project template
+    template_url = "https://github.com/beeware/briefcase-template"
+
+    # The expected commit hash of the project template
+    template_hash = "sha1:476c396a300e6844d89f49de4dabfde202442776"
+
     def bundle_path(self, app):
         """A placeholder; New command doesn't have a bundle path."""
         raise NotImplementedError()
@@ -99,6 +107,12 @@ class NewCommand(BaseCommand):
             "--template-branch",
             dest="template_branch",
             help="The branch of the cookiecutter template to use for the new project",
+        )
+
+        parser.add_argument(
+            "--template-hash",
+            dest="template_hash",
+            help="The expected commit hash of the cookiecutter template",
         )
 
         parser.add_argument(
@@ -170,12 +184,7 @@ class NewCommand(BaseCommand):
         if not is_valid_app_name(candidate):
             raise ValueError(
                 self.console.textwrap(
-                    f"{candidate!r} is not a valid app name.\n"
-                    "\n"
-                    "App names must not be reserved keywords such as 'and', 'for' and "
-                    "'while'. They must also be PEP508 compliant (i.e., they can only "
-                    "include letters, numbers, '-' and '_'; must start with a letter; "
-                    "and cannot end with '-' or '_')."
+                    f"{candidate!r} is not a valid app name.\n\n{APP_NAME_SPEC}"
                 )
             )
 
@@ -190,7 +199,7 @@ class NewCommand(BaseCommand):
         :param app_name: The app name
         :returns: The app's module name.
         """
-        return app_name.replace("-", "_")
+        return get_module_name(app_name)
 
     def validate_bundle(self, candidate):
         """Determine if the bundle identifier is valid.
@@ -312,10 +321,7 @@ class NewCommand(BaseCommand):
                 "Next, we need a name that can serve as a machine-readable Python "
                 "package name for your application.\n"
                 "\n"
-                "This name must be PEP508-compliant - that means the name may only "
-                "contain letters, numbers, hyphens and underscores; it can't contain "
-                "spaces or punctuation, and it can't start with a hyphen or "
-                "underscore.\n"
+                f"{APP_NAME_SPEC}\n"
                 "\n"
                 "Based on your formal name, we suggest an app name of "
                 f"{default_app_name!r}, but you can use another name if you want."
@@ -497,8 +503,7 @@ class NewCommand(BaseCommand):
         # Sort the options alphabetically first
         ordered = OrderedDict(sorted(bootstraps.items()))
 
-        # Ensure the first 3 options are: Toga, PySide6, Pygame
-        ordered.move_to_end("Pygame", last=False)
+        # Ensure the first 2 options are: Toga, PySide6
         ordered.move_to_end("PySide6", last=False)
         ordered.move_to_end("Toga", last=False)
 
@@ -604,6 +609,7 @@ class NewCommand(BaseCommand):
         self,
         template: str | None = None,
         template_branch: str | None = None,
+        template_hash: str | None = None,
         project_overrides: dict[str, str] | None = None,
         **options,
     ):
@@ -640,12 +646,22 @@ class NewCommand(BaseCommand):
                 f"A directory named {context['app_name']!r} already exists."
             )
 
+        # If a template hash has been provided, use it. Use the command's
+        # template hash if there's no template or branch override.
+        if template_hash:
+            resolved_hash = template_hash
+        elif template is None and template_branch is None:
+            resolved_hash = self.template_hash
+        else:
+            resolved_hash = None
+
         # Create the project files
         self.generate_template(
-            template=(template or "https://github.com/beeware/briefcase-template"),
+            template=template or self.template_url,
             branch=template_branch,
             output_path=self.base_path,
             extra_context=context,
+            template_hash=resolved_hash,
         )
 
         # Perform any post-template processing required by the bootstrap.
@@ -677,6 +693,7 @@ To run your application, type:
         self,
         template: str | None = None,
         template_branch: str | None = None,
+        template_hash: str | None = None,
         project_overrides: list[str] | None = None,
         **options,
     ):
@@ -687,6 +704,7 @@ To run your application, type:
         return self.new_app(
             template=template,
             template_branch=template_branch,
+            template_hash=template_hash,
             project_overrides=parse_project_overrides(project_overrides),
             **options,
         )

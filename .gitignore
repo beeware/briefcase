@@ -18,13 +18,14 @@ distribute-*
 .coverage
 .coverage.*
 coverage.xml
-venv*
+/venv*
 .vscode/
 .eggs/
 .tox/
 /local
 __pycache__/
 .ruff_cache/
+.venv/
 
 /pip-wheel-metadata
 # IntelliJ Idea family of suites
@@ -44,14 +45,20 @@ __pycache__/
 tests/apps/verify-*/
 logs/
 
-# AI tooling (SpecKit v0.8.0)
+# AI tooling
+.kilo/
 .opencode/
 .specify/scripts
 .specify/templates
 .specify/extensions.yml
 .specify/extensions
+.specify/feature.json
 .specify/init-options.json
 .specify/integration.json
 .specify/integrations
 .specify/workflows
 .specify/workflow.yml
+/specs/
+/docs/superpowers/
+/.superpowers/
+/.worktrees/

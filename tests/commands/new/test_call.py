@@ -53,6 +53,11 @@ def test_new_app(new_command, cmdline, overrides):
         # Run the first app
         (
             "new",
-            {"template": None, "template_branch": None, "project_overrides": overrides},
+            {
+                "template": None,
+                "template_branch": None,
+                "template_hash": None,
+                "project_overrides": overrides,
+            },
         ),
     ]

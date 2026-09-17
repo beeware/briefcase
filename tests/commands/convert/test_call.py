@@ -42,6 +42,7 @@ def test_convert_app(convert_command, cmdline, overrides, patch_tempdir):
             {
                 "template": None,
                 "template_branch": None,
+                "template_hash": None,
                 "project_overrides": overrides,
                 "tmp_path": Path(patch_tempdir.name),
             },

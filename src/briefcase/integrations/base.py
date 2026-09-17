@@ -11,9 +11,9 @@ from collections import defaultdict
 from collections.abc import Collection, Mapping
 from functools import cached_property
 from pathlib import Path
-from typing import TYPE_CHECKING, TypeVar
+from typing import TYPE_CHECKING, Self, TypeVar
 
-import httpx
+import httpx2
 from cookiecutter.main import cookiecutter
 
 from briefcase.config import AppConfig, FinalizedAppConfig
@@ -33,15 +33,17 @@ if TYPE_CHECKING:
     from briefcase.integrations.docker import Docker, DockerAppContext
     from briefcase.integrations.file import File
     from briefcase.integrations.flatpak import Flatpak
+    from briefcase.integrations.gnupg import GnuPG
     from briefcase.integrations.java import JDK
     from briefcase.integrations.linuxdeploy import LinuxDeploy
     from briefcase.integrations.rcedit import RCEdit
     from briefcase.integrations.subprocess import Subprocess
-    from briefcase.integrations.virtual_environment import VirtualEnvironment
+    from briefcase.integrations.virtual_environment import VirtualEnvironmentManager
     from briefcase.integrations.visualstudio import VisualStudio
     from briefcase.integrations.windows_sdk import WindowsSDK
     from briefcase.integrations.wix import WiX
     from briefcase.integrations.xcode import Xcode, XcodeCliTools
+
 
 ToolT = TypeVar("ToolT", bound="Tool")
 ManagedToolT = TypeVar("ManagedToolT", bound="ManagedTool")
@@ -69,11 +71,11 @@ class Tool(ABC):
 
     @classmethod
     def verify(
-        cls: type[ToolT],
+        cls,
         tools: ToolCache,
         app: FinalizedAppConfig | None = None,
         **kwargs,
-    ) -> ToolT:
+    ) -> Self:
         """Confirm the tool is available and usable on the host platform."""
         cls.verify_host(tools=tools)
         tool = cls.verify_install(tools=tools, app=app, **kwargs)
@@ -105,12 +107,12 @@ class ManagedTool(Tool):
 
     @classmethod
     def verify(
-        cls: type[ManagedToolT],
+        cls,
         tools: ToolCache,
         app: FinalizedAppConfig | None = None,
         install: bool = True,
         **kwargs,
-    ) -> ManagedToolT:
+    ) -> Self:
         """Confirm the managed tool is installed and available."""
         return super().verify(tools=tools, app=app, install=install, **kwargs)
 
@@ -152,12 +154,13 @@ class ToolCache(Mapping):
     docker: Docker
     file: File
     flatpak: Flatpak
+    gnupg: GnuPG
     git: git_
     java: JDK
     linuxdeploy: LinuxDeploy
     rcedit: RCEdit
     subprocess: Subprocess
-    virtual_environment: VirtualEnvironment
+    virtual_environment: VirtualEnvironmentManager
     visualstudio: VisualStudio
     windows_sdk: WindowsSDK
     wix: WiX
@@ -172,7 +175,7 @@ class ToolCache(Mapping):
 
     # Third party tools
     cookiecutter = staticmethod(cookiecutter)
-    httpx = httpx
+    httpx2 = httpx2
 
     def __init__(
         self,
@@ -251,10 +254,7 @@ class ToolCache(Mapping):
 
         :returns: a character encoding (upper-cased), e.g. UTF-8. Defaults to UTF-8.
         """
-        if sys.version_info < (3, 11):  # pragma: no-cover-if-gte-py311
-            encoding = locale.getdefaultlocale()[1]  # deprecated in Python 3.11
-        else:  # pragma: no-cover-if-lt-py311
-            encoding = locale.getencoding()
+        encoding = locale.getencoding()
 
         if not encoding:
             encoding = DEFAULT_SYSTEM_ENCODING

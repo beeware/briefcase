@@ -31,15 +31,18 @@ def test_path_is_realpath(dummy_console, tmp_path):
 def test_data_path_creation_failure(dummy_console, tmp_path, monkeypatch):
     """An error is raised if the data path cannot be created."""
 
-    def raise_calledprpcesserror(*a, **kw):
-        raise subprocess.CalledProcessError(returncode=1, cmd=["mkdir", str(data_path)])
+    if platform.system() == "Windows":
+        # On Windows, patch run(), since path creation is handled differently
+        def raise_calledprpcesserror(*a, **kw):
+            raise subprocess.CalledProcessError(returncode=1, cmd=["mkdir"])
 
-    # On Linux and macOS, use /etc/ to raise an OSError
-    data_path = Path("/etc/mydatadir")
+        monkeypatch.setattr(subprocess, "run", raise_calledprpcesserror)
+    else:
 
-    # Patch run() since it's apparently quite difficult to find a
-    # location in Windows that is guaranteed to throw an error...
-    monkeypatch.setattr(subprocess, "run", raise_calledprpcesserror)
+        def raise_oserror(*a, **kw):
+            raise OSError()
+
+        monkeypatch.setattr(os, "makedirs", raise_oserror)
 
     with pytest.raises(
         BriefcaseCommandError,
@@ -48,7 +51,7 @@ def test_data_path_creation_failure(dummy_console, tmp_path, monkeypatch):
             r" files:"
         ),
     ):
-        DummyCommand(console=dummy_console, data_path=data_path)
+        DummyCommand(console=dummy_console, data_path=Path("/etc/mydatadir"))
 
 
 def test_space_in_path(dummy_console, tmp_path):
@@ -62,6 +65,51 @@ def test_space_in_path(dummy_console, tmp_path):
             base_path=tmp_path / "base",
             data_path=tmp_path / "somewhere bad",
         )
+
+
+def test_comma_in_base_path(dummy_console, tmp_path):
+    """The Briefcase project path cannot contain commas."""
+    with pytest.raises(
+        BriefcaseCommandError,
+        match=r"contains a comma. This will cause problems with some tools",
+    ):
+        DummyCommand(
+            console=dummy_console,
+            base_path=tmp_path / "somewhere,bad",
+            data_path=tmp_path / "data",
+        )
+
+
+def test_left_to_right_mark_in_base_path_on_windows(
+    dummy_console,
+    tmp_path,
+    monkeypatch,
+):
+    """The Briefcase project path cannot contain LTR marks on Windows."""
+    monkeypatch.setattr(platform, "system", lambda: "Windows")
+    data_path = tmp_path / "data"
+    data_path.mkdir()
+
+    with pytest.raises(
+        BriefcaseCommandError,
+        match=r"contains a left-to-right mark character",
+    ):
+        DummyCommand(
+            console=dummy_console,
+            base_path=tmp_path / "\u200e",
+            data_path=data_path,
+        )
+
+
+def test_space_in_base_path_warns(dummy_console, tmp_path, capsys):
+    """The Briefcase project path warns when it contains spaces."""
+    DummyCommand(
+        console=dummy_console,
+        base_path=tmp_path / "somewhere bad",
+        data_path=tmp_path / "data",
+    )
+
+    assert "WARNING: Project path contains spaces" in capsys.readouterr().out
 
 
 def test_empty_custom_path(monkeypatch, dummy_console, tmp_path):

@@ -19,6 +19,9 @@ def first_app_templated(first_app_config, tmp_path):
         dedent(
             """\
             [paths]
+            app_path = "src/app"
+            app_packages_path = "src/app_packages"
+            support_path = "src"
             extras_path = "custom_extras"
             """
         ),

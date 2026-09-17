@@ -5,8 +5,10 @@ from unittest.mock import MagicMock
 import pytest
 from packaging.version import Version
 
-from briefcase.exceptions import UnsupportedHostError
+from briefcase.exceptions import BriefcaseCommandError, UnsupportedHostError
 from briefcase.platforms.windows.app import WindowsAppCreateCommand
+
+from .....utils import create_file
 
 
 @pytest.fixture
@@ -90,7 +92,8 @@ def test_verify_windows_cpu_arch(create_command):
     # Create a Mock object for the platform module
     create_command.tools.platform = MagicMock(spec_set=platform)
 
-    # Simulate that Mock platform is running on Windows ARM64 with an x86_64 Python interpreter
+    # Simulate that Mock platform is running on Windows ARM64
+    # with an x86_64 Python interpreter
     create_command.tools.host_os = "Windows"
     create_command.tools.host_arch = "ARM64"
     create_command.tools.platform.python_compiler = MagicMock(
@@ -107,6 +110,30 @@ def test_verify_windows_cpu_arch(create_command):
         ),
     ):
         create_command.verify_host()
+
+
+def test_verify_windows_cpu_arch_warning(monkeypatch, create_command, capsys):
+    """User can opt into emuluation mode, but they will get a warning."""
+    # Set the environment variable to allow emulation
+    monkeypatch.setenv("BRIEFCASE_ALLOW_EMULATION", "1")
+
+    # Create a Mock object for the platform module
+    create_command.tools.platform = MagicMock(spec_set=platform)
+
+    # Simulate that Mock platform is running on Windows ARM64
+    # with an x86_64 Python interpreter
+    create_command.tools.host_os = "Windows"
+    create_command.tools.host_arch = "ARM64"
+    create_command.tools.platform.python_compiler = MagicMock(
+        return_value="MSV v.1950 64 bit (AMD64)"
+    )
+
+    create_command.verify_host()
+
+    # A warning was raised, but the app can continue.
+    stdout, stderr = capsys.readouterr()
+    assert "Running in CPU emulation mode" in stdout
+    assert stderr == ""
 
 
 def test_context(create_command, first_app_config):
@@ -196,6 +223,36 @@ def test_installer_images(create_command, first_app_config, tmp_path):
 
 
 @pytest.mark.parametrize(
+    ("console_app", "arch", "revision", "expected_binary"),
+    [
+        (False, "AMD64", "42", "GUI-Stub-3.X-amd64-b42.zip"),
+        (True, "AMD64", "42", "Console-Stub-3.X-amd64-b42.zip"),
+        (False, "arm64", "37", "GUI-Stub-3.X-arm64-b37.zip"),
+        (True, "arm64", "37", "Console-Stub-3.X-arm64-b37.zip"),
+    ],
+)
+def test_stub_binary_filename(
+    create_command,
+    first_app_config,
+    console_app,
+    arch,
+    revision,
+    expected_binary,
+):
+    """A valid support package URL is created for a support revision."""
+    first_app_config.console_app = console_app
+    create_command.tools.host_arch = arch
+
+    create_command.tools.sys = MagicMock(spec=sys)
+    create_command.tools.sys.version_info = ("3", "X", "Y")
+
+    assert (
+        create_command.stub_binary_filename(revision, first_app_config)
+        == expected_binary
+    )
+
+
+@pytest.mark.parametrize(
     ("revision", "micro"),
     [
         # Numerical revision
@@ -208,14 +265,12 @@ def test_installer_images(create_command, first_app_config, tmp_path):
         ("0rc1", "0"),
     ],
 )
-def test_support_package_url(
-    create_command, revision, micro, first_app_config, tmp_path
-):
+def test_support_package_url(create_command, revision, micro):
     """A valid support package URL is created for a support revision."""
     expected_link = (
         f"https://www.python.org/ftp/python"
         f"/{sys.version_info.major}.{sys.version_info.minor}.{micro}"
-        f"/python-{sys.version_info.major}.{sys.version_info.minor}.{revision}-embed-{create_command.tools.host_arch.lower()}.zip"
+        f"/python-{sys.version_info.major}.{sys.version_info.minor}.{revision}-embeddable-{create_command.tools.host_arch.lower()}.zip"
     )
     assert create_command.support_package_url(revision) == expected_link
 
@@ -259,3 +314,92 @@ def test_external(create_command, external_first_app, tmp_path):
     context = create_command.output_format_template_context(external_first_app)
     assert context["package_path"] == str(tmp_path / "base_path/external/src")
     assert context["binary_path"] == "internal/app.exe"
+
+
+@pytest.mark.parametrize(
+    ("template_version", "app_version", "compatible"),
+    [
+        (10240, 7601, False),
+        (10240, 10240, True),
+        (10240, 17763, True),
+        (None, 10240, True),
+        (10240, None, True),
+        (None, None, True),
+        # Values provided as strings are converted to int
+        ("10240", "7601", False),
+        (10240, "7601", False),
+        ("10240", 7601, False),
+    ],
+)
+def test_min_os_version(
+    mock_venv,
+    create_command,
+    first_app_templated,
+    template_version,
+    app_version,
+    compatible,
+):
+    """If the app defines a min OS version that is incompatible with the app template,
+    an error is raised."""
+    first_app_templated.requires = ["first", "second==1.2.3", "third>=3.2.1"]
+    create_command.target_windows_build = MagicMock(return_value=template_version)
+    if app_version:
+        first_app_templated.min_os_version = app_version
+
+    if not compatible:
+        with pytest.raises(
+            BriefcaseCommandError,
+            match=(
+                f"Your Windows app specifies a minimum build number of {app_version}, "
+                f"but the app template only supports {template_version}"
+            ),
+        ):
+            create_command.install_app_requirements(first_app_templated, mock_venv)
+        mock_venv.install_requirements.assert_not_called()
+    else:
+        create_command.install_app_requirements(first_app_templated, mock_venv)
+        mock_venv.install_requirements.assert_called_once_with(
+            ["first", "second==1.2.3", "third>=3.2.1"],
+            allow_editable=False,
+            require_binary=True,
+            install_path=(
+                create_command.base_path
+                / "build/first-app/windows/app/src/app_packages"
+            ),
+            extra_installer_args=[],
+        )
+
+
+def test_target_windows_build(create_command, first_app_templated):
+    "Test that the target Windows build is returned"
+
+    create_command._briefcase_toml[first_app_templated] = {"briefcase": {}}
+    assert create_command.target_windows_build(first_app_templated) is None
+    create_command._briefcase_toml[first_app_templated] = {
+        "briefcase": {"target_windows_build": 10240}
+    }
+    assert create_command.target_windows_build(first_app_templated) == 10240
+
+
+def test_install_managed_python_env(
+    create_command,
+    mock_venv,
+    first_app_templated,
+    base_path,
+):
+    """A managed python environment will be copied into the final app."""
+    # Create some mock content in the virtual environment
+    create_file(base_path / "mock-venv/base.txt", "Top level file")
+    create_file(base_path / "mock-venv/DLLs/python.dll", "A Python DLL")
+    create_file(base_path / "mock-venv/Lib/site-packages/test.py", "Stdlib")
+
+    # Install the managed Python environment
+    create_command.install_managed_python_env(first_app_templated, mock_venv)
+
+    # The managed environment was copied to the final app.
+    # Deep directory structure is preserved.
+    app_path = create_command.bundle_path(first_app_templated) / "src"
+
+    assert (app_path / "base.txt").exists()
+    assert (app_path / "DLLs/python.dll").exists()
+    assert (app_path / "Lib/site-packages/test.py").exists()

@@ -68,3 +68,5 @@ The format for the code signing identity is platform specific:
 * **On macOS:** The 40-character hex thumbprint of the signing identity; the full name of the certificate (e.g., `Developer ID Application: Jane Smith (ABC12345DE)`); or `-` to use an ad-hoc signature. See the [documentation on macOS code signing for more details](../../how-to/code-signing/macOS.md).
 
 * **On Windows:** The 40-character hex thumbprint of the signing identity; or the subject name of a certificate in the user's certificate store. See the [documentation on Windows code signing for more details](../../how-to/code-signing/windows.md).
+
+* **On Linux system packages:** The fingerprint (or any portion of it), key ID, or name/email address of a GPG signing identity. See the [documentation on Linux code signing for more details](../../how-to/code-signing/linux.md).

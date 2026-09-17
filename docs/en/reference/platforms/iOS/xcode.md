@@ -68,12 +68,14 @@ iOS projects use `.png` format icons. An application must provide icons of the f
 * 152px
 * 167px
 * 180px
-* 640px
+* 640px (for splash screen)
 * 1024px
-* 1280px
-* 1920px
+* 1280px (for splash screen)
+* 1920px (for splash screen)
 
-The icon will also be used to populate the splash screen. You can specify a background color for the splash screen using the `splash_background_color` configuration setting.
+Icons must be square. iOS will automatically apply a mask with rounded corners (a "squircle") to app icons so they match the system icon shape. If you provide non-square icons or icons with transparent regions, the transparent areas will render as black on the device.
+
+The 640px, 1280px and 1920px icons will also be used to populate the splash screen. Splash screen images are *not* automatically masked by iOS — they will be displayed as-is, with transparent areas showing the splash background color.
 
 iOS projects do not support installer images.
 
@@ -89,9 +91,9 @@ The following options can be provided at the command line when producing iOS pro
 
 ### run
 
-#### `-d <device>` / `--device <device>`
+#### `-d [<device>]` / `--device [<device>]`
 
-The device simulator to target. Can be either a UDID, a device name (e.g., `"iPhone 11"`), or a device name and OS version (`"iPhone 11::iOS 13.3"`).
+The device simulator to target. Can be either a UDID, a device name (e.g., `"iPhone 11"`), a device name and OS version (`"iPhone 11::iOS 13.3"`), or `auto`. `auto` is the default behavior; Briefcase will automatically select an "entry level" iPhone simulator (e.g., an iPhone SE, or iPhone 16e) on the most recent available iOS version. To see the full list of available simulators and select from that list, provide `-d`/`--device` with no value.
 
 ## Application configuration
 
@@ -116,6 +118,9 @@ Any Boolean or string value can be used for an `Info.plist` value.
 ### `min_os_version`
 
 The minimum iOS version that the app will support. This controls the value of `IPHONEOS_DEPLOYMENT_TARGET` used when building the app.
+
+The default version when unspecified is currently `15.0`. This affects the versions of Xcode and its included iOS SDK that will be supported, which are listed at Apple Developer's [Xcode SDKs and system requirements](https://developer.apple.com/xcode/system-requirements/) page.
+
 
 ## Permissions
 

@@ -111,6 +111,7 @@ def test_unknown_command():
             {
                 "template": None,
                 "template_branch": None,
+                "template_hash": None,
                 "project_overrides": None,
             },
             {},
@@ -123,6 +124,23 @@ def test_unknown_command():
             {
                 "template": "path/to/template",
                 "template_branch": "experiment",
+                "template_hash": None,
+                "project_overrides": None,
+            },
+            {
+                "version": "1.2.3",
+                "other": 42,
+            },
+        ),
+        (
+            (
+                "new --template=path/to/template --template-branch=experiment"
+                " --template-hash=sha1:abc123 -C version=\\'1.2.3\\' -C other=42"
+            ),
+            {
+                "template": "path/to/template",
+                "template_branch": "experiment",
+                "template_hash": "sha1:abc123",
                 "project_overrides": None,
             },
             {
@@ -153,6 +171,7 @@ def test_new_command(macOS_console, cmdline, expected_options, expected_override
             {
                 "template": None,
                 "template_branch": None,
+                "template_hash": None,
                 "project_overrides": None,
             },
             {},
@@ -165,6 +184,23 @@ def test_new_command(macOS_console, cmdline, expected_options, expected_override
             {
                 "template": "path/to/template",
                 "template_branch": "experiment",
+                "template_hash": None,
+                "project_overrides": None,
+            },
+            {
+                "version": "1.2.3",
+                "other": 42,
+            },
+        ),
+        (
+            (
+                "convert --template=path/to/template --template-branch=experiment"
+                " --template-hash=sha1:abc123 -C version=\\'1.2.3\\' -C other=42"
+            ),
+            {
+                "template": "path/to/template",
+                "template_branch": "experiment",
+                "template_hash": "sha1:abc123",
                 "project_overrides": None,
             },
             {

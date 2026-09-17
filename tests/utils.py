@@ -6,12 +6,17 @@ import plistlib
 import tarfile
 import zipfile
 from email.message import EmailMessage
-from http import HTTPStatus
 from pathlib import Path
 
-import httpx
-from httpx_retries import Retry, RetryTransport
+import httpx2
+import tomli_w
 from rich.markup import escape
+from tenacity import (
+    retry,
+    retry_if_exception,
+    stop_after_attempt,
+    wait_exponential_jitter,
+)
 
 from briefcase.console import Console, InputDisabled
 
@@ -70,6 +75,23 @@ def create_file(filepath, content, mode="w", chmod=None):
         os.chmod(filepath, chmod)
 
     return filepath
+
+
+def create_toml_file(tomlpath, content):
+    """A test utility to create a TOML file with known content.
+
+    Ensures that the directory for the file exists, and writes a TOML file with specific
+    content.
+
+    :param tomlpath: The path for the TOML file to create.
+    :param content: A dictionary of content that tomllib can use to create the file.
+    :returns: The path to the file that was created.
+    """
+    tomlpath.parent.mkdir(parents=True, exist_ok=True)
+    with tomlpath.open("wb") as f:
+        tomli_w.dump(content, f)
+
+    return tomlpath
 
 
 def create_plist_file(plistpath, content):
@@ -152,7 +174,7 @@ def mock_file_download(filename, content, mode="w", role=None):
     :returns: a function that can act as a mock side effect for `file.download()`
     """
 
-    def _download_file(url, download_path, role):
+    def _download_file(url, download_path, role, expected_hash=None):
         return create_file(download_path / filename, content, mode=mode)
 
     return _download_file
@@ -168,7 +190,7 @@ def mock_zip_download(filename, content, role=None):
     :returns: a function that can act as a mock side effect for `file.download()`
     """
 
-    def _download_file(url, download_path, role):
+    def _download_file(url, download_path, role, expected_hash=None):
         return create_zip_file(download_path / filename, content)
 
     return _download_file
@@ -184,7 +206,7 @@ def mock_tgz_download(filename, content, role=None, links=None):
     :returns: a function that can act as a mock side effect for `file.download()`
     """
 
-    def _download_file(url, download_path, role):
+    def _download_file(url, download_path, role, expected_hash=None):
         return create_tgz_file(download_path / filename, content, links)
 
     return _download_file
@@ -350,48 +372,38 @@ def file_content(path: Path) -> str | bytes | None:
             return f.read()
 
 
+def _is_retryable_url_error(exc: BaseException) -> bool:
+    """Determine whether an exception raised while checking URL resolvability is worth
+    retrying.
+
+    Retries transient network-level exceptions, and HTTP responses with a status code
+    indicating a temporary server-side problem (429, 502, 503, 504).
+    """
+    if isinstance(
+        exc,
+        (
+            httpx2.TimeoutException,
+            httpx2.NetworkError,
+            httpx2.RemoteProtocolError,
+        ),
+    ):
+        return True
+    return isinstance(exc, httpx2.HTTPStatusError) and exc.response.status_code in {
+        429,
+        502,
+        503,
+        504,
+    }
+
+
+@retry(
+    retry=retry_if_exception(_is_retryable_url_error),
+    wait=wait_exponential_jitter(initial=0.6, max=4.0),
+    stop=stop_after_attempt(4),
+    reraise=True,
+)
 def assert_url_resolvable(url: str):
     """Tests whether a URL is resolvable with retries; raises for failure."""
-    transport = RetryTransport(
-        # this retry for the underlying transport only applies to connection attempts
-        transport=httpx.HTTPTransport(retries=3),
-        # the underlying retry timing algorithm (first retry is immediate):
-        #  > backoff_factor * (2^attempt) * random.uniform(jitter, 1)
-        # Here are some example backoff timings using the defaults below:
-        #   [0.0, 0.694, 1.939, 3.588]
-        #   [0.0, 0.529, 1.589, 2.002]
-        #   [0.0, 0.599, 1.948, 4.184]
-        retry=Retry(
-            total=3,
-            backoff_factor=0.6,
-            backoff_jitter=0.3,
-            allowed_methods=[
-                "HEAD",
-                "GET",
-                "PUT",
-                "DELETE",
-                "OPTIONS",
-                "TRACE",
-            ],
-            status_forcelist=[
-                HTTPStatus.TOO_MANY_REQUESTS,
-                HTTPStatus.BAD_GATEWAY,
-                HTTPStatus.SERVICE_UNAVAILABLE,
-                HTTPStatus.GATEWAY_TIMEOUT,
-            ],
-            retry_on_exceptions=[
-                httpx.TimeoutException,
-                httpx.NetworkError,
-                httpx.RemoteProtocolError,
-                httpx.ReadTimeout,
-            ],
-        ),
-    )
-
-    try:
-        with httpx.Client(transport=transport, follow_redirects=True) as client:
-            response = client.head(url, timeout=10)
+    with httpx2.Client(follow_redirects=True) as client:
+        response = client.head(url, timeout=10)
         response.raise_for_status()
-    finally:
-        # RetryTransport doesn't close its transport...so close it manually
-        transport._sync_transport.close()

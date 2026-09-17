@@ -61,7 +61,7 @@ Configuration options between the [Windows app folder][windows-app-folder] and [
 
 ## Prerequisites  { #windows-prerequisites }
 
-Briefcase requires installing Python 3.10+. You will also need a method for managing virtual environments (such as `venv`).
+Briefcase requires installing Python {{ min_python_version }} or later. You will also need a method for managing virtual environments (such as `venv`).
 
 ## Packaging format
 
@@ -128,6 +128,11 @@ The digest algorithm to request the Timestamp Authority server uses for the time
 ## Application configuration
 
 The following options can be added to the `tool.briefcase.app.<appname>.windows` section of your `pyproject.toml` file.
+
+#### `min_os_version`
+
+The minimum [Windows build number](https://en.wikipedia.org/wiki/List_of_Microsoft_Windows_versions) that the app will support.
+This is used by MSI installers to block installation on unsupported versions.
 
 #### `dotnet_version`  { #dotnet-version }
 
@@ -197,11 +202,24 @@ Briefcase will attempt to convert your [`version`][] into a valid MSI value by e
 
 However, if you need to override this default value, you can define [`version_triple`][] in your app settings. If provided, this value will be used in the MSI configuration file instead of the auto-generated value.
 
+### `create_desktop_shortcut`
+
+/// note | Only used for MSI packaging
+///
+
+Windows MSI installers are able to provide an option to the user to create a desktop shortcut to start the application.
+
+If this setting is set to `True`, the installer will include a checkbox, enabled by default. The user installing the app can then opt out of creating a desktop shortcut for the app.
+
+If this setting is set to `False`, the installer will include the checkbox, but it will be *disabled* by default. The user installing the app can then opt into creating a desktop shortcut for the app.
+
+If this setting is undefined, or set to an empty string, the installer will not include an option to create a shortcut, and no shortcut will be created.
+
 ## Installer/uninstaller options
 
 Windows MSI installers are able to present a panel of optional features to the user as part of the installation or uninstallation process. These features are binary flags which can then be used by a [post-install script][post_install_script] to perform additional installation behaviors, or by a [pre-uninstall script][pre_uninstall_script] to perform additional uninstallation behaviors.
 
-Installer and uninstaller options are defined using a TOML array of tables. Up to 4 installer options and 4 uninstaller options can be defined. Each option is in a group named `[[ toga.briefcase.app.<app name>.install_option ]]` or `[[ toga.briefcase.app.<app name>.uninstall_option ]]`, which must define the following keys:
+Installer and uninstaller options are defined using a TOML array of tables. Up to 4 installer options and 4 uninstaller options can be defined. Each option is in a group named `[[ tool.briefcase.app.<app name>.install_option ]]` or `[[ tool.briefcase.app.<app name>.uninstall_option ]]`, which must define the following keys:
 
 ### `install_option.name` / `uninstall_option.name`
 
@@ -219,11 +237,30 @@ A longer description of the purpose of the option, as a string.
 
 A Boolean describing the initial value of the option in the GUI. If not provided, defaults to `False`.
 
+### `install_option.system` / `uninstall_option.system`
+
+The install scope for which the option is relevant. The value can be:
+
+* `true` to display the option only when installing for all users;
+* `false` to display the option only when installing for the current user; or
+* `"both"` to display the option for both install scopes.
+
+If this setting is not defined, it defaults to `"both"`.
+
+The install scope is selected by the user during installation, or fixed by the [`system_installer`][] setting. The scope of an installed app is reused when displaying uninstall options.
+
+If an option is not displayed for the selected scope, its configured default value is still provided to the post-install or pre-uninstall script.
+
 ### Using options
 
 When an installer option is defined, the value of the option will be made available to the post-install or pre-uninstall script as an environment variable. For example, if you define an option with a name of `foo`, an environment variable of `OPTION_FOO` will be defined, with a value of 1 if the option has been selected by the user, and 0 if the option has not been selected.
 
-In the post-install script, the `ALLUSERS` environment variable will be set; its value will be 1 if the app has been installed for all users, or 0 if it has only been installed for the current user. The `INSTALLER_PATH` environment variable will be set to the path of the MSI file.
+In addition, the post-install script environment will have a number of variables set describing the conditions of the installation:
+* `ALLUSERS` will be set to 1 if the app has been installed for all users, or 0 if it has only been installed for the current user;
+* `INSTALLER_PATH` will be set to the path of the MSI file; and
+* `INSTALLER_UNATTENDED` will be set to 1 if the MSI has been installed in "quiet mode" (i.e., if the `/qn` option has been passed to `msiexec`).
+
+The post-uninstall script will have the `INSTALLER_UNATTENDED` variable set.
 
 If a user uninstalls software by clicking "uninstall" through the Windows "Remove software" interface, the uninstall options will not be displayed to the user. The pre-uninstall script *will* be executed, but the uninstall options will assume their default values. The uninstall GUI is only displayed if the user re-runs the installer manually, or if the user specifies the "Modify" option in the Windows "Remove software" interface. This is a quirk of the Windows uninstall tooling.
 

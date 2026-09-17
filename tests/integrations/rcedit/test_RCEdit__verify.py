@@ -79,6 +79,9 @@ def test_verify_does_not_exist(mock_tools, tmp_path):
         "releases/download/v2.0.0/rcedit-x64.exe",
         download_path=tmp_path / "tools",
         role="RCEdit",
+        expected_hash=(
+            "sha256:3e7801db1a5edbec91b49a24a094aad776cb4515488ea5a4ca2289c400eade2a"
+        ),
     )
 
     # The build command retains the path to the downloaded file.
@@ -98,4 +101,7 @@ def test_verify_rcedit_download_failure(mock_tools, tmp_path):
         "releases/download/v2.0.0/rcedit-x64.exe",
         download_path=tmp_path / "tools",
         role="RCEdit",
+        expected_hash=(
+            "sha256:3e7801db1a5edbec91b49a24a094aad776cb4515488ea5a4ca2289c400eade2a"
+        ),
     )

@@ -83,3 +83,8 @@ def test_plugins(linuxdeploy):
         "gtk": LinuxDeployGtkPlugin,
         "qt": LinuxDeployQtPlugin,
     }
+
+
+def test_download_hash(linuxdeploy):
+    """Linuxdeploy is a rolling release, so it cannot be hash-verified."""
+    assert linuxdeploy.download_hash.startswith("unverified:")

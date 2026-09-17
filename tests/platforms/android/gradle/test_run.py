@@ -7,7 +7,7 @@ import time
 from pathlib import Path
 from unittest import mock
 
-import httpx
+import httpx2
 import pytest
 
 from briefcase.console import LogLevel
@@ -50,7 +50,7 @@ def run_command(dummy_console, tmp_path, first_app_config, jdk):
 
     command.tools.os = mock.MagicMock(spec_set=os)
     command.tools.os.environ = {}
-    command.tools.httpx = mock.MagicMock(spec_set=httpx)
+    command.tools.httpx2 = mock.MagicMock(spec_set=httpx2)
     command.tools.subprocess = mock.MagicMock(spec_set=Subprocess)
     command.tools.sys = mock.MagicMock(spec_set=sys)
 
@@ -104,6 +104,33 @@ def test_device_option(run_command):
     assert overrides == {}
 
 
+def test_device_selection_option(run_command):
+    """The -d option with no argument can be parsed."""
+    options, overrides = run_command.parse_options(["-d"])
+
+    assert options == {
+        "device_or_avd": None,
+        "appname": None,
+        "update": False,
+        "update_requirements": False,
+        "update_resources": False,
+        "update_support": False,
+        "update_stub": False,
+        "no_update": False,
+        "test_mode": False,
+        "debugger": None,
+        "debugger_host": "localhost",
+        "debugger_port": 5678,
+        "passthrough": [],
+        "extra_emulator_args": None,
+        "shutdown_on_exit": False,
+        "revoke_permissions": None,
+        "forward_ports": None,
+        "reverse_ports": None,
+    }
+    assert overrides == {}
+
+
 def test_extra_emulator_args_option(run_command):
     """The -d option can be parsed."""
     options, overrides = run_command.parse_options(
@@ -111,7 +138,7 @@ def test_extra_emulator_args_option(run_command):
     )
 
     assert options == {
-        "device_or_avd": None,
+        "device_or_avd": "auto",
         "appname": None,
         "update": False,
         "update_requirements": False,
@@ -138,7 +165,7 @@ def test_shutdown_on_exit_option(run_command):
     options, overrides = run_command.parse_options(["--shutdown-on-exit"])
 
     assert options == {
-        "device_or_avd": None,
+        "device_or_avd": "auto",
         "appname": None,
         "update": False,
         "update_requirements": False,
@@ -170,7 +197,7 @@ def test_revoke_permission_option(run_command):
     )
 
     assert options == {
-        "device_or_avd": None,
+        "device_or_avd": "auto",
         "appname": None,
         "update": False,
         "update_requirements": False,
@@ -202,7 +229,7 @@ def test_forward_ports_option(run_command):
     )
 
     assert options == {
-        "device_or_avd": None,
+        "device_or_avd": "auto",
         "appname": None,
         "update": False,
         "update_requirements": False,
@@ -231,7 +258,7 @@ def test_reverse_ports_option(run_command):
     )
 
     assert options == {
-        "device_or_avd": None,
+        "device_or_avd": "auto",
         "appname": None,
         "update": False,
         "update_requirements": False,
@@ -317,7 +344,8 @@ def test_run_existing_device(run_command, first_app_config):
 
     # The adb wrapper is invoked with the expected arguments
     run_command.tools.mock_adb.install_apk.assert_called_once_with(
-        run_command.binary_path(first_app_config)
+        run_command.binary_path(first_app_config),
+        f"{first_app_config.package_name}.{first_app_config.module_name}",
     )
     run_command.tools.mock_adb.force_stop_app.assert_called_once_with(
         f"{first_app_config.package_name}.{first_app_config.module_name}",
@@ -396,7 +424,8 @@ def test_run_with_passthrough(run_command, first_app_config):
 
     # The adb wrapper is invoked with the expected arguments
     run_command.tools.mock_adb.install_apk.assert_called_once_with(
-        run_command.binary_path(first_app_config)
+        run_command.binary_path(first_app_config),
+        f"{first_app_config.package_name}.{first_app_config.module_name}",
     )
     run_command.tools.mock_adb.force_stop_app.assert_called_once_with(
         f"{first_app_config.package_name}.{first_app_config.module_name}",
@@ -630,7 +659,8 @@ def test_run_created_emulator(run_command, first_app_config):
 
     # The adb wrapper is invoked with the expected arguments
     run_command.tools.mock_adb.install_apk.assert_called_once_with(
-        run_command.binary_path(first_app_config)
+        run_command.binary_path(first_app_config),
+        f"{first_app_config.package_name}.{first_app_config.module_name}",
     )
     run_command.tools.mock_adb.force_stop_app.assert_called_once_with(
         f"{first_app_config.package_name}.{first_app_config.module_name}",
@@ -692,7 +722,8 @@ def test_run_idle_device(run_command, first_app_config):
 
     # The adb wrapper is invoked with the expected arguments
     run_command.tools.mock_adb.install_apk.assert_called_once_with(
-        run_command.binary_path(first_app_config)
+        run_command.binary_path(first_app_config),
+        f"{first_app_config.package_name}.{first_app_config.module_name}",
     )
     run_command.tools.mock_adb.force_stop_app.assert_called_once_with(
         f"{first_app_config.package_name}.{first_app_config.module_name}",
@@ -794,7 +825,8 @@ def test_run_test_mode(run_command, first_app_config):
 
     # The adb wrapper is invoked with the expected arguments
     run_command.tools.mock_adb.install_apk.assert_called_once_with(
-        run_command.binary_path(first_app_config)
+        run_command.binary_path(first_app_config),
+        f"{first_app_config.package_name}.{first_app_config.module_name}",
     )
     run_command.tools.mock_adb.force_stop_app.assert_called_once_with(
         f"{first_app_config.package_name}.{first_app_config.module_name}",
@@ -868,7 +900,8 @@ def test_run_test_mode_with_passthrough(run_command, first_app_config):
 
     # The adb wrapper is invoked with the expected arguments
     run_command.tools.mock_adb.install_apk.assert_called_once_with(
-        run_command.binary_path(first_app_config)
+        run_command.binary_path(first_app_config),
+        f"{first_app_config.package_name}.{first_app_config.module_name}",
     )
     run_command.tools.mock_adb.force_stop_app.assert_called_once_with(
         f"{first_app_config.package_name}.{first_app_config.module_name}",
@@ -946,7 +979,8 @@ def test_run_test_mode_created_emulator(run_command, first_app_config):
 
     # The adb wrapper is invoked with the expected arguments
     run_command.tools.mock_adb.install_apk.assert_called_once_with(
-        run_command.binary_path(first_app_config)
+        run_command.binary_path(first_app_config),
+        f"{first_app_config.package_name}.{first_app_config.module_name}",
     )
     run_command.tools.mock_adb.force_stop_app.assert_called_once_with(
         f"{first_app_config.package_name}.{first_app_config.module_name}",
@@ -1055,7 +1089,8 @@ def test_run_debugger(run_command, first_app_config, tmp_path, debugger):
 
     # The adb wrapper is invoked with the expected arguments
     run_command.tools.mock_adb.install_apk.assert_called_once_with(
-        run_command.binary_path(first_app_config)
+        run_command.binary_path(first_app_config),
+        f"{first_app_config.package_name}.{first_app_config.module_name}",
     )
     run_command.tools.mock_adb.force_stop_app.assert_called_once_with(
         f"{first_app_config.package_name}.{first_app_config.module_name}",
@@ -1082,7 +1117,8 @@ def test_run_debugger(run_command, first_app_config, tmp_path, debugger):
                         "sys_path_regex": "requirements$",
                         "host_folder": str(
                             tmp_path
-                            / "base_path/build/first-app/android/gradle/app/build/python/pip/debug/common"
+                            / "base_path/build/first-app/android/gradle/"
+                            / "app/build/python/pip/debug/common"
                         ),
                     },
                 }

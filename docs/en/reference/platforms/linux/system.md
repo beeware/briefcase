@@ -89,7 +89,23 @@ Linux System packages do not support splash screens or installer images.
 
 The Linux system app template includes a `LICENSE` and `CHANGELOG` file, with stub content. When the application is generated from template, Briefcase will look in the project root folder (i.e., the folder that contains your `pyproject.toml`) for files with the same name. If these files are found, they will be copied into your project. You should ensure these files are complete and correct before publishing your app.
 
-The Linux system app template also includes an initial draft manfile for your app. This manfile will be populated with the [`description`][] and [`long_description`][] of your app. You may wish to add more details on app usage.
+The Linux system app template also includes an initial draft manfile for your app. This manfile will be populated with the [`description`][] and [`long_description`][] of your app. You may wish to add more details on app usage. If you need full control over the man page content, you can provide your own troff-formatted man page using the [`man_page`][] configuration option.
+
+## Code signing
+
+Linux system packages can be signed using a GPG signing identity. See the [how-to guide on Linux code signing](../../../how-to/code-signing/linux.md) for instructions on generating and obtaining a GPG signing identity.
+
+The identity used to sign the package can be specified with the `-i` / `--identity` option, as a fingerprint, key ID, or name or email address. If no identity is specified, Briefcase will prompt you to select an identity from the secret keys available on the system, or to opt out of signing. If only one secret key is available, it is offered as the default selection.
+
+Signing is performed as follows, depending on the packaging format:
+
+- `.deb` packages are signed with [`debsigs`](https://manpages.debian.org/bookworm/debsigs/debsigs.1.en.html), embedding an `origin` signature in the package. The `debsigs` tool must be installed.
+- `.rpm` packages are signed with [`rpmsign`](https://rpm.org/), embedding a signature in the package header. The `rpm-sign` tool must be installed.
+- `.pkg.tar.zst` packages are signed with `gpg`, producing a detached signature in a `.sig` file alongside the package; both files must be distributed together. The `gnupg` tool must be installed.
+
+If the relevant signing tool is not installed, Briefcase will report an error suggesting how to install it. If no signing identity is available, or if `--adhoc-sign` is used, the package will be produced without a signature.
+
+Signing is not supported when building with Docker (i.e., using the `--target` option); in this case, the package must be produced without a signature.
 
 ## Additional options
 
@@ -99,7 +115,7 @@ The following options can be provided at the command line when producing Deb pac
 
 A Docker base image identifier for the Linux distribution you want to target. The identifier will be in the pattern `<vendor>:<codename>` (e.g., `debian:buster` or `ubuntu:jammy`). You can also use the version number in place of the code name (e.g., `debian:10`, `ubuntu:22.04`, or `fedora:37`). Whichever form you choose, you should be consistent; no normalization of code name and version is performed, so `ubuntu:jammy` and `ubuntu:22.04` will be identified as different versions (even though they the same version).
 
-You can specify any identifier you want, provided the distribution is still supported by the vendor, and system Python is Python 3.10 or later.
+You can specify any identifier you want, provided the distribution is still supported by the vendor, and system Python is Python {{ min_python_version }} or later.
 
 The following Linux vendors are known to work as Docker targets:
 
@@ -181,6 +197,16 @@ Any problems with installing or running your system package likely indicate an i
 
 When an application is published as a `.deb` file, Debian requires that you specify a "section", describing a classification of the application area. The template will provide a default section of `utils`; if you want to override that default, you can specify a value for [`system_section`][]. For details on the allowed values for [`system_section`][], refer to the [Debian Policy Manual](https://www.debian.org/doc/debian-policy/ch-controlfields.html#s-f-section).
 
+### `man_page`
+
+The path to a troff-formatted man page file, relative to the project root directory (i.e., the directory containing your `pyproject.toml`). If specified, this file will replace the template-generated man page during the build. For example:
+
+```toml
+man_page = "docs/myapp.1"
+```
+
+If [`man_page`][] is not specified, the default template-generated man page will be used.
+
 ### `dockerfile_extra_content`
 
 Any additional Docker instructions that are required to configure the container used to build your Python app. For example, any dependencies that cannot be configured with `apt-get` could be installed. [`dockerfile_extra_content`][] is string literal that will be added verbatim to the end of the project Dockerfile.
@@ -196,7 +222,6 @@ RUN <second command run as root>
 
 USER brutus
 """
-
 ```
 
 ## Platform quirks
@@ -204,3 +229,7 @@ USER brutus
 ### Local path references and Docker builds
 
 Docker builds are not able to reference local paths in the [`requires`][] and [`requirement_installer_args`][] configurations. This is because the Docker container only has access to specific file paths on the host system. See [issue \#2018](https://github.com/beeware/briefcase/issues/2081) for more discussion of the problem, and some possible workarounds.
+
+### Environment managers and Docker builds
+
+If an application defines the use of an environment manager (using the [`env_manager`][] setting), and Docker is used to build the application, the environment manager will be ignored, and raw `pip` installs will be used.

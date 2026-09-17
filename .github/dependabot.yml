@@ -8,6 +8,8 @@ updates:
       interval: "weekly"
       day: "sunday"
       time: "20:00"
+    cooldown:
+      default-days: 7
 
   - package-ecosystem: "pip"
     directory: "/"
@@ -16,6 +18,8 @@ updates:
       interval: "weekly"
       day: "sunday"
       time: "20:00"
+    cooldown:
+      default-days: 7
 
   - package-ecosystem: "pip"
     directory: "automation"
@@ -24,6 +28,8 @@ updates:
       interval: "weekly"
       day: "sunday"
       time: "20:00"
+    cooldown:
+      default-days: 7
 
   - package-ecosystem: "pip"
     directory: "debugger"
@@ -32,6 +38,8 @@ updates:
       interval: "weekly"
       day: "sunday"
       time: "20:00"
+    cooldown:
+      default-days: 7
 
   - package-ecosystem: "pre-commit"
     directory: "/"
@@ -40,3 +48,5 @@ updates:
       interval: "weekly"
       day: "sunday"
       time: "20:00"
+    cooldown:
+      default-days: 7

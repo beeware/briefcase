@@ -4,8 +4,10 @@
 
 - [Tutorial](tutorial/index.md)
 - [How-to guides](how-to/index.md)
+    - [How to run Briefcase](how-to/run.md)
     - Obtaining a Code Signing identity
         - [Android](how-to/code-signing/android.md)
+        - [Linux](how-to/code-signing/linux.md)
         - [macOS](how-to/code-signing/macOS.md)
         - [Windows](how-to/code-signing/windows.md)
     - Building different types of apps
@@ -59,6 +61,10 @@
 - [Reference](reference/index.md)
     - [Briefcase configuration options](reference/environment.md)
     - [Project configuration options](reference/configuration.md)
+    - [Environment Management](reference/env_management/index.md)
+        - [venv](reference/env_management/venv.md)
+        - [uv](reference/env_management/uv.md)
+        - [Conda](reference/env_management/conda.md)
     - [Command Reference](reference/commands/index.md)
         - [new](reference/commands/new.md)
         - [convert](reference/commands/convert.md)

@@ -1,0 +1,423 @@
+import subprocess
+import sys
+from pathlib import Path
+
+import pytest
+
+from briefcase.exceptions import RequirementsInstallError
+
+from ....utils import create_file
+
+
+def test_install_requirements(mock_tools, mock_venv):
+    """Requirements can be installed with pip."""
+    mock_venv.install_requirements(
+        [
+            "pkg1",
+            "pkg2==1.2.3",
+            "../path/to/pkg3",
+        ],
+    )
+
+    # pip was run using the *Briefcase* environment,
+    # targeted at the *venv*'s Python install.
+    mock_tools.subprocess.run.assert_called_once_with(
+        [
+            sys.executable,
+            "-u",
+            "-X",
+            "utf8",
+            "-m",
+            "pip",
+            "--python",
+            mock_venv.executable,
+            "install",
+            "--disable-pip-version-check",
+            "--no-user",
+            "--upgrade",
+            "-vv",
+            "pkg1",
+            "pkg2==1.2.3",
+            "../path/to/pkg3",
+        ],
+        check=True,
+        encoding="UTF-8",
+        env=None,
+    )
+
+
+@pytest.mark.parametrize(
+    ("requirement", "editable"),
+    (
+        [
+            # Relative paths and single level
+            ("./current-dir", True),
+            ("../parent-dir", True),
+            # Relative paths and multiple levels
+            ("../../grandparent/package", True),
+            ("./deeply/nested/package", True),
+            ("../sibling/package", True),
+            # Simple relative paths
+            ("folder/package", True),
+            ("src/mypackage", True),
+            # Absolute paths
+            ("/absolute/path", True),
+            # SCM URLs (should NOT get -e for now):
+            ("git+https://github.com/user/repo.git", False),
+            ("git+ssh://git@github.com/user/repo.git", False),
+            ("hg+https://bitbucket.org/user/repo", False),
+            ("git+https://github.com/user/repo.git@1.2.3", False),
+            ("SomeProject@git+https://github.com/user/repo.git", False),
+            ("SomeProject@git+https://github.com/user/repo.git@branch", False),
+            (
+                "SomeProject@git+https://github.com/user/repo.git#subdirectory=sub_dir",
+                False,
+            ),
+            # Archives (should NOT get -e):
+            ("./local/package.tar.gz", False),
+            ("./local/package.zip", False),
+            ("./local/package.whl", False),
+            ("./local/package.tar.bz2", False),
+            ("./local/package.tar", False),
+            # Archives specified by URL
+            ("https://github.com/user/repo/archive/main.tar.gz", False),
+            ("SomeProject@https://github.com/user/repo/archive/main.tar.gz", False),
+            ("https://files.pythonhosted.org/packages/.../package-1.0.tar.gz", False),
+            # Regular packages (should NOT get -e):
+            ("package1", False),
+            ("package2==1.2.3", False),
+            ("package3 == 2.3.4", False),
+            ("package4 >= 3.4.5", False),
+        ]
+        + (
+            [
+                # Windows paths. Windows honors unix-style paths, but on Unix,
+                # windows-style paths appear as package names, so we only test
+                # this option on Windows.
+                ("folder\\windows", True),
+                (".\\windows\\current", True),
+                ("..\\windows\\parent", True),
+                ("C:\\absolute\\windows", True),
+            ]
+            if sys.platform == "win32"
+            else []
+        )
+    ),
+)
+@pytest.mark.parametrize("allow_editable", [True, False])
+def test_install_requirements_path_formats(
+    mock_tools,
+    mock_venv,
+    requirement,
+    editable,
+    allow_editable,
+):
+    """Test possible path formats that pip supports for editable installation."""
+    mock_venv.install_requirements(
+        [requirement],
+        allow_editable=allow_editable,
+    )
+
+    # pip was run using the *Briefcase* environment,
+    # targeted at the *venv*'s Python install.
+    mock_tools.subprocess.run.assert_called_once_with(
+        [
+            sys.executable,
+            "-u",
+            "-X",
+            "utf8",
+            "-m",
+            "pip",
+            "--python",
+            mock_venv.executable,
+            "install",
+            "--disable-pip-version-check",
+            "--no-user",
+            "--upgrade",
+            "-vv",
+        ]
+        + (["-e", requirement] if (editable and allow_editable) else [requirement]),
+        check=True,
+        encoding="UTF-8",
+        env=None,
+    )
+
+
+@pytest.mark.parametrize(
+    ("platform", "arch", "min_os_version", "args", "env"),
+    [
+        ("macOS", "arm64", None, ["--platform", "macosx_11_0_arm64"], None),
+        ("macOS", "arm64", "12.3", ["--platform", "macosx_12_3_arm64"], None),
+        ("macOS", "x86_64", None, ["--platform", "macosx_11_0_x86_64"], None),
+        ("macOS", "x86_64", "12.3", ["--platform", "macosx_12_3_x86_64"], None),
+        (
+            "iphoneos",
+            "arm64",
+            None,
+            [
+                "--platform",
+                "ios_13_0_arm64_iphoneos",
+                "--extra-index-url",
+                "https://pypi.anaconda.org/beeware/simple",
+            ],
+            {"PYTHONPATH": str(Path("/path/to/support"))},
+        ),
+        (
+            "iphoneos",
+            "arm64",
+            "16.4",
+            [
+                "--platform",
+                "ios_16_4_arm64_iphoneos",
+                "--extra-index-url",
+                "https://pypi.anaconda.org/beeware/simple",
+            ],
+            {"PYTHONPATH": str(Path("/path/to/support"))},
+        ),
+        (
+            "iphonesimulator",
+            "arm64",
+            None,
+            [
+                "--platform",
+                "ios_13_0_arm64_iphonesimulator",
+                "--extra-index-url",
+                "https://pypi.anaconda.org/beeware/simple",
+            ],
+            {"PYTHONPATH": str(Path("/path/to/support"))},
+        ),
+        (
+            "iphonesimulator",
+            "arm64",
+            "16.4",
+            [
+                "--platform",
+                "ios_16_4_arm64_iphonesimulator",
+                "--extra-index-url",
+                "https://pypi.anaconda.org/beeware/simple",
+            ],
+            {"PYTHONPATH": str(Path("/path/to/support"))},
+        ),
+        ("windows", "x86_64", None, [], None),
+        ("windows", "ARM64", None, [], None),
+        ("linux", "x86_64", None, [], None),
+        ("linux", "aarch64", None, [], None),
+        ("android", "arm64_v8a", None, [], None),
+    ],
+)
+@pytest.mark.parametrize("preexisting", [True, False])
+def test_install_requirements_with_install_path(
+    mock_tools,
+    mock_venv,
+    tmp_path,
+    platform,
+    arch,
+    min_os_version,
+    args,
+    env,
+    preexisting,
+):
+    """If an install path is provided, extra platform tags are included."""
+    mock_venv.platform = platform
+    mock_venv.arch = arch
+    mock_venv.platform_path = Path("/path/to/support")
+
+    if preexisting:
+        # Mock some pre-existing content in the install path
+        create_file(tmp_path / "location" / "pre-existing.file", "content")
+        create_file(tmp_path / "location" / "folder" / "other.file", "content")
+
+    mock_venv.install_requirements(
+        [
+            "pkg1",
+            "pkg2==1.2.3",
+        ],
+        install_path=tmp_path / "location",
+        min_os_version=min_os_version,
+    )
+
+    # If the install folder was pre-existing, it will be removed,
+    if preexisting:
+        mock_tools.shutil.rmtree.assert_called_once_with(tmp_path / "location")
+
+    # We can guarantee the install path exists now.
+    assert (tmp_path / "location").is_dir()
+
+    # pip was run using the *Briefcase* environment,
+    # targeted at the *venv*'s Python install.
+    mock_tools.subprocess.run.assert_called_once_with(
+        [
+            sys.executable,
+            "-u",
+            "-X",
+            "utf8",
+            "-m",
+            "pip",
+            "--python",
+            mock_venv.executable,
+            "install",
+            "--disable-pip-version-check",
+            "--no-user",
+            "--upgrade",
+            "-vv",
+            f"--target={tmp_path / 'location'}",
+            *args,
+            "pkg1",
+            "pkg2==1.2.3",
+        ],
+        check=True,
+        encoding="UTF-8",
+        env=env,
+    )
+
+
+def test_require_binary(mock_tools, mock_venv):
+    """The install can require binary installs."""
+    mock_venv.install_requirements(
+        [
+            "pkg1",
+            "pkg2==1.2.3",
+        ],
+        require_binary=True,
+    )
+
+    # pip was run using the *Briefcase* environment,
+    # targeted at the *venv*'s Python install.
+    mock_tools.subprocess.run.assert_called_once_with(
+        [
+            sys.executable,
+            "-u",
+            "-X",
+            "utf8",
+            "-m",
+            "pip",
+            "--python",
+            mock_venv.executable,
+            "install",
+            "--disable-pip-version-check",
+            "--no-user",
+            "--upgrade",
+            "-vv",
+            "--only-binary",
+            ":all:",
+            "pkg1",
+            "pkg2==1.2.3",
+        ],
+        check=True,
+        encoding="UTF-8",
+        env=None,
+    )
+
+
+def test_disable_include_dependencies(mock_tools, mock_venv):
+    """Requirements can be installed without dependencies."""
+    mock_venv.install_requirements(
+        [
+            "pkg1",
+            "pkg2==1.2.3",
+        ],
+        include_deps=False,
+    )
+
+    # pip was run using the *Briefcase* environment,
+    # targeted at the *venv*'s Python install.
+    mock_tools.subprocess.run.assert_called_once_with(
+        [
+            sys.executable,
+            "-u",
+            "-X",
+            "utf8",
+            "-m",
+            "pip",
+            "--python",
+            mock_venv.executable,
+            "install",
+            "--disable-pip-version-check",
+            "--no-user",
+            "--upgrade",
+            "-vv",
+            "--no-deps",
+            "pkg1",
+            "pkg2==1.2.3",
+        ],
+        check=True,
+        encoding="UTF-8",
+        env=None,
+    )
+
+
+def test_extra_installer_args(mock_tools, mock_venv, base_path):
+    """Requirements can be installed with extra installer argugments."""
+    (base_path / "wheels").mkdir(parents=True)
+
+    mock_venv.install_requirements(
+        [
+            "pkg1",
+            "pkg2==1.2.3",
+        ],
+        extra_installer_args=["-f", "./wheels"],
+    )
+
+    # pip was run using the *Briefcase* environment,
+    # targeted at the *venv*'s Python install.
+    mock_tools.subprocess.run.assert_called_once_with(
+        [
+            sys.executable,
+            "-u",
+            "-X",
+            "utf8",
+            "-m",
+            "pip",
+            "--python",
+            mock_venv.executable,
+            "install",
+            "--disable-pip-version-check",
+            "--no-user",
+            "--upgrade",
+            "-vv",
+            "-f",
+            base_path / "wheels",
+            "pkg1",
+            "pkg2==1.2.3",
+        ],
+        check=True,
+        encoding="UTF-8",
+        env=None,
+    )
+
+
+def test_install_failure(mock_tools, mock_venv):
+    """An install failure is reported as a RequirementsInstallError."""
+    mock_tools.subprocess.run.side_effect = subprocess.CalledProcessError(
+        cmd="pip", returncode=1
+    )
+
+    with pytest.raises(RequirementsInstallError):
+        mock_venv.install_requirements(
+            ["problem-package"],
+            allow_editable=True,
+        )
+
+    # pip was run using the *Briefcase* environment,
+    # targeted at the *venv*'s Python install.
+    mock_tools.subprocess.run.assert_called_once_with(
+        [
+            sys.executable,
+            "-u",
+            "-X",
+            "utf8",
+            "-m",
+            "pip",
+            "--python",
+            mock_venv.executable,
+            "install",
+            "--disable-pip-version-check",
+            "--no-user",
+            "--upgrade",
+            "-vv",
+            "problem-package",
+        ],
+        check=True,
+        encoding="UTF-8",
+        env=None,
+    )

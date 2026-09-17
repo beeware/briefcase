@@ -40,6 +40,10 @@ class WiX(ManagedTool):
         )
 
     @property
+    def download_hash(self) -> str:
+        return "sha256:097383b2773bdd3d76a6a2cd3f4de6357bae59172e1b6fa5ad87ce062074e8d0"
+
+    @property
     def wix_exe(self) -> Path:
         return (
             self.wix_home
@@ -122,6 +126,7 @@ class WiX(ManagedTool):
             url=self.download_url,
             download_path=self.tools.base_path,
             role="WiX",
+            expected_hash=self.download_hash,
         )
 
         try:

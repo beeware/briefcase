@@ -1,14 +1,11 @@
 import datetime
 import os
-import subprocess
-import sys
 from unittest import mock
 
 import pytest
 import tomli_w
 
 import briefcase
-from briefcase.commands.create import _is_local_path
 from briefcase.console import LogLevel
 from briefcase.debuggers.base import BaseDebugger, DebuggerConnectionMode
 from briefcase.exceptions import BriefcaseCommandError, RequirementsInstallError
@@ -60,7 +57,13 @@ def create_installation_artefacts(app_packages_path, packages):
     return _create_installation_artefacts
 
 
-def test_bad_path_index(create_command, myapp, bundle_path, app_requirements_path):
+def test_bad_path_index(
+    create_command,
+    mock_venv,
+    myapp,
+    bundle_path,
+    app_requirements_path,
+):
     """If the app's path index doesn't declare a destination for requirements, an error
     is raised."""
     # Write a briefcase.toml that is missing app_packages_path and app_requirements_path
@@ -84,10 +87,10 @@ def test_bad_path_index(create_command, myapp, bundle_path, app_requirements_pat
             r" `app_packages_path`"
         ),
     ):
-        create_command.install_app_requirements(myapp)
+        create_command.install_app_requirements(myapp, mock_venv)
 
     # pip wasn't invoked
-    create_command.tools[myapp].app_context.run.assert_not_called()
+    mock_venv.install_requirements.assert_not_called()
 
     # requirements.txt doesn't exist either
     assert not app_requirements_path.exists()
@@ -99,6 +102,7 @@ def test_bad_path_index(create_command, myapp, bundle_path, app_requirements_pat
 
 def test_app_packages_no_requires(
     create_command,
+    mock_venv,
     myapp,
     app_packages_path,
     app_packages_path_index,
@@ -106,14 +110,15 @@ def test_app_packages_no_requires(
     """If an app has no requirements, install_app_requirements is a no-op."""
     myapp.requires = None
 
-    create_command.install_app_requirements(myapp)
+    create_command.install_app_requirements(myapp, mock_venv)
 
     # No request was made to install requirements
-    create_command.tools[myapp].app_context.run.assert_not_called()
+    mock_venv.install_requirements.assert_not_called()
 
 
 def test_app_packages_empty_requires(
     create_command,
+    mock_venv,
     myapp,
     app_packages_path,
     app_packages_path_index,
@@ -121,14 +126,15 @@ def test_app_packages_empty_requires(
     """If an app has an empty requirements list, install_app_requirements is a no-op."""
     myapp.requires = []
 
-    create_command.install_app_requirements(myapp)
+    create_command.install_app_requirements(myapp, mock_venv)
 
     # No request was made to install requirements
-    create_command.tools[myapp].app_context.run.assert_not_called()
+    mock_venv.install_requirements.assert_not_called()
 
 
 def test_app_packages_valid_requires(
     create_command,
+    mock_venv,
     myapp,
     app_packages_path,
     app_packages_path_index,
@@ -136,28 +142,19 @@ def test_app_packages_valid_requires(
     """If an app has a valid list of requirements, pip is invoked."""
     myapp.requires = ["first", "second==1.2.3", "third>=3.2.1"]
 
-    create_command.install_app_requirements(myapp)
+    create_command.install_app_requirements(myapp, mock_venv)
 
     # A request was made to install requirements
-    create_command.tools[myapp].app_context.run.assert_called_with(
+    mock_venv.install_requirements.assert_called_with(
         [
-            sys.executable,
-            "-u",
-            "-X",
-            "utf8",
-            "-m",
-            "pip",
-            "install",
-            "--disable-pip-version-check",
-            "--upgrade",
-            "--no-user",
-            f"--target={app_packages_path}",
             "first",
             "second==1.2.3",
             "third>=3.2.1",
         ],
-        check=True,
-        encoding="UTF-8",
+        allow_editable=False,
+        require_binary=True,
+        install_path=app_packages_path,
+        extra_installer_args=[],
     )
 
     # Original app definitions haven't changed
@@ -167,6 +164,7 @@ def test_app_packages_valid_requires(
 
 def test_app_packages_requirement_installer_args_no_paths(
     create_command,
+    mock_venv,
     myapp,
     app_packages_path,
     app_path,
@@ -177,32 +175,23 @@ def test_app_packages_requirement_installer_args_no_paths(
     myapp.requirement_installer_args = ["--no-cache"]
     myapp.requires = ["package"]
 
-    create_command.install_app_requirements(myapp)
+    create_command.install_app_requirements(myapp, mock_venv)
 
     # A request was made to install requirements
-    create_command.tools[myapp].app_context.run.assert_called_with(
+    mock_venv.install_requirements.assert_called_with(
         [
-            sys.executable,
-            "-u",
-            "-X",
-            "utf8",
-            "-m",
-            "pip",
-            "install",
-            "--disable-pip-version-check",
-            "--upgrade",
-            "--no-user",
-            f"--target={app_packages_path}",
-            "--no-cache",
             "package",
         ],
-        check=True,
-        encoding="UTF-8",
+        allow_editable=False,
+        require_binary=True,
+        install_path=app_packages_path,
+        extra_installer_args=["--no-cache"],
     )
 
 
 def test_app_packages_requirement_installer_args_path_transformed(
     create_command,
+    mock_venv,
     myapp,
     app_packages_path,
     app_path,
@@ -214,33 +203,23 @@ def test_app_packages_requirement_installer_args_path_transformed(
     myapp.requirement_installer_args = ["--extra-index-url", "./packages"]
     myapp.requires = ["package"]
 
-    create_command.install_app_requirements(myapp)
+    create_command.install_app_requirements(myapp, mock_venv)
 
     # A request was made to install requirements
-    create_command.tools[myapp].app_context.run.assert_called_with(
+    mock_venv.install_requirements.assert_called_with(
         [
-            sys.executable,
-            "-u",
-            "-X",
-            "utf8",
-            "-m",
-            "pip",
-            "install",
-            "--disable-pip-version-check",
-            "--upgrade",
-            "--no-user",
-            f"--target={app_packages_path}",
-            "--extra-index-url",
-            os.path.abspath(create_command.base_path / "packages"),
             "package",
         ],
-        check=True,
-        encoding="UTF-8",
+        allow_editable=False,
+        require_binary=True,
+        install_path=app_packages_path,
+        extra_installer_args=["--extra-index-url", "./packages"],
     )
 
 
 def test_app_packages_requirement_installer_args_coincidental_path_not_transformed(
     create_command,
+    mock_venv,
     myapp,
     app_packages_path,
     app_path,
@@ -252,32 +231,23 @@ def test_app_packages_requirement_installer_args_coincidental_path_not_transform
     myapp.requirement_installer_args = ["-f./wheels"]
     myapp.requires = ["package"]
 
-    create_command.install_app_requirements(myapp)
+    create_command.install_app_requirements(myapp, mock_venv)
 
     # A request was made to install requirements
-    create_command.tools[myapp].app_context.run.assert_called_with(
+    mock_venv.install_requirements.assert_called_with(
         [
-            sys.executable,
-            "-u",
-            "-X",
-            "utf8",
-            "-m",
-            "pip",
-            "install",
-            "--disable-pip-version-check",
-            "--upgrade",
-            "--no-user",
-            f"--target={app_packages_path}",
-            "-f./wheels",
             "package",
         ],
-        check=True,
-        encoding="UTF-8",
+        allow_editable=False,
+        require_binary=True,
+        install_path=app_packages_path,
+        extra_installer_args=["-f./wheels"],
     )
 
 
 def test_app_packages_requirement_installer_args_path_not_transformed(
     create_command,
+    mock_venv,
     myapp,
     app_packages_path,
     app_path,
@@ -289,33 +259,23 @@ def test_app_packages_requirement_installer_args_path_not_transformed(
     myapp.requirement_installer_args = ["--extra-index-url", "./packages"]
     myapp.requires = ["package"]
 
-    create_command.install_app_requirements(myapp)
+    create_command.install_app_requirements(myapp, mock_venv)
 
     # A request was made to install requirements
-    create_command.tools[myapp].app_context.run.assert_called_with(
+    mock_venv.install_requirements.assert_called_with(
         [
-            sys.executable,
-            "-u",
-            "-X",
-            "utf8",
-            "-m",
-            "pip",
-            "install",
-            "--disable-pip-version-check",
-            "--upgrade",
-            "--no-user",
-            f"--target={app_packages_path}",
-            "--extra-index-url",
-            "./packages",
             "package",
         ],
-        check=True,
-        encoding="UTF-8",
+        allow_editable=False,
+        require_binary=True,
+        install_path=app_packages_path,
+        extra_installer_args=["--extra-index-url", "./packages"],
     )
 
 
 def test_app_packages_requirement_installer_args_combined_argument_not_transformed(
     create_command,
+    mock_venv,
     myapp,
     app_packages_path,
     app_path,
@@ -327,32 +287,23 @@ def test_app_packages_requirement_installer_args_combined_argument_not_transform
     myapp.requirement_installer_args = ["--extra-index-url=./packages"]
     myapp.requires = ["package"]
 
-    create_command.install_app_requirements(myapp)
+    create_command.install_app_requirements(myapp, mock_venv)
 
     # A request was made to install requirements
-    create_command.tools[myapp].app_context.run.assert_called_with(
+    mock_venv.install_requirements.assert_called_with(
         [
-            sys.executable,
-            "-u",
-            "-X",
-            "utf8",
-            "-m",
-            "pip",
-            "install",
-            "--disable-pip-version-check",
-            "--upgrade",
-            "--no-user",
-            f"--target={app_packages_path}",
-            "--extra-index-url=./packages",
             "package",
         ],
-        check=True,
-        encoding="UTF-8",
+        allow_editable=False,
+        require_binary=True,
+        install_path=app_packages_path,
+        extra_installer_args=["--extra-index-url=./packages"],
     )
 
 
 def test_app_packages_valid_requires_no_support_package(
     create_command,
+    mock_venv,
     myapp,
     app_packages_path,
     app_packages_path_index,
@@ -367,28 +318,19 @@ def test_app_packages_valid_requires_no_support_package(
         "paths": {"app_packages_path": "path/to/app_packages"}
     }
 
-    create_command.install_app_requirements(myapp)
+    create_command.install_app_requirements(myapp, mock_venv)
 
     # A request was made to install requirements
-    create_command.tools[myapp].app_context.run.assert_called_with(
+    mock_venv.install_requirements.assert_called_with(
         [
-            sys.executable,
-            "-u",
-            "-X",
-            "utf8",
-            "-m",
-            "pip",
-            "install",
-            "--disable-pip-version-check",
-            "--upgrade",
-            "--no-user",
-            f"--target={app_packages_path}",
             "first",
             "second==1.2.3",
             "third>=3.2.1",
         ],
-        check=True,
-        encoding="UTF-8",
+        allow_editable=False,
+        require_binary=True,
+        install_path=app_packages_path,
+        extra_installer_args=[],
     )
 
     # Original app definitions haven't changed
@@ -398,6 +340,7 @@ def test_app_packages_valid_requires_no_support_package(
 
 def test_app_packages_invalid_requires(
     create_command,
+    mock_venv,
     myapp,
     app_packages_path,
     app_packages_path_index,
@@ -408,33 +351,20 @@ def test_app_packages_invalid_requires(
     # Unfortunately, no way to tell the difference between "offline" and
     # "your requirements are invalid"; pip returns status code 1 for all
     # failures.
-    create_command.tools[
-        myapp
-    ].app_context.run.side_effect = subprocess.CalledProcessError(
-        cmd=["python", "-u", "-m", "pip", "..."], returncode=1
-    )
+    mock_venv.install_requirements.side_effect = RequirementsInstallError()
 
     with pytest.raises(RequirementsInstallError):
-        create_command.install_app_requirements(myapp)
+        create_command.install_app_requirements(myapp, mock_venv)
 
     # But the request to install was still made
-    create_command.tools[myapp].app_context.run.assert_called_with(
+    mock_venv.install_requirements.assert_called_with(
         [
-            sys.executable,
-            "-u",
-            "-X",
-            "utf8",
-            "-m",
-            "pip",
-            "install",
-            "--disable-pip-version-check",
-            "--upgrade",
-            "--no-user",
-            f"--target={app_packages_path}",
             "does-not-exist",
         ],
-        check=True,
-        encoding="UTF-8",
+        allow_editable=False,
+        require_binary=True,
+        install_path=app_packages_path,
+        extra_installer_args=[],
     )
 
     # Original app definitions haven't changed
@@ -444,6 +374,7 @@ def test_app_packages_invalid_requires(
 
 def test_app_packages_offline(
     create_command,
+    mock_venv,
     myapp,
     app_packages_path,
     app_packages_path_index,
@@ -454,35 +385,22 @@ def test_app_packages_offline(
     # Unfortunately, no way to tell the difference between "offline" and
     # "your requirements are invalid"; pip returns status code 1 for all
     # failures.
-    create_command.tools[
-        myapp
-    ].app_context.run.side_effect = subprocess.CalledProcessError(
-        cmd=["python", "-u", "-m", "pip", "..."], returncode=1
-    )
+    mock_venv.install_requirements.side_effect = RequirementsInstallError()
 
     with pytest.raises(RequirementsInstallError):
-        create_command.install_app_requirements(myapp)
+        create_command.install_app_requirements(myapp, mock_venv)
 
     # But the request to install was still made
-    create_command.tools[myapp].app_context.run.assert_called_with(
+    mock_venv.install_requirements.assert_called_with(
         [
-            sys.executable,
-            "-u",
-            "-X",
-            "utf8",
-            "-m",
-            "pip",
-            "install",
-            "--disable-pip-version-check",
-            "--upgrade",
-            "--no-user",
-            f"--target={app_packages_path}",
             "first",
             "second",
             "third",
         ],
-        check=True,
-        encoding="UTF-8",
+        allow_editable=False,
+        require_binary=True,
+        install_path=app_packages_path,
+        extra_installer_args=[],
     )
 
     # Original app definitions haven't changed
@@ -493,6 +411,7 @@ def test_app_packages_offline(
 @pytest.mark.parametrize("logging_level", [LogLevel.INFO, LogLevel.DEEP_DEBUG])
 def test_app_packages_install_requirements(
     create_command,
+    mock_venv,
     myapp,
     app_packages_path,
     app_packages_path_index,
@@ -506,34 +425,24 @@ def test_app_packages_install_requirements(
     myapp.requires = ["first", "second", "third"]
 
     # The side effect of calling pip is creating installation artefacts
-    create_command.tools[
-        myapp
-    ].app_context.run.side_effect = create_installation_artefacts(
+    mock_venv.install_requirements.side_effect = create_installation_artefacts(
         app_packages_path, myapp.requires
     )
 
     # Install the requirements
-    create_command.install_app_requirements(myapp)
+    create_command.install_app_requirements(myapp, mock_venv)
 
     # The request to install was made
-    create_command.tools[myapp].app_context.run.assert_called_with(
+    mock_venv.install_requirements.assert_called_with(
         [
-            sys.executable,
-            "-u",
-            "-X",
-            "utf8",
-            "-m",
-            "pip",
-            "install",
-            "--disable-pip-version-check",
-            "--upgrade",
-            "--no-user",
-            f"--target={app_packages_path}",
-        ]
-        + (["-vv"] if logging_level == LogLevel.DEEP_DEBUG else [])
-        + ["first", "second", "third"],
-        check=True,
-        encoding="UTF-8",
+            "first",
+            "second",
+            "third",
+        ],
+        allow_editable=False,
+        require_binary=True,
+        install_path=app_packages_path,
+        extra_installer_args=[],
     )
 
     # The new app packages have installation artefacts created
@@ -551,6 +460,7 @@ def test_app_packages_install_requirements(
 
 def test_app_packages_replace_existing_requirements(
     create_command,
+    mock_venv,
     myapp,
     app_packages_path,
     app_packages_path_index,
@@ -563,35 +473,24 @@ def test_app_packages_replace_existing_requirements(
     myapp.requires = ["first", "second", "third"]
 
     # The side effect of calling pip is creating installation artefacts
-    create_command.tools[
-        myapp
-    ].app_context.run.side_effect = create_installation_artefacts(
+    mock_venv.install_requirements.side_effect = create_installation_artefacts(
         app_packages_path, myapp.requires
     )
 
     # Install the requirements
-    create_command.install_app_requirements(myapp)
+    create_command.install_app_requirements(myapp, mock_venv)
 
     # The request to install was still made
-    create_command.tools[myapp].app_context.run.assert_called_with(
+    mock_venv.install_requirements.assert_called_with(
         [
-            sys.executable,
-            "-u",
-            "-X",
-            "utf8",
-            "-m",
-            "pip",
-            "install",
-            "--disable-pip-version-check",
-            "--upgrade",
-            "--no-user",
-            f"--target={app_packages_path}",
             "first",
             "second",
             "third",
         ],
-        check=True,
-        encoding="UTF-8",
+        allow_editable=False,
+        require_binary=True,
+        install_path=app_packages_path,
+        extra_installer_args=[],
     )
 
     # The new app packages have installation artefacts created
@@ -602,17 +501,47 @@ def test_app_packages_replace_existing_requirements(
     assert (app_packages_path / "third").exists()
     assert (app_packages_path / "third/__main__.py").exists()
 
-    # The old app packages no longer exist.
-    assert not (app_packages_path / "old").exists()
-    assert not (app_packages_path / "ancient").exists()
-
     # Original app definitions haven't changed
     assert myapp.requires == ["first", "second", "third"]
     assert myapp.test_requires is None
 
 
+def test_app_packages_no_binary_requires(
+    create_command,
+    mock_venv,
+    myapp,
+    app_packages_path,
+    app_packages_path_index,
+):
+    """If the platform doesn't enforce binary requirements, that is passed on."""
+    # Disable binary installs at the command level.
+    create_command.require_binary_installs = False
+
+    myapp.requires = ["first", "second==1.2.3", "third>=3.2.1"]
+
+    create_command.install_app_requirements(myapp, mock_venv)
+
+    # A request was made to install requirements
+    mock_venv.install_requirements.assert_called_with(
+        [
+            "first",
+            "second==1.2.3",
+            "third>=3.2.1",
+        ],
+        allow_editable=False,
+        require_binary=False,
+        install_path=app_packages_path,
+        extra_installer_args=[],
+    )
+
+    # Original app definitions haven't changed
+    assert myapp.requires == ["first", "second==1.2.3", "third>=3.2.1"]
+    assert myapp.test_requires is None
+
+
 def test_app_requirements_no_requires(
     create_command,
+    mock_venv,
     myapp,
     app_requirements_path,
     app_requirements_path_index,
@@ -622,7 +551,7 @@ def test_app_requirements_no_requires(
     myapp.requires = None
 
     # Install requirements into the bundle
-    create_command.install_app_requirements(myapp)
+    create_command.install_app_requirements(myapp, mock_venv)
 
     # requirements.txt doesn't exist either
     assert app_requirements_path.exists()
@@ -636,6 +565,7 @@ def test_app_requirements_no_requires(
 
 def test_app_requirements_empty_requires(
     create_command,
+    mock_venv,
     myapp,
     app_requirements_path,
     app_requirements_path_index,
@@ -646,7 +576,7 @@ def test_app_requirements_empty_requires(
     myapp.requires = []
 
     # Install requirements into the bundle
-    create_command.install_app_requirements(myapp)
+    create_command.install_app_requirements(myapp, mock_venv)
 
     # requirements.txt doesn't exist either
     assert app_requirements_path.exists()
@@ -660,6 +590,7 @@ def test_app_requirements_empty_requires(
 
 def test_app_requirements_requires(
     create_command,
+    mock_venv,
     myapp,
     app_requirements_path,
     app_requirements_path_index,
@@ -670,7 +601,7 @@ def test_app_requirements_requires(
     myapp.requires = ["first", "second==1.2.3", "third>=3.2.1"]
 
     # Install requirements into the bundle
-    create_command.install_app_requirements(myapp)
+    create_command.install_app_requirements(myapp, mock_venv)
 
     # requirements.txt doesn't exist either
     assert app_requirements_path.exists()
@@ -684,6 +615,7 @@ def test_app_requirements_requires(
 
 def test_app_requirements_requirement_installer_args_no_template_support(
     create_command,
+    mock_venv,
     myapp,
     app_path,
     app_requirements_path,
@@ -697,7 +629,7 @@ def test_app_requirements_requirement_installer_args_no_template_support(
     myapp.requires = ["my-favourite-package"]
 
     # Install requirements into the bundle
-    create_command.install_app_requirements(myapp)
+    create_command.install_app_requirements(myapp, mock_venv)
 
     # requirements.txt exists either
     assert app_requirements_path.exists()
@@ -711,6 +643,7 @@ def test_app_requirements_requirement_installer_args_no_template_support(
 
 def test_app_requirements_requirement_installer_args_with_template_support(
     create_command,
+    mock_venv,
     myapp,
     app_path,
     app_requirements_path,
@@ -720,11 +653,18 @@ def test_app_requirements_requirement_installer_args_with_template_support(
 ):
     """If an app has requirement install args, a requirements file is still written, and
     requirement installer args file is written if the template supports it."""
-    myapp.requirement_installer_args = ["--no-cache", "-f", "wheels with space"]
+    (create_command.base_path / "packages").mkdir(exist_ok=True)
+    myapp.requirement_installer_args = [
+        "--no-cache",
+        "--extra-index-url",
+        "./packages",
+        "-f",
+        "wheels with space",
+    ]
     myapp.requires = ["my-favourite-package"]
 
     # Install requirements into the bundle
-    create_command.install_app_requirements(myapp)
+    create_command.install_app_requirements(myapp, mock_venv)
 
     # requirements.txt exists either
     assert app_requirements_path.exists()
@@ -734,7 +674,16 @@ def test_app_requirements_requirement_installer_args_with_template_support(
     assert app_requirement_installer_args_path.exists()
     assert (
         app_requirement_installer_args_path.read_text(encoding="utf-8")
-        == "--no-cache\n-f\nwheels with space\n"
+        == "\n".join(
+            [
+                "--no-cache",
+                "--extra-index-url",
+                str(create_command.base_path / "packages"),
+                "-f",
+                "wheels with space",
+            ]
+        )
+        + "\n"
     )
 
     # Original app definitions haven't changed
@@ -744,6 +693,7 @@ def test_app_requirements_requirement_installer_args_with_template_support(
 
 def test_app_requirements_requirement_installer_args_without_requires_no_template_support(  # noqa: E501
     create_command,
+    mock_venv,
     myapp,
     app_path,
     app_requirements_path,
@@ -758,7 +708,7 @@ def test_app_requirements_requirement_installer_args_without_requires_no_templat
     myapp.requires = []
 
     # Install requirements into the bundle
-    create_command.install_app_requirements(myapp)
+    create_command.install_app_requirements(myapp, mock_venv)
 
     # requirements.txt exists either
     assert app_requirements_path.exists()
@@ -774,6 +724,7 @@ def test_app_requirements_requirement_installer_args_without_requires_no_templat
 
 def test_app_requirements_requirement_installer_args_without_requires_with_template_support(  # noqa: E501
     create_command,
+    mock_venv,
     myapp,
     app_path,
     app_requirements_path,
@@ -788,7 +739,7 @@ def test_app_requirements_requirement_installer_args_without_requires_with_templ
     myapp.requires = []
 
     # Install requirements into the bundle
-    create_command.install_app_requirements(myapp)
+    create_command.install_app_requirements(myapp, mock_venv)
 
     # requirements.txt exists either
     assert app_requirements_path.exists()
@@ -806,30 +757,9 @@ def test_app_requirements_requirement_installer_args_without_requires_with_templ
     assert myapp.test_requires is None
 
 
-@pytest.mark.parametrize(
-    ("altsep", "requirement", "expected"),
-    [
-        (None, "asdf/xcvb", True),
-        (None, "asdf>xcvb", False),
-        (">", "asdf/xcvb", True),
-        (">", "asdf>xcvb", True),
-        (">", "asdf+xcvb", False),
-    ],
-)
-def test__is_local_path_altsep_respected(
-    altsep,
-    requirement,
-    expected,
-    monkeypatch,
-):
-    """``os.altsep`` is included as a separator when available."""
-    monkeypatch.setattr(os, "sep", "/")
-    monkeypatch.setattr(os, "altsep", altsep)
-    assert _is_local_path(requirement) is expected
-
-
 def _test_app_requirements_paths(
     create_command,
+    mock_venv,
     myapp,
     app_requirements_path,
     tmp_path,
@@ -842,7 +772,7 @@ def _test_app_requirements_paths(
         converted = requirement
     myapp.requires = ["first", requirement, "third"]
 
-    create_command.install_app_requirements(myapp)
+    create_command.install_app_requirements(myapp, mock_venv)
     with app_requirements_path.open(encoding="utf-8") as f:
         assert f.read() == (
             "\n".join(
@@ -885,6 +815,7 @@ def _test_app_requirements_paths(
 )
 def test_app_requirements_non_paths(
     create_command,
+    mock_venv,
     myapp,
     app_requirements_path,
     app_requirements_path_index,
@@ -895,6 +826,7 @@ def test_app_requirements_non_paths(
     """Requirements which are not paths are left unchanged."""
     _test_app_requirements_paths(
         create_command,
+        mock_venv,
         myapp,
         app_requirements_path,
         tmp_path,
@@ -916,6 +848,7 @@ def test_app_requirements_non_paths(
 )
 def test_app_requirements_paths_unix(
     create_command,
+    mock_venv,
     myapp,
     app_requirements_path,
     app_requirements_path_index,
@@ -926,6 +859,7 @@ def test_app_requirements_paths_unix(
     """Requirement paths in Unix format are expanded correctly."""
     _test_app_requirements_paths(
         create_command,
+        mock_venv,
         myapp,
         app_requirements_path,
         tmp_path,
@@ -953,6 +887,7 @@ def test_app_requirements_paths_unix(
 )
 def test_app_requirements_paths_windows(
     create_command,
+    mock_venv,
     myapp,
     app_requirements_path,
     app_requirements_path_index,
@@ -963,6 +898,7 @@ def test_app_requirements_paths_windows(
     """Requirement paths in Windows format are expanded correctly."""
     _test_app_requirements_paths(
         create_command,
+        mock_venv,
         myapp,
         app_requirements_path,
         tmp_path,
@@ -972,6 +908,7 @@ def test_app_requirements_paths_windows(
 
 def test_app_packages_test_requires(
     create_command,
+    mock_venv,
     myapp,
     app_packages_path,
     app_packages_path_index,
@@ -981,28 +918,19 @@ def test_app_packages_test_requires(
     myapp.requires = ["first", "second==1.2.3", "third>=3.2.1"]
     myapp.test_requires = ["pytest", "pytest-tldr"]
 
-    create_command.install_app_requirements(myapp)
+    create_command.install_app_requirements(myapp, mock_venv)
 
     # A request was made to install requirements
-    create_command.tools[myapp].app_context.run.assert_called_with(
+    mock_venv.install_requirements.assert_called_with(
         [
-            sys.executable,
-            "-u",
-            "-X",
-            "utf8",
-            "-m",
-            "pip",
-            "install",
-            "--disable-pip-version-check",
-            "--upgrade",
-            "--no-user",
-            f"--target={app_packages_path}",
             "first",
             "second==1.2.3",
             "third>=3.2.1",
         ],
-        check=True,
-        encoding="UTF-8",
+        allow_editable=False,
+        require_binary=True,
+        install_path=app_packages_path,
+        extra_installer_args=[],
     )
 
     # Original app definitions haven't changed
@@ -1012,6 +940,7 @@ def test_app_packages_test_requires(
 
 def test_app_packages_test_requires_test_mode(
     create_command,
+    mock_venv,
     myapp,
     app_packages_path,
     app_packages_path_index,
@@ -1021,30 +950,21 @@ def test_app_packages_test_requires_test_mode(
     myapp.test_requires = ["pytest", "pytest-tldr"]
     myapp.test_mode = True
 
-    create_command.install_app_requirements(myapp)
+    create_command.install_app_requirements(myapp, mock_venv)
 
     # A request was made to install requirements
-    create_command.tools[myapp].app_context.run.assert_called_with(
+    mock_venv.install_requirements.assert_called_with(
         [
-            sys.executable,
-            "-u",
-            "-X",
-            "utf8",
-            "-m",
-            "pip",
-            "install",
-            "--disable-pip-version-check",
-            "--upgrade",
-            "--no-user",
-            f"--target={app_packages_path}",
             "first",
             "second==1.2.3",
             "third>=3.2.1",
             "pytest",
             "pytest-tldr",
         ],
-        check=True,
-        encoding="UTF-8",
+        allow_editable=False,
+        require_binary=True,
+        install_path=app_packages_path,
+        extra_installer_args=[],
     )
 
     # Original app definitions haven't changed
@@ -1054,6 +974,7 @@ def test_app_packages_test_requires_test_mode(
 
 def test_app_packages_only_test_requires_test_mode(
     create_command,
+    mock_venv,
     myapp,
     app_packages_path,
     app_packages_path_index,
@@ -1064,27 +985,18 @@ def test_app_packages_only_test_requires_test_mode(
     myapp.test_requires = ["pytest", "pytest-tldr"]
     myapp.test_mode = True
 
-    create_command.install_app_requirements(myapp)
+    create_command.install_app_requirements(myapp, mock_venv)
 
     # A request was made to install requirements
-    create_command.tools[myapp].app_context.run.assert_called_with(
+    mock_venv.install_requirements.assert_called_with(
         [
-            sys.executable,
-            "-u",
-            "-X",
-            "utf8",
-            "-m",
-            "pip",
-            "install",
-            "--disable-pip-version-check",
-            "--upgrade",
-            "--no-user",
-            f"--target={app_packages_path}",
             "pytest",
             "pytest-tldr",
         ],
-        check=True,
-        encoding="UTF-8",
+        allow_editable=False,
+        require_binary=True,
+        install_path=app_packages_path,
+        extra_installer_args=[],
     )
 
     # Original app definitions haven't changed
@@ -1108,6 +1020,7 @@ class DummyDebugger(BaseDebugger):
 
 
 def test_app_packages_debugger(
+    mock_venv,
     create_command,
     myapp,
     bundle_path,
@@ -1118,29 +1031,20 @@ def test_app_packages_debugger(
     myapp.requires = ["first", "second==1.2.3", "third>=3.2.1"]
     myapp.debugger = DummyDebugger()
 
-    create_command.install_app_requirements(myapp)
+    create_command.install_app_requirements(myapp, mock_venv)
 
     # A request was made to install requirements
-    create_command.tools[myapp].app_context.run.assert_called_with(
+    mock_venv.install_requirements.assert_called_with(
         [
-            sys.executable,
-            "-u",
-            "-X",
-            "utf8",
-            "-m",
-            "pip",
-            "install",
-            "--disable-pip-version-check",
-            "--upgrade",
-            "--no-user",
-            f"--target={app_packages_path}",
             "first",
             "second==1.2.3",
             "third>=3.2.1",
             "briefcase-dummy-debugger-support",
         ],
-        check=True,
-        encoding="UTF-8",
+        allow_editable=False,
+        require_binary=True,
+        install_path=app_packages_path,
+        extra_installer_args=[],
     )
 
     # Original app definitions haven't changed

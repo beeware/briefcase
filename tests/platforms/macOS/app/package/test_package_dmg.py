@@ -352,6 +352,7 @@ def test_dmg_external_app(
     package_command.notarize.assert_called_once_with(
         external_first_app,
         identity=sekrit_identity,
+        wait=True,
     )
 
     # The app doesn't specify an app icon or installer icon, so there's no

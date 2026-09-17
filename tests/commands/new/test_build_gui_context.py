@@ -3,7 +3,6 @@ from collections.abc import Collection
 from briefcase.bootstraps import (
     ConsoleBootstrap,
     EmptyBootstrap,
-    PygameGuiBootstrap,
     PySide6GuiBootstrap,
     TogaGuiBootstrap,
 )
@@ -66,41 +65,28 @@ test_requires = [
 universal_build = true
 requires = [
     "toga-cocoa~=0.5.0",
-    "std-nslog~=1.0.3",
+    "std-nslog~=2.0.0",
 ]
 """,
         "pyproject_table_linux": """\
 requires = [
     "toga-gtk~=0.5.0",
-    # PyGObject 3.52.1 enforces a requirement on libgirepository-2.0-dev. This library
-    # isn't available on Debian 12/Ubuntu 22.04. If you don't need to support those (or
-    # older) releases, you can remove this version pin. See beeware/toga#3143.
-    "pygobject < 3.52.1",
 ]
 """,
         "pyproject_table_linux_system_debian": """\
 system_requires = [
     # Needed to compile pycairo wheel
     "libcairo2-dev",
-    # One of the following two packages are needed to compile PyGObject wheel. If you
-    # remove the pygobject pin in the requires list, you should also change to the
-    # version 2.0 of the girepository library. See beeware/toga#3143.
-    "libgirepository1.0-dev",
-    # "libgirepository-2.0-dev",
+    "libgirepository-2.0-dev",
 ]
 
 system_runtime_requires = [
     # Needed to provide GTK and its GI bindings
     "gir1.2-gtk-3.0",
-    # One of the following two packages are needed to use PyGObject at runtime. If you
-    # remove the pygobject pin in the requires list, you should also change to the
-    # version 2.0 of the girepository library. See beeware/toga#3143.
-    "libgirepository-1.0-1",
-    # "libgirepository-2.0-0",
+    "libgirepository-2.0-0",
     # Dependencies that GTK looks for at runtime
     "libcanberra-gtk3-module",
     # Needed to provide WebKit2 at runtime
-    # Note: Debian 11 requires gir1.2-webkit2-4.0 instead
     # "gir1.2-webkit2-4.1",
 ]
 """,
@@ -120,7 +106,7 @@ system_runtime_requires = [
     # Dependencies that GTK looks for at runtime
     "libcanberra-gtk3",
     # Needed to provide WebKit2 at runtime
-    # "webkit2gtk3",
+    # "webkit2gtk4.1",
 ]
 """,
         "pyproject_table_linux_system_suse": """\
@@ -203,7 +189,6 @@ requires = [
         "pyproject_table_iOS": """\
 requires = [
     "toga-iOS~=0.5.0",
-    "std-nslog~=1.0.3",
 ]
 """,
         "pyproject_table_android": '''\
@@ -414,7 +399,7 @@ universal_build = true
 # Pyside 6.10 (required for Python 3.14 support) enforces a macOS 13 minimum.
 min_os_version = "13.0"
 requires = [
-    "std-nslog~=1.0.3",
+    "std-nslog~=2.0.0",
 ]
 """,
         "pyproject_table_linux": """\
@@ -477,144 +462,22 @@ linuxdeploy_plugins = [
 flatpak_runtime = "org.kde.Platform"
 flatpak_runtime_version = "6.9"
 flatpak_sdk = "org.kde.Sdk"
-""",
-        "pyproject_table_windows": """\
-requires = [
-]
-""",
-        "pyproject_table_iOS": """\
-supported = false
-""",
-        "pyproject_table_android": """\
-supported = false
-""",
-        "pyproject_table_web": """\
-supported = false
-""",
-    }
 
-
-def test_pygame_bootstrap(new_command):
-    """Context can be requested from the Pygame bootstrap."""
-
-    context = new_command.build_gui_context(
-        PygameGuiBootstrap(
-            new_command.console,
-            {
-                "app_name": "myapplication",
-                "author": "Grace Hopper",
-            },
-        ),
-        project_overrides={},
-    )
-
-    assert context == {
-        "app_source": """\
-import importlib.metadata
-import os
-import sys
-from pathlib import Path
-
-import pygame
-
-SCREEN_WIDTH, SCREEN_HEIGHT = 800, 600
-WHITE = (255, 255, 255)
-
-
-def main():
-    # Linux desktop environments use an app's .desktop file to integrate the app
-    # in to their application menus. The .desktop file of this app will include
-    # the StartupWMClass key, set to app's formal name. This helps associate the
-    # app's windows to its menu item.
-    #
-    # For association to work, any windows of the app must have WMCLASS property
-    # set to match the value set in app's desktop file. For PyGame, this is set
-    # using the SDL_VIDEO_X11_WMCLASS environment variable.
-
-    # Find the name of the module that was used to start the app
-    app_module = sys.modules["__main__"].__package__
-    # Retrieve the app's metadata
-    metadata = importlib.metadata.metadata(app_module)
-
-    os.environ["SDL_VIDEO_X11_WMCLASS"] = metadata["Formal-Name"]
-
-    pygame.init()
-    pygame.display.set_caption(metadata["Formal-Name"])
-    screen = pygame.display.set_mode((SCREEN_WIDTH, SCREEN_HEIGHT))
-
-    running = True
-    while running:
-        for event in pygame.event.get():
-            if event.type == pygame.QUIT:
-                running = False
-                break
-
-        screen.fill(WHITE)
-        pygame.display.flip()
-
-    pygame.quit()
-""",
-        "pyproject_table_briefcase_app_extra_content": """
-requires = [
-    "pygame~=2.6",
-]
-test_requires = [
-{% if cookiecutter.test_framework == "pytest" %}
-    "pytest",
-{% endif %}
-]
-""",
-        "pyproject_table_macOS": """\
-universal_build = true
-requires = [
-    "std-nslog~=1.0.3",
-]
-""",
-        "pyproject_table_linux": """\
-requires = [
-]
-""",
-        "pyproject_table_linux_system_debian": """\
-system_requires = [
-]
-
-system_runtime_requires = [
-]
-""",
-        "pyproject_table_linux_system_rhel": """\
-system_requires = [
-]
-
-system_runtime_requires = [
-]
-""",
-        "pyproject_table_linux_system_suse": """\
-system_requires = [
-]
-
-system_runtime_requires = [
-]
-""",
-        "pyproject_table_linux_system_arch": """\
-system_requires = [
-]
-
-system_runtime_requires = [
-]
-""",
-        "pyproject_table_linux_appimage": """\
-manylinux = "manylinux_2_28"
-
-system_requires = [
-]
-
-linuxdeploy_plugins = [
-]
-""",
-        "pyproject_table_linux_flatpak": """\
-flatpak_runtime = "org.freedesktop.Platform"
-flatpak_runtime_version = "25.08"
-flatpak_sdk = "org.freedesktop.Sdk"
+# PySide6.QtWebEngineWidgets requires Kerberos libraries that are not included
+# in the KDE Flatpak runtime. Uncomment this module to build them into the app.
+# modules_extra_content = '''
+#   - name: mit-krb5
+#     buildsystem: simple
+#     sources:
+#       - type: archive
+#         url: https://kerberos.org/dist/krb5/1.21/krb5-1.21.3.tar.gz
+#         sha256: b7a4cd5ead67fb08b980b21abd150ff7217e85ea320c9ed0c6dadd304840ad35
+#     build-commands:
+#       - cd src && autoreconf -i
+#       - cd src && ./configure --prefix=/app --disable-static --enable-shared
+#       - cd src && make -j$(nproc)
+#       - cd src && make install
+# '''
 """,
         "pyproject_table_windows": """\
 requires = [

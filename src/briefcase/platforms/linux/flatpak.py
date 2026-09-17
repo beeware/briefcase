@@ -97,9 +97,25 @@ Your application configuration must provide values for
 `flatpak_sdk`, `flatpak_runtime`, and `flatpak_runtime_version`.
 """) from e
 
+    def flatpak_base(self, app):
+        return getattr(app, "flatpak_base", None)
+
+    def flatpak_base_version(self, app):
+        try:
+            return app.flatpak_base_version
+        except AttributeError as e:
+            if self.flatpak_base(app) is not None:
+                raise BriefcaseConfigError("""\
+The App specifies a Flatpak base without a version.
+
+Your application configuration must provide a value for `flatpak_base_version`
+if `flatpak_base` is defined.
+""") from e
+
 
 class LinuxFlatpakCreateCommand(LinuxFlatpakMixin, CreateCommand):
     description = "Create and populate a Linux Flatpak."
+    app_template_hash = "sha1:504bb2c693d871c2ea069c2d5b531a72b5886fa6"
     hidden_app_properties: Collection[str] = {"permission", "finish_arg"}
 
     def output_format_template_context(self, app: FinalizedAppConfig):
@@ -108,6 +124,8 @@ class LinuxFlatpakCreateCommand(LinuxFlatpakMixin, CreateCommand):
             "flatpak_runtime": self.flatpak_runtime(app),
             "flatpak_runtime_version": self.flatpak_runtime_version(app),
             "flatpak_sdk": self.flatpak_sdk(app),
+            "flatpak_base": self.flatpak_base(app),
+            "flatpak_base_version": self.flatpak_base_version(app),
         }
 
     def permissions_context(
@@ -185,6 +203,8 @@ class LinuxFlatpakBuildCommand(LinuxFlatpakMixin, BuildCommand):
             runtime=self.flatpak_runtime(app),
             runtime_version=self.flatpak_runtime_version(app),
             sdk=self.flatpak_sdk(app),
+            base=self.flatpak_base(app),
+            base_version=self.flatpak_base_version(app),
         )
 
         self.console.info("Building Flatpak...", prefix=app.app_name)

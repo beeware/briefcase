@@ -81,10 +81,11 @@ def test_new_app(
     new_command.build_app_context.assert_called_once_with({})
     new_command.build_gui_context.assert_called_once_with(mock.ANY, {})
 
-    # Template is updated
+    # Template is updated, and its hash is verified
     new_command.update_cookiecutter_cache.assert_called_once_with(
         template="https://github.com/beeware/briefcase-template",
         branch=expected_branch,
+        template_hash=new_command.template_hash,
     )
     # Cookiecutter is invoked
     new_command.tools.cookiecutter.assert_called_once_with(
@@ -96,9 +97,8 @@ def test_new_app(
             "formal_name": "My Application",
             "class_name": "MyApplication",
             "app_name": "myapplication",
-            # The expected app context
-            # should now also contain the
-            # default template and branch
+            # The expected app context should now also contain
+            # the template and branch
             "template_source": "https://github.com/beeware/briefcase-template",
             "template_branch": expected_branch,
             "briefcase_version": briefcase_version,
@@ -153,6 +153,7 @@ def test_new_app_missing_template(monkeypatch, new_command, tmp_path):
     new_command.update_cookiecutter_cache.assert_called_once_with(
         template="https://github.com/beeware/briefcase-template",
         branch="v37.42.7",
+        template_hash=new_command.template_hash,
     )
 
     # Cookiecutter is invoked twice
@@ -165,9 +166,8 @@ def test_new_app_missing_template(monkeypatch, new_command, tmp_path):
             "formal_name": "My Application",
             "class_name": "MyApplication",
             "app_name": "myapplication",
-            # The expected app context
-            # should now also contain the
-            # default template and branch
+            # The expected app context should now also contain
+            # the template and branch
             "template_source": "https://github.com/beeware/briefcase-template",
             "template_branch": "v37.42.7",
             "briefcase_version": "37.42.7",
@@ -220,15 +220,17 @@ def test_new_app_dev(monkeypatch, new_command, tmp_path, briefcase_version):
     new_command.build_app_context.assert_called_once_with({})
     new_command.build_gui_context.assert_called_once_with(mock.ANY, {})
 
-    # Template is updated
+    # Template is updated; no hash is used for the second attempt.
     assert new_command.update_cookiecutter_cache.mock_calls == [
         mock.call(
             template="https://github.com/beeware/briefcase-template",
             branch="v37.42.7",
+            template_hash=new_command.template_hash,
         ),
         mock.call(
             template="https://github.com/beeware/briefcase-template",
             branch="main",
+            template_hash=None,
         ),
     ]
 
@@ -244,8 +246,8 @@ def test_new_app_dev(monkeypatch, new_command, tmp_path, briefcase_version):
                     "formal_name": "My Application",
                     "class_name": "MyApplication",
                     "app_name": "myapplication",
-                    # The expected app context should now also contain the default
-                    # template and branch
+                    # The expected app context should now also contain
+                    # the template and branch
                     "template_source": "https://github.com/beeware/briefcase-template",
                     "template_branch": "v37.42.7",
                     "briefcase_version": briefcase_version,
@@ -308,10 +310,11 @@ def test_new_app_with_template(monkeypatch, new_command, tmp_path):
     new_command.build_app_context.assert_called_once_with({})
     new_command.build_gui_context.assert_called_once_with(mock.ANY, {})
 
-    # Template is updated
+    # Template is updated; no hash verification as no hash was provided
     new_command.update_cookiecutter_cache.assert_called_once_with(
         template="https://example.com/other.git",
         branch="v37.42.7",
+        template_hash=None,
     )
     # Cookiecutter is invoked
     new_command.tools.cookiecutter.assert_called_once_with(
@@ -323,9 +326,65 @@ def test_new_app_with_template(monkeypatch, new_command, tmp_path):
             "formal_name": "My Application",
             "class_name": "MyApplication",
             "app_name": "myapplication",
-            # The expected app context
-            # should now also contain the
-            # template and branch
+            # The expected app context should now also contain
+            # the template and branch
+            "template_source": "https://example.com/other.git",
+            "template_branch": "v37.42.7",
+            "briefcase_version": "37.42.7",
+            "app_source": "main()",
+            "pyproject_requires": "toga",
+        },
+        default_config={"replay_dir": str(tmp_path / "data/templates/.replay")},
+    )
+
+
+def test_new_app_with_template_and_hash(monkeypatch, new_command, tmp_path):
+    """A specific template and hash can both be requested."""
+    monkeypatch.setattr(briefcase, "__version__", "37.42.7")
+
+    app_context = {
+        "formal_name": "My Application",
+        "class_name": "MyApplication",
+        "app_name": "myapplication",
+    }
+    new_command.build_app_context = mock.MagicMock(return_value=app_context)
+    new_command.select_bootstrap = mock.MagicMock(return_value=BaseGuiBootstrap)
+    new_command.build_gui_context = mock.MagicMock(
+        return_value={
+            "app_source": "main()",
+            "pyproject_requires": "toga",
+        }
+    )
+
+    new_command.update_cookiecutter_cache = mock.MagicMock(
+        return_value="https://example.com/other.git"
+    )
+    new_command.tools.cookiecutter = mock.MagicMock(spec_set=cookiecutter)
+
+    new_command.new_app(
+        template="https://example.com/other.git",
+        template_hash="sha1:1234567890123456789012345678901234567890",
+        project_overrides={},
+    )
+
+    # Template is verified with the hash.
+    new_command.update_cookiecutter_cache.assert_called_once_with(
+        template="https://example.com/other.git",
+        branch="v37.42.7",
+        template_hash="sha1:1234567890123456789012345678901234567890",
+    )
+    # Cookiecutter is invoked
+    new_command.tools.cookiecutter.assert_called_once_with(
+        "https://example.com/other.git",
+        no_input=True,
+        output_dir=os.fsdecode(tmp_path / "base"),
+        checkout="v37.42.7",
+        extra_context={
+            "formal_name": "My Application",
+            "class_name": "MyApplication",
+            "app_name": "myapplication",
+            # The expected app context should now also contain
+            # the template and branch
             "template_source": "https://example.com/other.git",
             "template_branch": "v37.42.7",
             "briefcase_version": "37.42.7",
@@ -379,6 +438,7 @@ def test_new_app_with_invalid_template(monkeypatch, new_command, tmp_path):
     new_command.update_cookiecutter_cache.assert_called_once_with(
         template="https://example.com/other.git",
         branch="v37.42.7",
+        template_hash=None,
     )
     # Cookiecutter is invoked
     new_command.tools.cookiecutter.assert_called_once_with(
@@ -390,9 +450,8 @@ def test_new_app_with_invalid_template(monkeypatch, new_command, tmp_path):
             "formal_name": "My Application",
             "class_name": "MyApplication",
             "app_name": "myapplication",
-            # The expected app context
-            # should now also contain the
-            # template and branch
+            # The expected app context should now also contain
+            # the template and branch
             "template_source": "https://example.com/other.git",
             "template_branch": "v37.42.7",
             "briefcase_version": "37.42.7",
@@ -448,6 +507,7 @@ def test_new_app_with_invalid_template_branch(monkeypatch, new_command, tmp_path
     new_command.update_cookiecutter_cache.assert_called_once_with(
         template="https://example.com/other.git",
         branch="v37.42.7",
+        template_hash=None,
     )
 
     # Cookiecutter is invoked
@@ -460,9 +520,8 @@ def test_new_app_with_invalid_template_branch(monkeypatch, new_command, tmp_path
             "formal_name": "My Application",
             "class_name": "MyApplication",
             "app_name": "myapplication",
-            # The expected app context
-            # should now also contain the
-            # template and branch
+            # The expected app context should now also contain
+            # the template and branch
             "template_source": "https://example.com/other.git",
             "template_branch": "v37.42.7",
             "briefcase_version": "37.42.7",
@@ -507,6 +566,7 @@ def test_new_app_with_branch(monkeypatch, new_command, tmp_path):
     new_command.update_cookiecutter_cache.assert_called_once_with(
         template="https://github.com/beeware/briefcase-template",
         branch="experimental",
+        template_hash=None,
     )
     # Cookiecutter is invoked
     new_command.tools.cookiecutter.assert_called_once_with(
@@ -518,10 +578,134 @@ def test_new_app_with_branch(monkeypatch, new_command, tmp_path):
             "formal_name": "My Application",
             "class_name": "MyApplication",
             "app_name": "myapplication",
-            # The expected app context
-            # should now also contain the
-            # template and branch
+            # The expected app context should now also contain
+            # the template and branch
             "template_source": "https://github.com/beeware/briefcase-template",
+            "template_branch": "experimental",
+            "briefcase_version": "37.42.7",
+            "app_source": "main()",
+            "pyproject_requires": "toga",
+        },
+        default_config={"replay_dir": str(tmp_path / "data/templates/.replay")},
+    )
+
+
+def test_new_app_with_branch_and_hash(monkeypatch, new_command, tmp_path):
+    """A specific branch and hash can be requested."""
+    monkeypatch.setattr(briefcase, "__version__", "37.42.7")
+    app_context = {
+        "formal_name": "My Application",
+        "class_name": "MyApplication",
+        "app_name": "myapplication",
+    }
+    new_command.build_app_context = mock.MagicMock(return_value=app_context)
+    new_command.select_bootstrap = mock.MagicMock(return_value=BaseGuiBootstrap)
+    new_command.build_gui_context = mock.MagicMock(
+        return_value={
+            "app_source": "main()",
+            "pyproject_requires": "toga",
+        }
+    )
+
+    new_command.update_cookiecutter_cache = mock.MagicMock(
+        return_value="https://example.com/other.git"
+    )
+    new_command.tools.cookiecutter = mock.MagicMock(spec_set=cookiecutter)
+
+    # Create a new app, with a specific template branch.
+    new_command.new_app(
+        template_branch="experimental",
+        template_hash="sha1:1234567890123456789012345678901234567890",
+        project_overrides={},
+    )
+
+    # App context is constructed
+    new_command.select_bootstrap.assert_called_once_with({})
+    new_command.build_app_context.assert_called_once_with({})
+    new_command.build_gui_context.assert_called_once_with(mock.ANY, {})
+
+    # Template is updated
+    new_command.update_cookiecutter_cache.assert_called_once_with(
+        template="https://github.com/beeware/briefcase-template",
+        branch="experimental",
+        template_hash="sha1:1234567890123456789012345678901234567890",
+    )
+    # Cookiecutter is invoked
+    new_command.tools.cookiecutter.assert_called_once_with(
+        "https://example.com/other.git",
+        no_input=True,
+        output_dir=os.fsdecode(tmp_path / "base"),
+        checkout="experimental",
+        extra_context={
+            "formal_name": "My Application",
+            "class_name": "MyApplication",
+            "app_name": "myapplication",
+            # The expected app context should now also contain
+            # the template and branch
+            "template_source": "https://github.com/beeware/briefcase-template",
+            "template_branch": "experimental",
+            "briefcase_version": "37.42.7",
+            "app_source": "main()",
+            "pyproject_requires": "toga",
+        },
+        default_config={"replay_dir": str(tmp_path / "data/templates/.replay")},
+    )
+
+
+def test_new_app_with_full_template(monkeypatch, new_command, tmp_path):
+    """A specific template, branch and hash can be requested."""
+    monkeypatch.setattr(briefcase, "__version__", "37.42.7")
+    app_context = {
+        "formal_name": "My Application",
+        "class_name": "MyApplication",
+        "app_name": "myapplication",
+    }
+    new_command.build_app_context = mock.MagicMock(return_value=app_context)
+    new_command.select_bootstrap = mock.MagicMock(return_value=BaseGuiBootstrap)
+    new_command.build_gui_context = mock.MagicMock(
+        return_value={
+            "app_source": "main()",
+            "pyproject_requires": "toga",
+        }
+    )
+
+    new_command.update_cookiecutter_cache = mock.MagicMock(
+        return_value="https://example.com/other.git"
+    )
+    new_command.tools.cookiecutter = mock.MagicMock(spec_set=cookiecutter)
+
+    # Create a new app, with a specific template branch.
+    new_command.new_app(
+        template="https://example.com/other.git",
+        template_branch="experimental",
+        template_hash="sha1:1234567890123456789012345678901234567890",
+        project_overrides={},
+    )
+
+    # App context is constructed
+    new_command.select_bootstrap.assert_called_once_with({})
+    new_command.build_app_context.assert_called_once_with({})
+    new_command.build_gui_context.assert_called_once_with(mock.ANY, {})
+
+    # Template is updated
+    new_command.update_cookiecutter_cache.assert_called_once_with(
+        template="https://example.com/other.git",
+        branch="experimental",
+        template_hash="sha1:1234567890123456789012345678901234567890",
+    )
+    # Cookiecutter is invoked
+    new_command.tools.cookiecutter.assert_called_once_with(
+        "https://example.com/other.git",
+        no_input=True,
+        output_dir=os.fsdecode(tmp_path / "base"),
+        checkout="experimental",
+        extra_context={
+            "formal_name": "My Application",
+            "class_name": "MyApplication",
+            "app_name": "myapplication",
+            # The expected app context should now also contain
+            # the template and branch
+            "template_source": "https://example.com/other.git",
             "template_branch": "experimental",
             "briefcase_version": "37.42.7",
             "app_source": "main()",
@@ -571,6 +755,7 @@ def test_new_app_unused_project_overrides(
     new_command.update_cookiecutter_cache.assert_called_once_with(
         template="https://github.com/beeware/briefcase-template",
         branch="v37.42.7",
+        template_hash=new_command.template_hash,
     )
     # Cookiecutter is invoked
     new_command.tools.cookiecutter.assert_called_once_with(
@@ -582,9 +767,8 @@ def test_new_app_unused_project_overrides(
             "formal_name": "My Application",
             "class_name": "MyApplication",
             "app_name": "myapplication",
-            # The expected app context
-            # should now also contain the
-            # default template and branch
+            # The expected app context should now also contain
+            # the template and branch
             "template_source": "https://github.com/beeware/briefcase-template",
             "template_branch": "v37.42.7",
             "briefcase_version": "37.42.7",

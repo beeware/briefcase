@@ -7,7 +7,6 @@ import pytest
         "helloworld",
         "helloWorld",
         "hello42world",
-        "42helloworld",  # ?? Are we sure this is correct?
         "hello_world",
         "hello-world",
     ],
@@ -36,6 +35,9 @@ def test_valid_app_name(new_command, name):
         "false",  # Python, Java and Javascript keyword (in different cases)
         "False",  # Python, Java and Javascript keyword (in different cases)
         "FALSE",  # Python, Java and Javascript keyword (in different cases)
+        "42helloworld",  # Not a python identifier
+        "helloworld_",  # trailing underscore
+        "helloworld-",  # trailing hyphen
     ],
 )
 def test_invalid_app_name(new_command, name, tmp_path):

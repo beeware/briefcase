@@ -9,7 +9,6 @@ from briefcase.config import is_valid_app_name
         "helloworld",
         "helloWorld",
         "hello42world",
-        "42helloworld",
         "hello_world",
         "hello-world",
     ],
@@ -34,6 +33,7 @@ def test_is_valid_app_name(name):
         "main",
         "socket",
         "test",
+        "42helloworld",
         # ı, İ and K (i.e. 0x212a) are valid ASCII when made lowercase # noqa: RUF003
         # and as such are accepted by the official PEP 508 regex. They are rejected
         # here to ensure compliance with the regex that is used in practice.

@@ -1,8 +1,8 @@
 [build-system]
 requires = [
     # keep versions in sync with automation/pyproject.toml and ../pyproject.toml
-    "setuptools==82.0.1",
-    "setuptools_scm==10.0.5",
+    "setuptools==84.0.0",
+    "setuptools_scm==10.2.3",
 ]
 build-backend = "setuptools.build_meta"
 
@@ -23,8 +23,8 @@ debugpy = ["debugpy>=1.8.17,<2.0.0"]
 
 [dependency-groups]
 test = [
-    "coverage[toml] == 7.14.0",
-    "pytest == 9.0.3",
+    "coverage[toml] == 7.16.0",
+    "pytest == 9.1.1",
     "pytest-xdist == 3.8.0",
 ]
 
@@ -45,6 +45,9 @@ show_missing = true
 skip_covered = true
 skip_empty = true
 precision = 1
+
+[tool.ruff]
+extend = "../pyproject.toml"
 
 [tool.ruff.lint]
 ignore = [

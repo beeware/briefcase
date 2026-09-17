@@ -72,8 +72,10 @@ process_list_two_procs_same_cmd = [
             process_list_two_procs_same_cmd,
             ["/bin/cmd.sh", "--input", "data"],
             100,
-            "Multiple running instances of app found. "
-            "Using most recently created app process 100.\n",
+            (
+                "Multiple running instances of app found. "
+                "Using most recently created app process 100.\n"
+            ),
         ),
         (
             process_list_two_procs_same_cmd,
@@ -116,8 +118,10 @@ def test_get_process_id_by_command_w_command_line(
             process_list_two_procs_same_cmd,
             "/bin/cmd.sh",
             100,
-            "Multiple running instances of app found. "
-            "Using most recently created app process 100.\n",
+            (
+                "Multiple running instances of app found. "
+                "Using most recently created app process 100.\n"
+            ),
         ),
         (process_list_two_procs_same_cmd, "/bin/random_cmd.sh", None, ""),
     ],

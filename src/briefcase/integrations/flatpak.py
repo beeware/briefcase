@@ -44,28 +44,23 @@ class Flatpak(Tool):
                 else:
                     raise ValueError(f"Unexpected tool name {parts[0]}") from None
             except (ValueError, IndexError):
-                tools.console.warning(
-                    """\
-*************************************************************************
-** WARNING: Unable to determine the version of Flatpak                 **
-*************************************************************************
+                tools.console.warning_banner(
+                    "Unable to determine the version of Flatpak",
+                    """
+                        Briefcase will proceed, assuming everything is OK. If you
+                        experience problems, this is almost certainly the cause of
+                        those problems.
 
-    Briefcase will proceed, assuming everything is OK. If you
-    experience problems, this is almost certainly the cause of those
-    problems.
+                        Please report this as a bug at:
 
-    Please report this as a bug at:
+                            https://github.com/beeware/briefcase/issues/new
 
-      https://github.com/beeware/briefcase/issues/new
+                        In your report, please including the output from running:
 
-    In your report, please including the output from running:
+                            flatpak --version
 
-      flatpak --version
-
-    from the command prompt.
-
-*************************************************************************
-"""
+                        from the command prompt.
+                    """,
                 )
 
         except OSError as e:
@@ -85,7 +80,10 @@ You must install both flatpak and flatpak-builder.
 
         try:
             output = tools.subprocess.check_output(
-                ["flatpak-builder", "--version"]
+                [
+                    "flatpak-builder",
+                    "--version",
+                ]
             ).strip("\n")
 
             # flatpak-builder 1.3 changed the output of --version
@@ -102,28 +100,23 @@ You must install both flatpak and flatpak-builder.
                 else:
                     raise ValueError(f"Unexpected tool name {parts[0]}")
             except (ValueError, IndexError):
-                tools.console.warning(
-                    """\
-*************************************************************************
-** WARNING: Unable to determine the version of flatpak-builder         **
-*************************************************************************
+                tools.console.warning_banner(
+                    "Unable to determine the version of flatpak-builder",
+                    """
+                        Briefcase will proceed, assuming everything is OK. If you
+                        experience problems, this is almost certainly the cause of
+                        those problems.
 
-    Briefcase will proceed, assuming everything is OK. If you
-    experience problems, this is almost certainly the cause of those
-    problems.
+                        Please report this as a bug at:
 
-    Please report this as a bug at:
+                            https://github.com/beeware/briefcase/issues/new
 
-      https://github.com/beeware/briefcase/issues/new
+                        In your report, please including the output from running:
 
-    In your report, please including the output from running:
+                            flatpak-builder --version
 
-      flatpak-builder --version
-
-    from the command prompt.
-
-*************************************************************************
-"""
+                        from the command prompt.
+                    """,
                 )
 
         except OSError as e:
@@ -175,13 +168,17 @@ You must install both flatpak and flatpak-builder.
         runtime: str,
         runtime_version: str,
         sdk: str,
+        base: str | None = None,
+        base_version: str | None = None,
     ):
-        """Verify that a specific Flatpak runtime and SDK are available.
+        """Verify that a specific Flatpak runtime, SDK and base are available.
 
         :param repo_alias: The alias of the repo where the runtime and SDK are stored.
         :param runtime: The identifier of the Flatpak runtime
         :param runtime_version: The version of the Flatpak runtime
         :param sdk: The Flatpak SDK
+        :param base: (Optional) The Flatpak base
+        :param base_version: The version of the Flatpak base if specified
         """
         try:
             self.tools.subprocess.run(
@@ -194,6 +191,7 @@ You must install both flatpak and flatpak-builder.
                     f"{runtime}/{self.tools.host_arch}/{runtime_version}",
                     f"{sdk}/{self.tools.host_arch}/{runtime_version}",
                 ]
+                + ([f"{base}/{self.tools.host_arch}/{base_version}"] if base else [])
                 + (["--verbose"] if self.tools.console.is_deep_debug else []),
                 check=True,
                 # flatpak install uses many animations that cannot be disabled
@@ -204,7 +202,12 @@ You must install both flatpak and flatpak-builder.
                 f"Unable to install "
                 f"Flatpak runtime {runtime}/{self.tools.host_arch}/{runtime_version} "
                 f"and SDK {sdk}/{self.tools.host_arch}/{runtime_version} "
-                f"from repo {repo_alias}."
+                + (
+                    f"and base {base}/{self.tools.host_arch}/{base_version} "
+                    if base
+                    else ""
+                )
+                + f"from repo {repo_alias}."
             ) from e
 
     def build(self, bundle_identifier: str, app_name: str, path: Path):

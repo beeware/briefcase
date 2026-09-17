@@ -104,7 +104,7 @@ def test_single_minimal_app(tmp_path):
     }
 
     # No warnings
-    console.warning.assert_not_called()
+    console.warning_banner.assert_not_called()
 
 
 def test_multiple_minimal_apps(tmp_path):
@@ -151,7 +151,7 @@ def test_multiple_minimal_apps(tmp_path):
     }
 
     # No warnings
-    console.warning.assert_not_called()
+    console.warning_banner.assert_not_called()
 
 
 def test_platform_override(tmp_path):
@@ -754,6 +754,68 @@ def test_pep_621_merge(tmp_path):
     }
 
 
+def test_long_description_warning(tmp_path):
+    """A description longer than the recommended length raises a warning."""
+    long_description = "This is a needlessly long app description " + ("x" * 50)
+    assert len(long_description) > 80
+
+    config_file = create_file(
+        tmp_path / "pyproject.toml",
+        f"""
+        [tool.briefcase]
+        license = "MIT"
+
+        [tool.briefcase.app.my_app]
+        description = "{long_description}"
+        """,
+    )
+
+    console = Mock()
+    _, apps = parse_config(
+        config_file,
+        platform="macOS",
+        output_format="Xcode",
+        console=console,
+    )
+
+    # The description is preserved as-is...
+    assert apps["my_app"]["description"] == long_description
+    # ...but the user is warned that it's too long.
+    console.warning_banner.assert_called_once()
+    warning_text = console.warning_banner.call_args[0][1]
+    assert "my_app" in warning_text
+    assert str(len(long_description)) in warning_text
+    assert "long_description" in warning_text
+
+
+def test_short_description_no_warning(tmp_path):
+    """A description at the recommended length doesn't raise a warning."""
+    # A description that is exactly at the limit is acceptable.
+    description = "x" * 80
+    assert len(description) == 80
+
+    config_file = create_file(
+        tmp_path / "pyproject.toml",
+        f"""
+        [tool.briefcase]
+        license = "MIT"
+
+        [tool.briefcase.app.my_app]
+        description = "{description}"
+        """,
+    )
+
+    console = Mock()
+    parse_config(
+        config_file,
+        platform="macOS",
+        output_format="Xcode",
+        console=console,
+    )
+
+    console.warning_banner.assert_not_called()
+
+
 def test_license_pep621_table_with_files_is_error(tmp_path):
     """PEP 621 table format mixed with license-files raises an error."""
     config_file = create_file(
@@ -828,7 +890,7 @@ def test_license_pep639_empty_list(tmp_path):
 
     assert apps["my_app"]["license"] == "MIT"
     assert apps["my_app"]["license_files"] == []
-    console.warning.assert_not_called()
+    console.warning_banner.assert_not_called()
 
 
 def test_license_pep639_invalid_spdx_with_files(tmp_path):
@@ -889,7 +951,7 @@ def test_license_pep639_spdx_without_files(config, tmp_path):
 
     assert apps["my_app"]["license"] == "MIT"
     assert apps["my_app"]["license_files"] == []
-    console.warning.assert_not_called()
+    console.warning_banner.assert_not_called()
 
 
 def test_license_pep639_missing_file(tmp_path):
@@ -944,7 +1006,7 @@ def test_license_pep639_valid(tmp_path):
 
     assert apps["my_app"]["license"] == "MIT AND BSD-3-Clause"
     assert apps["my_app"]["license_files"] == ["LICENSE", "LICENSE-other"]
-    console.warning.assert_not_called()
+    console.warning_banner.assert_not_called()
 
 
 def test_license_pep639_normalized(tmp_path):
@@ -972,7 +1034,7 @@ def test_license_pep639_normalized(tmp_path):
 
     assert apps["my_app"]["license"] == "MIT"
     assert apps["my_app"]["license_files"] == ["LICENSE"]
-    console.warning.assert_not_called()
+    console.warning_banner.assert_not_called()
 
 
 @pytest.mark.parametrize(
@@ -1016,8 +1078,8 @@ def test_license_pep621_text_spdx(config, tmp_path):
     assert not license_text_file.exists()
 
     # One warning hinting an identified license
-    console.warning.assert_called_once()
-    warning_text = console.warning.call_args[0][0]
+    console.warning_banner.assert_called_once()
+    warning_text = "\n".join(console.warning_banner.call_args[0])
     assert "uses PEP 621 `license.text` format" in warning_text
     assert "may not be correct, and should be verified." not in warning_text
     assert "LicenseRef-UnknownLicense" not in warning_text
@@ -1052,8 +1114,8 @@ def test_license_pep621_text_non_spdx(tmp_path):
     assert not license_text_file.exists()
 
     # One warning hinting an unknown license
-    console.warning.assert_called_once()
-    warning_text = console.warning.call_args[0][0]
+    console.warning_banner.assert_called_once()
+    warning_text = "\n".join(console.warning_banner.call_args[0])
     assert "uses PEP 621 `license.text` format" in warning_text
     assert "may not be correct, and should be verified." not in warning_text
     assert "LicenseRef-UnknownLicense" in warning_text
@@ -1092,8 +1154,8 @@ def test_license_pep621_text_non_spdx_multiline(tmp_path):
     )
 
     # One warning hinting an unknown license
-    console.warning.assert_called_once()
-    warning_text = console.warning.call_args[0][0]
+    console.warning_banner.assert_called_once()
+    warning_text = "\n".join(console.warning_banner.call_args[0])
     assert "uses PEP 621 `license.text` format" in warning_text
     assert "may not be correct, and should be verified." in warning_text
     assert "LicenseRef-UnknownLicense" in warning_text
@@ -1163,8 +1225,8 @@ of this software and associated documentation files (the "Software"), ...
     assert apps["my_app"]["license_files"] == ["LICENSE"]
 
     # One warning hinting a known license
-    console.warning.assert_called_once()
-    warning_text = console.warning.call_args[0][0]
+    console.warning_banner.assert_called_once()
+    warning_text = "\n".join(console.warning_banner.call_args[0])
     assert "uses PEP 621 `license.file` format" in warning_text
     assert "may not be correct, and should be verified." not in warning_text
     assert "LicenseRef-UnknownLicense" not in warning_text
@@ -1198,8 +1260,8 @@ def test_license_pep621_file_unknown_spdx(tmp_path):
     assert apps["my_app"]["license_files"] == ["LICENSE"]
 
     # One warning hinting an unknown license
-    console.warning.assert_called_once()
-    warning_text = console.warning.call_args[0][0]
+    console.warning_banner.assert_called_once()
+    warning_text = "\n".join(console.warning_banner.call_args[0])
     assert "uses PEP 621 `license.file` format" in warning_text
     assert "may not be correct, and should be verified." not in warning_text
     assert "LicenseRef-UnknownLicense" in warning_text
@@ -1286,8 +1348,8 @@ def test_license_text_spdx(config, tmp_path):
     assert not license_text_file.exists()
 
     # One warning hinting a known license
-    console.warning.assert_called_once()
-    warning_text = console.warning.call_args[0][0]
+    console.warning_banner.assert_called_once()
+    warning_text = "\n".join(console.warning_banner.call_args[0])
     assert "uses pre-PEP 621 `license` format" in warning_text
     assert "may not be correct, and should be verified." not in warning_text
     assert "LicenseRef-UnknownLicense" not in warning_text
@@ -1330,8 +1392,8 @@ def test_license_text_non_spdx(tmp_path):
     assert not license_text_file.exists()
 
     # One warning hinting an unknown license
-    console.warning.assert_called_once()
-    warning_text = console.warning.call_args[0][0]
+    console.warning_banner.assert_called_once()
+    warning_text = "\n".join(console.warning_banner.call_args[0])
     assert "uses pre-PEP 621 `license` format" in warning_text
     assert "may not be correct, and should be verified." not in warning_text
     assert "LicenseRef-UnknownLicense" in warning_text
@@ -1378,8 +1440,8 @@ def test_license_text_non_spdx_multiline(tmp_path):
     )
 
     # One warning hinting an unknown license
-    console.warning.assert_called_once()
-    warning_text = console.warning.call_args[0][0]
+    console.warning_banner.assert_called_once()
+    warning_text = "\n".join(console.warning_banner.call_args[0])
     assert "uses pre-PEP 621 `license` format" in warning_text
     assert "may not be correct, and should be verified." in warning_text
     assert "LicenseRef-UnknownLicense" in warning_text

@@ -40,6 +40,7 @@ def test_new_skin(mock_tools, android_sdk, skin_tgz_path):
         "artwork/resources/device-art-resources/pixel_X.tar.gz",
         download_path=android_sdk.root_path,
         role="pixel_X device skin",
+        expected_hash="unverified:Android emulator skins do not have a checksum",
     )
 
     # Skin is unpacked.
@@ -71,6 +72,7 @@ def test_skin_download_failure(mock_tools, android_sdk, skin_tgz_path):
         "artwork/resources/device-art-resources/pixel_X.tar.gz",
         download_path=android_sdk.root_path,
         role="pixel_X device skin",
+        expected_hash="unverified:Android emulator skins do not have a checksum",
     )
 
     # Skin wasn't downloaded, so it wasn't unpacked
@@ -99,6 +101,7 @@ def test_unpack_failure(mock_tools, android_sdk, skin_tgz_path):
         "artwork/resources/device-art-resources/pixel_X.tar.gz",
         download_path=android_sdk.root_path,
         role="pixel_X device skin",
+        expected_hash="unverified:Android emulator skins do not have a checksum",
     )
 
     # An attempt to unpack the skin was made.

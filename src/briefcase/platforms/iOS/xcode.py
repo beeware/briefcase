@@ -4,7 +4,9 @@ import contextlib
 import plistlib
 import subprocess
 import time
+from collections.abc import Collection
 from pathlib import Path
+from typing import Literal
 from uuid import UUID
 
 from packaging.version import Version
@@ -18,7 +20,8 @@ from briefcase.commands import (
     RunCommand,
     UpdateCommand,
 )
-from briefcase.config import FinalizedAppConfig
+from briefcase.config import EnvManagerT, FinalizedAppConfig
+from briefcase.console import Console
 from briefcase.debuggers.base import AppPackagesPathMappings
 from briefcase.exceptions import (
     BriefcaseCommandError,
@@ -27,6 +30,7 @@ from briefcase.exceptions import (
     NoDistributionArtefact,
 )
 from briefcase.integrations.subprocess import is_process_dead
+from briefcase.integrations.virtual_environment import VirtualEnvironment
 from briefcase.integrations.xcode import DeviceState, get_device_state, get_simulators
 from briefcase.platforms.iOS import iOSMixin
 from briefcase.platforms.macOS.filters import XcodeBuildFilter, macOS_log_clean_filter
@@ -34,6 +38,7 @@ from briefcase.platforms.macOS.filters import XcodeBuildFilter, macOS_log_clean_
 
 class iOSXcodePassiveMixin(iOSMixin):
     output_format = "Xcode"
+    supported_env_managers: Collection[EnvManagerT] = {"venv", "uv"}
 
     @property
     def packaging_formats(self):
@@ -57,24 +62,23 @@ class iOSXcodePassiveMixin(iOSMixin):
     def distribution_path(self, app):
         # This path won't ever be *generated*, as distribution artefacts
         # can't be generated on iOS.
-        raise NoDistributionArtefact("""
-*************************************************************************
-** WARNING: No distributable artefact has been generated               **
-*************************************************************************
+        raise NoDistributionArtefact(
+            Console.format_warning_banner(
+                title="No distributable artefact has been generated",
+                message="""\
+                    Briefcase has not generated a standalone iOS artefact, as
+                    iOS apps must be published through Xcode.
 
-    Briefcase has not generated a standalone iOS artefact, as iOS apps
-    must be published through Xcode.
+                    To open Xcode for your iOS project, run:
 
-    To open Xcode for your iOS project, run:
+                        briefcase open iOS
 
-        briefcase open iOS
+                    and use Xcode's app distribution workflow described at:
 
-    and use Xcode's app distribution workflow described at:
-
-        https://briefcase.readthedocs.io/en/stable/reference/platforms/iOS/xcode.html#ios-deploy
-
-*************************************************************************
-""")
+                        https://briefcase.readthedocs.io/en/stable/reference/platforms/iOS/xcode.html#ios-deploy
+                """,
+            )
+        )
 
 
 class iOSXcodeMixin(iOSXcodePassiveMixin):
@@ -91,10 +95,17 @@ class iOSXcodeMixin(iOSXcodePassiveMixin):
             "-d",
             "--device",
             dest="udid",
+            nargs="?",
+            default="auto",
+            const=None,
             help=(
-                "The device to target; either a UDID, "
-                'a device name ("iPhone 11"), '
-                'or a device name and OS version ("iPhone 11::iOS 13.3")'
+                "The device to target; either a UDID, a device name "
+                '("iPhone 11"), a device name and OS version '
+                '("iPhone 11::iOS 13.3"), or "auto" (the default) to '
+                'automatically select a recent "SE-class" device on the '
+                "most recently released iOS version. Provide -d with no "
+                "value to select from the full list of available "
+                "simulators."
             ),
             required=False,
         )
@@ -102,7 +113,11 @@ class iOSXcodeMixin(iOSXcodePassiveMixin):
     def select_target_device(self, udid_or_device=None):
         """Select the target device to use for iOS builds.
 
-        Interrogates the system to get the list of available simulators
+        Interrogates the system to get the list of available simulators.
+
+        If the user has specified "auto", a recent "SE-class" iPhone simulator
+        is selected automatically, on the most recent iOS version, without
+        prompting.
 
         If there is only a single iOS version available, that version
         will be selected automatically.
@@ -111,12 +126,16 @@ class iOSXcodeMixin(iOSXcodePassiveMixin):
         automatically.
 
         If the user has specified a device at the command line, it will be
-        used in preference to any
+        used in preference to any of the above.
 
-        :param udid_or_device: The device to target. Can be a device UUID, a
-            device name ("iPhone 11"), or a device name and OS version
-            ("iPhone 11::13.3"). If ``None``, the user will be asked to select
-            a device at runtime.
+        :param udid_or_device: The device to target. Can be:
+            - `None` (default if -d/--device was specified with no value)
+            - The literal string `"auto"` (case-insensitive); automatically
+              select a recent "SE-class" simulator on the most recent
+              available iOS version, without prompting.
+            - A device UUID.
+            - A device name (e.g. `"iPhone 11"`).
+            - A device name and OS version (e.g. `"iPhone 11::iOS 13.3"`).
         :returns: A tuple containing the udid, iOS version, and device name
             for the selected device.
         """
@@ -143,8 +162,51 @@ class iOSXcodeMixin(iOSXcodePassiveMixin):
 
         except (ValueError, TypeError) as e:
             # Provided value wasn't a UDID.
-            # It must be a device or device+version
-            if udid_or_device and "::" in udid_or_device:
+            if udid_or_device and udid_or_device.lower() == "auto":
+                # No -d/--device value, or "-d auto": automatically select a
+                # recent "SE-class" device on the most recent iOS version,
+                # without prompting.
+                if not simulators:
+                    raise BriefcaseCommandError("No iOS simulators available.") from e
+
+                # simulators is keyed by iOS version tags of the form
+                # "iOS 15.5"; pick the tag with the highest version number.
+                iOS_tag = max(
+                    simulators,
+                    key=lambda tag: tuple(int(v) for v in tag.split()[-1].split(".")),
+                )
+                devices = simulators[iOS_tag]
+
+                matches = [
+                    (candidate_udid, name)
+                    for candidate_udid, name in devices.items()
+                    if name.startswith("iPhone SE ")
+                    or (name.startswith("iPhone ") and name.endswith("e"))
+                ]
+                if matches:
+                    # If multiple SE-class devices match, pick
+                    # deterministically (alphabetically last device name).
+                    udid, device = max(matches, key=lambda item: item[1])
+                else:
+                    raise BriefcaseCommandError(
+                        "Unable to automatically select an iOS simulator; "
+                        'no "SE-class" iPhone simulator (e.g., an iPhone SE, '
+                        'or a similar "entry level" device) is available on '
+                        f"{iOS_tag}, and the choice is ambiguous.\n"
+                        "\n"
+                        "Specify a device explicitly with -d/--device, or use "
+                        "-d with no value to select from the full list of "
+                        "available simulators."
+                    ) from e
+
+                # iOS_tag will be of the form "iOS 15.5"
+                # Drop the "iOS" prefix when reporting the version.
+                iOS_version = iOS_tag.split(" ", 1)[-1]
+                self.console.info(
+                    f"Automatically selected {device} simulator on {iOS_tag}"
+                )
+                return udid, iOS_version, device
+            elif udid_or_device and "::" in udid_or_device:
                 # A device name::version.
                 device, iOS_tag = udid_or_device.split("::")
 
@@ -257,6 +319,7 @@ or:
 
 class iOSXcodeCreateCommand(iOSXcodePassiveMixin, CreateCommand):
     description = "Create and populate a iOS Xcode project."
+    app_template_hash = "sha1:9565386b12ede7bf5581a2dec319111b098ddaea"
 
     def permissions_context(
         self,
@@ -309,25 +372,54 @@ class iOSXcodeCreateCommand(iOSXcodePassiveMixin, CreateCommand):
             "info": info,
         }
 
-    def _extra_pip_args(self, app: FinalizedAppConfig):
-        """Any additional arguments that must be passed to pip when installing packages.
+    def create_app_environment(
+        self,
+        app: FinalizedAppConfig,
+        platform: str,
+        arch: str,
+        env_manager: EnvManagerT | Literal["default"] | None = "default",
+        recreate: bool = True,
+    ):
+        """Create an isolated iOS virtual environment in which the app can be built.
 
-        :param app: The app configuration
-        :returns: A list of additional arguments
+        :param app: The config object for the app
+        :param platform: The platform being targeted.
+        :param arch: The architecture for the environment.
+        :param env_manager: An explicit environment manager to use. Defaults to the
+            app's configured environment manager.
+        :param recreate: If the environment already exists, should it be re-created?
+            Defaults to True (i.e., recreate by default).
         """
-        return [
-            *super()._extra_pip_args(app),
-            "--only-binary=:all:",
-            "--extra-index-url",
-            "https://pypi.anaconda.org/beeware/simple",
-        ]
+        # The default invocation will be with self.platform, which will be "iOS".
+        # Interpret that as the device; interpret all others as simulators.
+        if platform == "iOS":
+            platform = "iphoneos"
+            platform_path = (
+                self.support_path(app)
+                / "Python.xcframework/ios-arm64/platform-config/arm64-iphoneos"
+            )
+        else:
+            platform_path = (
+                self.support_path(app)
+                / "Python.xcframework/ios-arm64_x86_64-simulator/platform-config"
+                / f"{arch}-iphonesimulator"
+            )
+
+        return super().create_app_environment(
+            app=app,
+            platform=platform,
+            arch=arch,
+            env_manager=env_manager,
+            recreate=recreate,
+            platform_path=platform_path,
+        )
 
     def _install_app_requirements(
         self,
         app: FinalizedAppConfig,
+        venv: VirtualEnvironment,
         requires: list[str],
         app_packages_path: Path,
-        **kwargs,
     ):
         try:
             # Determine the min iOS version from the framework metadata
@@ -369,74 +461,51 @@ class iOSXcodeCreateCommand(iOSXcodePassiveMixin, CreateCommand):
                 f"but the support package only supports {support_min_version}"
             )
 
-        ios_min_tag = ios_min_version.replace(".", "_")
-
-        # Feb 2025: The platform-site was moved into the xcframework as
-        # `platform-config`. Look for the new location; fall back to the old location.
-        device_platform_site = (
-            self.support_path(app)
-            / "Python.xcframework/ios-arm64/platform-config/arm64-iphoneos"
-        )
-        simulator_platform_site = (
-            self.support_path(app)
-            / "Python.xcframework/ios-arm64_x86_64-simulator"
-            / f"platform-config/{self.tools.host_arch}-iphonesimulator"
-        )
-        if not device_platform_site.exists():
-            device_platform_site = (
-                self.support_path(app) / "platform-site/iphoneos.arm64"
-            )
-            simulator_platform_site = (
-                self.support_path(app)
-                / f"platform-site/iphonesimulator.{self.tools.host_arch}"
-            )
-
         # Perform the initial install pass targeting the "iphoneos" platform
-        super()._install_app_requirements(
-            app,
-            requires=requires,
-            app_packages_path=app_packages_path.parent / "app_packages.iphoneos",
-            progress_message="Installing app requirements for iPhone device...",
-            pip_args=[
-                f"--platform=ios_{ios_min_tag}_arm64_iphoneos",
-            ],
-            pip_kwargs={
-                "env": {
-                    "PYTHONPATH": str(device_platform_site),
-                    "PIP_REQUIRE_VIRTUALENV": None,
-                }
-            },
-            install_hint=f"""
+        with (
+            self.console.wait_bar("Installing app requirements for iPhone device..."),
+        ):
+            venv.install_requirements(
+                requires,
+                allow_editable=False,
+                require_binary=self.require_binary_installs,
+                min_os_version=ios_min_version,
+                extra_installer_args=app.requirement_installer_args,
+                install_path=app_packages_path.parent / "app_packages.iphoneos",
+                install_hint=f"""
 
 This may be because the `iphoneos` wheels that are available are not compatible
 with Python {self.python_version_tag} and a minimum iOS version of {ios_min_version}.
 """,
-        )
+            )
 
-        # Perform a second install pass targeting the "iphonesimulator" platform for the
+        # Perform a second install pass targeting the iOS simulator platform for the
         # current architecture
-        super()._install_app_requirements(
+        sim_venv = self.create_app_environment(
             app,
-            requires=requires,
-            app_packages_path=app_packages_path.parent / "app_packages.iphonesimulator",
-            progress_message="Installing app requirements for iPhone simulator...",
-            pip_args=[
-                f"--platform=ios_{ios_min_tag}_{self.tools.host_arch}_iphonesimulator",
-            ],
-            pip_kwargs={
-                "env": {
-                    "PYTHONPATH": str(simulator_platform_site),
-                    "PIP_REQUIRE_VIRTUALENV": None,
-                },
-            },
-            install_hint=f"""
+            platform="iphonesimulator",
+            arch=self.tools.host_arch,
+        )
+        with (
+            self.console.wait_bar(
+                "Installing app requirements for iPhone simulator..."
+            ),
+        ):
+            sim_venv.install_requirements(
+                requires,
+                allow_editable=False,
+                require_binary=self.require_binary_installs,
+                min_os_version=ios_min_version,
+                extra_installer_args=app.requirement_installer_args,
+                install_path=app_packages_path.parent / "app_packages.iphonesimulator",
+                install_hint=f"""
 
 This may indicate that an `iphoneos` wheel could be found, but an
 `iphonesimulator` wheel could not be found; or that the `iphonesimulator`
 binary wheels that are available are not compatible with
 Python {self.python_version_tag} and a minimum iOS version of {ios_min_version}.
 """,
-        )
+            )
 
 
 class iOSXcodeUpdateCommand(iOSXcodeCreateCommand, UpdateCommand):
@@ -542,14 +611,16 @@ class iOSXcodeRunCommand(iOSXcodeMixin, RunCommand):
         app: FinalizedAppConfig,
         *,
         passthrough: list[str],
-        udid=None,
+        udid: str | None = None,
         **options,
     ) -> dict | None:
         """Start the application.
 
         :param app: The config object for the app
         :param passthrough: The list of arguments to pass to the app
-        :param udid: The device UDID to target. If ``None``, the user will
+        :param udid: The device UDID, name, or name::version to target. If
+            `"auto"`, a recent "SE-class" simulator on the most recent iOS
+            version will be selected automatically. If `None`, the user will
             be asked to select a device at runtime.
         """
         try:
@@ -596,22 +667,30 @@ class iOSXcodeRunCommand(iOSXcodeMixin, RunCommand):
                     f"Unable to boot {device} simulator running {iOS_version}"
                 ) from e
 
+        device_hub_started = False
         if not app.test_mode:
             # We now know the simulator is *running*, so we can open it.
             # We don't need to open the simulator to run the test suite.
             try:
                 with self.console.wait_bar("Opening simulator..."):
-                    self.tools.subprocess.run(
-                        [
-                            "open",
-                            "-a",
-                            "Simulator",
-                            "--args",
-                            "-CurrentDeviceUDID",
-                            udid,
-                        ],
-                        check=True,
-                    )
+                    if self.tools.xcode.version < Version("27.0"):
+                        self.tools.subprocess.run(
+                            [
+                                "open",
+                                "-a",
+                                "Simulator",
+                                "--args",
+                                "-CurrentDeviceUDID",
+                                udid,
+                            ],
+                            check=True,
+                        )
+                    else:
+                        self.tools.subprocess.run(
+                            ["open", "-a", "Device Hub"],
+                            check=True,
+                        )
+                        device_hub_started = True
             except subprocess.CalledProcessError as e:
                 raise BriefcaseCommandError(
                     f"Unable to open {device} simulator running {iOS_version}"
@@ -625,7 +704,13 @@ class iOSXcodeRunCommand(iOSXcodeMixin, RunCommand):
                 "Uninstalling any existing app version..."
             ) as keep_alive,
             self.tools.subprocess.Popen(
-                ["xcrun", "simctl", "uninstall", udid, app.bundle_identifier]
+                [
+                    "xcrun",
+                    "simctl",
+                    "uninstall",
+                    udid,
+                    app.bundle_identifier,
+                ]
             ) as uninstall_popen,
         ):
             while (ret_code := uninstall_popen.poll()) is None:
@@ -641,7 +726,13 @@ class iOSXcodeRunCommand(iOSXcodeMixin, RunCommand):
         with (
             self.console.wait_bar(f"Installing new {label} version...") as keep_alive,
             self.tools.subprocess.Popen(
-                ["xcrun", "simctl", "install", udid, self.binary_path(app)]
+                [
+                    "xcrun",
+                    "simctl",
+                    "install",
+                    udid,
+                    self.binary_path(app),
+                ]
             ) as install_popen,
         ):
             while (ret_code := install_popen.poll()) is None:
@@ -661,7 +752,8 @@ class iOSXcodeRunCommand(iOSXcodeMixin, RunCommand):
         #   and for native NSLog() calls in the bootstrap binary
         # Case (2) works when the standard library is dynamically linked,
         #   and ctypes (which handles the NSLog integration) is an
-        #   extension module.
+        #   extension module. It also catches the case for the CPython
+        #   builtin behavior of redirecting to the system log.
         # It's not enough to filter on *just* the processImagePath,
         # as the process will generate lots of system-level messages.
         # We can't filter on *just* the senderImagePath, because other
@@ -679,10 +771,13 @@ class iOSXcodeRunCommand(iOSXcodeMixin, RunCommand):
                 "--predicate",
                 (
                     f'senderImagePath ENDSWITH "/{app.formal_name}"'
-                    f' OR (processImagePath ENDSWITH "/{app.formal_name}"'
-                    ' AND (senderImagePath ENDSWITH "-iphonesimulator.so"'
-                    ' OR senderImagePath ENDSWITH "-iphonesimulator.dylib"'
-                    ' OR senderImagePath ENDSWITH "_ctypes.framework/_ctypes"))'
+                    f'OR (processImagePath ENDSWITH "/{app.formal_name}"'
+                    '  AND (senderImagePath ENDSWITH "-iphonesimulator.so"'
+                    '    OR senderImagePath ENDSWITH "-iphonesimulator.dylib"'
+                    '    OR senderImagePath ENDSWITH "_ctypes.framework/_ctypes"'
+                    '    OR senderImagePath ENDSWITH "/Python"'
+                    "  )"
+                    ")"
                 ),
             ],
             stdout=subprocess.PIPE,
@@ -720,6 +815,12 @@ class iOSXcodeRunCommand(iOSXcodeMixin, RunCommand):
                         raise BriefcaseCommandError(
                             f"Unable to determine PID of {label} {app.app_name}."
                         ) from e
+
+                if device_hub_started:
+                    self.console.warning(
+                        "Device Hub has been started. You may need to select "
+                        f"the {device} device running iOS {iOS_version} in the GUI."
+                    )
 
                 # Start streaming logs for the app.
                 self.console.info(

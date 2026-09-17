@@ -27,16 +27,16 @@ class JDK(ManagedTool):
         super().__init__(tools=tools)
         self.java_home = java_home
 
-    @property
-    def OpenJDK_download_url(self):
-        """The OpenJDK download URL appropriate for the current machine."""
+    def _openjdk_platform_arch_extension(self) -> tuple[str, str, str]:
+        """The (platform, arch, extension) triple for the OpenJDK asset appropriate for
+        the current machine."""
         system_arch = self.tools.host_arch
         # use a 32bit JDK if using 32bit Python on 64bit hardware
         if self.tools.is_32bit_python and self.tools.host_arch == "aarch64":
             system_arch = "armv7l"
 
         try:
-            platform, arch, extension = {
+            return {
                 "Darwin": {
                     "arm64": ("mac", "aarch64", "tar.gz"),
                     "x86_64": ("mac", "x64", "tar.gz"),
@@ -54,12 +54,43 @@ class JDK(ManagedTool):
         except KeyError as e:
             raise IncompatibleToolError(tool=self.full_name, env_var="JAVA_HOME") from e
 
+    @property
+    def openjdk_download_url(self):
+        """The OpenJDK download URL appropriate for the current machine."""
+        platform, arch, extension = self._openjdk_platform_arch_extension()
         return (
             f"https://github.com/adoptium/temurin{self.JDK_MAJOR_VER}-binaries/"
             f"releases/download/jdk-{self.JDK_RELEASE}+{self.JDK_BUILD}/"
             f"OpenJDK{self.JDK_MAJOR_VER}U-jdk_{arch}_{platform}_hotspot_"
             f"{self.JDK_RELEASE}_{self.JDK_BUILD}.{extension}"
         )
+
+    @property
+    def openjdk_download_hash(self) -> str:
+        """The expected sha256 hash of the OpenJDK download for the current machine."""
+        platform, arch, _ = self._openjdk_platform_arch_extension()
+        hash = {
+            ("mac", "aarch64"): (
+                "856059de21518c2ff6eba6126ffc93390affe363c3ee205b3146a3bac3be0aa5"
+            ),
+            ("mac", "x64"): (
+                "a2a7bfd3a767fcaf35a2e96cc562e6a63cd695e08c1a896222303c4e978da3d6"
+            ),
+            ("linux", "arm"): (
+                "a0129be48dfbd16b7c6a158bf9e91683be2e292c473085294a6d436bbc5f4ea9"
+            ),
+            ("linux", "aarch64"): (
+                "dc29ca6d35beb4419b4b00419b8a3dfbf5ae551e1ae2b046b516d9a579d04533"
+            ),
+            ("linux", "x64"): (
+                "992f96e7995075ac7636bb1a8de52b0c61d71ed3137fafc979ab96b4ab78dd75"
+            ),
+            ("windows", "x64"): (
+                "dcf0064efec7e515a5e3b56e7532f1a1c125510303c6c9e60af8878e3f7347fe"
+            ),
+        }[(platform, arch)]
+
+        return f"sha256:{hash}"
 
     @classmethod
     def version_from_path(cls, tools: ToolCache, java_path: str | Path) -> str:
@@ -260,9 +291,10 @@ class JDK(ManagedTool):
     def install(self):
         """Download and install a JDK."""
         jdk_zip_path = self.tools.file.download(
-            url=self.OpenJDK_download_url,
+            url=self.openjdk_download_url,
             download_path=self.tools.base_path,
             role=f"Java {self.JDK_MAJOR_VER} JDK",
+            expected_hash=self.openjdk_download_hash,
         )
 
         with self.tools.console.wait_bar("Installing OpenJDK..."):

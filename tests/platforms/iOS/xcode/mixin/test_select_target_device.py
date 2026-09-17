@@ -335,3 +335,130 @@ def test_no_devices_for_os(dummy_command):
 
     with pytest.raises(BriefcaseCommandError):
         dummy_command.select_target_device()
+
+
+@pytest.mark.parametrize(
+    "se_device",
+    [
+        "iPhone SE (3rd generation)",
+        "iPhone 16e",
+        "iPhone 17e",
+    ],
+)
+def test_auto_device(dummy_command, se_device):
+    """An SE-class device on the most recent iOS version is selected automatically."""
+    dummy_command.get_simulators.return_value = {
+        "iOS 16.4": {
+            "0BB80120-FA02-4597-A1BA-DB8CDE4F086D": "iPhone SE (3rd generation)",
+        },
+        "iOS 17.5": {
+            "C9A005C8-9468-47C5-8376-68A6E3408209": "iPhone 15 Pro",
+            "2D3503A3-6EB9-4B37-9B17-C7EFEF2FA32D": se_device,
+            "EEEBA06C-81F9-407C-885A-2261306DB2BE": "iPhone 15 Pro Max",
+        },
+    }
+
+    udid, iOS_version, device = dummy_command.select_target_device("auto")
+
+    assert udid == "2D3503A3-6EB9-4B37-9B17-C7EFEF2FA32D"
+    assert iOS_version == "17.5"
+    assert device == se_device
+
+    # No user input was solicited
+    assert dummy_command.console.prompts == []
+
+
+def test_auto_single_iOS_version(dummy_command):
+    """If there's only one iOS version, an SE device is selected."""
+    dummy_command.get_simulators.return_value = {
+        "iOS 18.1": {
+            "C9A005C8-9468-47C5-8376-68A6E3408209": "iPhone 16 Pro",
+            "2D3503A3-6EB9-4B37-9B17-C7EFEF2FA32D": "iPhone 16e",
+        },
+    }
+
+    udid, iOS_version, device = dummy_command.select_target_device("auto")
+
+    assert udid == "2D3503A3-6EB9-4B37-9B17-C7EFEF2FA32D"
+    assert iOS_version == "18.1"
+    assert device == "iPhone 16e"
+
+    # No user input was solicited
+    assert dummy_command.console.prompts == []
+
+
+def test_auto_multiple_se_class_matches_tie_break(dummy_command):
+    """If multiple SE-class devices match on the most recent iOS version, the
+    alphabetically-last device name is picked deterministically."""
+    dummy_command.get_simulators.return_value = {
+        "iOS 18.1": {
+            "0BB80120-FA02-4597-A1BA-DB8CDE4F086D": "iPhone 16e",
+            "2D3503A3-6EB9-4B37-9B17-C7EFEF2FA32D": "iPhone SE (3rd generation)",
+        },
+    }
+
+    udid, iOS_version, device = dummy_command.select_target_device("auto")
+
+    # "iPhone SE (3rd generation)" sorts after "iPhone 16e" alphabetically.
+    assert udid == "2D3503A3-6EB9-4B37-9B17-C7EFEF2FA32D"
+    assert iOS_version == "18.1"
+    assert device == "iPhone SE (3rd generation)"
+
+    # No user input was solicited
+    assert dummy_command.console.prompts == []
+
+
+def test_auto_ignores_se_class_on_older_version(dummy_command):
+    """An SE-class device on an older iOS version is never selected, even if the most
+    recent version's choice is otherwise ambiguous."""
+    dummy_command.get_simulators.return_value = {
+        "iOS 16.4": {
+            "0BB80120-FA02-4597-A1BA-DB8CDE4F086D": "iPhone SE (3rd generation)",
+        },
+        "iOS 17.5": {
+            "C9A005C8-9468-47C5-8376-68A6E3408209": "iPhone 15 Pro",
+            "EEEBA06C-81F9-407C-885A-2261306DB2BE": "iPhone 15 Pro Max",
+        },
+    }
+
+    with pytest.raises(
+        BriefcaseCommandError,
+        match=r'Unable to automatically select an iOS simulator; no "SE-class"',
+    ):
+        dummy_command.select_target_device("auto")
+
+    # No user input was solicited
+    assert dummy_command.console.prompts == []
+
+
+def test_auto_raises_on_ambiguous_no_se_class_match(dummy_command):
+    """If the most recent iOS version has no SE-class match, the choice is ambiguous."""
+    dummy_command.get_simulators.return_value = {
+        "iOS 17.5": {
+            "C9A005C8-9468-47C5-8376-68A6E3408209": "iPhone 15 Pro",
+            "EEEBA06C-81F9-407C-885A-2261306DB2BE": "iPhone 15 Pro Max",
+        },
+    }
+
+    with pytest.raises(
+        BriefcaseCommandError,
+        match=r'Unable to automatically select an iOS simulator; no "SE-class"',
+    ):
+        dummy_command.select_target_device("auto")
+
+    # No user input was solicited
+    assert dummy_command.console.prompts == []
+
+
+def test_auto_raises_when_no_simulators(dummy_command):
+    """If there are no simulators available at all, auto-select raises an error."""
+    dummy_command.get_simulators.return_value = {}
+
+    with pytest.raises(
+        BriefcaseCommandError,
+        match=r"No iOS simulators available\.",
+    ):
+        dummy_command.select_target_device("auto")
+
+    # No user input was solicited
+    assert dummy_command.console.prompts == []

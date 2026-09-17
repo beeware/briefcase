@@ -165,6 +165,7 @@ class GradleMixin(_MixinBase):
 
 class GradleCreateCommand(GradleMixin, CreateCommand):
     description = "Create and populate an Android Gradle project."
+    app_template_hash = "sha1:32244ad8bd608cc451f05718d07f2e3429541333"
     hidden_app_properties: Collection[str] = {"permission", "feature"}
 
     def support_package_filename(self, support_revision):
@@ -194,31 +195,27 @@ class GradleCreateCommand(GradleMixin, CreateCommand):
         try:
             dependencies = app.build_gradle_dependencies
         except AttributeError:
-            self.console.warning("""
-*************************************************************************
-** WARNING: App does not define build_gradle_dependencies              **
-*************************************************************************
+            self.tools.console.warning_banner(
+                "App does not define build_gradle_dependencies",
+                """
+                    The Android configuration for this app does not contain a
+                    `build_gradle_dependencies` definition. Briefcase will use a
+                    default value of:
 
-    The Android configuration for this app does not contain a
-    `build_gradle_dependencies` definition. Briefcase will use a default
-    value of:
+                        build_gradle_dependencies = [
+                            "androidx.appcompat:appcompat:1.0.2",
+                            "androidx.constraintlayout:constraintlayout:1.1.3",
+                            "androidx.swiperefreshlayout:swiperefreshlayout:1.1.0",
+                        ]
 
-        build_gradle_dependencies = [
-            "androidx.appcompat:appcompat:1.0.2",
-            "androidx.constraintlayout:constraintlayout:1.1.3",
-            "androidx.swiperefreshlayout:swiperefreshlayout:1.1.0",
-        ]
+                    You should add this definition to the Android configuration
+                    of your project's pyproject.toml file. See:
 
-    You should add this definition to the Android configuration
-    of your project's pyproject.toml file. See:
+                        https://briefcase.readthedocs.io/en/stable/reference/platforms/android/gradle.html#build-gradle-dependencies
 
-        https://briefcase.readthedocs.io/en/stable/reference/platforms/android/gradle.html#build-gradle-dependencies
-
-    for more information.
-
-*************************************************************************
-
-""")
+                    for more information.
+                """,
+            )
             dependencies = [
                 "androidx.appcompat:appcompat:1.0.2",
                 "androidx.constraintlayout:constraintlayout:1.1.3",
@@ -400,9 +397,15 @@ class GradleRunCommand(GradleMixin, RunCommand):
             "-d",
             "--device",
             dest="device_or_avd",
+            nargs="?",
+            default="auto",
+            const=None,
             help=(
                 "The device to target; either a device ID for a physical device, "
-                " or an AVD name ('@emulatorName') "
+                "or an AVD name ('@emulatorName'), or 'auto' (the default) to "
+                'automatically select a default "beePhone" emulator (creating one '
+                "if necessary). Provide -d with no value to select from the full "
+                "list of available emulators, or to create one interactively."
             ),
             required=False,
         )
@@ -461,7 +464,7 @@ class GradleRunCommand(GradleMixin, RunCommand):
         self,
         app: FinalizedAppConfig,
         passthrough: list[str],
-        device_or_avd=None,
+        device_or_avd: str | None = None,
         extra_emulator_args=None,
         shutdown_on_exit=False,
         revoke_permissions: list[str] | None = None,
@@ -473,8 +476,9 @@ class GradleRunCommand(GradleMixin, RunCommand):
 
         :param app: The config object for the app
         :param passthrough: The list of arguments to pass to the app
-        :param device_or_avd: The device to target. If ``None``, the user will
-            be asked to re-run the command selecting a specific device.
+        :param device_or_avd: The device to target. If `None`, the user will
+            be asked to re-run the command selecting a specific device. If `"auto"`,
+            a default "beePhone" device will be selected (and created if necessary).
         :param extra_emulator_args: Any additional arguments to pass to the emulator.
         :param shutdown_on_exit: Should the emulator be shut down on exit?
         :param revoke_permissions: A list of permissions to revoke before launching
@@ -527,7 +531,7 @@ class GradleRunCommand(GradleMixin, RunCommand):
 
             # Install the latest APK file onto the device.
             with self.console.wait_bar("Installing new app version..."):
-                adb.install_apk(self.binary_path(app))
+                adb.install_apk(self.binary_path(app), package)
 
             if revoke_permissions:
                 # Revoke specified app permissions to ensure a reproducible

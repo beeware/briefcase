@@ -5,9 +5,11 @@ import keyword
 import re
 import subprocess
 import sys
+import tomllib
 import unicodedata
 from email.utils import getaddresses
 from pathlib import Path
+from typing import Literal
 from urllib.parse import urlparse
 
 from build import BuildBackendException
@@ -15,16 +17,13 @@ from build.util import project_wheel_metadata
 from packaging.licenses import InvalidLicenseExpression, canonicalize_license_expression
 from packaging.version import InvalidVersion, Version
 
-if sys.version_info >= (3, 11):  # pragma: no-cover-if-lt-py311
-    import tomllib
-else:  # pragma: no-cover-if-gte-py311
-    import tomli as tomllib
-
 from briefcase.debuggers.base import BaseDebugger
 from briefcase.platforms import get_output_formats, get_platforms
 
 from .constants import MIME_TYPE_REGISTRIES, RESERVED_WORDS
 from .exceptions import BriefcaseConfigError, InvalidVersionError
+
+EnvManagerT = Literal["venv", "uv", "conda"]
 
 # PEP 508 restricts the naming of modules. The PEP defines a regex that uses
 # re.IGNORECASE; but in in practice, packaging uses a version that rolls out the lower
@@ -33,10 +32,18 @@ from .exceptions import BriefcaseConfigError, InvalidVersionError
 # https://github.com/pypa/packaging/blob/24.0/src/packaging/_tokenizer.py#L80
 PEP508_NAME_RE = re.compile(r"^([a-zA-Z0-9]|[a-zA-Z0-9][a-zA-Z0-9._-]*[a-zA-Z0-9])$")
 
+APP_NAME_SPEC = (
+    "App names must not be reserved keywords such as 'and', 'for' and "
+    "'while'. They must also be valid Python identifiers when hyphens "
+    "are replaced by underscores, and PEP508 compliant (i.e., they can "
+    "only include letters, numbers, '-' and '_'; must start with a letter; "
+    "and cannot end with '-' or '_')."
+)
+
 
 def is_valid_pep508_name(app_name):
     """Determine if the name is valid by PEP508 rules."""
-    return PEP508_NAME_RE.match(app_name)
+    return PEP508_NAME_RE.fullmatch(app_name)
 
 
 def is_reserved_keyword(app_name):
@@ -44,8 +51,17 @@ def is_reserved_keyword(app_name):
     return keyword.iskeyword(app_name.lower()) or app_name.lower() in RESERVED_WORDS
 
 
+def get_module_name(app_name: str) -> str:
+    return app_name.replace("-", "_")
+
+
 def is_valid_app_name(app_name):
-    return not is_reserved_keyword(app_name) and is_valid_pep508_name(app_name)
+    module_name = get_module_name(app_name)
+    return (
+        not is_reserved_keyword(app_name)
+        and is_valid_pep508_name(module_name)
+        and module_name.isidentifier()
+    )
 
 
 def make_class_name(formal_name):
@@ -89,6 +105,11 @@ def make_class_name(formal_name):
         and unicodedata.category(class_name[0]) not in xid_start
         and class_name[0] != "_"
     ):
+        class_name = f"_{class_name}"
+
+    # A keyword is not a valid identifier, e.g. `class lambda(toga.App)`
+    # does not parse. Prepend an underscore, as above.
+    if keyword.iskeyword(class_name):
         class_name = f"_{class_name}"
 
     return class_name
@@ -318,15 +339,24 @@ def validate_install_options_config(config, opt_type, **others):
             # Options are booleans, and are False by default
             option["default"] = bool(config_item.get("default", False))
 
+            system = config_item.get("system", "both")
+            if not isinstance(system, bool) and system != "both":
+                raise BriefcaseConfigError(
+                    f"System setting for {opt_type} option {name!r} must be a "
+                    "boolean or 'both'."
+                )
+
+            option["system"] = system
+
     return options
 
 
-VALID_BUNDLE_RE = re.compile(r"[a-zA-Z0-9-]+(\.[a-zA-Z0-9-]+)+$")
+VALID_BUNDLE_RE = re.compile(r"[a-zA-Z0-9-]+(\.[a-zA-Z0-9-]+)+")
 
 
 def is_valid_bundle_identifier(bundle):
     """Check if the bundle identifier follows the basic reversed domain name pattern."""
-    return VALID_BUNDLE_RE.match(bundle) is not None
+    return VALID_BUNDLE_RE.fullmatch(bundle) is not None
 
 
 def parse_boolean(value: str) -> bool:
@@ -435,6 +465,7 @@ class AppConfig(BaseConfig):
     and identity (``__eq__``/``__hash__`` based on ``app_name``).
     """
 
+    project_name: str
     app_name: str
     version: Version
     bundle: str
@@ -450,6 +481,7 @@ class AppConfig(BaseConfig):
     permission: dict
     template: str | None
     template_branch: str | None
+    template_hash: str | None
     test_sources: list[str] | None
     test_requires: list[str] | None
     supported: bool
@@ -463,6 +495,8 @@ class AppConfig(BaseConfig):
     install_launcher: bool
     install_options: dict
     uninstall_options: dict
+    requires_python: str | None
+    env_manager: EnvManagerT
 
     test_mode: bool
     debugger: BaseDebugger | None
@@ -487,7 +521,7 @@ class AppConfig(BaseConfig):
         This is derived from the name, but:
         * all `-` have been replaced with `_`.
         """
-        return self.app_name.replace("-", "_")
+        return get_module_name(self.app_name)
 
     @property
     def bundle_name(self):
@@ -585,6 +619,7 @@ class DraftAppConfig(AppConfig):
         permission: dict | None = None,
         template: str | None = None,
         template_branch: str | None = None,
+        template_hash: str | None = None,
         test_sources: list[str] | None = None,
         test_requires: list[str] | None = None,
         supported: bool = True,
@@ -594,6 +629,7 @@ class DraftAppConfig(AppConfig):
         external_package_path: str | None = None,
         external_package_executable_path: str | None = None,
         install_launcher: bool | None = None,
+        env_manager: EnvManagerT | None = None,
         **kwargs,
     ):
         super().__init__(**kwargs)
@@ -614,6 +650,7 @@ class DraftAppConfig(AppConfig):
         self.permission = {} if permission is None else permission
         self.template = template
         self.template_branch = template_branch
+        self.template_hash = template_hash
         self.test_sources = test_sources
         self.test_requires = test_requires
         self.supported = supported
@@ -638,12 +675,7 @@ class DraftAppConfig(AppConfig):
 
         if not is_valid_app_name(self.app_name):
             raise BriefcaseConfigError(
-                f"{self.app_name!r} is not a valid app name."
-                f"\n\n"
-                "App names must not be reserved keywords such as 'and', 'for' and "
-                "'while'. They must also be PEP508 compliant (i.e., they can only "
-                "include letters, numbers, '-' and '_'; must start with a letter; "
-                "and cannot end with '-' or '_')."
+                f"{self.app_name!r} is not a valid app name.\n\n{APP_NAME_SPEC}"
             )
 
         if not is_valid_bundle_identifier(self.bundle_identifier):
@@ -657,11 +689,11 @@ class DraftAppConfig(AppConfig):
                 "may not contain any reserved words (like 'switch', or 'while')."
             )
 
-        for document_type_id, document_type in self.document_types.items():
+        for doc_type_id, doc_type in self.document_types.items():
             validate_document_type_config(
                 self.app_name,
-                document_type_id,
-                document_type,
+                doc_type_id,
+                doc_type,
             )
 
         self.install_options = validate_install_options_config(
@@ -700,6 +732,13 @@ class DraftAppConfig(AppConfig):
                     f"The `sources` list for {self.app_name!r} does not include a "
                     f"package named {self.module_name!r}."
                 )
+
+        if env_manager in {"venv", "uv", "conda"}:
+            self.env_manager = env_manager
+        elif env_manager is None:
+            self.env_manager = "venv"
+        else:
+            raise BriefcaseConfigError(f"Unknown environment manager {env_manager!r}")
 
 
 class FinalizedAppConfig(AppConfig):
@@ -843,7 +882,7 @@ def _normalize_pep639_license_config(
     if raw_license_files is None:
         raw_license_files = []
 
-    # Ensure `licence` is an SPDX expression
+    # Ensure `license` is an SPDX expression
     try:
         spdx_id = canonicalize_license_expression(raw_license)
     except InvalidLicenseExpression:
@@ -891,65 +930,61 @@ def _normalize_pep621_license_text_config(
     # Attempt to identify the SPDX expression from the text content.
     spdx_id = get_license_from_text(license_text)
 
-    warning = [
-        f"""
-*******************************************************************************
-** {"WARNING: '" + app_name + "' uses PEP 621 `license.text` format":73} **
-*******************************************************************************
-
-    Briefcase now uses PEP 639 format for license definitions.
-"""
-    ]
     if spdx_id is not None:
         # SPDX identifiable.
         license = spdx_id
-        warning.append(f"""
-    PEP 639 requires the definition of both `license` and `license-files`,
-    and `license` must be a valid SPDX expression. The current value for
-    `license.text` seems to define a SPDX license of '{spdx_id}'.
-""")
+        spdx_note = (
+            "PEP 639 requires the definition of both `license` and "
+            "`license-files`, and `license` must be a valid SPDX expression. "
+            "The current value for `license.text` seems to define a SPDX "
+            f"license of '{spdx_id}'."
+        )
     else:
         # SPDX not identifiable.
         spdx_id = "<SPDX expression>"
         license = "LicenseRef-UnknownLicense"
-        warning.append(f"""
-    PEP 639 requires the definition of both `license` and `license-files`.
-    Briefcase cannot determine the current license for '{app_name}' based
-    on the value of `license.text`. A value of 'LicenseRef-UnknownLicense'
-    will be used.
-""")
+        spdx_note = (
+            "PEP 639 requires the definition of both `license` and "
+            "`license-files`. Briefcase cannot determine the current license "
+            f"for '{app_name}' based on the value of `license.text`. A value of "
+            "'LicenseRef-UnknownLicense' will be used."
+        )
 
     # Write the license text to a file under the build directory so it can
     # be referenced as a real path in license-files.
     tmp_license_file = _write_temp_license(base_path, app_name, license_text)
     if tmp_license_file:
         license_files = [tmp_license_file]
-        warning.append("""
-    The contents of `license.text` will be used as the contents of the
-    license file. This may not be correct, and should be verified.
-""")
+        file_note = (
+            "The contents of `license.text` will be used as the contents of "
+            "the license file. This may not be correct, and should be verified."
+        )
     else:
         license_files = []
-        warning.append("""
-    Your project will not have a value for `license-files`. This will
-    cause problems packaging for some platforms.
-""")
+        file_note = (
+            "Your project will not have a value for `license-files`. This will "
+            "cause problems packaging for some platforms."
+        )
 
-    warning.append(f"""
-    Update your configuration to put the full license text in a file and use
-    PEP 639 format for the license definition:
+    # Warn and finalize PEP 621 license.text coercion.
+    console.warning_banner(
+        f"'{app_name}' uses PEP 621 `license.text` format",
+        f"""
+            Briefcase now uses PEP 639 format for license definitions.
 
-        license = "{spdx_id}"
-        license-files = ["LICENSE"]
+            {spdx_note}
 
-    You should not release your project without resolving this warning.
+            {file_note}
 
-*******************************************************************************
-""")
+            Update your configuration to put the full license text in a file
+            and use PEP 639 format for the license definition:
 
-    # Warn and finalize PEP 621 license.text coercion. Use `license_files` rather than
-    # `license-files` so it's a valid attribute name.
-    console.warning("".join(warning))
+                license = "{spdx_id}"
+                license-files = ["LICENSE"]
+
+            You should not release your project without resolving this warning.
+        """,
+    )
     config["license"] = license
     config["license_files"] = license_files
 
@@ -980,47 +1015,41 @@ def _normalize_pep621_license_file_config(
     license_text = license_path.read_text(encoding="utf-8")
     spdx_id = get_license_from_text(license_text)
 
-    warning = [
-        f"""
-*******************************************************************************
-** {"WARNING: '" + app_name + "' uses PEP 621 `license.file` format":73} **
-*******************************************************************************
-
-    Briefcase now uses PEP 639 format for license definitions.
-
-    PEP 639 requires the definition of both `license` and `license-files`.
-    The value for `license.file` will be used to populate the PEP 639
-    `licence-files` setting.
-"""
-    ]
     if spdx_id is not None:
         license = spdx_id
         # License is valid SPDX
-        warning.append(f"""
-    The license has been identified as '{spdx_id}'.
-""")
+        spdx_note = f"The license has been identified as '{spdx_id}'."
     else:
         # Can't identify SPDX for license
         license = "<SPDX expression>"
         spdx_id = "LicenseRef-UnknownLicense"
-        warning.append("""
-    A license SPDX expression could not be identified from the license file.
-    The license has been set to 'LicenseRef-UnknownLicense'
-    """)
+        spdx_note = (
+            "A license SPDX expression could not be identified from the "
+            "license file. The license has been set to "
+            "'LicenseRef-UnknownLicense'."
+        )
 
-    warning.append(f"""
-    Update your configuration to use PEP 639 format:
-
-        license = "{license}"
-        license-files = ["{license_file}"]
-
-    You should not release your project without resolving this warning.
-
-*******************************************************************************
-""")
     # Warn and finalize PEP 621 license.file coercion. Use `license_files` rather than
     # `license-files` so it's a valid attribute name.
-    console.warning("".join(warning))
+    console.warning_banner(
+        f"'{app_name}' uses PEP 621 `license.file` format",
+        f"""
+            Briefcase now uses PEP 639 format for license definitions.
+
+            PEP 639 requires the definition of both `license` and
+            `license-files`. The value for `license.file` will be used to
+            populate the PEP 639 `license-files` setting.
+
+            {spdx_note}
+
+            Update your configuration to use PEP 639 format:
+
+                license = "{license}"
+                license-files = ["{license_file}"]
+
+            You should not release your project without resolving this warning.
+        """,
+    )
     config["license"] = spdx_id
     config["license_files"] = [license_file]
 
@@ -1050,65 +1079,62 @@ def _normalize_pre_pep621_license_config(
     # Attempt to identify the SPDX expression from the text content.
     spdx_id = get_license_from_text(license_text)
 
-    warning = [
-        f"""
-*******************************************************************************
-** {"WARNING: '" + app_name + "' uses pre-PEP 621 `license` format":73} **
-*******************************************************************************
-
-    Briefcase now uses PEP 639 format for license definitions.
-"""
-    ]
     if spdx_id is not None:
         # SPDX identifiable.
         license = spdx_id
-        warning.append(f"""
-    PEP 639 requires the definition of both `license` and `license-files`,
-    and `license` must be a valid SPDX expression. The current value for
-    `license` seems to define a SPDX license of '{spdx_id}'.
-""")
+        spdx_note = (
+            "PEP 639 requires the definition of both `license` and "
+            "`license-files`, and `license` must be a valid SPDX expression. "
+            "The current value for `license` seems to define a SPDX license "
+            f"of '{spdx_id}'."
+        )
     else:
         # SPDX not identifiable.
         spdx_id = "<SPDX expression>"
         license = "LicenseRef-UnknownLicense"
-        warning.append(f"""
-    PEP 639 requires the definition of both `license` and `license-files`.
-    Briefcase cannot determine the current license for '{app_name}' based
-    on the value of `license`. A value of 'LicenseRef-UnknownLicense' will
-    be used.
-""")
+        spdx_note = (
+            "PEP 639 requires the definition of both `license` and "
+            "`license-files`. Briefcase cannot determine the current license "
+            f"for '{app_name}' based on the value of `license`. A value of "
+            "'LicenseRef-UnknownLicense' will be used."
+        )
 
     # Write the license text to a file under the build directory so it can
     # be referenced as a real path in license-files.
     tmp_license_file = _write_temp_license(base_path, app_name, license_text)
     if tmp_license_file:
         license_files = [tmp_license_file]
-        warning.append("""
-    The contents of `license` will be used as the contents of the license
-    file. This may not be correct, and should be verified.
-""")
+        file_note = (
+            "The contents of `license` will be used as the contents of the "
+            "license file. This may not be correct, and should be verified."
+        )
     else:
         license_files = []
-        warning.append("""
-    Your project will not have a value for `license-files`. This will
-    cause problems packaging for some platforms.
-""")
-
-    warning.append(f"""
-    Update your configuration to put the full license text in a file and use
-    PEP 639 format for the license definition:
-
-        license = "{spdx_id}"
-        license-files = ["LICENSE"]
-
-    You should not release your project without resolving this warning.
-
-*******************************************************************************
-""")
+        file_note = (
+            "Your project will not have a value for `license-files`. This will "
+            "cause problems packaging for some platforms."
+        )
 
     # Warn and finalize pre-PEP 621 license coercion. Use `license_files` rather than
     # `license-files` so it's a valid attribute name.
-    console.warning("".join(warning))
+    console.warning_banner(
+        f"'{app_name}' uses pre-PEP 621 `license` format",
+        f"""
+            Briefcase now uses PEP 639 format for license definitions.
+
+            {spdx_note}
+
+            {file_note}
+
+            Update your configuration to put the full license text in a file
+            and use PEP 639 format for the license definition:
+
+                license = "{spdx_id}"
+                license-files = ["LICENSE"]
+
+            You should not release your project without resolving this warning.
+        """,
+    )
     config["license"] = license
     config["license_files"] = license_files
 
@@ -1450,6 +1476,21 @@ def parse_config(config_file: Path, platform, output_format, console):
 
         # Normalize license fields to PEP 639 representation.
         normalize_license_config(config, app_name, base_path, console)
+
+        # Warn if the description is too long for some packaging formats.
+        description = config.get("description")
+        if isinstance(description, str) and len(description) > 80:
+            console.warning_banner(
+                "Application description is too long",
+                f"""
+                    The description for {app_name!r} is {len(description)}
+                    characters long. Briefcase recommends a description of no
+                    more than 80 characters; longer descriptions may be
+                    truncated when packaging for some platforms.
+
+                    Move any detailed text into the `long_description` field.
+                """,
+            )
 
         # Construct a configuration object, and add it to the list
         # of configurations that are being handled.

@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 import re
-import sys
+import tomllib
 from functools import cached_property, partial
 from pathlib import Path
 from shutil import copy2, copytree
@@ -10,17 +10,12 @@ from urllib.parse import urlparse
 
 from packaging.utils import canonicalize_name
 
+from briefcase.bootstraps import EmptyBootstrap
+from briefcase.config import APP_NAME_SPEC, make_class_name, validate_url
+from briefcase.exceptions import BriefcaseCommandError
+
 from ..config import get_license_from_text, is_valid_app_name
 from .new import LICENSE_OPTIONS, NewCommand, parse_project_overrides
-
-if sys.version_info >= (3, 11):  # pragma: no-cover-if-lt-py311
-    import tomllib
-else:  # pragma: no-cover-if-gte-py311
-    import tomli as tomllib
-
-from briefcase.bootstraps import EmptyBootstrap
-from briefcase.config import make_class_name, validate_url
-from briefcase.exceptions import BriefcaseCommandError
 
 
 class ConvertCommand(NewCommand):
@@ -108,31 +103,40 @@ class ConvertCommand(NewCommand):
         """
         intro = (
             "We need a name that can serve as a machine-readable Python package name "
-            "for your application. This name must be PEP508-compliant - that means the "
-            "name may only contain letters, numbers, hyphens and underscores; it can't "
-            "contain spaces or punctuation, and it can't start with a hyphen or "
-            "underscore."
+            f"for your application. {APP_NAME_SPEC}"
         )
 
         default = "hello-world"
-        if (
-            "name" in self.pep621_data
-            and is_valid_app_name(self.pep621_data["name"])
-            and override_value is None
-        ):
-            app_name = canonicalize_name(self.pep621_data["name"])
+
+        pep621_name = self.pep621_data.get("name")
+        if pep621_name and is_valid_app_name(pep621_name) and override_value is None:
+            # PEP621 name is usable as-is (e.g., "foobar", "foo-bar")
             self.console.divider(title="App name")
             self.console.prompt()
             self.console.prompt(
-                f"Using value from PEP621 formatted pyproject.toml {app_name!r}"
+                f"Using value from PEP621 formatted pyproject.toml {pep621_name!r}"
             )
-            return app_name
-
-        if is_valid_app_name(self.base_path.name):  # Directory name is normalised
-            default = canonicalize_name(self.base_path.name)
+            return pep621_name
+        elif pep621_name and is_valid_app_name(
+            canonicalized_name := canonicalize_name(pep621_name)
+        ):
+            # Canonicalized PEP621 name is valid
+            # (e.g., "test.name" -> "test-name", "test-app_name" -> "test-app-name")
+            intro += (
+                "\n\nBased on the project name from your PEP621 formatted "
+                f"pyproject.toml, we suggest an app name of '{canonicalized_name}', "
+                "but you can use another name if you want."
+            )
+            default = canonicalized_name
+        elif is_valid_app_name(
+            canonicalized_name := canonicalize_name(self.base_path.name)
+        ):
+            # Canonicalized project name isn't valid
+            # Fall back to canonicalized directory name
+            default = canonicalized_name
             intro += (
                 "\n\n"
-                f"Based on your PEP508 formatted directory name, we suggest an "
+                f"Based on your canonicalized directory name, we suggest an "
                 f"app name of '{default}', but you can use another name if you want."
             )
 
@@ -492,22 +496,22 @@ class ConvertCommand(NewCommand):
         # otherwise check the license file
         if "text" in self.pep621_data.get("license", {}):
             default = get_license_from_text(
-                self.pep621_data["license"]["text"], default="Other"
+                self.pep621_data["license"]["text"], default="LicenseRef-Other"
             )
             default_source = "the PEP621 formatted pyproject.toml"
         elif "file" in self.pep621_data.get("license", {}):
             license_text = (
                 self.base_path / self.pep621_data["license"]["file"]
             ).read_text(encoding="utf-8")
-            default = get_license_from_text(license_text, default="Other")
+            default = get_license_from_text(license_text, default="LicenseRef-Other")
             default_source = "the license file"
         elif (self.base_path / "LICENSE").exists():
             license_text = (self.base_path / "LICENSE").read_text(encoding="utf-8")
-            default = get_license_from_text(license_text, default="Other")
+            default = get_license_from_text(license_text, default="LicenseRef-Other")
             default_source = "the license file"
         elif (self.base_path / "LICENCE").exists():
             license_text = (self.base_path / "LICENCE").read_text(encoding="utf-8")
-            default = get_license_from_text(license_text, default="Other")
+            default = get_license_from_text(license_text, default="LicenseRef-Other")
             default_source = "the license file"
         else:
             return None, intro
@@ -670,6 +674,7 @@ class ConvertCommand(NewCommand):
         tmp_path: Path,
         template: str | None = None,
         template_branch: str | None = None,
+        template_hash: str | None = None,
         project_overrides: dict[str, str] | None = None,
         **options,
     ) -> None:
@@ -680,6 +685,9 @@ class ConvertCommand(NewCommand):
             cookiecutter.
         :param template: The cookiecutter template to use.
         :param template_branch: The git branch that the template should use.
+        :param template_hash: The expected commit hash of the template's resolved
+            branch head. Only meaningful together with `template`/`template_branch`;
+            the default template is always verified without needing this.
         """
         self.console.prompt()
         self.console.prompt("Let's setup an existing project as a Briefcase app!")
@@ -704,12 +712,22 @@ class ConvertCommand(NewCommand):
             prefix=context["app_name"],
         )
 
+        # If a template hash has been provided, use it. Use the command's
+        # template hash if there's no template or branch override.
+        if template_hash:
+            resolved_hash = template_hash
+        elif template is None and template_branch is None:
+            resolved_hash = self.template_hash
+        else:
+            resolved_hash = None
+
         # Create the project files
         self.generate_template(
-            template=(template or "https://github.com/beeware/briefcase-template"),
+            template=template or self.template_url,
             branch=template_branch,
             output_path=tmp_path,
             extra_context=context,
+            template_hash=resolved_hash,
         )
 
         project_dir = tmp_path / context["app_name"]
@@ -750,6 +768,7 @@ To run your application, type:
         self,
         template: str | None = None,
         template_branch: str | None = None,
+        template_hash: str | None = None,
         project_overrides: list[str] | None = None,
         **options,
     ):
@@ -766,6 +785,7 @@ To run your application, type:
                 tmp_path=tmp_path,
                 template=template,
                 template_branch=template_branch,
+                template_hash=template_hash,
                 project_overrides=parse_project_overrides(project_overrides),
                 **options,
             )

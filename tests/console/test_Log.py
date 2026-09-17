@@ -162,6 +162,19 @@ def test_capture_stacktrace_for_briefcaseerror(console, skip_logfile):
     assert console.skip_log is skip_logfile
 
 
+def test_capture_stacktrace_no_exception(console):
+    """capture_stacktrace is a no-op when there is no active exception."""
+    console.capture_stacktrace()
+
+    assert console.stacktraces == []
+
+
+def test_close_is_idempotent(console):
+    """Close() can be called more than once."""
+    console.close()
+    console.close()
+
+
 def test_save_log_to_file_do_not_log(console, command):
     """Nothing is done to save log if no command or --log wasn't passed."""
     console.save_log_to_file(command=None)
@@ -408,14 +421,11 @@ def test_save_log_to_file_fail_to_make_logs_dir(
     console.print("a line of output")
     console.save_log_to_file(command=command)
 
-    assert capsys.readouterr().out == "\n".join(
-        [
-            "a line of output",
-            "",
-            "Failed to save log to /asdf/log_filepath: directory creation denied",
-            "",
-            "",
-        ]
+    assert capsys.readouterr().out == (
+        "a line of output\n"
+        "\n"
+        "Failed to save log to /asdf/log_filepath: directory creation denied\n"
+        "\n"
     )
 
 
@@ -471,47 +481,32 @@ def test_log_with_context(console, capsys):
         console.info("Pop back to deep")
     console.info("Pop back to normal")
 
-    assert capsys.readouterr().out == "\n".join(
-        [
-            "this is info output",
-            "",
-            "Entering Deep context...",
-            (
-                "Deep|"
-                " --------------------------------------------------------------------"
-            ),
-            "Deep| this is deep context",
-            "Deep| ",
-            "Deep| [prefix] prefixed deep context",
-            "Deep| ",
-            "Deep| this is deep debug",
-            "Deep| ",
-            "Deep| Entering Really Deep context...",
-            (
-                "Really Deep|"
-                " -------------------------------------------------------------"
-            ),
-            "Really Deep| this is really deep context",
-            "Really Deep| ",
-            "Really Deep| [prefix2] prefixed really deep context",
-            "Really Deep| ",
-            "Really Deep| this is really deep debug",
-            (
-                "Really Deep|"
-                " -------------------------------------------------------------"
-            ),
-            "Deep| Leaving Really Deep context.",
-            "Deep| ",
-            "Deep| Pop back to deep",
-            (
-                "Deep|"
-                " --------------------------------------------------------------------"
-            ),
-            "Leaving Deep context.",
-            "",
-            "Pop back to normal",
-            "",
-        ]
+    assert capsys.readouterr().out == (
+        "this is info output\n"
+        "\n"
+        "Entering Deep context...\n"
+        "Deep| --------------------------------------------------------------------\n"
+        "Deep| this is deep context\n"
+        "Deep| \n"
+        "Deep| [prefix] prefixed deep context\n"
+        "Deep| \n"
+        "Deep| this is deep debug\n"
+        "Deep| \n"
+        "Deep| Entering Really Deep context...\n"
+        "Really Deep| -------------------------------------------------------------\n"
+        "Really Deep| this is really deep context\n"
+        "Really Deep| \n"
+        "Really Deep| [prefix2] prefixed really deep context\n"
+        "Really Deep| \n"
+        "Really Deep| this is really deep debug\n"
+        "Really Deep| -------------------------------------------------------------\n"
+        "Deep| Leaving Really Deep context.\n"
+        "Deep| \n"
+        "Deep| Pop back to deep\n"
+        "Deep| --------------------------------------------------------------------\n"
+        "Leaving Deep context.\n"
+        "\n"
+        "Pop back to normal\n"
     )
 
 
@@ -528,25 +523,17 @@ def test_log_error_with_context(console, capsys):
     except ValueError:
         console.info("this is cleanup")
 
-    assert capsys.readouterr().out == "\n".join(
-        [
-            "this is info output",
-            "",
-            "Entering Deep context...",
-            (
-                "Deep|"
-                " --------------------------------------------------------------------"
-            ),
-            "Deep| this is deep context",
-            (
-                "Deep|"
-                " --------------------------------------------------------------------"
-            ),
-            "Leaving Deep context.",
-            "",
-            "this is cleanup",
-            "",
-        ]
+    assert capsys.readouterr().out == (
+        "this is info output\n"
+        "\n"
+        "Entering Deep context...\n"
+        "Deep| --------------------------------------------------------------------\n"
+        "Deep| this is deep context\n"
+        "Deep| --------------------------------------------------------------------\n"
+        "Leaving Deep context.\n"
+        "\n"
+        "this is cleanup\n"
+        ""
     )
 
 

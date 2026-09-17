@@ -28,6 +28,7 @@ def test_valid_bundle(bundle):
         "com.hello_world",  # underscore
         "com.hello,world",  # comma
         "com.hello world!",  # exclamation point
+        "com.example\n",  # trailing newline
     ],
 )
 def test_invalid_bundle(bundle):
