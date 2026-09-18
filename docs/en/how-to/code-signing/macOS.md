@@ -105,6 +105,10 @@ Congratulations! You've just successfully installed the Developer ID Application
 
 The *specific type* of the certificate you have just created is quite precious, and you should make sure to keep it safe. A single Developer ID Application Certificate can be used to [sign, notarize and distribute multiple applications](https://developer.apple.com/forums/thread/657993) outside of the Mac App store, which is why a [very limited number of them](https://help.apple.com/xcode/mac/current/#/dev3a05256b8) can be created on a particular Developer Account. You should consider making a backup copy, which will require you to export the certificate together with the associated private key from the Keychain. The procedure for doing so is [documented by Apple](https://support.apple.com/guide/keychain-access/import-and-export-keychain-items-kyca35961/mac).
 
+/// note | Issue: "certificate is not trusted"
+
+If instead of `This certificate is valid` you see `"Developer ID Application: [...]" certificate is not trusted` in red, it most likely means the **Developer ID** intermediate certificate in your system, needed to validate your application certificate, is expired. To fix the issue, you need to either upgrade your system to the latest version (recommended), or download the latest [Developer ID - G2 certificate](https://www.apple.com/certificateauthority/DeveloperIDG2CA.cer). Other up-to-date certificates can also be downloaded from [Apple PKI](https://www.apple.com/certificateauthority) if needed.
+
 ///
 
 ## Other types of Code Signing identities
