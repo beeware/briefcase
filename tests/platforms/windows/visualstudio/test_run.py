@@ -27,7 +27,15 @@ def run_command(dummy_console, tmp_path):
     return command
 
 
-def test_run_app(run_command, first_app_config, tmp_path):
+@pytest.fixture
+def startup_log(tmp_path):
+    """The startup diagnostics log location passed to every app."""
+    return {
+        "BRIEFCASE_STARTUP_LOG": str(tmp_path / "base_path/logs/first-app.startup.log")
+    }
+
+
+def test_run_app(run_command, first_app_config, tmp_path, startup_log):
     """A windows Visual Studio project app can be started."""
 
     # Set up the log streamer to return a known stream with a good returncode
@@ -48,6 +56,7 @@ def test_run_app(run_command, first_app_config, tmp_path):
         stdout=subprocess.PIPE,
         stderr=subprocess.STDOUT,
         bufsize=1,
+        env=startup_log,
     )
 
     # The streamer was started
@@ -58,7 +67,7 @@ def test_run_app(run_command, first_app_config, tmp_path):
     )
 
 
-def test_run_app_with_args(run_command, first_app_config, tmp_path):
+def test_run_app_with_args(run_command, first_app_config, tmp_path, startup_log):
     """A windows Visual Studio project app can be started with args."""
 
     # Set up the log streamer to return a known stream with a good returncode
@@ -85,6 +94,7 @@ def test_run_app_with_args(run_command, first_app_config, tmp_path):
         stdout=subprocess.PIPE,
         stderr=subprocess.STDOUT,
         bufsize=1,
+        env=startup_log,
     )
 
     # The streamer was started
@@ -95,7 +105,7 @@ def test_run_app_with_args(run_command, first_app_config, tmp_path):
     )
 
 
-def test_run_app_test_mode(run_command, first_app_config, tmp_path):
+def test_run_app_test_mode(run_command, first_app_config, tmp_path, startup_log):
     """A windows Visual Studio project app can be started in test mode."""
     first_app_config.test_mode = True
 
@@ -118,7 +128,7 @@ def test_run_app_test_mode(run_command, first_app_config, tmp_path):
         stdout=subprocess.PIPE,
         stderr=subprocess.STDOUT,
         bufsize=1,
-        env={"BRIEFCASE_MAIN_MODULE": "tests.first_app"},
+        env={"BRIEFCASE_MAIN_MODULE": "tests.first_app", **startup_log},
     )
 
     # The streamer was started
@@ -129,7 +139,12 @@ def test_run_app_test_mode(run_command, first_app_config, tmp_path):
     )
 
 
-def test_run_app_test_mode_with_args(run_command, first_app_config, tmp_path):
+def test_run_app_test_mode_with_args(
+    run_command,
+    first_app_config,
+    tmp_path,
+    startup_log,
+):
     """A windows Visual Studio project app can be started in test mode with args."""
     first_app_config.test_mode = True
 
@@ -157,7 +172,7 @@ def test_run_app_test_mode_with_args(run_command, first_app_config, tmp_path):
         stdout=subprocess.PIPE,
         stderr=subprocess.STDOUT,
         bufsize=1,
-        env={"BRIEFCASE_MAIN_MODULE": "tests.first_app"},
+        env={"BRIEFCASE_MAIN_MODULE": "tests.first_app", **startup_log},
     )
 
     # The streamer was started
@@ -168,7 +183,13 @@ def test_run_app_test_mode_with_args(run_command, first_app_config, tmp_path):
     )
 
 
-def test_run_app_debugger(run_command, first_app_config, tmp_path, dummy_debugger):
+def test_run_app_debugger(
+    run_command,
+    first_app_config,
+    tmp_path,
+    dummy_debugger,
+    startup_log,
+):
     """A windows Visual Studio project app can be started in debug mode."""
     first_app_config.debugger = dummy_debugger
     first_app_config.debugger_host = "somehost"
@@ -206,7 +227,8 @@ def test_run_app_debugger(run_command, first_app_config, tmp_path, dummy_debugge
                     },
                     "app_packages_path_mappings": None,
                 }
-            )
+            ),
+            **startup_log,
         },
     )
 
