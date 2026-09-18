@@ -446,6 +446,37 @@ files that Briefcase can convert and merge automatically.
 class WindowsRunCommand(RunCommand):
     supports_debugger = True
 
+    def _diagnostics_path(self, app: FinalizedAppConfig) -> Path:
+        """The path of the file used to capture app startup diagnostics.
+
+        A GUI app on Windows is built against the GUI subsystem, so it has no console
+        attached, and its stdout/stderr never reach the pipe Briefcase is streaming.
+        This means a failure during interpreter or GUI toolkit startup produces no
+        output at all. This file gives the app somewhere it can record its own startup
+        progress, so that such a failure can be diagnosed.
+
+        :param app: The app being run
+        :returns: The path of the diagnostics file
+        """
+        return self.base_path / self.console.LOG_DIR / f"{app.app_name}.startup.log"
+
+    def _dump_diagnostics(self, app: FinalizedAppConfig):
+        """Report the contents of the app's startup diagnostics file, if any."""
+        path = self._diagnostics_path(app)
+        try:
+            content = path.read_text(
+                encoding="utf-8",
+                errors="backslashreplace",
+            ).strip()
+        except OSError as e:
+            self.console.warning(f"Unable to read app startup diagnostics: {e}")
+            return
+
+        if content:
+            self.console.error()
+            self.console.error(f"App startup diagnostics ({path}):")
+            self.console.error(content)
+
     def run_app(
         self,
         app: FinalizedAppConfig,
@@ -460,37 +491,54 @@ class WindowsRunCommand(RunCommand):
         # Set up the log stream
         kwargs = self._prepare_app_kwargs(app=app)
 
-        # Console apps must operate in non-streaming mode so that console input can
-        # be handled correctly. However, if we're in test mode, we *must* stream so
-        # that we can see the test exit sentinel
-        if app.console_app and not app.test_mode:
-            self.console.info("=" * 75)
-            self.tools.subprocess.run(
-                [self.binary_path(app), *passthrough],
-                cwd=self.tools.home_path,
-                encoding="UTF-8",
-                bufsize=1,
-                stream_output=False,
-                **kwargs,
-            )
-        else:
-            # Start the app in a way that lets us stream the logs
-            app_popen = self.tools.subprocess.Popen(
-                [self.binary_path(app), *passthrough],
-                cwd=self.tools.home_path,
-                encoding="UTF-8",
-                stdout=subprocess.PIPE,
-                stderr=subprocess.STDOUT,
-                bufsize=1,
-                **kwargs,
-            )
+        # A GUI app on Windows has no console attached, so any failure during
+        # interpreter or GUI toolkit startup is silent. Clear out any diagnostics from
+        # a previous run, so that anything reported is known to be from *this* run.
+        diagnostics_path = self._diagnostics_path(app)
+        diagnostics_path.parent.mkdir(parents=True, exist_ok=True)
+        diagnostics_path.unlink(missing_ok=True)
 
-            # Start streaming logs for the app.
-            self._stream_app_logs(
-                app,
-                popen=app_popen,
-                clean_output=False,
-            )
+        # Tell the app where it can write startup diagnostics of its own. A GUI app
+        # cannot rely on stdout/stderr reaching Briefcase, but it *can* write a file.
+        kwargs.setdefault("env", {})["BRIEFCASE_STARTUP_LOG"] = str(diagnostics_path)
+
+        try:
+            # Console apps must operate in non-streaming mode so that console input can
+            # be handled correctly. However, if we're in test mode, we *must* stream so
+            # that we can see the test exit sentinel
+            if app.console_app and not app.test_mode:
+                self.console.info("=" * 75)
+                self.tools.subprocess.run(
+                    [self.binary_path(app), *passthrough],
+                    cwd=self.tools.home_path,
+                    encoding="UTF-8",
+                    bufsize=1,
+                    stream_output=False,
+                    **kwargs,
+                )
+            else:
+                # Start the app in a way that lets us stream the logs
+                app_popen = self.tools.subprocess.Popen(
+                    [self.binary_path(app), *passthrough],
+                    cwd=self.tools.home_path,
+                    encoding="UTF-8",
+                    stdout=subprocess.PIPE,
+                    stderr=subprocess.STDOUT,
+                    bufsize=1,
+                    **kwargs,
+                )
+
+                # Start streaming logs for the app.
+                self._stream_app_logs(
+                    app,
+                    popen=app_popen,
+                    clean_output=False,
+                )
+        except BriefcaseCommandError:
+            # The app didn't run successfully. A GUI app produces no streamed output,
+            # so surface anything the app was able to record about its own startup.
+            self._dump_diagnostics(app)
+            raise
 
 
 class WindowsPackageCommand(PackageCommand):

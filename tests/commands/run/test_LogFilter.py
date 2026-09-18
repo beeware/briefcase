@@ -1,3 +1,4 @@
+import subprocess
 from unittest import mock
 
 import pytest
@@ -259,3 +260,35 @@ def test_log_filter(
         # processed
         assert log_filter.returncode == returncode
         assert terminated
+
+
+@pytest.mark.parametrize(
+    ("wait_side_effect", "expected_exit_timeout"),
+    [
+        # The app exits promptly after reporting its exit code.
+        (None, False),
+        # The app is still running 3s after reporting its exit code.
+        (subprocess.TimeoutExpired(cmd="app", timeout=3), True),
+    ],
+)
+def test_exit_timeout(wait_side_effect, expected_exit_timeout):
+    """Whether the app exited after reporting its exit code is recorded."""
+    popen = mock.MagicMock()
+    popen.wait.side_effect = wait_side_effect
+
+    log_filter = LogFilter(
+        popen,
+        clean_filter=None,
+        clean_output=True,
+        exit_filter=LogFilter.test_filter(LogFilter.DEFAULT_EXIT_REGEX),
+    )
+
+    # Feed the app's exit sentinel through the filter; this stops streaming.
+    with pytest.raises(StopStreaming):
+        list(log_filter(">>>>>>>>>> EXIT 0 <<<<<<<<<<"))
+
+    # The exit code was extracted from the app's output...
+    assert log_filter.returncode == 0
+    # ...and whether the app was still running was recorded.
+    assert log_filter.exit_timeout is expected_exit_timeout
+    popen.wait.assert_called_once_with(timeout=3)

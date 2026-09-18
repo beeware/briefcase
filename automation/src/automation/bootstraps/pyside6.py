@@ -1,4 +1,8 @@
-from automation.bootstraps import BRIEFCASE_EXIT_SUCCESS_SIGNAL, EXIT_SUCCESS_NOTIFY
+from automation.bootstraps import (
+    BRIEFCASE_EXIT_SUCCESS_SIGNAL,
+    EXIT_SUCCESS_NOTIFY,
+    STARTUP_DIAGNOSTICS,
+)
 from briefcase.bootstraps import PySide6GuiBootstrap
 
 
@@ -7,9 +11,14 @@ class PySide6AutomationBootstrap(PySide6GuiBootstrap):
         return f"""\
 import importlib.metadata
 import sys
+{STARTUP_DIAGNOSTICS}
+checkpoint("interpreter started")
+probe_stdout()
 
 from PySide6 import QtWidgets
 from PySide6.QtCore import QTimer
+
+checkpoint("PySide6 imported")
 
 
 class {{{{ cookiecutter.class_name }}}}(QtWidgets.QMainWindow):
@@ -20,12 +29,18 @@ class {{{{ cookiecutter.class_name }}}}(QtWidgets.QMainWindow):
     def init_ui(self):
         self.setWindowTitle("{{{{ cookiecutter.app_name }}}}")
         self.show()
+        checkpoint("main window shown")
 
         QTimer.singleShot(2000, self.exit_app)
 
     def exit_app(self):
+        checkpoint("exit timer fired")
+        # Probe again at the point the exit sentinels are emitted; the state of
+        # stdout here is what determines whether Briefcase can see them.
+        probe_stdout()
         print("{EXIT_SUCCESS_NOTIFY}")
         print("{BRIEFCASE_EXIT_SUCCESS_SIGNAL}")
+        checkpoint("exit sentinels printed")
         QtWidgets.QApplication.quit()
 
 
@@ -46,8 +61,11 @@ def main():
 
     QtWidgets.QApplication.setApplicationName(metadata["Formal-Name"])
 
+    checkpoint("constructing QApplication")
     app = QtWidgets.QApplication(sys.argv)
+    checkpoint("QApplication constructed")
     main_window = {{{{ cookiecutter.class_name }}}}()
+    checkpoint("entering event loop")
     sys.exit(app.exec())
 """
 
