@@ -3,7 +3,6 @@ from __future__ import annotations
 import re
 import subprocess
 from abc import abstractmethod
-from contextlib import suppress
 from pathlib import Path
 
 from briefcase.config import FinalizedAppConfig
@@ -46,6 +45,10 @@ class LogFilter:
 
         self.recent_history = []
         self.exit_filter = exit_filter
+
+        # Diagnostics for #2969: records whether the app was still running 3s after it
+        # reported its own exit code.
+        self.exit_timeout = False
 
     def __call__(self, line):
         """Filter a single line of a log.
@@ -93,8 +96,13 @@ class LogFilter:
                     # the app to exit immediately and that may result in the app
                     # exiting with a non-zero returncode. Therefore, wait for the app
                     # to close normally before raising StopStreaming.
-                    with suppress(subprocess.TimeoutExpired):
+                    try:
                         self.log_popen.wait(timeout=3)
+                    except subprocess.TimeoutExpired:
+                        # Diagnostics for #2969. The app reported an exit code, but
+                        # hasn't exited within the grace period; it is about to be
+                        # terminated, which will mask its real exit status.
+                        self.exit_timeout = True
                     raise StopStreaming()
 
         # Return the display line
@@ -209,6 +217,22 @@ class RunAppMixin:
                 # If we're monitoring an actual app (not just a log stream),
                 # and the app didn't exit cleanly, surface the error to the user.
                 if (status_code := popen.poll()) != 0:
+                    # Diagnostics for #2969. The exit status reported by the process
+                    # is the *only* signal used here; any exit code the app reported
+                    # in its output is ignored. Report both, plus how much output was
+                    # actually seen, so that a disagreement between them is visible.
+                    self.console.warning(
+                        f"App exit status was {status_code}, but the app's own output "
+                        f"reported exit code {log_filter.returncode}; "
+                        f"{len(log_filter.recent_history)} line(s) of app output were "
+                        f"seen while streaming"
+                        + (
+                            ", and the app was still running 3s after reporting its "
+                            "exit code."
+                            if log_filter.exit_timeout
+                            else "."
+                        )
+                    )
                     raise BriefcaseCommandError(
                         f"Problem running app {app.app_name} "
                         f"(return code {status_code})."

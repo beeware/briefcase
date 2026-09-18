@@ -829,6 +829,15 @@ class Subprocess(Tool):
             context in logging messages.
         :param popen_process: The Popen instance to clean up.
         """
+        # Diagnostics for #2969. On Windows, terminate() is TerminateProcess(handle, 1),
+        # so terminating a process that is still running is indistinguishable from that
+        # process exiting with status 1 of its own accord. Record which case this is.
+        if popen_process.poll() is None:
+            self.tools.console.warning(
+                f"{label} was still running at cleanup; terminating it. On Windows "
+                f"this will report an exit status of 1."
+            )
+
         popen_process.terminate()
         try:
             popen_process.wait(timeout=3)

@@ -293,6 +293,36 @@ def test_run_app_failure(run_command, first_app):
     assert filter_func.exit_filter.regex.pattern == LogFilter.DEFAULT_EXIT_REGEX
 
 
+def test_run_app_failure_diagnostics(run_command, first_app, capsys):
+    """A disagreement between the app's exit status and its output is reported."""
+    popen = mock.MagicMock()
+    popen.poll = mock.MagicMock(return_value=1)
+    run_command.tools.subprocess.stream_output = mock.MagicMock()
+
+    # The app reported a successful exit in its output, but was still running 3s
+    # later, and the process exit status disagrees with the app's own report.
+    def stream_output(label, popen_process, filter_func, **kwargs):
+        filter_func.returncode = 0
+        filter_func.exit_timeout = True
+        filter_func.recent_history = ["line 1", "line 2"]
+
+    run_command.tools.subprocess.stream_output.side_effect = stream_output
+
+    with pytest.raises(
+        BriefcaseCommandError,
+        match=r"Problem running app first \(return code 1\)\.",
+    ):
+        run_command._stream_app_logs(first_app, popen=popen)
+
+    # Both exit codes, the volume of output seen, and the fact that the app
+    # outlived its own exit report are surfaced to the user.
+    output = capsys.readouterr().out
+    assert "App exit status was 1" in output
+    assert "reported exit code 0" in output
+    assert "2 line(s) of app output" in output
+    assert "still running 3s after reporting its exit code" in output
+
+
 def test_run_app_log_stream_stream_failure(run_command, first_app):
     """If a log stream returns an error code, the log filter requires it is ignored."""
     popen = mock.MagicMock()
