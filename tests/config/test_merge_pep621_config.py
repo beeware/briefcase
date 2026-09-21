@@ -3,6 +3,7 @@ import warnings
 import pytest
 
 from briefcase.config import merge_pep621_config
+from briefcase.exceptions import BriefcaseConfigError
 
 
 def test_empty():
@@ -66,7 +67,7 @@ def test_invalid_pep621_project_name():
     "An invalid PEP 621 project name is rejected."
     briefcase_config = {}
 
-    with pytest.raises(ValueError, match="name is invalid"):
+    with pytest.raises(BriefcaseConfigError, match="PEP 621 project name"):
         merge_pep621_config(briefcase_config, {"name": "Not A Valid Name"})
 
 

@@ -1318,10 +1318,15 @@ def merge_pep621_config(global_config, pep621_config):
                 stacklevel=2,
             )
     elif project_name := pep621_config.get("name"):
-        global_config["project_name"] = canonicalize_name(
-            project_name,
-            validate=True,
-        )
+        try:
+            global_config["project_name"] = canonicalize_name(
+                project_name,
+                validate=True,
+            )
+        except InvalidName:
+            raise BriefcaseConfigError(
+                f"The PEP 621 project name {project_name!r} is invalid."
+            ) from None
 
     # Keys that map directly
     maybe_update("description", "description")
