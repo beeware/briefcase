@@ -40,6 +40,55 @@ def test_unsupported_host_os(create_command, host_os):
 
 
 @pytest.mark.parametrize(
+    ("version", "revision", "expected"),
+    [
+        # Numerical revision
+        ((3, 13, 5), 5, "3.13/iOS/Python-3.13-iOS-support.b5.tar.gz"),
+        ((3, 14, 5), 5, "3.14/iOS/Python-3.14-iOS-support.b5.tar.gz"),
+        # Text revision
+        ((3, 13, 5), "5", "3.13/iOS/Python-3.13-iOS-support.b5.tar.gz"),
+        ((3, 14, 5), "5", "3.14/iOS/Python-3.14-iOS-support.b5.tar.gz"),
+        # Off-label revisions
+        ((3, 13, 5), "x123", "3.13/iOS/Python-3.13-iOS-support.bx123.tar.gz"),
+        ((3, 14, 5), "x123", "3.14/iOS/Python-3.14-iOS-support.bx123.tar.gz"),
+    ],
+)
+def test_legacy_support_package_url(create_command, version, revision, expected):
+    """A valid support package URL is created for a support revision."""
+    create_command.tools.sys.version_info = version
+    assert create_command.support_package_url(revision) == (
+        f"https://briefcase-support.s3.amazonaws.com/python/{expected}"
+    )
+
+
+@pytest.mark.parametrize(
+    ("version", "revision", "expected"),
+    [
+        # Numerical revision
+        ((3, 15, 5), 5, "3.15.5/python-3.15.5"),
+        ((3, 16, 6), 5, "3.16.5/python-3.16.5"),
+        # Text revision
+        ((3, 15, 5), "5", "3.15.5/python-3.15.5"),
+        ((3, 16, 5), "5", "3.16.5/python-3.16.5"),
+        # Pre-release revision
+        ((3, 15, 0, "alpha", 4), "0a4", "3.15.0/python-3.15.0a4"),
+        ((3, 15, 0, "beta", 3), "0b3", "3.15.0/python-3.15.0b3"),
+        ((3, 15, 0, "candidate", 2), "0rc2", "3.15.0/python-3.15.0rc2"),
+        # The template revision supersedes the minor from the actual Python
+        ((3, 15, 3), "5", "3.15.5/python-3.15.5"),
+        ((3, 15, 0, "beta", 2), "0rc2", "3.15.0/python-3.15.0rc2"),
+    ],
+)
+def test_support_package_url(create_command, version, revision, expected):
+    """A valid support package URL is created for a support revision."""
+    create_command.tools.sys.version_info = version
+    assert (
+        create_command.support_package_url(revision)
+        == f"https://www.python.org/ftp/python/{expected}-iOS-XCframework.tar.gz"
+    )
+
+
+@pytest.mark.parametrize(
     ("platform", "arch", "venv_platform", "platform_path"),
     [
         (

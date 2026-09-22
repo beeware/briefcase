@@ -52,6 +52,49 @@ def test_create(venv, mock_tools, base_path, recreate):
     )
 
 
+
+@pytest.mark.parametrize("recreate", [True, False])
+@pytest.mark.parametrize(
+    ("platform", "abi", "arch"),
+    [
+        ("ios", "iphoneos", "arm64"),
+        ("ios", "iphonesimulator", "arm64"),
+        ("ios", "iphonesimulator", "x86_64"),
+    ],
+)
+def test_create_cross(venv, mock_tools, base_path, platform, abi, arch, recreate):
+    """A Python cross-platform venv can be created."""
+    venv.platform = abi
+    venv.arch = arch
+
+    # Mock a side effect of calling run that creates the pyvenv.cfg marker file.
+    def mock_run(cmd, *args, **kwargs):
+        if cmd[:3] == [sys.executable, "-m", "venv"] or cmd[:3] == [sys.executable, "-m", "xvenv"]:
+            Path(cmd[-1]).mkdir(parents=True)
+            (Path(cmd[-1]) / "pyvenv.cfg").write_text("", encoding="UTF-8")
+
+    mock_tools.subprocess.run.side_effect = mock_run
+
+    # venv does not initially exist
+    assert not venv.exists()
+
+    # venv was created, and now exists.
+    assert venv.prepare(recreate=recreate)
+    assert venv.exists()
+
+    mock_tools.subprocess.run.assert_called_once_with(
+        [
+            sys.executable,
+            "-m",
+            "xvenv",
+            "--platform", platform, "--arch", f"{arch}-{abi}",
+            "--without-pip",
+            base_path / ".briefcase/first-app/venv-myenv",
+        ],
+        check=True,
+    )
+
+
 def test_creates_parent_directory(first_app, mock_tools, base_path):
     """Environment parent directories on demand."""
     venv_path = base_path / "nested" / "missing" / "test_venv"
