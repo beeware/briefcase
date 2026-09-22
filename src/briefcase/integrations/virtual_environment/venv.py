@@ -50,13 +50,12 @@ class VenvVirtualEnvironment(VirtualEnvironment):
                 # pip from the environment that is running Briefcase.
                 self.venv_path.parent.mkdir(parents=True, exist_ok=True)
                 if self.platform in {"iphoneos", "iphonesimulator"}:
-                    args = [
-                        "xvenv",
-                        "--platform",
-                        "ios",
-                        "--arch",
-                        f"{self.arch}-{self.platform}",
-                    ]
+                    if self.platform == "iphoneos":
+                        arch = f"arm64-{self.platform}"
+                    else:
+                        arch = f"{self.arch}-{self.platform}"
+
+                    args = ["xvenv", "--platform", "ios", "--arch", arch]
                 else:
                     args = ["venv"]
                 self.tools.subprocess.run(

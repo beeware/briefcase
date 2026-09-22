@@ -55,14 +55,15 @@ def test_create(venv, mock_tools, base_path, recreate):
 
 @pytest.mark.parametrize("recreate", [True, False])
 @pytest.mark.parametrize(
-    ("platform", "abi", "arch"),
+    ("platform", "abi", "arch", "multiarch"),
     [
-        ("ios", "iphoneos", "arm64"),
-        ("ios", "iphonesimulator", "arm64"),
-        ("ios", "iphonesimulator", "x86_64"),
+        ("ios", "iphoneos", "arm64", "arm64-iphoneos"),
+        ("ios", "iphoneos", "x86_64", "arm64-iphoneos"),
+        ("ios", "iphonesimulator", "arm64", "arm64-iphonesimulator"),
+        ("ios", "iphonesimulator", "x86_64", "x86_64-iphonesimulator"),
     ],
 )
-def test_create_cross(venv, mock_tools, base_path, platform, abi, arch, recreate):
+def test_create_cross(venv, mock_tools, base_path, platform, abi, arch, multiarch, recreate):
     """A Python cross-platform venv can be created."""
     venv.platform = abi
     venv.arch = arch
@@ -87,7 +88,10 @@ def test_create_cross(venv, mock_tools, base_path, platform, abi, arch, recreate
             sys.executable,
             "-m",
             "xvenv",
-            "--platform", platform, "--arch", f"{arch}-{abi}",
+            "--platform",
+            platform,
+            "--arch",
+            multiarch,
             "--without-pip",
             base_path / ".briefcase/first-app/venv-myenv",
         ],
