@@ -49,8 +49,17 @@ class VenvVirtualEnvironment(VirtualEnvironment):
                 # Create the venv, but *don't* install pip. We'll use
                 # pip from the environment that is running Briefcase.
                 self.venv_path.parent.mkdir(parents=True, exist_ok=True)
+                if self.platform in {"iphoneos", "iphonesimulator"}:
+                    if self.platform == "iphoneos":
+                        arch = f"arm64-{self.platform}"
+                    else:
+                        arch = f"{self.arch}-{self.platform}"
+
+                    args = ["xvenv", "--platform", "ios", "--arch", arch]
+                else:
+                    args = ["venv"]
                 self.tools.subprocess.run(
-                    [sys.executable, "-m", "venv", "--without-pip", self.venv_path],
+                    [sys.executable, "-m", *args, "--without-pip", self.venv_path],
                     check=True,
                 )
             except subprocess.CalledProcessError as e:
@@ -100,9 +109,5 @@ class VenvVirtualEnvironment(VirtualEnvironment):
         )
         env["VIRTUAL_ENV"] = os.fspath(self.venv_path)
         env.pop("PYTHONHOME", None)
-
-        # Make the environment an iOS cross-build environment
-        if self.platform in {"iphoneos", "iphonesimulator"}:
-            env["PYTHONPATH"] = str(self.platform_path)
 
         return env

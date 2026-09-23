@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import contextlib
 import plistlib
+import re
 import subprocess
 import time
 from collections.abc import Collection
@@ -320,6 +321,19 @@ or:
 class iOSXcodeCreateCommand(iOSXcodePassiveMixin, CreateCommand):
     description = "Create and populate a iOS Xcode project."
     app_template_hash = "sha1:9565386b12ede7bf5581a2dec319111b098ddaea"
+
+    def support_package_url(self, support_revision: str) -> str:
+        """The URL of the support package to use for apps of this type."""
+        # Official CPython iOS support packages are available from 3.15.0b1
+        if self.tools.sys.version_info < (3, 15):  # pramga: no-cover-if-gte-py315
+            return super().support_package_url(support_revision)
+        else:  # pramga: no-cover-if-lt-py315
+            micro = re.match(r"\d+", str(support_revision)).group(0)
+            return (
+                "https://www.python.org/ftp/python/"
+                f"{self.python_version_tag}.{micro}/"
+                f"python-{self.python_version_tag}.{support_revision}-iOS-XCframework.tar.gz"
+            )
 
     def permissions_context(
         self,

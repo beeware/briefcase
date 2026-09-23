@@ -254,7 +254,6 @@ jobs:
       python-version: ${{ startsWith(matrix.runner-os, 'ubuntu') && 'system' || '3.12' }}
       runner-os: ${{ matrix.runner-os }}
       framework: ${{ matrix.framework }}
-      ios-simulator: "iPhone 17e::iOS 26.5"
     strategy:
       fail-fast: false
       matrix:
