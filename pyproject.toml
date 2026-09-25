@@ -70,7 +70,7 @@ dependencies = [
     "pip >= 24.3",
     "setuptools >= 60",
     "wheel >= 0.37",
-    "xbuild >= 0.3.0",
+    "xbuild >= 0.4.0",
     #
     # For the remaining packages: We set the lower version limit to the lowest possible
     # version that satisfies our API needs. If the package uses semver, we set a limit

@@ -408,16 +408,6 @@ class iOSXcodeCreateCommand(iOSXcodePassiveMixin, CreateCommand):
         # Interpret that as the device; interpret all others as simulators.
         if platform == "iOS":
             platform = "iphoneos"
-            platform_path = (
-                self.support_path(app)
-                / "Python.xcframework/ios-arm64/platform-config/arm64-iphoneos"
-            )
-        else:
-            platform_path = (
-                self.support_path(app)
-                / "Python.xcframework/ios-arm64_x86_64-simulator/platform-config"
-                / f"{arch}-iphonesimulator"
-            )
 
         return super().create_app_environment(
             app=app,
@@ -425,7 +415,7 @@ class iOSXcodeCreateCommand(iOSXcodePassiveMixin, CreateCommand):
             arch=arch,
             env_manager=env_manager,
             recreate=recreate,
-            platform_path=platform_path,
+            support_path=self.support_path(app),
         )
 
     def _install_app_requirements(

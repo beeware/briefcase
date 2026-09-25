@@ -133,9 +133,9 @@ def test_update_app_with_support_package(update_command, first_app, tmp_path):
         ("verify-app-template", "first"),
         ("verify-app-tools", "first"),
         ("code", "first", False),
-        ("create-app-env", "first", "Tester", "gothic", "default", True),
         ("cleanup-support", "first"),
         ("support", "first"),
+        ("create-app-env", "first", "Tester", "gothic", "default", True),
         ("cleanup", "first"),
     ]
 
