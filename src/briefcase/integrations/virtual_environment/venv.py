@@ -55,7 +55,15 @@ class VenvVirtualEnvironment(VirtualEnvironment):
                     else:
                         arch = f"{self.arch}-{self.platform}"
 
-                    args = ["xvenv", "--platform", "ios", "--arch", arch]
+                    args = [
+                        "xvenv",
+                        "--platform",
+                        "ios",
+                        "--arch",
+                        arch,
+                        "--archive",
+                        self.support_path,
+                    ]
                 else:
                     args = ["venv"]
                 self.tools.subprocess.run(

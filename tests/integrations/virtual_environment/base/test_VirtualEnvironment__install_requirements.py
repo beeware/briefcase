@@ -42,7 +42,6 @@ def test_install_requirements(mock_tools, mock_venv):
         ],
         check=True,
         encoding="UTF-8",
-        env=None,
     )
 
 
@@ -139,17 +138,16 @@ def test_install_requirements_path_formats(
         + (["-e", requirement] if (editable and allow_editable) else [requirement]),
         check=True,
         encoding="UTF-8",
-        env=None,
     )
 
 
 @pytest.mark.parametrize(
-    ("platform", "arch", "min_os_version", "args", "env"),
+    ("platform", "arch", "min_os_version", "args"),
     [
-        ("macOS", "arm64", None, ["--platform", "macosx_11_0_arm64"], None),
-        ("macOS", "arm64", "12.3", ["--platform", "macosx_12_3_arm64"], None),
-        ("macOS", "x86_64", None, ["--platform", "macosx_11_0_x86_64"], None),
-        ("macOS", "x86_64", "12.3", ["--platform", "macosx_12_3_x86_64"], None),
+        ("macOS", "arm64", None, ["--platform", "macosx_11_0_arm64"]),
+        ("macOS", "arm64", "12.3", ["--platform", "macosx_12_3_arm64"]),
+        ("macOS", "x86_64", None, ["--platform", "macosx_11_0_x86_64"]),
+        ("macOS", "x86_64", "12.3", ["--platform", "macosx_12_3_x86_64"]),
         (
             "iphoneos",
             "arm64",
@@ -160,7 +158,6 @@ def test_install_requirements_path_formats(
                 "--extra-index-url",
                 "https://pypi.anaconda.org/beeware/simple",
             ],
-            {"PYTHONPATH": str(Path("/path/to/support"))},
         ),
         (
             "iphoneos",
@@ -172,7 +169,6 @@ def test_install_requirements_path_formats(
                 "--extra-index-url",
                 "https://pypi.anaconda.org/beeware/simple",
             ],
-            {"PYTHONPATH": str(Path("/path/to/support"))},
         ),
         (
             "iphonesimulator",
@@ -184,7 +180,6 @@ def test_install_requirements_path_formats(
                 "--extra-index-url",
                 "https://pypi.anaconda.org/beeware/simple",
             ],
-            {"PYTHONPATH": str(Path("/path/to/support"))},
         ),
         (
             "iphonesimulator",
@@ -196,13 +191,12 @@ def test_install_requirements_path_formats(
                 "--extra-index-url",
                 "https://pypi.anaconda.org/beeware/simple",
             ],
-            {"PYTHONPATH": str(Path("/path/to/support"))},
         ),
-        ("windows", "x86_64", None, [], None),
-        ("windows", "ARM64", None, [], None),
-        ("linux", "x86_64", None, [], None),
-        ("linux", "aarch64", None, [], None),
-        ("android", "arm64_v8a", None, [], None),
+        ("windows", "x86_64", None, []),
+        ("windows", "ARM64", None, []),
+        ("linux", "x86_64", None, []),
+        ("linux", "aarch64", None, []),
+        ("android", "arm64_v8a", None, []),
     ],
 )
 @pytest.mark.parametrize("preexisting", [True, False])
@@ -214,13 +208,12 @@ def test_install_requirements_with_install_path(
     arch,
     min_os_version,
     args,
-    env,
     preexisting,
 ):
     """If an install path is provided, extra platform tags are included."""
     mock_venv.platform = platform
     mock_venv.arch = arch
-    mock_venv.platform_path = Path("/path/to/support")
+    mock_venv.support_path = Path("/path/to/support")
 
     if preexisting:
         # Mock some pre-existing content in the install path
@@ -267,7 +260,6 @@ def test_install_requirements_with_install_path(
         ],
         check=True,
         encoding="UTF-8",
-        env=env,
     )
 
 
@@ -305,7 +297,6 @@ def test_require_binary(mock_tools, mock_venv):
         ],
         check=True,
         encoding="UTF-8",
-        env=None,
     )
 
 
@@ -342,7 +333,6 @@ def test_disable_include_dependencies(mock_tools, mock_venv):
         ],
         check=True,
         encoding="UTF-8",
-        env=None,
     )
 
 
@@ -382,7 +372,6 @@ def test_extra_installer_args(mock_tools, mock_venv, base_path):
         ],
         check=True,
         encoding="UTF-8",
-        env=None,
     )
 
 
@@ -419,5 +408,4 @@ def test_install_failure(mock_tools, mock_venv):
         ],
         check=True,
         encoding="UTF-8",
-        env=None,
     )

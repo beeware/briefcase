@@ -1010,17 +1010,17 @@ class CreateCommand(BaseCommand):
                 prefix=app.app_name,
             )
         else:
+            venv_class = self.tools.virtual_environment[app.env_manager]
+            if not venv_class.provides_python:
+                self.console.info("Installing support package...", prefix=app.app_name)
+                self.install_app_support_package(app=app)
+
             self.console.info("Creating app environment...", prefix=app.app_name)
             venv = self.create_app_environment(
                 app=app,
                 platform=self.platform,
                 arch=self.tools.host_arch,
             )
-
-            if not venv.provides_python:
-                self.console.info("Installing support package...", prefix=app.app_name)
-                self.install_app_support_package(app=app)
-
             try:
                 # If the platform uses a stub binary, the template will define a binary
                 # revision. If this template configuration item doesn't exist, no stub

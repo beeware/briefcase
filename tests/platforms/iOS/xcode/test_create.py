@@ -89,26 +89,11 @@ def test_support_package_url(create_command, version, revision, expected):
 
 
 @pytest.mark.parametrize(
-    ("platform", "arch", "venv_platform", "platform_path"),
+    ("platform", "arch", "venv_platform"),
     [
-        (
-            "iOS",
-            "arm64",
-            "iphoneos",
-            "Python.xcframework/ios-arm64/platform-config/arm64-iphoneos",
-        ),
-        (
-            "iphonesimulator",
-            "arm64",
-            "iphonesimulator",
-            "Python.xcframework/ios-arm64_x86_64-simulator/platform-config/arm64-iphonesimulator",
-        ),
-        (
-            "iphonesimulator",
-            "x86_64",
-            "iphonesimulator",
-            "Python.xcframework/ios-arm64_x86_64-simulator/platform-config/x86_64-iphonesimulator",
-        ),
+        ("iOS", "arm64", "iphoneos"),
+        ("iphonesimulator", "arm64", "iphonesimulator"),
+        ("iphonesimulator", "x86_64", "iphonesimulator"),
     ],
 )
 def test_create_app_environment(
@@ -118,7 +103,6 @@ def test_create_app_environment(
     platform,
     arch,
     venv_platform,
-    platform_path,
 ):
     """An iOS app can create cross-environments with a platform path."""
     create_command.tools.subprocess = mock.MagicMock()
@@ -136,10 +120,7 @@ def test_create_app_environment(
     assert venv.platform == venv_platform
     assert venv.arch == arch
     assert venv.name == f"{venv_platform}-{arch}"
-    assert (
-        venv.platform_path
-        == tmp_path / "base_path/build/first-app/ios/xcode/Support" / platform_path
-    )
+    assert venv.support_path == tmp_path / "base_path/build/first-app/ios/xcode/Support"
 
 
 def test_install_requirements(

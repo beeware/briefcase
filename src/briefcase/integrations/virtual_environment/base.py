@@ -24,7 +24,7 @@ class VirtualEnvironment(ABC):
         *,
         platform: str | None = None,
         arch: str | None = None,
-        platform_path: Path | None = None,
+        support_path: Path | None = None,
     ):
         """Initialise the virtual environment on a specific path.
 
@@ -39,7 +39,7 @@ class VirtualEnvironment(ABC):
         :param arch: The architecture for the environment. If this isn't the
             host OS architecture, the environment will be a cross build
             environment.
-        :param platform_path: The path where cross-platform details are stored.
+        :param support_path: The path where the support package is stored.
         """
         self.name = name
         self.app = app
@@ -47,7 +47,7 @@ class VirtualEnvironment(ABC):
         self.base_path = base_path
         self.platform = platform
         self.arch = arch
-        self.platform_path = platform_path
+        self.support_path = support_path
 
     @property
     def venv_path(self):
@@ -179,13 +179,6 @@ class VirtualEnvironment(ABC):
                     ]
                 )
 
-                # Add include the platform extensions vendored with with the
-                # support package so that pip will resolve transitive binary
-                # platform dependencies.
-                env = {"PYTHONPATH": str(self.platform_path)}
-            else:
-                env = None
-
             if extra_installer_args:
                 install_args.extend(
                     self.tools.file.resolve_relative_args(
@@ -218,7 +211,6 @@ class VirtualEnvironment(ABC):
                 ],
                 check=True,
                 encoding="UTF-8",
-                env=env,
             )
         except subprocess.CalledProcessError as e:
             raise RequirementsInstallError(install_hint=install_hint) from e

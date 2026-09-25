@@ -92,6 +92,8 @@ def test_create_cross(venv, mock_tools, base_path, platform, abi, arch, multiarc
             platform,
             "--arch",
             multiarch,
+            "--archive",
+            venv.support_path,
             "--without-pip",
             base_path / ".briefcase/first-app/venv-myenv",
         ],
