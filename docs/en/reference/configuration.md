@@ -408,6 +408,10 @@ As with [`sources`][], [`test_sources`][] is a *cumulative* setting. If an appli
 
 If directories with the same name are present, their contents are merged. If files with the same name are present, those from later entries in the concatenated list will take priority over earlier ones.
 
+#### `allow_subprocesses`
+
+By default, creating Python subprocesses using `subprocess` or `multiprocessing` in spawn mode does not work. Set this to `true` to include the Python binary into the application bundle and set `sys.executable` accordingly.
+
 ## Permissions
 
 Applications may also need to declare the permissions they require. Permissions are specified as sub-attributes of a `permission` property, defined at the level of an project, app, or platform. Permission declarations are *cumulative*; if an application defines permissions at the global level, application level, *and* platform level, the final set of permissions will be the *merged* set of all permissions from all levels, starting from least to most specific, with the most specific taking priority.
