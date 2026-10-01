@@ -1,4 +1,7 @@
+import pytest
+
 from briefcase.config import merge_pep621_config
+from briefcase.exceptions import BriefcaseConfigError
 
 
 def test_empty():
@@ -8,6 +11,54 @@ def test_empty():
     merge_pep621_config(briefcase_config, {"other": "thingy"})
 
     assert briefcase_config == {"key": "value"}
+
+
+def test_project_name_is_normalized():
+    """The PEP 621 project name is normalized for use by Briefcase."""
+    briefcase_config = {"key": "value"}
+
+    merge_pep621_config(
+        briefcase_config,
+        {"name": "Some.Project_Name"},
+    )
+
+    assert briefcase_config == {
+        "key": "value",
+        "project_name": "some-project-name",
+    }
+
+
+@pytest.mark.parametrize(
+    ("project_name", "representation"),
+    [
+        ("not a valid name!", "'not a valid name!'"),
+        (42, "42"),
+    ],
+)
+def test_invalid_project_name(project_name, representation):
+    """An invalid PEP 621 project name raises a clean configuration error."""
+    briefcase_config = {"key": "value"}
+
+    with pytest.raises(
+        BriefcaseConfigError,
+        match=rf"The PEP 621 project name {representation} is invalid\.",
+    ):
+        merge_pep621_config(
+            briefcase_config,
+            {"name": project_name},
+        )
+
+
+def test_legacy_project_name_takes_priority():
+    """A legacy project name takes priority over PEP 621 project metadata."""
+    briefcase_config = {"project_name": "Legacy_Name"}
+
+    merge_pep621_config(
+        briefcase_config,
+        {"name": "PEP.621.Name"},
+    )
+
+    assert briefcase_config == {"project_name": "Legacy_Name"}
 
 
 def test_base_keys():

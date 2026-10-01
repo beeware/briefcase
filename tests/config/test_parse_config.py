@@ -8,7 +8,7 @@ from build import BuildBackendException
 from briefcase.config import parse_config
 from briefcase.console import Console
 from briefcase.exceptions import BriefcaseConfigError
-from tests.utils import create_file
+from tests.utils import PartialMatchString, create_file
 
 
 def test_invalid_toml(tmp_path):
@@ -690,7 +690,7 @@ def test_pep_621_merge(tmp_path):
         tmp_path / "pyproject.toml",
         """
         [project]
-        name = "awesome"
+        name = "Awesome.App"
         version = "1.2.3"
         authors = [{name = "Kim Park", email = "kim@example.com"}]
         dependencies = ["numpy"]
@@ -704,7 +704,6 @@ def test_pep_621_merge(tmp_path):
         test = ["pytest"]
 
         [tool.briefcase]
-        project_name = "Awesome app"
         bundle = "com.example"
         license = "MIT"
 
@@ -726,16 +725,17 @@ def test_pep_621_merge(tmp_path):
         """,
     )
 
+    console = Mock()
     _, apps = parse_config(
         config_file,
         platform="macOS",
         output_format="app",
-        console=Mock(),
+        console=console,
     )
 
     awesome = apps["awesome"]
     assert awesome == {
-        "project_name": "Awesome app",
+        "project_name": "awesome-app",
         "bundle": "com.example",
         "version": "1.2.3",
         "license": "MIT",
@@ -752,6 +752,62 @@ def test_pep_621_merge(tmp_path):
         "formal_name": "Awesome Application",
         "long_description": "The application is very awesome",
     }
+    console.warning_banner.assert_not_called()
+
+
+def test_invalid_legacy_project_name_warning(tmp_path):
+    """An invalid legacy project name is accepted with a warning."""
+    config_file = create_file(
+        tmp_path / "pyproject.toml",
+        """
+        [tool.briefcase]
+        project_name = "Awesome app!"
+        license = "MIT"
+
+        [tool.briefcase.app.awesome]
+        """,
+    )
+
+    console = Mock()
+    global_config, apps = parse_config(
+        config_file,
+        platform="macOS",
+        output_format="app",
+        console=console,
+    )
+
+    assert global_config["project_name"] == "Awesome app!"
+    assert apps["awesome"]["project_name"] == "Awesome app!"
+    console.warning_banner.assert_called_once_with(
+        "Invalid project name",
+        PartialMatchString("'Awesome app!' is not a valid PEP 621 project name"),
+    )
+
+
+def test_valid_legacy_project_name_no_warning(tmp_path):
+    """A valid legacy project name is accepted without a warning."""
+    config_file = create_file(
+        tmp_path / "pyproject.toml",
+        """
+        [tool.briefcase]
+        project_name = "awesome-app"
+        license = "MIT"
+
+        [tool.briefcase.app.awesome]
+        """,
+    )
+
+    console = Mock()
+    global_config, apps = parse_config(
+        config_file,
+        platform="macOS",
+        output_format="app",
+        console=console,
+    )
+
+    assert global_config["project_name"] == "awesome-app"
+    assert apps["awesome"]["project_name"] == "awesome-app"
+    console.warning_banner.assert_not_called()
 
 
 def test_long_description_warning(tmp_path):
@@ -1368,7 +1424,7 @@ def test_license_text_non_spdx(tmp_path):
         license = "You can use it while standing on one foot"
 
         [tool.briefcase]
-        project_name = "Awesome app"
+        project_name = "awesome-app"
         bundle = "com.example"
 
         [tool.briefcase.app.my_app]
@@ -1412,7 +1468,7 @@ def test_license_text_non_spdx_multiline(tmp_path):
         license = "You can use it\\nwhile standing on one foot"
 
         [tool.briefcase]
-        project_name = "Awesome app"
+        project_name = "awesome-app"
         bundle = "com.example"
 
         [tool.briefcase.app.my_app]
@@ -1510,6 +1566,7 @@ def test_pep621_empty_dynamic(monkeypatch, tmp_path):
     assert awesome == {
         "app_name": "awesome",
         "bundle": "com.example",
+        "project_name": "awesome",
         "version": "1.2.3",
         "license": "EUPL-1.2",
         "license_files": [],
@@ -1584,6 +1641,7 @@ def test_pep621_dynamic(monkeypatch, tmp_path):
         "formal_name": "Awesome Application",
         "license": "GPL-3.0",
         "license_files": [],
+        "project_name": "awesome",
         "requires": ["toga>=0.5.3"],
         "url": "https://example.com/",
         "version": "1.2.3",
