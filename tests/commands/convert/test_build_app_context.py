@@ -1,3 +1,6 @@
+from unittest import mock
+
+
 def test_overrides_are_used(convert_command):
     (convert_command.base_path / "src/app_name").mkdir(parents=True)
     (convert_command.base_path / "src/app_name/__main__.py").write_text(
@@ -19,7 +22,16 @@ def test_overrides_are_used(convert_command):
         "leftover": "leftover",
     }
     override_input = overrides.copy()
+    convert_command.input_project_name = mock.MagicMock(
+        wraps=convert_command.input_project_name
+    )
+
     out = convert_command.build_app_context(override_input)
+
+    convert_command.input_project_name.assert_called_once_with(
+        "app_name",
+        override_value="project_name",
+    )
     for k, v in overrides.items():
         if k == "app_type":
             assert not out["console_app"]

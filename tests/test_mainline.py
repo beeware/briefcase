@@ -24,7 +24,7 @@ def pyproject_toml(monkeypatch, tmp_path):
 requires = ["briefcase"]
 
 [tool.briefcase]
-project_name = "Hello World"
+project_name = "hello-world"
 bundle = "com.example"
 version = "0.0.1"
 license = "MIT"
