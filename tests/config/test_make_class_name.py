@@ -1,6 +1,8 @@
+import keyword
+
 import pytest
 
-from briefcase.config import make_class_name
+from briefcase.config import derive_class_name, make_class_name
 
 
 @pytest.mark.parametrize(
@@ -39,9 +41,39 @@ from briefcase.config import make_class_name
         # Soft keywords are legal class names, and case matters
         ("match", "match"),
         ("Lambda", "Lambda"),
+        # Nothing identifier-like survives, so a generic name is used
+        ("!!!", "Briefcase"),
+        ("...", "Briefcase"),
+        ("\U0001f389", "Briefcase"),
+        ("", "Briefcase"),
     ],
 )
 def test_make_class_name(formal_name, candidate):
     """A formal name can be converted into a valid class name."""
     class_name = make_class_name(formal_name)
     assert class_name == candidate
+
+
+@pytest.mark.parametrize(
+    ("formal_name", "candidate"),
+    [
+        ("Hello World", "HelloWorld"),
+        ("lambda", "_lambda"),
+        # derive_class_name reports the empty result that make_class_name
+        # replaces; validate_formal_name depends on being able to see it.
+        ("!!!", ""),
+        ("\U0001f389", ""),
+        ("", ""),
+    ],
+)
+def test_derive_class_name(formal_name, candidate):
+    """The raw derivation is visible without the generic fallback."""
+    assert derive_class_name(formal_name) == candidate
+
+
+def test_make_class_name_is_always_an_identifier():
+    """Whatever the formal name, the class name can be used in a class statement."""
+    for formal_name in ["!!!", "...", "\U0001f389", "", "   ", "My App", "lambda"]:
+        class_name = make_class_name(formal_name)
+        assert class_name.isidentifier()
+        assert not keyword.iskeyword(class_name)
