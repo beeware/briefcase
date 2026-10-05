@@ -156,6 +156,10 @@ The only time `sources` is *not* required is if you are is [packaging an externa
 
 A hexadecimal RGB color value (e.g., `#D81B60`) for a subtle secondary color to be used throughout an application to call attention to key elements. This setting is only used if the platform allows color modification, otherwise it is ignored.
 
+#### `allow_subprocesses`
+
+A Boolean describing whether the bundled application should allow the use of Python subprocesses. Set to `false` by default; `sys.executable` will be set to an empty string in bundled applications. If set to `true`, and the platform supports subprocesses, `sys.executable` will be set to the path of a Python binary that can be used in calls to [`subprocess.run()`][subprocess.run] etc to spawn a Python interpreter.
+
 #### `build`
 
 A build identifier. An integer, used in addition to the version specifier, to identify a specific compiled version of an application.
@@ -407,10 +411,6 @@ Test startup invokes the module `tests.<app_name>`. Therefore the tests sources 
 As with [`sources`][], [`test_sources`][] is a *cumulative* setting. If an application defines sources at the global level, application level, *and* platform level, the final set of sources will be the *concatenation* of test sources from all levels, starting from least to most specific.
 
 If directories with the same name are present, their contents are merged. If files with the same name are present, those from later entries in the concatenated list will take priority over earlier ones.
-
-#### `allow_subprocesses`
-
-By default, creating Python subprocesses using `subprocess` or `multiprocessing` in spawn mode does not work. Set this to `true` to include the Python binary into the application bundle and set `sys.executable` accordingly.
 
 ## Permissions
 
