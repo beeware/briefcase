@@ -215,6 +215,52 @@ If this setting is set to `False`, the installer will include the checkbox, but 
 
 If this setting is undefined, or set to an empty string, the installer will not include an option to create a shortcut, and no shortcut will be created.
 
+### `installer_completion_text`
+
+/// note | Only used for MSI packaging
+///
+
+Text to display on the final page of the MSI installer, after the app has been successfully installed. This text *replaces* the default description ("Click the Finish button to exit the Setup Wizard."); the page heading is not changed. The text is not displayed when the app is uninstalled.
+
+If this setting is undefined, or set to an empty string, the default description will be displayed.
+
+Text that is enclosed in square brackets will be interpreted as the name of a Windows Installer property, and will be replaced with the value of that property. For example, `"[ProductName] has been installed to [INSTALLFOLDER]."` will display the name of the app, and the folder where it was installed. To display a literal square bracket, use `[\[]` or `[\]]`.
+
+### `completion_launch_app`
+
+/// note | Only used for MSI packaging
+///
+
+Windows MSI installers are able to provide an option on the final page of the installer to launch the app as soon as installation is complete.
+
+If this setting is set to `True`, the installer will include a "Launch <app name>" checkbox, enabled by default. The user installing the app can then opt out of launching the app.
+
+If this setting is set to `False`, the installer will include the checkbox, but it will be *disabled* by default. The user installing the app can then opt into launching the app.
+
+If this setting is undefined, or set to an empty string, the installer will not include an option to launch the app.
+
+The app is launched as the user who ran the installer, even if the app has been installed for all users. The app will never be launched by a silent or unattended install.
+
+### `completion_urls`
+
+/// note | Only used for MSI packaging
+///
+
+A list of hyperlinks to display on the final page of the MSI installer, after the app has been successfully installed. Clicking a link will open the URL in the user's default web browser. The links are not displayed when the app is uninstalled.
+
+Each link is a table with two keys: a `title`, which is the text that will be displayed; and a `url`, which is the web address to open. For example:
+
+```toml
+completion_urls = [
+    { title = "Read the getting started guide", url = "https://example.com/start" },
+    { title = "Join our community", url = "https://example.com/community" },
+]
+```
+
+Links are displayed in the order they are defined. There is no limit to the number of links that can be defined; however, the installer page has a fixed size, so only about 5 links can be displayed (fewer if [`installer_completion_text`][] or [`completion_launch_app`][] are also used). Any links that don't fit on the page will not be visible.
+
+As with [`installer_completion_text`][], text in square brackets in a `title` or `url` will be interpreted as a Windows Installer property.
+
 ## Installer/uninstaller options
 
 Windows MSI installers are able to present a panel of optional features to the user as part of the installation or uninstallation process. These features are binary flags which can then be used by a [post-install script][post_install_script] to perform additional installation behaviors, or by a [pre-uninstall script][pre_uninstall_script] to perform additional uninstallation behaviors.

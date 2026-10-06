@@ -264,6 +264,14 @@ class WindowsCreateCommand(CreateCommand):
         except AttributeError:
             installer_images["banner"] = ""
 
+        # Customizations of the installer's completion dialog. Values are passed to
+        # the template as-is; the template is responsible for any escaping.
+        completion_dialog = {
+            "text": getattr(app, "installer_completion_text", ""),
+            "launch_app": getattr(app, "completion_launch_app", ""),
+            "urls": getattr(app, "completion_urls", []),
+        }
+
         return {
             "version_triple": version_triple,
             "guid": str(guid),
@@ -271,6 +279,7 @@ class WindowsCreateCommand(CreateCommand):
             "package_path": str(self.package_path(app)),
             "binary_path": self.package_executable_path(app),
             "installer_images": installer_images,
+            "completion_dialog": completion_dialog,
         }
 
     def _cleanup_app_support_package(self, support_path):
