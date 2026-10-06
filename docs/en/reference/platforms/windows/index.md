@@ -233,7 +233,7 @@ Text that is enclosed in square brackets will be interpreted as the name of a Wi
 
 Windows MSI installers are able to provide an option on the final page of the installer to launch the app as soon as installation is complete.
 
-If this setting is set to `True`, the installer will include a "Launch <app name>" checkbox, enabled by default. The user installing the app can then opt out of launching the app.
+If this setting is set to `True`, the installer will include a "Launch `<app name>`" checkbox, enabled by default. The user installing the app can then opt out of launching the app.
 
 If this setting is set to `False`, the installer will include the checkbox, but it will be *disabled* by default. The user installing the app can then opt into launching the app.
 
