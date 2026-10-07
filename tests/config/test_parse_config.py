@@ -784,7 +784,7 @@ def test_invalid_legacy_project_name_warning(tmp_path):
     )
 
 
-def test_valid_legacy_project_name_no_warning(tmp_path):
+def test_valid_legacy_project_name(tmp_path):
     """A valid legacy project name is accepted without a warning."""
     config_file = create_file(
         tmp_path / "pyproject.toml",

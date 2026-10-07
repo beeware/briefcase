@@ -6,7 +6,7 @@ If you have an application called "My App", with source code in the `src/myapp` 
 
 ```toml
 [tool.briefcase]
-project_name = "My Project"
+project_name = "my-project"
 bundle = "com.example"
 version = "0.1"
 
@@ -79,7 +79,7 @@ Many platforms will also require a [`license_files`][] definition.
 
 #### `project_name`
 
-The project is the collection of all applications that are described by the briefcase configuration. For projects with a single app, this may be the same as the app name of the solitary packaged app. If `[project].name` is defined, `project_name` can be omitted.
+The project is the collection of all applications that are described by the briefcase configuration. For projects with a single app, this may be the same as the app name of the solitary packaged app. It must be a [valid PEP 621 project name](https://packaging.python.org/en/latest/specifications/name-normalization/#name-format); it will be automatically normalized by Briefcase.
 
 #### `version`
 
