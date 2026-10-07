@@ -159,7 +159,7 @@ class XMLExtension(Extension):
             return escape(obj)
 
         def xml_attr(obj):
-            """ "Filter to quote an XML value appropriately."""
+            """Filter to quote an XML value appropriately."""
             return quoteattr(obj)
 
         environment.filters["bool_attr"] = bool_attr

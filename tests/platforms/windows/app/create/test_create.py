@@ -140,6 +140,7 @@ def test_context(create_command, first_app_config):
     context = create_command.output_format_template_context(first_app_config)
     assert sorted(context.keys()) == [
         "binary_path",
+        "completion_dialog",
         "guid",
         "install_scope",
         "installer_images",
@@ -219,6 +220,58 @@ def test_installer_images(create_command, first_app_config, tmp_path):
     assert context["installer_images"] == {
         "background": str(tmp_path / "base_path/path/to/background.bmp"),
         "banner": str(tmp_path / "base_path/path/to/banner.bmp"),
+    }
+
+
+def test_no_completion_dialog(create_command, first_app_config):
+    """If no completion dialog customizations are specified, defaults are used."""
+    context = create_command.output_format_template_context(first_app_config)
+
+    assert context["completion_dialog"] == {
+        "install_text": "",
+        "uninstall_text": "",
+        "launch_app": "",
+        "urls": [],
+    }
+
+
+@pytest.mark.parametrize("launch_app", [True, False])
+def test_completion_dialog(create_command, first_app_config, launch_app):
+    """Completion dialog customizations are passed through unmodified."""
+    first_app_config.installer_completion_text = "All done! [ProductName] & <more>"
+    first_app_config.uninstaller_completion_text = "Sorry to see you go!"
+    first_app_config.installer_completion_launch_app = launch_app
+    first_app_config.installer_completion_urls = [
+        {"title": "Docs", "url": "https://example.com/docs"},
+        {"title": "Chat", "url": 'https://example.com/chat?q="x"'},
+    ]
+
+    context = create_command.output_format_template_context(first_app_config)
+
+    assert context["completion_dialog"] == {
+        "install_text": "All done! [ProductName] & <more>",
+        "uninstall_text": "Sorry to see you go!",
+        "launch_app": launch_app,
+        "urls": [
+            {"title": "Docs", "url": "https://example.com/docs"},
+            {"title": "Chat", "url": 'https://example.com/chat?q="x"'},
+        ],
+    }
+
+
+def test_completion_dialog_partial(create_command, first_app_config):
+    """Completion dialog keys can be specified independently."""
+    first_app_config.installer_completion_urls = [
+        {"title": "Docs", "url": "https://example.com/docs"},
+    ]
+
+    context = create_command.output_format_template_context(first_app_config)
+
+    assert context["completion_dialog"] == {
+        "install_text": "",
+        "uninstall_text": "",
+        "launch_app": "",
+        "urls": [{"title": "Docs", "url": "https://example.com/docs"}],
     }
 
 
