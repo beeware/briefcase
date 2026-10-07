@@ -142,6 +142,33 @@ If this setting is set to `False`, the installer will include the checkbox, but 
 
 If this setting is undefined, or set to an empty string, the installer will not include an option to create a shortcut, and no shortcut will be created.
 
+### `dotnet_rollforward`
+
+The version roll-forward policy used when checking for compatible runtimes. Defaults to `"LatestMinor"`. This maps directly to .NET's [roll-forward behavior](https://learn.microsoft.com/en-us/dotnet/core/versions/selection#control-roll-forward-behavior). Valid values are:
+
+* `"Minor"` - Roll forward to the lowest higher minor version, if the requested minor version is missing.
+* `"Major"` - Roll forward to the lowest higher major version, and lowest minor version, if the requested major version is missing.
+* `"LatestPatch"` - Roll forward to the highest patch version. This disables minor version roll forward.
+* `"LatestMinor"` - Roll forward to the highest minor version, even if the requested minor version is present.
+* `"LatestMajor"` - Roll forward to the highest major and highest minor version, even if the requested major is present.
+* `"Disable"` - Do not roll forward. Only bind to the specified version. This policy is not recommended for general use because it disables the ability to roll forward to the latest patches.
+
+This value will be ignored unless [`dotnet_version`][dotnet-version] is set.
+
+### `dotnet_runtime_type`
+
+The type of .NET runtime required. Defaults to `"Desktop"` for GUI apps, and `"Core"` for console apps. Valid values are:
+
+* `"Core"` - The base .NET runtime (`Microsoft.NETCore.App`).
+* `"Desktop"` -The .NET Windows Desktop runtime (`Microsoft.WindowsDesktop.App`), which includes WPF and Windows Forms support.
+* `"AspNet"` - The ASP.NET Core runtime (`Microsoft.AspNetCore.App`).
+
+This value will be ignored unless [`dotnet_version`][dotnet-version] is set.
+
+### `dotnet_version`  { #dotnet-version }
+
+The minimum .NET runtime version required by the application, as a version string (e.g., `"10.0.0"`). This is used by MSI installers to verify that the required runtime is installed before installing the app. If this value is not set, no .NET runtime check is performed.
+
 ### `installer_completion_launch_app`
 
 /// note | Only used for MSI packaging
@@ -164,6 +191,8 @@ The app is launched as the user who ran the installer, even if the app has been 
 
 Text to display on the final page of the MSI installer, after the app has been successfully installed. If this setting is undefined, or set to an empty string, the default description will be displayed.
 
+Text in square brackets is interpreted as the name of a Windows Installer property, and replaced with its value; for example, `[ProductName]` will be replaced with the name of the app. To include a literal square bracket, use `[\[]` or `[\]]`.
+
 ### `installer_completion_urls`
 
 /// note | Only used for MSI packaging
@@ -180,42 +209,15 @@ installer_completion_urls = [
 ]
 ```
 
-Links are displayed in the order they are defined. There is no limit to the number of links that can be defined; however, the installer page has a fixed size, so there is a limit to the number of links that can be displayed (especially if [`installer_completion_text`][] or [`installer_completion_launch_app`][] are also used). Any links that don't fit on the page will not be visible.
+Links are displayed in the order they are defined. Up to 5 links will be displayed; any further links will be ignored. Each link is displayed on a single line, so long titles will be truncated at the width of the dialog.
 
-As with [`installer_completion_text`][], text in square brackets in a `title` or `url` will be interpreted as a Windows Installer property.
-
-#### `dotnet_rollforward`
-
-The version roll-forward policy used when checking for compatible runtimes. Defaults to `"LatestMinor"`. This maps directly to .NET's [roll-forward behavior](https://learn.microsoft.com/en-us/dotnet/core/versions/selection#control-roll-forward-behavior). Valid values are:
-
-* `"Minor"` - Roll forward to the lowest higher minor version, if the requested minor version is missing.
-* `"Major"` - Roll forward to the lowest higher major version, and lowest minor version, if the requested major version is missing.
-* `"LatestPatch"` - Roll forward to the highest patch version. This disables minor version roll forward.
-* `"LatestMinor"` - Roll forward to the highest minor version, even if the requested minor version is present.
-* `"LatestMajor"` - Roll forward to the highest major and highest minor version, even if the requested major is present.
-* `"Disable"` - Do not roll forward. Only bind to the specified version. This policy is not recommended for general use because it disables the ability to roll forward to the latest patches.
-
-This value will be ignored unless [`dotnet_version`][dotnet-version] is set.
-
-#### `dotnet_runtime_type`
-
-The type of .NET runtime required. Defaults to `"Desktop"` for GUI apps, and `"Core"` for console apps. Valid values are:
-
-* `"Core"` - The base .NET runtime (`Microsoft.NETCore.App`).
-* `"Desktop"` -The .NET Windows Desktop runtime (`Microsoft.WindowsDesktop.App`), which includes WPF and Windows Forms support.
-* `"AspNet"` - The ASP.NET Core runtime (`Microsoft.AspNetCore.App`).
-
-This value will be ignored unless [`dotnet_version`][dotnet-version] is set.
-
-#### `dotnet_version`  { #dotnet-version }
-
-The minimum .NET runtime version required by the application, as a version string (e.g., `"10.0.0"`). This is used by MSI installers to verify that the required runtime is installed before installing the app. If this value is not set, no .NET runtime check is performed.
+Text in square brackets in a `title` or `url` is also interpreted as the name of a Windows Installer property, and replaced with its value.
 
 ### `installer_path`
 
 The name of a directory in the package bundle that can be used to store post-install and pre-uninstall scripts. Defaults to `_installer`.
 
-#### `min_os_version`
+### `min_os_version`
 
 The minimum [Windows build number](https://en.wikipedia.org/wiki/List_of_Microsoft_Windows_versions) that the app will support.
 This is used by MSI installers to block installation on unsupported versions.
@@ -246,6 +248,8 @@ If `true` the installer will attempt to install the app as a per-machine app, av
 ///
 
 Text to display on the final page of the MSI uninstaller, after the app has been successfully uninstalled. If this setting is undefined, or set to an empty string, the default description will be displayed.
+
+Text in square brackets is interpreted as the name of a Windows Installer property, and replaced with its value; for example, `[ProductName]` will be replaced with the name of the app. To include a literal square bracket, use `[\[]` or `[\]]`.
 
 ### `use_full_install_path`
 

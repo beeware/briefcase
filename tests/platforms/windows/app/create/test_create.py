@@ -259,6 +259,17 @@ def test_completion_dialog(create_command, first_app_config, launch_app):
     }
 
 
+def test_completion_dialog_strip_newlines(create_command, first_app_config):
+    """Surrounding newlines are stripped from completion text."""
+    first_app_config.installer_completion_text = "\nDone\n"
+    first_app_config.uninstaller_completion_text = "\nGoodbye\n"
+
+    context = create_command.output_format_template_context(first_app_config)
+
+    assert context["completion_dialog"]["install_text"] == "Done"
+    assert context["completion_dialog"]["uninstall_text"] == "Goodbye"
+
+
 def test_completion_dialog_partial(create_command, first_app_config):
     """Completion dialog keys can be specified independently."""
     first_app_config.installer_completion_urls = [
