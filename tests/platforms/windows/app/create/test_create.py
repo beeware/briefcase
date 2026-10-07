@@ -228,7 +228,8 @@ def test_no_completion_dialog(create_command, first_app_config):
     context = create_command.output_format_template_context(first_app_config)
 
     assert context["completion_dialog"] == {
-        "text": "",
+        "install_text": "",
+        "uninstall_text": "",
         "launch_app": "",
         "urls": [],
     }
@@ -238,8 +239,9 @@ def test_no_completion_dialog(create_command, first_app_config):
 def test_completion_dialog(create_command, first_app_config, launch_app):
     """Completion dialog customizations are passed through unmodified."""
     first_app_config.installer_completion_text = "All done! [ProductName] & <more>"
-    first_app_config.completion_launch_app = launch_app
-    first_app_config.completion_urls = [
+    first_app_config.uninstaller_completion_text = "Sorry to see you go!"
+    first_app_config.installer_completion_launch_app = launch_app
+    first_app_config.installer_completion_urls = [
         {"title": "Docs", "url": "https://example.com/docs"},
         {"title": "Chat", "url": 'https://example.com/chat?q="x"'},
     ]
@@ -247,7 +249,8 @@ def test_completion_dialog(create_command, first_app_config, launch_app):
     context = create_command.output_format_template_context(first_app_config)
 
     assert context["completion_dialog"] == {
-        "text": "All done! [ProductName] & <more>",
+        "install_text": "All done! [ProductName] & <more>",
+        "uninstall_text": "Sorry to see you go!",
         "launch_app": launch_app,
         "urls": [
             {"title": "Docs", "url": "https://example.com/docs"},
@@ -258,14 +261,15 @@ def test_completion_dialog(create_command, first_app_config, launch_app):
 
 def test_completion_dialog_partial(create_command, first_app_config):
     """Completion dialog keys can be specified independently."""
-    first_app_config.completion_urls = [
+    first_app_config.installer_completion_urls = [
         {"title": "Docs", "url": "https://example.com/docs"},
     ]
 
     context = create_command.output_format_template_context(first_app_config)
 
     assert context["completion_dialog"] == {
-        "text": "",
+        "install_text": "",
+        "uninstall_text": "",
         "launch_app": "",
         "urls": [{"title": "Docs", "url": "https://example.com/docs"}],
     }

@@ -143,10 +143,6 @@ class PListExtension(Extension):
         environment.filters["plist_value"] = plist_value
 
 
-# Characters that cannot appear literally in the href of a SysLink anchor.
-_LINK_URL_UNSAFE = re.compile(r'["<>\s]')
-
-
 class XMLExtension(Extension):
     """Jinja2 extension for generating XML values."""
 
@@ -163,21 +159,12 @@ class XMLExtension(Extension):
             return escape(obj)
 
         def xml_attr(obj):
-            """ "Filter to quote an XML value appropriately."""
+            """Filter to quote an XML value appropriately."""
             return quoteattr(obj)
-
-        def link_url(obj):
-            """Filter to percent-encode characters that can't appear in a hyperlink
-            href: `"`, `<`, `>` and whitespace."""
-            return _LINK_URL_UNSAFE.sub(
-                lambda match: "".join(f"%{byte:02X}" for byte in match[0].encode()),
-                obj,
-            )
 
         environment.filters["bool_attr"] = bool_attr
         environment.filters["xml_escape"] = xml_escape
         environment.filters["xml_attr"] = xml_attr
-        environment.filters["link_url"] = link_url
 
 
 class UUIDExtension(Extension):

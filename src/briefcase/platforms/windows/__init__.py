@@ -264,12 +264,14 @@ class WindowsCreateCommand(CreateCommand):
         except AttributeError:
             installer_images["banner"] = ""
 
-        # Customizations of the installer's completion dialog. Values are passed to
-        # the template as-is; the template is responsible for any escaping.
+        # Customizations of the installer's completion dialog.
         completion_dialog = {
-            "text": getattr(app, "installer_completion_text", ""),
-            "launch_app": getattr(app, "completion_launch_app", ""),
-            "urls": getattr(app, "completion_urls", []),
+            "install_text": getattr(app, "installer_completion_text", "").strip("\n"),
+            "uninstall_text": getattr(app, "uninstaller_completion_text", "").strip(
+                "\n"
+            ),
+            "launch_app": getattr(app, "installer_completion_launch_app", ""),
+            "urls": getattr(app, "installer_completion_urls", []),
         }
 
         return {
