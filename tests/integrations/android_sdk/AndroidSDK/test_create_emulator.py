@@ -128,7 +128,7 @@ def test_default_name(mock_tools, android_sdk, tmp_path):
     avd = android_sdk.create_emulator(app)
 
     # The expected device AVD was created.
-    assert avd == "beePhone"
+    assert avd == "beePhone-31"
 
 
 def test_default_name_with_collisions(mock_tools, android_sdk, tmp_path):
@@ -139,8 +139,10 @@ def test_default_name_with_collisions(mock_tools, android_sdk, tmp_path):
     # Create some existing emulators that will collide with the default name.
     android_sdk.emulators = MagicMock(
         return_value=[
-            "beePhone2",
+            "beePhone-31-2",
             "runningEmulator",
+            "beePhone-35",
+            "beePhone-31",
             "beePhone",
         ]
     )
@@ -162,7 +164,7 @@ def test_default_name_with_collisions(mock_tools, android_sdk, tmp_path):
     avd = android_sdk.create_emulator(app)
 
     # The expected device AVD was created.
-    assert avd == "beePhone3"
+    assert avd == "beePhone-31-3"
 
 
 def test_image_type_fallback_when_default_not_available(
@@ -173,7 +175,7 @@ def test_image_type_fallback_when_default_not_available(
     mock_tools.console.values = [
         "",  # default emulator name
         "3",  # select android-CANARY (option 3 in the sorted list)
-        "",  # accept first available type (google_apis, since "default" isn't available)
+        "",  # accept first available type (google_apis; "default" is unavailable)
     ]
 
     # Mock the internal emulator creation method
@@ -187,11 +189,11 @@ def test_image_type_fallback_when_default_not_available(
     avd = android_sdk.create_emulator(app)
 
     # The expected device AVD was created.
-    assert avd == "beePhone"
+    assert avd == "beePhone-31"
 
     # The call was made with the first available type, not "default"
     android_sdk._create_emulator.assert_called_once_with(
-        avd="beePhone",
+        avd="beePhone-31",
         device_type="pixel",
         skin="pixel_7_pro",
         system_image="system-images;android-CANARY;google_apis;x86_64",
@@ -217,11 +219,11 @@ def test_system_image_selection(mock_tools, android_sdk, tmp_path):
     avd = android_sdk.create_emulator(app)
 
     # The expected device AVD was created.
-    assert avd == "beePhone"
+    assert avd == "beePhone-31"
 
     # The call was made to create the emulator
     android_sdk._create_emulator.assert_called_once_with(
-        avd="beePhone",
+        avd="beePhone-31",
         device_type="pixel",
         skin="pixel_7_pro",
         system_image="system-images;android-34;google_apis;x86_64",

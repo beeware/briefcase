@@ -3,7 +3,7 @@ import shutil
 import sys
 from unittest import mock
 
-import httpx
+import httpx2
 import pytest
 
 from briefcase.exceptions import (
@@ -447,8 +447,8 @@ def test_offline_install(
     app_requirements_path_index,
 ):
     """If the computer is offline, an error is raised."""
-    stream_mock = create_command.tools.httpx.stream = mock.MagicMock()
-    stream_mock.return_value.__enter__.side_effect = httpx.TransportError(
+    stream_mock = create_command.tools.httpx2.stream = mock.MagicMock()
+    stream_mock.return_value.__enter__.side_effect = httpx2.TransportError(
         "Unstable connection"
     )
 

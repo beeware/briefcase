@@ -8,8 +8,8 @@ from collections.abc import Iterable, Iterator
 from pathlib import Path
 from unittest import mock
 
-import httpcore
-import httpx
+import httpcore2
+import httpx2
 import pytest
 
 from briefcase.exceptions import (
@@ -26,14 +26,14 @@ TEMPORARY_DOWNLOAD_FILE_SUFFIX = ".download"
 
 @pytest.fixture
 def mock_tools(mock_tools) -> ToolCache:
-    mock_tools.httpx = mock.MagicMock(spec_set=httpx)
+    mock_tools.httpx2 = mock.MagicMock(spec_set=httpx2)
     # Restore move so the temporary file can be moved after downloaded
     mock_tools.shutil.move = mock.MagicMock(wraps=shutil.move)
     return mock_tools
 
 
-class _IteratorByteSteam(httpx.SyncByteStream):
-    """Shim that satisfies ``httpx.Response`` ``stream`` parameter type.
+class _IteratorByteSteam(httpx2.SyncByteStream):
+    """Shim that satisfies ``httpx2.Response`` ``stream`` parameter type.
 
     Cannot be replaced by any ``Iterable[bytes]`` because the base class requires
     an explicit finalization method ``close``.
@@ -53,8 +53,8 @@ def _make_httpx_response(
     stream: list[bytes],
     method: str = "GET",
     headers: dict | None = None,
-) -> httpx.Response:
-    """Create a real ``httpx.Response`` with key methods wrapped by ``mock.Mock`` for
+) -> httpx2.Response:
+    """Create a real ``httpx2.Response`` with key methods wrapped by ``mock.Mock`` for
     spying.
 
     Wrapped methods:
@@ -65,16 +65,16 @@ def _make_httpx_response(
     if headers is None:
         headers = {}
 
-    response = httpx.Response(
-        request=httpx.Request(
+    response = httpx2.Response(
+        request=httpx2.Request(
             method=method,
-            url=httpx.URL(url),
+            url=httpx2.URL(url),
         ),
         status_code=status_code,
-        headers=httpx.Headers(headers),
+        headers=httpx2.Headers(headers),
         # Always use ``stream`` rather than content because it's more flexible
         # even if the request is made non-streaming or the response is read with
-        # ``response.read()``, httpx will still consume the ``stream`` response
+        # ``response.read()``, httpx2 will still consume the ``stream`` response
         # content internally. This allows testing both the non-streaming and
         # streaming download paths without needing to complicate the response params
         stream=_IteratorByteSteam(stream),
@@ -181,7 +181,7 @@ def test_new_download_oneshot(
         ),
         stream=[content],
     )
-    mock_tools.httpx.stream.return_value.__enter__.return_value = response
+    mock_tools.httpx2.stream.return_value.__enter__.return_value = response
 
     # Download the file
     filename = mock_tools.file.download(
@@ -190,12 +190,12 @@ def test_new_download_oneshot(
         expected_hash=expected_hash,
     )
 
-    # httpx.stream has been invoked, but content isn't iterated
-    mock_tools.httpx.stream.assert_called_with(
+    # httpx2.stream has been invoked, but content isn't iterated
+    mock_tools.httpx2.stream.assert_called_with(
         "GET",
         "https://example.com/support?useful=Yes",
         follow_redirects=True,
-        verify=mock_tools.file.ssl_context,
+        verify=True,
     )
     response.headers.get.assert_called_with("content-length")
     response.read.assert_called_once()
@@ -221,11 +221,17 @@ def test_new_download_oneshot(
     with (mock_tools.base_path / "downloads/something.zip").open(encoding="utf-8") as f:
         assert f.read() == "all content"
 
-    # Verify that the expected warnings are output
+    # Verify that the expected warnings/confirmations are output
+    output = capsys.readouterr().out
     if hash_algorithm is None:
-        assert "will not be verified" in capsys.readouterr().out
+        assert "will not be verified" in output
+        assert "hash verified" not in output
+    elif hash_algorithm == "unverified":
+        assert "will not be verified" not in output
+        assert "hash verified" not in output
     else:
-        assert "will not be verified" not in capsys.readouterr().out
+        assert "will not be verified" not in output
+        assert f"hash verified ({hash_algorithm})" in output
 
 
 @pytest.mark.parametrize(
@@ -258,7 +264,7 @@ def test_new_download_chunked(mock_tools, file_perms, hash_algorithm, capsys):
         headers={"content-length": "24"},
         stream=chunks,
     )
-    mock_tools.httpx.stream.return_value.__enter__.return_value = response
+    mock_tools.httpx2.stream.return_value.__enter__.return_value = response
 
     # Download the file
     filename = mock_tools.file.download(
@@ -267,12 +273,12 @@ def test_new_download_chunked(mock_tools, file_perms, hash_algorithm, capsys):
         expected_hash=expected_hash,
     )
 
-    # httpx.stream has been invoked, and content is chunked.
-    mock_tools.httpx.stream.assert_called_with(
+    # httpx2.stream has been invoked, and content is chunked.
+    mock_tools.httpx2.stream.assert_called_with(
         "GET",
         "https://example.com/support?useful=Yes",
         follow_redirects=True,
-        verify=mock_tools.file.ssl_context,
+        verify=True,
     )
     response.headers.get.assert_called_with("content-length")
     response.iter_bytes.assert_called_once_with(chunk_size=1048576)
@@ -299,16 +305,23 @@ def test_new_download_chunked(mock_tools, file_perms, hash_algorithm, capsys):
     with (mock_tools.base_path / "something.zip").open(encoding="utf-8") as f:
         assert f.read() == "chunk-1;chunk-2;chunk-3;"
 
-    # Verify that the expected warnings are output
+    # Verify that the expected warnings/confirmations are output
+    output = capsys.readouterr().out
     if hash_algorithm is None:
-        assert "will not be verified" in capsys.readouterr().out
+        assert "will not be verified" in output
+        assert "hash verified" not in output
+    elif hash_algorithm == "unverified":
+        assert "will not be verified" not in output
+        assert "hash verified" not in output
     else:
-        assert "will not be verified" not in capsys.readouterr().out
+        assert "will not be verified" not in output
+        assert f"hash verified ({hash_algorithm})" in output
 
 
 @pytest.mark.parametrize("hash_algorithm", [None, "unverified", "sha256"])
 def test_already_downloaded(mock_tools, hash_algorithm, capsys):
-    """If the file already exists on disk, it isn't re-downloaded.
+    """If the file already exists on disk, it isn't re-downloaded, but its hash is re-
+    verified against expected_hash.
 
     The request is still made to derive the filename, but the content is never streamed.
     """
@@ -336,7 +349,7 @@ def test_already_downloaded(mock_tools, hash_algorithm, capsys):
         headers={"content-length": "100", "content-encoding": "gzip"},
         stream=[b"definitely not gzip content"],
     )
-    mock_tools.httpx.stream.return_value.__enter__.return_value = response
+    mock_tools.httpx2.stream.return_value.__enter__.return_value = response
 
     # Download the file
     filename = mock_tools.file.download(
@@ -346,11 +359,11 @@ def test_already_downloaded(mock_tools, hash_algorithm, capsys):
     )
 
     # The GET request will have been made
-    mock_tools.httpx.stream.assert_called_with(
+    mock_tools.httpx2.stream.assert_called_with(
         "GET",
         url,
         follow_redirects=True,
-        verify=mock_tools.file.ssl_context,
+        verify=True,
     )
 
     # The request's Content-Disposition header is consumed to
@@ -367,8 +380,73 @@ def test_already_downloaded(mock_tools, hash_algorithm, capsys):
     mock_tools.os.chmod.assert_not_called()
     mock_tools.os.remove.assert_not_called()
 
-    # No mention of verification
-    assert "will not be verified" not in capsys.readouterr().out
+    output = capsys.readouterr().out
+    if hash_algorithm is None:
+        # No hash was provided, so a warning is logged, and there's nothing to
+        # confirm as verified.
+        assert "will not be verified" in output
+        assert "already downloaded." in output
+        assert "already downloaded; hash verified" not in output
+    elif hash_algorithm == "unverified":
+        # Verification was deliberately skipped; no warning, nothing verified.
+        assert "will not be verified" not in output
+        assert "already downloaded." in output
+        assert "already downloaded; hash verified" not in output
+    else:
+        # A real hash was provided and matched; confirm it was verified.
+        assert "will not be verified" not in output
+        assert "already downloaded." not in output
+        assert f"already downloaded; hash verified ({hash_algorithm})" in output
+
+
+def test_already_downloaded_hash_mismatch(mock_tools, capsys):
+    """If the cached file's content doesn't match expected_hash, CorruptContentError is
+    raised, even though the file is already on disk."""
+    content = b"existing content"
+
+    # Create an existing file whose content doesn't match the expected hash
+    existing_file = mock_tools.base_path / "something.zip"
+    with existing_file.open("w", encoding="utf-8") as f:
+        f.write(content.decode())
+
+    url = "https://example.com/path/to/something.zip"
+
+    response = _make_httpx_response(
+        status_code=200,
+        url=url,
+        headers={"content-length": "100", "content-encoding": "gzip"},
+        stream=[b"definitely not gzip content"],
+    )
+    mock_tools.httpx2.stream.return_value.__enter__.return_value = response
+
+    expected_hash = f"sha256:{'0' * 64}"
+
+    with pytest.raises(CorruptContentError) as exc_info:
+        mock_tools.file.download(
+            url=url,
+            download_path=mock_tools.base_path,
+            role="something",
+            expected_hash=expected_hash,
+        )
+
+    assert exc_info.value.role == "something"
+    assert exc_info.value.expected_hash == expected_hash
+    assert exc_info.value.actual_hash == (
+        f"sha256:{hashlib.sha256(content).hexdigest()}"
+    )
+
+    # The cached file was not touched
+    assert existing_file.exists()
+    with existing_file.open(encoding="utf-8") as f:
+        assert f.read() == content.decode()
+
+    # Temporary file was not created, moved, or deleted
+    mock_tools.shutil.move.assert_not_called()
+    mock_tools.os.chmod.assert_not_called()
+    mock_tools.os.remove.assert_not_called()
+
+    # No success confirmation was logged
+    assert "hash verified" not in capsys.readouterr().out
 
 
 def test_missing_resource(mock_tools):
@@ -380,7 +458,7 @@ def test_missing_resource(mock_tools):
         stream=[],
     )
 
-    mock_tools.httpx.stream.return_value.__enter__.return_value = response
+    mock_tools.httpx2.stream.return_value.__enter__.return_value = response
 
     # Download the file
     with pytest.raises(MissingNetworkResourceError):
@@ -389,12 +467,12 @@ def test_missing_resource(mock_tools):
             download_path=mock_tools.base_path,
         )
 
-    # httpx.stream has been invoked, but nothing else.
-    mock_tools.httpx.stream.assert_called_with(
+    # httpx2.stream has been invoked, but nothing else.
+    mock_tools.httpx2.stream.assert_called_with(
         "GET",
         url,
         follow_redirects=True,
-        verify=mock_tools.file.ssl_context,
+        verify=True,
     )
     response.headers.get.assert_not_called()
 
@@ -416,7 +494,7 @@ def test_bad_resource(mock_tools):
         stream=[],
     )
 
-    mock_tools.httpx.stream.return_value.__enter__.return_value = response
+    mock_tools.httpx2.stream.return_value.__enter__.return_value = response
 
     # Download the file
     with pytest.raises(BadNetworkResourceError):
@@ -425,12 +503,12 @@ def test_bad_resource(mock_tools):
             download_path=mock_tools.base_path,
         )
 
-    # httpx.stream has been invoked, but nothing else.
-    mock_tools.httpx.stream.assert_called_with(
+    # httpx2.stream has been invoked, but nothing else.
+    mock_tools.httpx2.stream.assert_called_with(
         "GET",
         url,
         follow_redirects=True,
-        verify=mock_tools.file.ssl_context,
+        verify=True,
     )
     response.headers.get.assert_not_called()
 
@@ -455,7 +533,7 @@ def test_iter_bytes_connection_error(mock_tools):
         headers={"content-length": "100", "content-encoding": "gzip"},
         stream=[b"definitely not gzip content"],
     )
-    mock_tools.httpx.stream.return_value.__enter__.return_value = response
+    mock_tools.httpx2.stream.return_value.__enter__.return_value = response
 
     # Download the file
     with pytest.raises(NetworkFailure, match=r"Unable to download something\.zip"):
@@ -464,12 +542,12 @@ def test_iter_bytes_connection_error(mock_tools):
             download_path=mock_tools.base_path,
         )
 
-    # httpx.stream has been invoked, but nothing else.
-    mock_tools.httpx.stream.assert_called_with(
+    # httpx2.stream has been invoked, but nothing else.
+    mock_tools.httpx2.stream.assert_called_with(
         "GET",
         "https://example.com/something.zip?useful=Yes",
         follow_redirects=True,
-        verify=mock_tools.file.ssl_context,
+        verify=True,
     )
     response.headers.get.assert_called_with("content-length")
 
@@ -494,11 +572,12 @@ def test_connection_error(mock_tools):
     # Use ftp scheme to force raising a real ProtocolError without needing to mock
     url = "ftp://example.com/something.zip"
 
-    # Use the real httpx for this test instead of the MagicMock'd one from mock_tools
+    # Use the real httpx2 for this test instead of the MagicMock'd one from mock_tools
     # Keep using the fixture though, so that it still gets cleaned up after the test
-    mock_tools.httpx = mock.Mock(wraps=httpx)
+    mock_tools.httpx2 = mock.Mock(wraps=httpx2)
 
-    # Failure leads to filename never being read, so the error message will use the full URL
+    # Failure leads to filename never being read,
+    # so the error message will use the full URL
     # rather than the filename
     with pytest.raises(NetworkFailure, match=f"Unable to download {url}"):
         mock_tools.file.download(
@@ -506,12 +585,12 @@ def test_connection_error(mock_tools):
             download_path=mock_tools.base_path,
         )
 
-    # httpx.stream has been invoked, but nothing else.
-    mock_tools.httpx.stream.assert_called_with(
+    # httpx2.stream has been invoked, but nothing else.
+    mock_tools.httpx2.stream.assert_called_with(
         "GET",
         url,
         follow_redirects=True,
-        verify=mock_tools.file.ssl_context,
+        verify=True,
     )
 
     # The file doesn't exist as a result of the download failure
@@ -529,8 +608,8 @@ def test_connection_error(mock_tools):
 
 def test_redirect_connection_error(mock_tools):
     """NetworkFailure raises if the request leads to too many redirects."""
-    mock_tools.httpx.stream.side_effect = [
-        httpx.TooManyRedirects("Exceeded max redirects")
+    mock_tools.httpx2.stream.side_effect = [
+        httpx2.TooManyRedirects("Exceeded max redirects")
     ]
 
     # Download the file
@@ -543,12 +622,12 @@ def test_redirect_connection_error(mock_tools):
             download_path=mock_tools.base_path,
         )
 
-    # httpx.stream has been invoked, but nothing else.
-    mock_tools.httpx.stream.assert_called_with(
+    # httpx2.stream has been invoked, but nothing else.
+    mock_tools.httpx2.stream.assert_called_with(
         "GET",
         "https://example.com/something.zip?useful=Yes",
         follow_redirects=True,
-        verify=mock_tools.file.ssl_context,
+        verify=True,
     )
 
     # The file doesn't exist as a result of the download failure
@@ -563,10 +642,10 @@ def test_redirect_connection_error(mock_tools):
 def test_ssl_verification_error(mock_tools):
     """NetworkFailure is raised if the request fails due to SSL."""
     # Mock an SSL verification error
-    error = httpx.ConnectError("connection error")
-    error.__context__ = httpcore.ConnectError()
+    error = httpx2.ConnectError("connection error")
+    error.__context__ = httpcore2.ConnectError()
     error.__context__.__context__ = ssl.SSLCertVerificationError()
-    mock_tools.httpx.stream.side_effect = [error]
+    mock_tools.httpx2.stream.side_effect = [error]
 
     # Download the file
     with pytest.raises(
@@ -581,12 +660,12 @@ def test_ssl_verification_error(mock_tools):
             download_path=mock_tools.base_path,
         )
 
-    # httpx.stream has been invoked, but nothing else.
-    mock_tools.httpx.stream.assert_called_with(
+    # httpx2.stream has been invoked, but nothing else.
+    mock_tools.httpx2.stream.assert_called_with(
         "GET",
         "https://example.com/something.zip",
         follow_redirects=True,
-        verify=mock_tools.file.ssl_context,
+        verify=True,
     )
 
     # The file doesn't exist as a result of the download failure
@@ -600,10 +679,10 @@ def test_ssl_verification_error(mock_tools):
 
 def test_unknown_httpcore_connectionerror(mock_tools):
     """NetworkFailure is raised if an unknown core connection error occurs."""
-    # Mock a connection error at the level of httpcore
-    error = httpx.ConnectError("connection error")
-    error.__context__ = httpcore.ConnectError()
-    mock_tools.httpx.stream.side_effect = [error]
+    # Mock a connection error at the level of httpcore2
+    error = httpx2.ConnectError("connection error")
+    error.__context__ = httpcore2.ConnectError()
+    mock_tools.httpx2.stream.side_effect = [error]
 
     # Download the file
     with pytest.raises(
@@ -618,12 +697,12 @@ def test_unknown_httpcore_connectionerror(mock_tools):
             download_path=mock_tools.base_path,
         )
 
-    # httpx.stream has been invoked, but nothing else.
-    mock_tools.httpx.stream.assert_called_with(
+    # httpx2.stream has been invoked, but nothing else.
+    mock_tools.httpx2.stream.assert_called_with(
         "GET",
         "https://example.com/something.zip",
         follow_redirects=True,
-        verify=mock_tools.file.ssl_context,
+        verify=True,
     )
 
     # The file doesn't exist as a result of the download failure
@@ -636,10 +715,10 @@ def test_unknown_httpcore_connectionerror(mock_tools):
 
 
 def test_unknown_httpx_connectionerror(mock_tools):
-    """NetworkFailure is raised if an unknown httpx connection error occurs."""
-    # Mock a connection error at the level of httpx
-    error = httpx.ConnectError("connection error")
-    mock_tools.httpx.stream.side_effect = [error]
+    """NetworkFailure is raised if an unknown httpx2 connection error occurs."""
+    # Mock a connection error at the level of httpx2
+    error = httpx2.ConnectError("connection error")
+    mock_tools.httpx2.stream.side_effect = [error]
 
     # Download the file
     with pytest.raises(
@@ -654,12 +733,12 @@ def test_unknown_httpx_connectionerror(mock_tools):
             download_path=mock_tools.base_path,
         )
 
-    # httpx.stream has been invoked, but nothing else.
-    mock_tools.httpx.stream.assert_called_with(
+    # httpx2.stream has been invoked, but nothing else.
+    mock_tools.httpx2.stream.assert_called_with(
         "GET",
         "https://example.com/something.zip",
         follow_redirects=True,
-        verify=mock_tools.file.ssl_context,
+        verify=True,
     )
 
     # The file doesn't exist as a result of the download failure
@@ -681,7 +760,7 @@ def test_new_download_hash_mismatch(mock_tools, file_perms):
         headers={},
         stream=[b"all content"],
     )
-    mock_tools.httpx.stream.return_value.__enter__.return_value = response
+    mock_tools.httpx2.stream.return_value.__enter__.return_value = response
 
     with pytest.raises(CorruptContentError):
         mock_tools.file.download(
@@ -723,4 +802,4 @@ def test_malformed_expected_hash(mock_tools, expected_hash):
             expected_hash=expected_hash,
         )
 
-    mock_tools.httpx.stream.assert_not_called()
+    mock_tools.httpx2.stream.assert_not_called()

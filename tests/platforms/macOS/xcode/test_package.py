@@ -46,7 +46,7 @@ def test_verify(package_command, monkeypatch):
     assert package_command.tools.xcode_cli is not None
     mock_ensure_xcode_is_installed.assert_called_once_with(
         tools=package_command.tools,
-        min_version=(13, 0, 0),
+        min_version="13.0",
     )
     mock_ensure_command_line_tools_are_installed.assert_called_once_with(
         tools=package_command.tools

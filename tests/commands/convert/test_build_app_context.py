@@ -14,12 +14,13 @@ def test_overrides_are_used(convert_command):
         "bundle": "com.bundle",
         "author": "author",
         "author_email": "author_email",
-        "license": "Other",
+        "license": "LicenseRef-Other",
         "app_type": "GUI",
         "leftover": "leftover",
     }
     override_input = overrides.copy()
     out = convert_command.build_app_context(override_input)
+
     for k, v in overrides.items():
         if k == "app_type":
             assert not out["console_app"]

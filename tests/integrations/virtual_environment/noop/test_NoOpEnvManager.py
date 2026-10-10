@@ -43,7 +43,8 @@ def test_existing(noop_venv, recreate):
     assert noop_venv.exists()
 
     # Calling prepare causes the environment to be created
-    # If a recreate was requested, and the marker file existed, that is reflected in the result
+    # If a recreate was requested,
+    # and the marker file existed, that is reflected in the result
     assert noop_venv.prepare(recreate=recreate) == recreate
 
     # Environment still exists, and the marker path points at the executable.

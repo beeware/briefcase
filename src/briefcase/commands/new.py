@@ -28,8 +28,8 @@ LICENSE_OPTIONS = {
     "GPL-2.0+": "GNU General Public License v2.0 or later (GPL-2.0+)",
     "GPL-3.0": "GNU General Public License v3.0 only (GPL-3.0)",
     "GPL-3.0+": "GNU General Public License v3.0 or later (GPL-3.0+)",
-    "Proprietary": "Proprietary",
-    "Other": "Other",
+    "LicenseRef-Proprietary": "Proprietary",
+    "LicenseRef-Other": "Other",
 }
 DEFAULT_LICENSE = "BSD-3-Clause"
 
@@ -81,7 +81,7 @@ class NewCommand(BaseCommand):
     template_url = "https://github.com/beeware/briefcase-template"
 
     # The expected commit hash of the project template
-    template_hash = "sha1:32ad2fe2db8d92787acc74ee54788a38a56c4970"
+    template_hash = "sha1:476c396a300e6844d89f49de4dabfde202442776"
 
     def bundle_path(self, app):
         """A placeholder; New command doesn't have a bundle path."""
@@ -270,17 +270,18 @@ class NewCommand(BaseCommand):
         """
         return f"https://{self.make_domain(bundle)}/{app_name}"
 
-    def input_project_name(self, formal_name, override_value):
+    def input_project_name(self, app_name, override_value):
         return self.console.text_question(
             intro=(
                 "Briefcase can manage projects that contain multiple applications, so "
                 "we need a Project name.\n"
                 "\n"
                 "If you're only planning to have one application in this project, you "
-                "can use the formal name as the project name."
+                "can use the app name as the project name."
             ),
             description="Project Name",
-            default=formal_name,
+            default=app_name,
+            validator=self.validate_app_name,
             override_value=override_value,
         )
 
@@ -359,7 +360,7 @@ class NewCommand(BaseCommand):
         )
 
         project_name = self.input_project_name(
-            formal_name, project_overrides.pop("project_name", None)
+            app_name, project_overrides.pop("project_name", None)
         )
 
         description = self.console.text_question(
@@ -503,8 +504,7 @@ class NewCommand(BaseCommand):
         # Sort the options alphabetically first
         ordered = OrderedDict(sorted(bootstraps.items()))
 
-        # Ensure the first 3 options are: Toga, PySide6, Pygame
-        ordered.move_to_end("Pygame", last=False)
+        # Ensure the first 2 options are: Toga, PySide6
         ordered.move_to_end("PySide6", last=False)
         ordered.move_to_end("Toga", last=False)
 

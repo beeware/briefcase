@@ -58,7 +58,7 @@ Although Briefcase provides a `run` command that can be used to serve the websit
 
 [PyScript](https://pyscript.net) (which forms the base of Briefcase's web backend) is a new project; and Toga's web backend is very new. As a result this web backend should be considered experimental.
 
-Regardless of what Python version you run Briefcase with, the app will use PyScript's current Python version (as of October 2022, this is 3.10).
+Regardless of what Python version you run Briefcase with, the app will use PyScript's current Python version (as of October 2026, this is 3.14).
 
 There are also a [number of constraints](https://pyodide.org/en/stable/usage/wasm-constraints.html) on what you can do in a web environment. Some of these are fundamental constraints on the web as a platform; some are known issues with PyScript and Pyodide as runtime environments. You shouldn't expect that arbitrary third-party Python packages will "just run" in a web environment.
 

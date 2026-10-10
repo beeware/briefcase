@@ -1,4 +1,8 @@
-from automation.bootstraps import BRIEFCASE_EXIT_SUCCESS_SIGNAL, EXIT_SUCCESS_NOTIFY
+from automation.bootstraps import (
+    BRIEFCASE_EXIT_SUCCESS_SIGNAL,
+    EXIT_SUCCESS_NOTIFY,
+    START_SUCCESS_NOTIFY,
+)
 from briefcase.bootstraps import PySide6GuiBootstrap
 
 
@@ -30,6 +34,8 @@ class {{{{ cookiecutter.class_name }}}}(QtWidgets.QMainWindow):
 
 
 def main():
+    print("{START_SUCCESS_NOTIFY}")
+
     # Linux desktop environments use an app's .desktop file to integrate the app
     # in to their application menus. The .desktop file of this app will include
     # the StartupWMClass key, set to app's formal name. This helps associate the

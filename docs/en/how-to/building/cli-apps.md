@@ -69,6 +69,7 @@ You can use any standard Python tool to parse CLI arguments. Here's a simple exa
 ```python
 import argparse
 
+
 def main():
     parser = argparse.ArgumentParser(description="A simple CLI app.")
     parser.add_argument("name", help="Your name")

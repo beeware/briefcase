@@ -14,17 +14,11 @@ from briefcase.platforms.android.gradle import android_log_clean_filter
         # System messages log
         (
             "D/libEGL  : loaded /vendor/lib64/egl/libEGL_emulation.so",
-            (
-                "loaded /vendor/lib64/egl/libEGL_emulation.so",
-                False,
-            ),
+            ("loaded /vendor/lib64/egl/libEGL_emulation.so", False),
         ),
         (
             "\x1b[32mD/libEGL  : loaded /vendor/lib64/egl/libEGL_emulation.so\x1b[0m",
-            (
-                "loaded /vendor/lib64/egl/libEGL_emulation.so",
-                False,
-            ),
+            ("loaded /vendor/lib64/egl/libEGL_emulation.so", False),
         ),
         (
             "D/stdio   : Could not find platform independent libraries <prefix>",
@@ -44,7 +38,10 @@ from briefcase.platforms.android.gradle import android_log_clean_filter
             ("Python app launched & stored in Android Activity class", True),
         ),
         (
-            "\x1b[32mI/python.stdout: Python app launched & stored in Android Activity class\x1b[0m",
+            (
+                "\x1b[32mI/python.stdout: Python app launched & "
+                "stored in Android Activity class\x1b[0m"
+            ),
             ("Python app launched & stored in Android Activity class", True),
         ),
         (
@@ -68,7 +65,10 @@ from briefcase.platforms.android.gradle import android_log_clean_filter
             ("test_case (tests.foobar.test_other.TestOtherMethods)", True),
         ),
         (
-            "\x1b[32mI/python.stderr: test_case (tests.foobar.test_other.TestOtherMethods)\x1b[0m",
+            (
+                "\x1b[32mI/python.stderr: test_case "
+                "(tests.foobar.test_other.TestOtherMethods)\x1b[0m"
+            ),
             ("test_case (tests.foobar.test_other.TestOtherMethods)", True),
         ),
         (

@@ -122,7 +122,7 @@ The specific tag of the `manylinux` image to use. Defaults to `latest`.
 A list of operating system packages that must be installed for the AppImage build to succeed. If a Docker build is requested, this list will be passed to the Docker context when building the container for the app build. By default, entries should be Ubuntu 18.04 `apt` package requirements. For example:
 
 ```python
-system_requires = ['libgirepository1.0-dev', 'libcairo2-dev']
+system_requires = ["libgirepository1.0-dev", "libcairo2-dev"]
 ```
 
 would make the GTK GI and Cairo operating system libraries available to your app.
@@ -244,7 +244,8 @@ You can force Briefcase to install Pillow from source by adding:
 ```python
 requires = [
     "pillow==9.1.0",
-    "--no-binary", "pillow",
+    "--no-binary",
+    "pillow",
 ]
 ```
 
@@ -282,8 +283,10 @@ You must add a separate `--no-binary` option for every binary library you want t
 requires = [
     "pillow==9.1.0",
     "cryptography==37.0.2",
-    "--no-binary", "pillow",
-    "--no-binary", "cryptography",
+    "--no-binary",
+    "pillow",
+    "--no-binary",
+    "cryptography",
 ]
 ```
 
@@ -293,7 +296,8 @@ If you want to force *all* packages to be installed from source, you can add a s
 requires = [
     "pillow==9.1.0",
     "cryptography==37.0.2",
-    "--no-binary", ":all:",
+    "--no-binary",
+    ":all:",
 ]
 ```
 
@@ -308,7 +312,5 @@ requires = [
 ]
 
 [tool.briefcase.app.helloworld.linux]
-requires = [
-    "--no-binary", "pillow"
-]
+requires = ["--no-binary", "pillow"]
 ```

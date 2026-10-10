@@ -241,11 +241,22 @@ class AndroidSDK(ManagedTool):
 
     @property
     def DEFAULT_DEVICE_SKIN(self) -> str:
+        # Skins are entirely cosmetic. In a CI environment, default to no skin.
+        if "CI" in os.environ:
+            return None
         return "pixel_7_pro"
 
     @property
+    def DEFAULT_ANDROID_SDK_LEVEL(self) -> int:
+        return 31
+
+    @property
+    def DEFAULT_AVD(self) -> str:
+        return f"beePhone-{self.DEFAULT_ANDROID_SDK_LEVEL}"
+
+    @property
     def DEFAULT_API_LEVEL(self) -> str:
-        return "android-31"
+        return f"android-{self.DEFAULT_ANDROID_SDK_LEVEL}"
 
     @property
     def DEFAULT_IMAGE_TYPE(self) -> str:
@@ -815,7 +826,7 @@ connection.
     def list_installed_system_images(self) -> set[str]:
         """Returns a set of installed system image package identifiers.
 
-        e.g., ``{"system-images;android-31;default;x86_64"}``
+        e.g., `{"system-images;android-31;default;x86_64"}`
         """
         try:
             output = self.tools.subprocess.check_output(
@@ -837,7 +848,7 @@ connection.
         """Verify that the required system image is installed.
 
         :param system_image: The SDKManager identifier for the system image (e.g.,
-            ``"system-images;android-31;default;x86_64"``)
+            `"system-images;android-31;default;x86_64"`)
         """
         # Look for the directory named as a system image.
         # If it exists, we already have the system image.
@@ -1008,15 +1019,16 @@ connection.
         be validated, and then automatically selected.
 
         :param device_or_avd: The device or AVD to target. Can be a physical
-            device id (a hex string), an emulator id (``emulator-5554``), or an
-            emulator AVD name (``@robotfriend``), or a JSON payload describing
-            the properties of an emulator that will be created (e.g.,
-            ``'{"avd":"beePhone","device_type":"pixel","skin":"pixel_3a","system_image":"system-images;android-31;default;arm64-v8a"}'``)
-            If ``None``, the user will be asked to select a device from the list
-            available.
-        :returns: A tuple containing ``(device, name, avd)``. ``avd`` will only
+            device id (a hex string), an emulator id (`emulator-5554`), or an
+            emulator AVD name (`@robotfriend`), a JSON payload describing the
+            properties of an emulator that will be created (e.g.,
+            `'{"avd":"beePhone","device_type":"pixel","skin":"pixel_3a","system_image":"system-images;android-31;default;arm64-v8a"}'`)
+            or `auto` to select an appropriate device automatically (creating
+            one if necessary). If `None`, the user will be asked to select a
+            device from the list available.
+        :returns: A tuple containing `(device, name, avd)`. `avd` will only
             be provided if an emulator with that AVD is not currently running.
-            If ``device`` is None, a new emulator should be created.
+            If `device` is None, a new emulator should be created.
         """
         # If the device_or_avd starts with "{", it's a definition for a new
         # emulator to be created.
@@ -1087,9 +1099,26 @@ connection.
                 choices[f"@{avd}"] = name
                 device_index[f"@{avd}"] = name
 
-        # If a device or AVD has been provided, check it against the available
-        # device list.
-        if device_or_avd:
+        if device_or_avd == "auto":
+            default_avd = f"@{self.DEFAULT_AVD}"
+            try:
+                name = device_index[default_avd]
+            except KeyError:
+                # The default AVD doesn't exist; create it.
+                self._create_emulator(
+                    avd=self.DEFAULT_AVD,
+                    device_type=self.DEFAULT_DEVICE_TYPE,
+                    skin=self.DEFAULT_DEVICE_SKIN,
+                    system_image=self.DEFAULT_SYSTEM_IMAGE,
+                )
+                name = f"{default_avd} (emulator)"
+
+            device = running_avds.get(self.DEFAULT_AVD)
+            return device, name, self.DEFAULT_AVD
+
+        elif device_or_avd:
+            # If a device or AVD has been provided, check it against the available
+            # device list.
             try:
                 name = device_index[device_or_avd]
 
@@ -1201,12 +1230,12 @@ In future, you can specify this device by running:
         # Get the list of existing emulators
         emulators = set(self.emulators())
 
-        default_avd = "beePhone"
+        default_avd = self.DEFAULT_AVD
         i = 1
         # Make sure the default name is unique
         while default_avd in emulators:
             i += 1
-            default_avd = f"beePhone{i}"
+            default_avd = f"{self.DEFAULT_AVD}-{i}"
 
         # Prompt for a device avd until a valid one is provided.
         avd = self.tools.console.text_question(
@@ -1274,13 +1303,16 @@ a default name '{default_avd}'.
             },
             key=lambda x: (0 if x == "default" else 1, x),
         )
+
         image_type = self.tools.console.selection_question(
             intro="Select the system image type:",
             description="Type",
             options=image_types,
-            default=self.DEFAULT_IMAGE_TYPE
-            if self.DEFAULT_IMAGE_TYPE in image_types
-            else image_types[0],
+            default=(
+                self.DEFAULT_IMAGE_TYPE
+                if self.DEFAULT_IMAGE_TYPE in image_types
+                else image_types[0]
+            ),
         )
 
         system_image = f"system-images;{api_level};{image_type};{self.emulator_abi}"
@@ -1584,7 +1616,7 @@ class ADB:
     def avd_name(self) -> str | None:
         """Get the AVD name for the device.
 
-        :returns: The AVD name for the device; or ``None`` if the device isn't
+        :returns: The AVD name for the device; or `None` if the device isn't
             an emulator
         """
         try:
@@ -1947,7 +1979,7 @@ Activity class not found while starting app.
         """Obtain the PID of a running app by package name.
 
         :param package: The package ID for the application (e.g.,
-            ``org.beeware.tutorial``)
+            `org.beeware.tutorial`)
         :returns: The PID of the given app as a string, or None if it isn't
         running.
         """

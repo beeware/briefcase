@@ -5,7 +5,7 @@ import shlex
 from abc import ABC, abstractmethod
 from collections.abc import Collection
 from pathlib import Path
-from typing import TYPE_CHECKING, TypeVar
+from typing import Self, TypeVar
 from urllib.parse import urlparse
 
 from briefcase.exceptions import (
@@ -15,12 +15,6 @@ from briefcase.exceptions import (
     UnsupportedHostError,
 )
 from briefcase.integrations.base import ManagedTool, Tool, ToolCache
-
-if TYPE_CHECKING:
-    try:
-        from typing import Self
-    except ImportError:  # pragma: no-cover-if-gte-py311
-        from typing_extensions import Self
 
 LinuxDeployT = TypeVar("LinuxDeployT", bound="LinuxDeployBase")
 

@@ -6,7 +6,6 @@ import pytest
 from briefcase.bootstraps import (
     ConsoleBootstrap,
     EmptyBootstrap,
-    PygameGuiBootstrap,
     PySide6GuiBootstrap,
     TogaGuiBootstrap,
 )
@@ -26,7 +25,7 @@ def test_question_sequence_toga(new_command):
 def test_question_sequence_console(new_command):
     """A console bootstrap can be constructed."""
     new_command.console.values = [
-        "4",  # Console app
+        "3",  # Console app
     ]
 
     bootstrap_class = new_command.select_bootstrap(project_overrides={})
@@ -45,21 +44,10 @@ def test_question_sequence_pyside6(new_command):
     assert bootstrap_class is PySide6GuiBootstrap
 
 
-def test_question_sequence_pygame(new_command):
-    """A Pygame bootstrap can be constructed."""
-    new_command.console.values = [
-        "3",  # PyGame
-    ]
-
-    bootstrap_class = new_command.select_bootstrap(project_overrides={})
-
-    assert bootstrap_class is PygameGuiBootstrap
-
-
 def test_question_sequence_none(new_command):
     """If no bootstrap is selected, the empty bootstrap is used."""
     new_command.console.values = [
-        "6",  # No toolkit
+        "5",  # No toolkit
     ]
 
     bootstrap_class = new_command.select_bootstrap(project_overrides={})
@@ -70,7 +58,7 @@ def test_question_sequence_none(new_command):
 def test_question_sequence_other_framework(new_command, capsys):
     """Selecting 'Other frameworks' shows guidance and aborts cleanly."""
     new_command.console.values = [
-        "5",  # Other framework
+        "4",  # Other framework
         "1",  # The first community framework (Toga Positron)
     ]
 
@@ -92,7 +80,7 @@ def test_question_sequence_other_framework(new_command, capsys):
 def test_question_sequence_other_none(new_command, capsys):
     """'None' can be selected from the 'Other frameworks' menu."""
     new_command.console.values = [
-        "5",  # Other framework
+        "4",  # Other framework
         "3",  # No framework selected from the "other" menu
     ]
 
@@ -120,7 +108,7 @@ def test_other_frameworks_hide_installed(new_command, capsys, monkeypatch):
     monkeypatch.setattr(metadata, "metadata", MagicMock(side_effect=_metadata))
 
     new_command.console.values = [
-        "5",  # Other framework
+        "4",  # Other framework
         "1",  # The first community framework (Toga Positron)
     ]
 
@@ -148,7 +136,7 @@ def test_other_frameworks_all_installed(new_command, capsys, monkeypatch):
     monkeypatch.setattr(metadata, "metadata", MagicMock(side_effect=_metadata))
 
     new_command.console.values = [
-        "5",  # Other framework
+        "4",  # Other framework
         "1",  # The first community framework (Toga Positron)
     ]
 

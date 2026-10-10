@@ -13,8 +13,7 @@ from contextlib import suppress
 from email.message import Message
 from pathlib import Path
 
-import httpx
-import truststore
+import httpx2
 from tenacity import retry, retry_if_exception_type, stop_after_attempt, wait_fixed
 
 from briefcase.exceptions import (
@@ -104,16 +103,6 @@ class File(Tool):
                 lambda path: (path.parent, path.is_dir()),
             )
         )
-
-    @property
-    def ssl_context(self):
-        """The SSL context to use for downloads."""
-        try:
-            return self._ssl_context
-        except AttributeError:
-            self._ssl_context = truststore.SSLContext(ssl.PROTOCOL_TLS_CLIENT)
-
-            return self._ssl_context
 
     def is_scm_url(self, path):
         """Determine if the requirement is defined as a URL.
@@ -282,6 +271,13 @@ class File(Tool):
           doesn't match, a `CorruptContentError` is raised. Any fixed-length
           hash algorithm provided by hashlib can be used.
 
+        If the file is already present in the download cache, it is *not*
+        re-downloaded; however, its content is still re-hashed and compared
+        against `expected_hash` every time, so a corrupted or tampered cache
+        entry will still raise `CorruptContentError`. A console message
+        confirms when a hash has been checked and verified, for both cached
+        and freshly downloaded files.
+
         :param url: The URL to download
         :param download_path: The path to the download cache folder. This path
             will be created if it doesn't exist.
@@ -296,11 +292,11 @@ class File(Tool):
         download_path.mkdir(parents=True, exist_ok=True)
         filename: Path | None = None
         try:
-            with self.tools.httpx.stream(
+            with self.tools.httpx2.stream(
                 "GET",
                 url,
                 follow_redirects=True,
-                verify=self.ssl_context,
+                verify=True,
             ) as response:
                 if response.status_code == 404:
                     raise MissingNetworkResourceError(url=url)
@@ -315,7 +311,7 @@ class File(Tool):
                 cache_full_name = response.url.path
                 header_value = response.headers.get("Content-Disposition")
                 if header_value:
-                    # Httpx does not provide a way to parse RFC6266 headers.
+                    # Httpx2 does not provide a way to parse RFC6266 headers.
                     # The cgi module *did* have a way to parse these headers, but
                     # it was deprecated as part of PEP594. PEP594 recommends
                     # using the email.message module to parse these headers as they
@@ -331,14 +327,31 @@ class File(Tool):
                 cache_name = cache_full_name.split("/")[-1]
                 filename = download_path / cache_name
 
+                if expected_hash is None:
+                    self.tools.console.warning(
+                        f"The integrity of {cache_name} will not be verified "
+                        "as no reference hash been provided."
+                    )
+
                 if filename.exists():
-                    self.tools.console.info(f"{cache_name} already downloaded")
-                else:
-                    if expected_hash is None:
-                        self.tools.console.warning(
-                            f"The integrity of {cache_name} will not be verified "
-                            "as no reference hash been provided."
+                    if algorithm is None:
+                        self.tools.console.info(f"{cache_name} already downloaded.")
+                    else:
+                        with filename.open("rb") as f:
+                            hash = hashlib.file_digest(f, algorithm)
+
+                        actual_digest = hash.hexdigest()
+                        if actual_digest.lower() != digest.lower():
+                            raise CorruptContentError(
+                                role=role or filename.name,
+                                expected_hash=f"{algorithm}:{digest}",
+                                actual_hash=f"{algorithm}:{actual_digest}",
+                            )
+                        self.tools.console.info(
+                            f"{cache_name} already downloaded; "
+                            f"hash verified ({algorithm})."
                         )
+                else:
                     self.tools.console.info(f"Downloading {cache_name}...")
                     self._fetch_and_write_content(
                         response,
@@ -347,14 +360,14 @@ class File(Tool):
                         algorithm=algorithm,
                         digest=digest,
                     )
-        except httpx.RequestError as e:
+        except httpx2.RequestError as e:
             if role:
                 description = role
             else:
                 description = filename.name if filename else url
 
-            if isinstance(e, httpx.TooManyRedirects):
-                # httpx, unlike requests, will not follow redirects indefinitely and
+            if isinstance(e, httpx2.TooManyRedirects):
+                # httpx2, unlike requests, will not follow redirects indefinitely and
                 # defaults to 20 redirects before calling it quits. If the download
                 # attempt exceeds 20 redirects, Briefcase probably needs to re-evaluate
                 # the URLs it is using for that download and ideally find a starting
@@ -363,11 +376,11 @@ class File(Tool):
                     "exceeded redirects when downloading the file.\n\n"
                     "Please report this as a bug to Briefcase."
                 )
-            elif isinstance(e, httpx.DecodingError):
+            elif isinstance(e, httpx2.DecodingError):
                 hint = "the server sent a malformed response."
-            elif isinstance(e, httpx.ConnectError):
+            elif isinstance(e, httpx2.ConnectError):
                 try:
-                    # It's a little difficult to verify exactly what might cause httpx
+                    # It's a little difficult to verify exactly what might cause httpx2
                     # to raise a ConnectError, but `__context__.__context__` should be
                     # an SSLCertVerificationError if there's a certificate problem.
                     # Catch that case, and print the raw exception in other cases.
@@ -388,7 +401,7 @@ class File(Tool):
                         f"The reported cause of the problem was {e}"
                     )
             else:
-                # httpx.TransportError
+                # httpx2.TransportError
                 # Use the default hint for generic network communication errors
                 hint = (
                     "is your computer offline?\n\n"
@@ -433,13 +446,13 @@ class File(Tool):
 
     def _fetch_and_write_content(
         self,
-        response: httpx.Response,
+        response: httpx2.Response,
         filename: Path,
         role: str | None,
         algorithm: str | None,
         digest: str | None,
     ):
-        """Write the content from the httpx Response to file.
+        """Write the content from the httpx2 Response to file.
 
         The data is initially written in to a temporary file in the Briefcase
         cache. This avoids partially downloaded files masquerading as complete
@@ -451,7 +464,7 @@ class File(Tool):
         file is moved into place. A mismatch raises `CorruptContentError` and the
         temporary file is discarded.
 
-        :param response: ``httpx.Response``
+        :param response: ``httpx2.Response``
         :param filename: full filesystem path to save data
         :param role: A string describing the role played by the file being
             downloaded, used to name the resource in `CorruptContentError`.
@@ -488,11 +501,15 @@ class File(Tool):
                                 hasher.update(data)
                             progress_bar.update(task_id, advance=len(data))
 
-            if hasher is not None and hasher.hexdigest().lower() != digest.lower():
-                raise CorruptContentError(
-                    role=role or filename.name,
-                    expected_hash=f"{hasher.name}:{digest}",
-                    actual_hash=f"{hasher.name}:{hasher.hexdigest()}",
+            if hasher is not None:
+                if hasher.hexdigest().lower() != digest.lower():
+                    raise CorruptContentError(
+                        role=role or filename.name,
+                        expected_hash=f"{hasher.name}:{digest}",
+                        actual_hash=f"{hasher.name}:{hasher.hexdigest()}",
+                    )
+                self.tools.console.info(
+                    f"{filename.name} hash verified ({hasher.name})."
                 )
 
             # This file move short circuits to a file rename when the source and

@@ -92,7 +92,8 @@ def test_verify_windows_cpu_arch(create_command):
     # Create a Mock object for the platform module
     create_command.tools.platform = MagicMock(spec_set=platform)
 
-    # Simulate that Mock platform is running on Windows ARM64 with an x86_64 Python interpreter
+    # Simulate that Mock platform is running on Windows ARM64
+    # with an x86_64 Python interpreter
     create_command.tools.host_os = "Windows"
     create_command.tools.host_arch = "ARM64"
     create_command.tools.platform.python_compiler = MagicMock(
@@ -119,7 +120,8 @@ def test_verify_windows_cpu_arch_warning(monkeypatch, create_command, capsys):
     # Create a Mock object for the platform module
     create_command.tools.platform = MagicMock(spec_set=platform)
 
-    # Simulate that Mock platform is running on Windows ARM64 with an x86_64 Python interpreter
+    # Simulate that Mock platform is running on Windows ARM64
+    # with an x86_64 Python interpreter
     create_command.tools.host_os = "Windows"
     create_command.tools.host_arch = "ARM64"
     create_command.tools.platform.python_compiler = MagicMock(
@@ -268,7 +270,7 @@ def test_support_package_url(create_command, revision, micro):
     expected_link = (
         f"https://www.python.org/ftp/python"
         f"/{sys.version_info.major}.{sys.version_info.minor}.{micro}"
-        f"/python-{sys.version_info.major}.{sys.version_info.minor}.{revision}-embed-{create_command.tools.host_arch.lower()}.zip"
+        f"/python-{sys.version_info.major}.{sys.version_info.minor}.{revision}-embeddable-{create_command.tools.host_arch.lower()}.zip"
     )
     assert create_command.support_package_url(revision) == expected_link
 

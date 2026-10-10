@@ -131,7 +131,8 @@ def test_install_mixed_requirements(mock_tools, venv, tmp_path):
         ],
     )
 
-    # Two install calls required - one to Conda, and one to pip (to install local packages)
+    # Two install calls required - one to Conda, and one to pip (to install local
+    # packages)
     assert mock_tools.subprocess.run.mock_calls == [
         call(
             [
@@ -175,7 +176,8 @@ def test_disable_include_dependencies(mock_tools, venv, tmp_path):
         include_deps=False,
     )
 
-    # Two install calls required - one to Conda, and one to pip (to install local packages)
+    # Two install calls required - one to Conda, and one to pip (to install local
+    # packages)
     assert mock_tools.subprocess.run.mock_calls == [
         call(
             [

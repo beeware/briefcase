@@ -40,26 +40,60 @@ def test_unsupported_host_os(create_command, host_os):
 
 
 @pytest.mark.parametrize(
-    ("platform", "arch", "venv_platform", "platform_path"),
+    ("version", "revision", "expected"),
     [
-        (
-            "iOS",
-            "arm64",
-            "iphoneos",
-            "Python.xcframework/ios-arm64/platform-config/arm64-iphoneos",
-        ),
-        (
-            "iphonesimulator",
-            "arm64",
-            "iphonesimulator",
-            "Python.xcframework/ios-arm64_x86_64-simulator/platform-config/arm64-iphonesimulator",
-        ),
-        (
-            "iphonesimulator",
-            "x86_64",
-            "iphonesimulator",
-            "Python.xcframework/ios-arm64_x86_64-simulator/platform-config/x86_64-iphonesimulator",
-        ),
+        # Numerical revision
+        ((3, 13, 5), 5, "3.13/iOS/Python-3.13-iOS-support.b5.tar.gz"),
+        ((3, 14, 5), 5, "3.14/iOS/Python-3.14-iOS-support.b5.tar.gz"),
+        # Text revision
+        ((3, 13, 5), "5", "3.13/iOS/Python-3.13-iOS-support.b5.tar.gz"),
+        ((3, 14, 5), "5", "3.14/iOS/Python-3.14-iOS-support.b5.tar.gz"),
+        # Off-label revisions
+        ((3, 13, 5), "x123", "3.13/iOS/Python-3.13-iOS-support.bx123.tar.gz"),
+        ((3, 14, 5), "x123", "3.14/iOS/Python-3.14-iOS-support.bx123.tar.gz"),
+    ],
+)
+def test_legacy_support_package_url(create_command, version, revision, expected):
+    """A valid support package URL is created for a support revision."""
+    create_command.tools.sys.version_info = version
+    assert create_command.support_package_url(revision) == (
+        f"https://briefcase-support.s3.amazonaws.com/python/{expected}"
+    )
+
+
+@pytest.mark.parametrize(
+    ("version", "revision", "expected"),
+    [
+        # Numerical revision
+        ((3, 15, 5), 5, "3.15.5/python-3.15.5"),
+        ((3, 16, 6), 5, "3.16.5/python-3.16.5"),
+        # Text revision
+        ((3, 15, 5), "5", "3.15.5/python-3.15.5"),
+        ((3, 16, 5), "5", "3.16.5/python-3.16.5"),
+        # Pre-release revision
+        ((3, 15, 0, "alpha", 4), "0a4", "3.15.0/python-3.15.0a4"),
+        ((3, 15, 0, "beta", 3), "0b3", "3.15.0/python-3.15.0b3"),
+        ((3, 15, 0, "candidate", 2), "0rc2", "3.15.0/python-3.15.0rc2"),
+        # The template revision supersedes the minor from the actual Python
+        ((3, 15, 3), "5", "3.15.5/python-3.15.5"),
+        ((3, 15, 0, "beta", 2), "0rc2", "3.15.0/python-3.15.0rc2"),
+    ],
+)
+def test_support_package_url(create_command, version, revision, expected):
+    """A valid support package URL is created for a support revision."""
+    create_command.tools.sys.version_info = version
+    assert (
+        create_command.support_package_url(revision)
+        == f"https://www.python.org/ftp/python/{expected}-iOS-XCframework.tar.gz"
+    )
+
+
+@pytest.mark.parametrize(
+    ("platform", "arch", "venv_platform"),
+    [
+        ("iOS", "arm64", "iphoneos"),
+        ("iphonesimulator", "arm64", "iphonesimulator"),
+        ("iphonesimulator", "x86_64", "iphonesimulator"),
     ],
 )
 def test_create_app_environment(
@@ -69,7 +103,6 @@ def test_create_app_environment(
     platform,
     arch,
     venv_platform,
-    platform_path,
 ):
     """An iOS app can create cross-environments with a platform path."""
     create_command.tools.subprocess = mock.MagicMock()
@@ -87,10 +120,7 @@ def test_create_app_environment(
     assert venv.platform == venv_platform
     assert venv.arch == arch
     assert venv.name == f"{venv_platform}-{arch}"
-    assert (
-        venv.platform_path
-        == tmp_path / "base_path/build/first-app/ios/xcode/Support" / platform_path
-    )
+    assert venv.support_path == tmp_path / "base_path/build/first-app/ios/xcode/Support"
 
 
 def test_install_requirements(
@@ -124,7 +154,8 @@ def test_install_requirements(
         install_path=bundle_path / "app_packages.iphoneos",
         install_hint=(
             "\n\n"
-            "This may be because the `iphoneos` wheels that are available are not compatible\n"
+            "This may be because the `iphoneos` wheels that are available "
+            "are not compatible\n"
             "with Python 3.X and a minimum iOS version of 12.0.\n"
         ),
     )
@@ -141,7 +172,8 @@ def test_install_requirements(
         install_hint=(
             "\n\n"
             "This may indicate that an `iphoneos` wheel could be found, but an\n"
-            "`iphonesimulator` wheel could not be found; or that the `iphonesimulator`\n"
+            "`iphonesimulator` wheel could not be found; or that the "
+            "`iphonesimulator`\n"
             "binary wheels that are available are not compatible with\n"
             "Python 3.X and a minimum iOS version of 12.0.\n"
         ),
@@ -375,7 +407,9 @@ def test_incompatible_min_os_version(
             {},
             {
                 "info": {
-                    "NSBluetoothAlwaysUsageDescription": "I need to connect to bluetooth device."
+                    "NSBluetoothAlwaysUsageDescription": (
+                        "I need to connect to bluetooth device."
+                    )
                 },
             },
         ),
@@ -412,7 +446,9 @@ def test_incompatible_min_os_version(
             {
                 "info": {
                     "NSLocationDefaultAccuracyReduced": True,
-                    "NSLocationWhenInUseUsageDescription": "I need to know roughly where you are",
+                    "NSLocationWhenInUseUsageDescription": (
+                        "I need to know roughly where you are"
+                    ),
                 }
             },
         ),
@@ -425,7 +461,9 @@ def test_incompatible_min_os_version(
             {
                 "info": {
                     "NSLocationDefaultAccuracyReduced": False,
-                    "NSLocationWhenInUseUsageDescription": "I need to know exactly where you are",
+                    "NSLocationWhenInUseUsageDescription": (
+                        "I need to know exactly where you are"
+                    ),
                 }
             },
         ),
@@ -437,8 +475,12 @@ def test_incompatible_min_os_version(
             {},
             {
                 "info": {
-                    "NSLocationWhenInUseUsageDescription": "I always need to know where you are",
-                    "NSLocationAlwaysAndWhenInUseUsageDescription": "I always need to know where you are",
+                    "NSLocationWhenInUseUsageDescription": (
+                        "I always need to know where you are"
+                    ),
+                    "NSLocationAlwaysAndWhenInUseUsageDescription": (
+                        "I always need to know where you are"
+                    ),
                     "UIBackgroundModes": ["processing", "location"],
                 }
             },
@@ -453,8 +495,12 @@ def test_incompatible_min_os_version(
             {
                 "info": {
                     "NSLocationDefaultAccuracyReduced": True,
-                    "NSLocationWhenInUseUsageDescription": "I need to know roughly where you are",
-                    "NSLocationAlwaysAndWhenInUseUsageDescription": "I always need to know where you are",
+                    "NSLocationWhenInUseUsageDescription": (
+                        "I need to know roughly where you are"
+                    ),
+                    "NSLocationAlwaysAndWhenInUseUsageDescription": (
+                        "I always need to know where you are"
+                    ),
                     "UIBackgroundModes": ["processing", "location"],
                 }
             },
@@ -469,8 +515,12 @@ def test_incompatible_min_os_version(
             {
                 "info": {
                     "NSLocationDefaultAccuracyReduced": False,
-                    "NSLocationWhenInUseUsageDescription": "I need to know exactly where you are",
-                    "NSLocationAlwaysAndWhenInUseUsageDescription": "I always need to know where you are",
+                    "NSLocationWhenInUseUsageDescription": (
+                        "I need to know exactly where you are"
+                    ),
+                    "NSLocationAlwaysAndWhenInUseUsageDescription": (
+                        "I always need to know where you are"
+                    ),
                     "UIBackgroundModes": ["processing", "location"],
                 }
             },
@@ -485,7 +535,9 @@ def test_incompatible_min_os_version(
             {
                 "info": {
                     "NSLocationDefaultAccuracyReduced": False,
-                    "NSLocationWhenInUseUsageDescription": "I need to know exactly where you are",
+                    "NSLocationWhenInUseUsageDescription": (
+                        "I need to know exactly where you are"
+                    ),
                 }
             },
         ),
@@ -500,8 +552,12 @@ def test_incompatible_min_os_version(
             {
                 "info": {
                     "NSLocationDefaultAccuracyReduced": False,
-                    "NSLocationWhenInUseUsageDescription": "I need to know exactly where you are",
-                    "NSLocationAlwaysAndWhenInUseUsageDescription": "I always need to know where you are",
+                    "NSLocationWhenInUseUsageDescription": (
+                        "I need to know exactly where you are"
+                    ),
+                    "NSLocationAlwaysAndWhenInUseUsageDescription": (
+                        "I always need to know where you are"
+                    ),
                     "UIBackgroundModes": ["processing", "location"],
                 }
             },

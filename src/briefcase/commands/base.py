@@ -9,6 +9,7 @@ import platform
 import re
 import subprocess
 import sys
+import tomllib
 from abc import ABC, abstractmethod
 from argparse import RawDescriptionHelpFormatter
 from collections.abc import Collection, Iterable
@@ -22,13 +23,6 @@ from packaging.specifiers import InvalidSpecifier, SpecifierSet
 from packaging.version import Version
 from platformdirs import PlatformDirs
 
-from briefcase.debuggers import get_debugger, get_debuggers
-
-if sys.version_info >= (3, 11):  # pragma: no-cover-if-lt-py311
-    import tomllib
-else:  # pragma: no-cover-if-gte-py311
-    import tomli as tomllib
-
 import briefcase
 from briefcase import __version__
 from briefcase.config import (
@@ -40,6 +34,7 @@ from briefcase.config import (
     parse_config,
 )
 from briefcase.console import MAX_TEXT_WIDTH, Console
+from briefcase.debuggers import get_debugger, get_debuggers
 from briefcase.exceptions import (
     BriefcaseCommandError,
     BriefcaseConfigError,

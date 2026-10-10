@@ -9,7 +9,7 @@ Briefcase converts Python projects into standalone native applications for macOS
 
 ## Quick Reference
 
-- **Language**: Python >= 3.10 (3.10–3.14 supported)
+- **Language**: Python >= 3.11 (3.11–3.15 supported)
 - **Docstrings**: Sphinx style with Markdown content
 - **Dev environment**: Python 3.13 virtualenv with `dev` dependency group
 - **License**: BSD-3-Clause
@@ -109,12 +109,11 @@ Do not make changes to AGENTS.md unless specifically directed to do so.
 
 ```python
 class macOSAppBuildCommand(
-    macOSAppMixin,          # format-specific paths/behavior
-    macOSSigningMixin,      # platform signing logic
+    macOSAppMixin,  # format-specific paths/behavior
+    macOSSigningMixin,  # platform signing logic
     AppPackagesMergeMixin,  # utility mixin
-    BuildCommand,           # base command from commands/
-):
-    ...
+    BuildCommand,  # base command from commands/
+): ...
 ```
 
 ### Platform module conventions
@@ -174,6 +173,7 @@ class DummyBuildCommand(BuildCommand):
     def build(self, app, **kwargs):
         self.actions.append(("build", app.app_name))
         return {}
+
 
 # Then assert exact action sequence:
 assert build_command.actions == [
@@ -267,6 +267,9 @@ When writing or editing any `.md` file, do not insert newlines mid-sentence or m
 - **Imports**: `from __future__ import annotations` used widely for PEP 604 unions
 - **Paths**: Always use `pathlib.Path` objects, never raw strings
 - **Function call formatting**: When a function call with more than one argument cannot fit on a single line, place each argument on its own line with a trailing comma on the last argument — do **not** use the "multiple arguments on one wrapped line" style that ruff also permits. Prefer:
+
+  <!-- fmt: off -->
+
   ```python
   my_function(
       arg1,
@@ -280,7 +283,13 @@ When writing or editing any `.md` file, do not insert newlines mid-sentence or m
       arg1, arg2, arg3
   )
   ```
+
+  <!-- fmt: on -->
+
 - **Long string arguments**: When a string argument must be split across lines to satisfy line length requirements, wrap the concatenated string literals in parentheses so it is clear the string is a single argument. Prefer:
+
+  <!-- fmt: off -->
+
   ```python
   my_function(
       (
@@ -290,7 +299,9 @@ When writing or editing any `.md` file, do not insert newlines mid-sentence or m
       second_argument,
   )
   ```
+
   over:
+
   ```python
   my_function(
       "this is a very long string "
@@ -298,6 +309,8 @@ When writing or editing any `.md` file, do not insert newlines mid-sentence or m
       second_argument,
   )
   ```
+
+  <!-- fmt: on -->
 
 ### Docstring formatting
 

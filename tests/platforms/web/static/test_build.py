@@ -1,13 +1,9 @@
 import shutil
 import subprocess
 import sys
+import tomllib
 from textwrap import dedent
 from unittest import mock
-
-if sys.version_info >= (3, 11):  # pragma: no-cover-if-lt-py311
-    import tomllib
-else:  # pragma: no-cover-if-gte-py311
-    import tomli as tomllib
 
 import pytest
 
@@ -293,7 +289,10 @@ def test_build_app_invalid_extra_pyscript_toml_content(
     # Building the web app raises an error
     with pytest.raises(
         BriefcaseConfigError,
-        match=r"Briefcase configuration error: Extra pyscript.toml content isn't valid TOML: Expected",
+        match=(
+            r"Briefcase configuration error: Extra pyscript.toml "
+            r"content isn't valid TOML: Expected"
+        ),
     ):
         build_command.build_app(first_app_generated)
 

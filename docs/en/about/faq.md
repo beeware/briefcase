@@ -1,20 +1,25 @@
 # Frequently Asked Questions
 
+## How do I use Briefcase?
+
+Briefcase is an installable Python package, with an executable entry point named `briefcase`. You can install Briefcase into a standard Python virtual environment, or use Python runner tools such as `uvx` or `pip`. See our [How to run Briefcase](../how-to/run.md) guide for more details.
+
 ## What versions of Python are supported?
 
-Python 3.10 or higher.
+Briefcase supports Python {{ min_python_version }} or higher.
 
 ## What platforms does Briefcase support?
 
 Briefcase currently has support for:
 
-- macOS (producing DMG files, or raw .app files)
+- macOS (producing DMG files, raw .app bundles, or PKG installers)
 - Linux (producing system packages, AppImage files or Flatpaks)
-- Windows (producing MSI installers)
+- Windows (producing MSI installers or .ZIP bundles)
 - iOS (producing Xcode projects)
 - Android (producing Gradle projects)
+- Web (producing a .ZIP file of self-contained web content)
 
-Support for other some other operating systems (e.g., tvOS, watchOS, WearOS, and the web) are on our road map.
+Support for other some other operating systems (e.g., tvOS, watchOS, and WearOS) are on our road map.
 
 Briefcase's platform support is built on a [plugin system][platform-interface], so if you want to add support for a custom platform, you can do so; or, you can contribute the backend to Briefcase itself.
 
@@ -23,7 +28,7 @@ Briefcase's platform support is built on a [plugin system][platform-interface], 
 Briefcase adds a [PEP566](https://peps.python.org/pep-0566/) metadata file when it installs your app's code. The metadata can be retrieved at runtime as described in the [Accessing Briefcase packaging metadata at runtime][access-packaging-metadata] how-to. You can determine if your app was packaged with Briefcase by testing for the existence of the `Briefcase-Version` tag:
 
 ```python
-in_briefcase = 'Briefcase-Version' in metadata
+in_briefcase = "Briefcase-Version" in metadata
 ```
 
 ## Can I use third-party Python packages in my app?

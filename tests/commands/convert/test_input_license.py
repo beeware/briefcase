@@ -34,7 +34,7 @@ from ...utils import PartialMatchString
         ("version 3 of the GNU General Public License", "GPL-3.0"),
         ("GPLv3+", "GPL-3.0+"),
         ("either version 3 of the License", "GPL-3.0+"),
-        ("Some text", "Other"),
+        ("Some text", "LicenseRef-Other"),
     ],
 )
 def test_get_license_from_file(
@@ -93,7 +93,7 @@ def test_get_license_from_file(
         ("version 3 of the GNU General Public License", "GPL-3.0"),
         ("GPLv3+", "GPL-3.0+"),
         ("either version 3 of the License", "GPL-3.0+"),
-        ("Some text", "Other"),
+        ("Some text", "LicenseRef-Other"),
     ],
 )
 def test_get_license_from_pep621_license_file(
@@ -139,7 +139,7 @@ def test_get_license_from_pep621_license_file(
         ("GPLv2+", "GPL-2.0+"),
         ("GPLv3", "GPL-3.0"),
         ("GPLv3+", "GPL-3.0+"),
-        ("Some text", "Other"),
+        ("Some text", "LicenseRef-Other"),
     ],
 )
 def test_get_license_from_pyproject(
@@ -181,4 +181,7 @@ def test_no_license_hint(convert_command, monkeypatch):
 
 
 def test_override_is_used(convert_command):
-    assert convert_command.input_license("Proprietary") == "Proprietary"
+    assert (
+        convert_command.input_license("LicenseRef-Proprietary")
+        == "LicenseRef-Proprietary"
+    )

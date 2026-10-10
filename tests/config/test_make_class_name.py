@@ -32,6 +32,13 @@ from briefcase.config import make_class_name
         # ('\u00B7 World', '_\u00B7World'),  # in Other_ID_Continue
         # Characters that are converted by NFKC normalization
         ("\u2135 World", "\u05d0World"),  # Unicode category Lo
+        # Names that reduce to a Python keyword; `class lambda(...)` does not parse
+        ("lambda", "_lambda"),
+        ("None", "_None"),
+        ("class", "_class"),
+        # Soft keywords are legal class names, and case matters
+        ("match", "match"),
+        ("Lambda", "Lambda"),
     ],
 )
 def test_make_class_name(formal_name, candidate):

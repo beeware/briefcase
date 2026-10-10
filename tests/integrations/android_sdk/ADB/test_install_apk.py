@@ -44,7 +44,9 @@ def test_install_failure_update_incompatible(adb, capsys):
         side_effect=subprocess.CalledProcessError(
             returncode=1,
             cmd="install",
-            output="Failure [INSTALL_FAILED_UPDATE_INCOMPATIBLE: signatures do not match]",
+            output=(
+                "Failure [INSTALL_FAILED_UPDATE_INCOMPATIBLE: signatures do not match]"
+            ),
         )
     )
 

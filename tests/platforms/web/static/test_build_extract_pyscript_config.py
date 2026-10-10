@@ -1,12 +1,5 @@
 import shutil
-import sys
 from unittest import mock
-
-if sys.version_info >= (3, 11):  # pragma: no-cover-if-lt-py311
-    pass
-else:  # pragma: no-cover-if-gte-py311
-    pass
-
 from zipfile import ZipFile
 
 import pytest
@@ -220,6 +213,9 @@ This is not valid toml.
     # Building the web app raises an error
     with pytest.raises(
         BriefcaseConfigError,
-        match=r"Briefcase configuration error: pyscript.toml content isn't valid TOML: Expected",
+        match=(
+            r"Briefcase configuration error: "
+            r"pyscript.toml content isn't valid TOML: Expected"
+        ),
     ):
         build_command.extract_pyscript_config([wheel_path])

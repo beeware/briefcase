@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 import re
-import sys
+import tomllib
 from functools import cached_property, partial
 from pathlib import Path
 from shutil import copy2, copytree
@@ -10,17 +10,12 @@ from urllib.parse import urlparse
 
 from packaging.utils import canonicalize_name
 
-from ..config import get_license_from_text, is_valid_app_name
-from .new import LICENSE_OPTIONS, NewCommand, parse_project_overrides
-
-if sys.version_info >= (3, 11):  # pragma: no-cover-if-lt-py311
-    import tomllib
-else:  # pragma: no-cover-if-gte-py311
-    import tomli as tomllib
-
 from briefcase.bootstraps import EmptyBootstrap
 from briefcase.config import APP_NAME_SPEC, make_class_name, validate_url
 from briefcase.exceptions import BriefcaseCommandError
+
+from ..config import get_license_from_text, is_valid_app_name
+from .new import LICENSE_OPTIONS, NewCommand, parse_project_overrides
 
 
 class ConvertCommand(NewCommand):
@@ -113,19 +108,19 @@ class ConvertCommand(NewCommand):
 
         default = "hello-world"
 
-        project_name = self.pep621_data.get("name")
-        if project_name and is_valid_app_name(project_name) and override_value is None:
-            # Project name is usable as-is (e.g., "foobar", "foo-bar")
+        pep621_name = self.pep621_data.get("name")
+        if pep621_name and is_valid_app_name(pep621_name) and override_value is None:
+            # PEP621 name is usable as-is (e.g., "foobar", "foo-bar")
             self.console.divider(title="App name")
             self.console.prompt()
             self.console.prompt(
-                f"Using value from PEP621 formatted pyproject.toml {project_name!r}"
+                f"Using value from PEP621 formatted pyproject.toml {pep621_name!r}"
             )
-            return project_name
-        elif project_name and is_valid_app_name(
-            canonicalized_name := canonicalize_name(project_name)
+            return pep621_name
+        elif pep621_name and is_valid_app_name(
+            canonicalized_name := canonicalize_name(pep621_name)
         ):
-            # Canonicalized project name is valid
+            # Canonicalized PEP621 name is valid
             # (e.g., "test.name" -> "test-name", "test-app_name" -> "test-app-name")
             intro += (
                 "\n\nBased on the project name from your PEP621 formatted "
@@ -501,22 +496,22 @@ class ConvertCommand(NewCommand):
         # otherwise check the license file
         if "text" in self.pep621_data.get("license", {}):
             default = get_license_from_text(
-                self.pep621_data["license"]["text"], default="Other"
+                self.pep621_data["license"]["text"], default="LicenseRef-Other"
             )
             default_source = "the PEP621 formatted pyproject.toml"
         elif "file" in self.pep621_data.get("license", {}):
             license_text = (
                 self.base_path / self.pep621_data["license"]["file"]
             ).read_text(encoding="utf-8")
-            default = get_license_from_text(license_text, default="Other")
+            default = get_license_from_text(license_text, default="LicenseRef-Other")
             default_source = "the license file"
         elif (self.base_path / "LICENSE").exists():
             license_text = (self.base_path / "LICENSE").read_text(encoding="utf-8")
-            default = get_license_from_text(license_text, default="Other")
+            default = get_license_from_text(license_text, default="LicenseRef-Other")
             default_source = "the license file"
         elif (self.base_path / "LICENCE").exists():
             license_text = (self.base_path / "LICENCE").read_text(encoding="utf-8")
-            default = get_license_from_text(license_text, default="Other")
+            default = get_license_from_text(license_text, default="LicenseRef-Other")
             default_source = "the license file"
         else:
             return None, intro
@@ -564,7 +559,7 @@ class ConvertCommand(NewCommand):
             module_name, override_value=project_overrides.pop("test_source_dir", None)
         )
         project_name = self.input_project_name(
-            formal_name, override_value=project_overrides.pop("project_name", None)
+            app_name, override_value=project_overrides.pop("project_name", None)
         )
         description = self.input_description(
             override_value=project_overrides.pop("description", None)

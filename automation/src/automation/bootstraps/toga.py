@@ -1,4 +1,8 @@
-from automation.bootstraps import BRIEFCASE_EXIT_SUCCESS_SIGNAL, EXIT_SUCCESS_NOTIFY
+from automation.bootstraps import (
+    BRIEFCASE_EXIT_SUCCESS_SIGNAL,
+    EXIT_SUCCESS_NOTIFY,
+    START_SUCCESS_NOTIFY,
+)
 from briefcase.bootstraps import TogaGuiBootstrap
 
 
@@ -35,5 +39,6 @@ class {{{{ cookiecutter.class_name }}}}(toga.App):
 
 
 def main():
+    print("{START_SUCCESS_NOTIFY}")
     return {{{{ cookiecutter.class_name }}}}()
 '''
