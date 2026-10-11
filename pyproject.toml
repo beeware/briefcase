@@ -90,7 +90,7 @@ dependencies = [
     "python-dateutil >= 2.9.0.post0",  # transitive dependency (beeware/briefcase#1428)
     "httpx2 >= 2.13, < 3.0",
     "rich >= 12.6, < 16.0",
-    "tenacity >= 8.0, < 10.0",
+    "tenacity >= 9.2.0, < 10.0",
     "tomli_w >= 1.0, < 2.0",
     "typing_extensions >= 4.6; python_version < '3.11'",
 ]
