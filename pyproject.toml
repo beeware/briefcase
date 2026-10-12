@@ -2,7 +2,7 @@
 requires = [
     # keep versions in sync with automation/pyproject.toml
     "setuptools==84.0.0",
-    "setuptools_scm==10.2.3",
+    "setuptools_scm==10.3.4",
 ]
 build-backend = "setuptools.build_meta"
 
@@ -90,7 +90,7 @@ dependencies = [
     "python-dateutil >= 2.9.0.post0",  # transitive dependency (beeware/briefcase#1428)
     "httpx2 >= 2.13, < 3.0",
     "rich >= 12.6, < 16.0",
-    "tenacity >= 8.0, < 10.0",
+    "tenacity >= 9.2.0, < 10.0",
     "tomli_w >= 1.0, < 2.0",
     "typing_extensions >= 4.6; python_version < '3.11'",
 ]
@@ -103,7 +103,7 @@ pre-commit = [
 ]
 
 setuptools-scm = [
-    "setuptools_scm==10.2.3",
+    "setuptools_scm==10.3.4",
 ]
 
 towncrier = [
@@ -111,11 +111,11 @@ towncrier = [
 ]
 
 tox-uv = [
-    "tox-uv == 1.36.0",
+    "tox-uv == 1.36.1",
 ]
 
 ty = [
-    "ty == 0.0.82",
+    "ty == 0.0.84",
 ]
 
 dev = [
@@ -125,7 +125,7 @@ dev = [
 ]
 
 test = [
-    "coverage[toml] == 7.16.1",
+    "coverage[toml] == 7.16.2",
     "coverage-conditional-plugin == 0.9.0",
     "pytest == 9.1.1",
     "pytest-xdist == 3.8.0",

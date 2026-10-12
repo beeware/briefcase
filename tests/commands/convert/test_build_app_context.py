@@ -20,6 +20,7 @@ def test_overrides_are_used(convert_command):
     }
     override_input = overrides.copy()
     out = convert_command.build_app_context(override_input)
+
     for k, v in overrides.items():
         if k == "app_type":
             assert not out["console_app"]

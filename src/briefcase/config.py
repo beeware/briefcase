@@ -15,6 +15,7 @@ from urllib.parse import urlparse
 from build import BuildBackendException
 from build.util import project_wheel_metadata
 from packaging.licenses import InvalidLicenseExpression, canonicalize_license_expression
+from packaging.utils import InvalidName, canonicalize_name
 from packaging.version import InvalidVersion, Version
 
 from briefcase.debuggers.base import BaseDebugger
@@ -1289,6 +1290,16 @@ def resolve_dynamic_pep621_config(base_path, dynamic, console):
 def merge_pep621_config(global_config, pep621_config):
     """Merge a PEP621 configuration into a Briefcase configuration."""
 
+    if "name" in pep621_config:
+        try:
+            project_name = canonicalize_name(pep621_config["name"], validate=True)
+        except (InvalidName, TypeError):
+            raise BriefcaseConfigError(
+                f"The PEP 621 project name {pep621_config['name']!r} is invalid."
+            ) from None
+
+        global_config.setdefault("project_name", project_name)
+
     if requires_python := pep621_config.get("requires-python"):
         global_config["requires_python"] = requires_python
 
@@ -1344,6 +1355,29 @@ def merge_pep621_config(global_config, pep621_config):
         pass
 
 
+def warn_invalid_legacy_project_name(global_config, console):
+    """Warn if a legacy Briefcase project name is not valid PEP 621 metadata."""
+    try:
+        project_name = global_config["project_name"]
+    except KeyError:
+        return
+
+    try:
+        canonicalize_name(project_name, validate=True)
+    except (InvalidName, TypeError):
+        console.warning_banner(
+            "Invalid project name",
+            f"""
+                {project_name!r} is not a valid PEP 621 project name and cannot be
+                normalized. Briefcase currently accepts invalid `project_name` values
+                in the `[tool.briefcase]` configuration, but this may become an error
+                in a future version.
+
+                Update `project_name` to a valid PEP 621 project name.
+            """,
+        )
+
+
 def parse_config(config_file: Path, platform, output_format, console):
     """Parse the briefcase section of the pyproject.toml configuration file.
 
@@ -1396,6 +1430,8 @@ def parse_config(config_file: Path, platform, output_format, console):
         merge_pep621_config(global_config, pep621_config)
     except KeyError:
         pass
+
+    warn_invalid_legacy_project_name(global_config, console)
 
     # For consistent results, sort the platforms and formats
     all_platforms = sorted(get_platforms().keys())

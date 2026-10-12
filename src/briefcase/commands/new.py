@@ -270,17 +270,18 @@ class NewCommand(BaseCommand):
         """
         return f"https://{self.make_domain(bundle)}/{app_name}"
 
-    def input_project_name(self, formal_name, override_value):
+    def input_project_name(self, app_name, override_value):
         return self.console.text_question(
             intro=(
                 "Briefcase can manage projects that contain multiple applications, so "
                 "we need a Project name.\n"
                 "\n"
                 "If you're only planning to have one application in this project, you "
-                "can use the formal name as the project name."
+                "can use the app name as the project name."
             ),
             description="Project Name",
-            default=formal_name,
+            default=app_name,
+            validator=self.validate_app_name,
             override_value=override_value,
         )
 
@@ -359,7 +360,7 @@ class NewCommand(BaseCommand):
         )
 
         project_name = self.input_project_name(
-            formal_name, project_overrides.pop("project_name", None)
+            app_name, project_overrides.pop("project_name", None)
         )
 
         description = self.console.text_question(

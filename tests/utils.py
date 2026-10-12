@@ -398,7 +398,7 @@ def _is_retryable_url_error(exc: BaseException) -> bool:
 
 @retry(
     retry=retry_if_exception(_is_retryable_url_error),
-    wait=wait_exponential_jitter(initial=0.6, max=4.0),
+    wait=wait_exponential_jitter(multiplier=0.6, max=4.0),
     stop=stop_after_attempt(4),
     reraise=True,
 )

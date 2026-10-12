@@ -6,7 +6,7 @@ If you have an application called "My App", with source code in the `src/myapp` 
 
 ```toml
 [tool.briefcase]
-project_name = "My Project"
+project_name = "my-project"
 bundle = "com.example"
 version = "0.1"
 
@@ -79,7 +79,7 @@ Many platforms will also require a [`license_files`][] definition.
 
 #### `project_name`
 
-The project is the collection of all applications that are described by the briefcase configuration. For projects with a single app, this may be the same as the formal name of the solitary packaged app.
+The project is the collection of all applications that are described by the briefcase configuration. For projects with a single app, this may be the same as the app name of the solitary packaged app. It must be a [valid PEP 621 project name](https://packaging.python.org/en/latest/specifications/name-normalization/#name-format); it will be automatically normalized by Briefcase.
 
 #### `version`
 
@@ -514,6 +514,7 @@ Many of the keys that exist in Briefcase's configuration have analogous settings
 
 The following `[project]` metadata keys will be used by Briefcase if they are available:
 
+- `name` is normalized and maps to the Briefcase [`project_name`][] setting.
 - `version` maps to the same key in Briefcase.
 - `license` and `license-files` map to the same key in Briefcase. Legacy formats for these keys will be [coerced into PEP 639 format][license-definitions].
 - `authors` The `email` and `name` keys of the first value in the `authors` setting map to [`author`][] and [`author_email`][].
