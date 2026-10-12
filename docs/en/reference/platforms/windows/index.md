@@ -182,7 +182,7 @@ If this setting is set to `False`, the installer will include the checkbox, but 
 
 If this setting is undefined, or set to an empty string, the installer will not include an option to launch the app.
 
-The app is launched as the user who ran the installer, even if the app has been installed for all users. The app will never be launched by a silent or unattended install.
+If enabled and selected by the user, the installer will attempt to launch the app's binary, with no additional command line arguments. If the app is [externally packaged][packaging-external-apps], the value for [`external_package_executable_path`][] will be used to launch the app. The app is launched as the user who ran the installer, even if the app has been installed for all users. The app will never be launched by a silent or unattended install.
 
 ### `installer_completion_text`
 
