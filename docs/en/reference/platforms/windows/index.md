@@ -129,26 +129,20 @@ The digest algorithm to request the Timestamp Authority server uses for the time
 
 The following options can be added to the `tool.briefcase.app.<appname>.windows` section of your `pyproject.toml` file.
 
-#### `min_os_version`
+### `create_desktop_shortcut`
 
-The minimum [Windows build number](https://en.wikipedia.org/wiki/List_of_Microsoft_Windows_versions) that the app will support.
-This is used by MSI installers to block installation on unsupported versions.
+/// note | Only used for MSI packaging
+///
 
-#### `dotnet_version`  { #dotnet-version }
+Windows MSI installers are able to provide an option to the user to create a desktop shortcut to start the application.
 
-The minimum .NET runtime version required by the application, as a version string (e.g., `"10.0.0"`). This is used by MSI installers to verify that the required runtime is installed before installing the app. If this value is not set, no .NET runtime check is performed.
+If this setting is set to `True`, the installer will include a checkbox, enabled by default. The user installing the app can then opt out of creating a desktop shortcut for the app.
 
-#### `dotnet_runtime_type`
+If this setting is set to `False`, the installer will include the checkbox, but it will be *disabled* by default. The user installing the app can then opt into creating a desktop shortcut for the app.
 
-The type of .NET runtime required. Defaults to `"Desktop"` for GUI apps, and `"Core"` for console apps. Valid values are:
+If this setting is undefined, or set to an empty string, the installer will not include an option to create a shortcut, and no shortcut will be created.
 
-* `"Core"` - The base .NET runtime (`Microsoft.NETCore.App`).
-* `"Desktop"` -The .NET Windows Desktop runtime (`Microsoft.WindowsDesktop.App`), which includes WPF and Windows Forms support.
-* `"AspNet"` - The ASP.NET Core runtime (`Microsoft.AspNetCore.App`).
-
-This value will be ignored unless [`dotnet_version`][dotnet-version] is set.
-
-#### `dotnet_rollforward`
+### `dotnet_rollforward`
 
 The version roll-forward policy used when checking for compatible runtimes. Defaults to `"LatestMinor"`. This maps directly to .NET's [roll-forward behavior](https://learn.microsoft.com/en-us/dotnet/core/versions/selection#control-roll-forward-behavior). Valid values are:
 
@@ -161,9 +155,72 @@ The version roll-forward policy used when checking for compatible runtimes. Defa
 
 This value will be ignored unless [`dotnet_version`][dotnet-version] is set.
 
+### `dotnet_runtime_type`
+
+The type of .NET runtime required. Defaults to `"Desktop"` for GUI apps, and `"Core"` for console apps. Valid values are:
+
+* `"Core"` - The base .NET runtime (`Microsoft.NETCore.App`).
+* `"Desktop"` -The .NET Windows Desktop runtime (`Microsoft.WindowsDesktop.App`), which includes WPF and Windows Forms support.
+* `"AspNet"` - The ASP.NET Core runtime (`Microsoft.AspNetCore.App`).
+
+This value will be ignored unless [`dotnet_version`][dotnet-version] is set.
+
+### `dotnet_version`  { #dotnet-version }
+
+The minimum .NET runtime version required by the application, as a version string (e.g., `"10.0.0"`). This is used by MSI installers to verify that the required runtime is installed before installing the app. If this value is not set, no .NET runtime check is performed.
+
+### `installer_completion_launch_app`
+
+/// note | Only used for MSI packaging
+///
+
+Windows MSI installers are able to provide an option on the final page of the installer to launch the app as soon as installation is complete.
+
+If this setting is set to `True`, the installer will include a "Launch `<app name>`" checkbox, enabled by default. The user installing the app can then opt out of launching the app.
+
+If this setting is set to `False`, the installer will include the checkbox, but it will be *disabled* by default. The user installing the app can then opt into launching the app.
+
+If this setting is undefined, or set to an empty string, the installer will not include an option to launch the app.
+
+If enabled and selected by the user, the installer will attempt to launch the app's binary, with no additional command line arguments. If the app is [externally packaged][packaging-external-apps], the value for [`external_package_executable_path`][] will be used to launch the app. The app is launched as the user who ran the installer, even if the app has been installed for all users. The app will never be launched by a silent or unattended install.
+
+### `installer_completion_text`
+
+/// note | Only used for MSI packaging
+///
+
+Text to display on the final page of the MSI installer, after the app has been successfully installed. If this setting is undefined, or set to an empty string, the default description will be displayed.
+
+Text in square brackets is interpreted as the name of a Windows Installer property, and replaced with its value; for example, `[ProductName]` will be replaced with the name of the app. To include a literal square bracket, use `[\[]` or `[\]]`.
+
+### `installer_completion_urls`
+
+/// note | Only used for MSI packaging
+///
+
+A list of hyperlinks to display on the final page of the MSI installer, after the app has been successfully installed. Clicking a link will open the URL in the user's default web browser. The links are not displayed when the app is uninstalled.
+
+Each link is a table with two keys: a `title`, which is the text that will be displayed; and a `url`, which is the web address to open. For example:
+
+```toml
+installer_completion_urls = [
+    { title = "Read the getting started guide", url = "https://example.com/start" },
+    { title = "Join our community", url = "https://example.com/community" },
+]
+```
+
+Links are displayed in the order they are defined. Up to 5 links will be displayed; any further links will be ignored. Each link is displayed on a single line, so long titles will be truncated at the width of the dialog.
+
+Text in square brackets in a `title` or `url` is also interpreted as the name of a Windows Installer property, and replaced with its value.
+
 ### `installer_path`
 
 The name of a directory in the package bundle that can be used to store post-install and pre-uninstall scripts. Defaults to `_installer`.
+
+### `min_os_version`
+
+The minimum [Windows build number](https://en.wikipedia.org/wiki/List_of_Microsoft_Windows_versions) that the app will support.
+This is used by MSI installers to block installation on unsupported versions.
 
 ### `post_install_script`
 
@@ -185,6 +242,15 @@ Controls whether the app will be installed as a per-user or per-machine app. Per
 
 If `true` the installer will attempt to install the app as a per-machine app, available to all users. If `false`, the installer will install as a per-user app. If undefined the installer will ask the user for their preference.
 
+### `uninstaller_completion_text`
+
+/// note | Only used for MSI packaging
+///
+
+Text to display on the final page of the MSI uninstaller, after the app has been successfully uninstalled. If this setting is undefined, or set to an empty string, the default description will be displayed.
+
+Text in square brackets is interpreted as the name of a Windows Installer property, and replaced with its value; for example, `[ProductName]` will be replaced with the name of the app. To include a literal square bracket, use `[\[]` or `[\]]`.
+
 ### `use_full_install_path`
 
 Controls whether the app will be installed using a path which includes both the application name *and* the company or developer's name. If `true` (the default), the app will be installed to `Program Files<Author Name><Project Name>`. If `false`, it will be installed to `Program Files<Project Name>`. Using the full path makes sense for larger companies with multiple applications, but less so for a solo developer.
@@ -201,19 +267,6 @@ Briefcase will attempt to convert your [`version`][] into a valid MSI value by e
 > - `1.2.3.4` becomes `1.2.3`.
 
 However, if you need to override this default value, you can define [`version_triple`][] in your app settings. If provided, this value will be used in the MSI configuration file instead of the auto-generated value.
-
-### `create_desktop_shortcut`
-
-/// note | Only used for MSI packaging
-///
-
-Windows MSI installers are able to provide an option to the user to create a desktop shortcut to start the application.
-
-If this setting is set to `True`, the installer will include a checkbox, enabled by default. The user installing the app can then opt out of creating a desktop shortcut for the app.
-
-If this setting is set to `False`, the installer will include the checkbox, but it will be *disabled* by default. The user installing the app can then opt into creating a desktop shortcut for the app.
-
-If this setting is undefined, or set to an empty string, the installer will not include an option to create a shortcut, and no shortcut will be created.
 
 ## Installer/uninstaller options
 
