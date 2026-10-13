@@ -32,7 +32,7 @@ class WindowsVisualStudioMixin(WindowsMixin):
 
 class WindowsVisualStudioCreateCommand(WindowsVisualStudioMixin, WindowsCreateCommand):
     description = "Create and populate a Visual Studio project."
-    app_template_hash = "sha1:6f7b07bab167aa5883d4add5a05ff67796c47a92"
+    app_template_hash = "sha1:705f65391782dd67d29f59ba3a24a47a450b09db"
 
 
 class WindowsVisualStudioUpdateCommand(WindowsVisualStudioCreateCommand, UpdateCommand):

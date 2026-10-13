@@ -43,7 +43,7 @@ class macOSAppMixin(macOSMixin):
 
 class macOSAppCreateCommand(macOSAppMixin, macOSCreateMixin, CreateCommand):
     description = "Create and populate a macOS app."
-    app_template_hash = "sha1:a483d71825dc285a84620ce695be5a607b74ccd9"
+    app_template_hash = "sha1:be2db76a7e4d17ba54cd61c749e3f326e1503233"
 
     def support_path(self, app: FinalizedAppConfig, runtime=False) -> Path:
         if runtime:

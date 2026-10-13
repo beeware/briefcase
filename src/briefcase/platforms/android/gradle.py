@@ -165,7 +165,7 @@ class GradleMixin(_MixinBase):
 
 class GradleCreateCommand(GradleMixin, CreateCommand):
     description = "Create and populate an Android Gradle project."
-    app_template_hash = "sha1:32244ad8bd608cc451f05718d07f2e3429541333"
+    app_template_hash = "sha1:f3ab88bddd3c47eeee8c86c44c3f64d553a2adfa"
     hidden_app_properties: Collection[str] = {"permission", "feature"}
 
     def support_package_filename(self, support_revision):

@@ -2,6 +2,35 @@
 
 <!-- towncrier release notes start -->
 
+## 0.4.6 (2026-10-13)
+
+### Features
+
+* Briefcase will now honor the PEP 621 project name as the Briefcase project name. ([#3011](https://github.com/beeware/briefcase/issues/3011))
+* Newly created Briefcase iOS projects now set the Xcode minimum iOS version to 15.0 (from 13.0). ([#3055](https://github.com/beeware/briefcase/issues/3055))
+* Briefcase now uses the official CPython support packages for iOS when deploying on Python 3.15. ([#3070](https://github.com/beeware/briefcase/issues/3070))
+* Briefcase now uses [`xbuild`](https://pypi.org/project/xbuild) to manage cross-platform iOS virtual environments. ([#3070](https://github.com/beeware/briefcase/issues/3070))
+* Windows MSI installers can now customize the final page of the installer, with custom completion text, an option to launch the app, and links to web pages. ([#3075](https://github.com/beeware/briefcase/issues/3075))
+
+### Bugfixes
+
+* The output of Windows apps is now captured by Briefcase, regardless of whether the app is in test mode or not. ([#2969](https://github.com/beeware/briefcase/issues/2969))
+* Downloads that are already present in the download cache are now re-verified against their expected hash, rather than being trusted unconditionally. This provides protection against cache poisoning as a potential attack vector. ([#3045](https://github.com/beeware/briefcase/issues/3045))
+* A bundle identifier ending in a newline is no longer accepted as valid. ([#3054](https://github.com/beeware/briefcase/issues/3054))
+* A formal name that reduces to a Python keyword, such as `lambda`, no longer produces an app class name that cannot be parsed. ([#3057](https://github.com/beeware/briefcase/issues/3057))
+* Briefcase is now compatible with Xcode 27. This mostly affected iOS device, as Xcode 27 replaces the Simulator with a new "Device Hub" app. ([#3058](https://github.com/beeware/briefcase/issues/3058))
+* Linux Flatpak apps now use `g++` when building in the Flatpak container, rather than trying to use `clang++`. ([#3069](https://github.com/beeware/briefcase/issues/3069))
+
+### Backward Incompatible Changes
+
+* The `project_name` for a project must now be a valid PEP 621 project name. If your existing project name is not a valid PEP 621 project name, a warning will be raised; this will become an error in future. ([#3011](https://github.com/beeware/briefcase/issues/3011))
+* Building Windows projects with the Visual Studio backend now requires the use of Visual Studio 2026, and the MSVC v14.50 build tools. ([#3046](https://github.com/beeware/briefcase/issues/3046))
+* Briefcase now enforces the minimum Xcode version that is required to submit an app to the iOS App Store. This changes in April each year; in April 2026, the minimum version becomes Xcode 26; in April 2027, it will become Xcode 27. ([#3058](https://github.com/beeware/briefcase/issues/3058))
+
+### Misc
+
+* [#3047](https://github.com/beeware/briefcase/issues/3047), [#3048](https://github.com/beeware/briefcase/issues/3048), [#3049](https://github.com/beeware/briefcase/issues/3049), [#3050](https://github.com/beeware/briefcase/issues/3050), [#3051](https://github.com/beeware/briefcase/issues/3051), [#3052](https://github.com/beeware/briefcase/issues/3052), [#3053](https://github.com/beeware/briefcase/issues/3053), [#3056](https://github.com/beeware/briefcase/issues/3056), [#3060](https://github.com/beeware/briefcase/issues/3060), [#3064](https://github.com/beeware/briefcase/issues/3064), [#3065](https://github.com/beeware/briefcase/issues/3065), [#3066](https://github.com/beeware/briefcase/issues/3066), [#3067](https://github.com/beeware/briefcase/issues/3067), [#3068](https://github.com/beeware/briefcase/issues/3068), [#3072](https://github.com/beeware/briefcase/issues/3072), [#3073](https://github.com/beeware/briefcase/issues/3073), [#3074](https://github.com/beeware/briefcase/issues/3074), [#3079](https://github.com/beeware/briefcase/issues/3079), [#3080](https://github.com/beeware/briefcase/issues/3080), [#3081](https://github.com/beeware/briefcase/issues/3081), [#3082](https://github.com/beeware/briefcase/issues/3082), [#3083](https://github.com/beeware/briefcase/issues/3083), [#3084](https://github.com/beeware/briefcase/issues/3084), [#3085](https://github.com/beeware/briefcase/issues/3085), [#3087](https://github.com/beeware/briefcase/issues/3087), [#3088](https://github.com/beeware/briefcase/issues/3088)
+
 ## 0.4.5 (2026-09-08)
 
 ### Features

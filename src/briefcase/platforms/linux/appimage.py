@@ -175,7 +175,7 @@ class LinuxAppImageCreateCommand(
     CreateCommand,
 ):
     description = "Create and populate a Linux AppImage."
-    app_template_hash = "sha1:9cfe6a7087d97709c5191099d6364c0457f6bcda"
+    app_template_hash = "sha1:b4e0e7d416439c88485068b0fbca0bb79cf95afc"
 
     def output_format_template_context(self, app: FinalizedAppConfig):
         context = super().output_format_template_context(app)
