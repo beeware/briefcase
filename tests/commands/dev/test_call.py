@@ -7,6 +7,8 @@ from briefcase.commands.base import full_options
 from briefcase.exceptions import BriefcaseCommandError, RequirementsInstallError
 from briefcase.integrations.virtual_environment import VirtualEnvironment
 
+from ...utils import TrackingHook
+
 
 class DummyDevCommand(DevCommand):
     """A dummy Dev command that doesn't actually do anything.
@@ -780,4 +782,48 @@ def test_run_test_uninstalled(dev_command, first_app_uninstalled):
             [],
             dev_command.env,
         ),
+    ]
+
+
+def test_hooks_run_around_dev(dev_command, first_app):
+    """pre_dev runs after verification; post_dev after the app exits."""
+    dev_command._get_hooks = lambda: {"tracking": TrackingHook}
+    dev_command.apps = {"first": first_app}
+    dev_command.venvs["first"] = True
+    options, _ = dev_command.parse_options([])
+
+    dev_command(**options)
+
+    first_venv = dev_command.venvs["first"]
+    assert dev_command.actions == [
+        ("verify-host",),
+        ("verify-tools",),
+        ("verify-app-template", "first"),
+        ("verify-app-tools", "first"),
+        ("hook", "pre_dev", "first"),
+        ("virtual-environment", "venv", "first", first_venv),
+        ("run_dev", "first", False, first_venv, [], dev_command.env),
+        ("hook", "post_dev", "first"),
+    ]
+
+
+def test_hooks_run_without_running_the_app(dev_command, first_app):
+    """With --no-run, post_dev runs after the requirements are installed."""
+    dev_command._get_hooks = lambda: {"tracking": TrackingHook}
+    dev_command.apps = {"first": first_app}
+    dev_command.venvs["first"] = True
+    options, _ = dev_command.parse_options(["--no-run"])
+
+    dev_command(**options)
+
+    first_venv = dev_command.venvs["first"]
+    assert dev_command.actions == [
+        ("verify-host",),
+        ("verify-tools",),
+        ("verify-app-template", "first"),
+        ("verify-app-tools", "first"),
+        ("hook", "pre_dev", "first"),
+        ("virtual-environment", "venv", "first", first_venv),
+        ("dev_requirements", "first", first_venv),
+        ("hook", "post_dev", "first"),
     ]

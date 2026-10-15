@@ -287,6 +287,8 @@ class DevCommand(RunAppMixin, BaseCommand):
 
         self.verify_app(app)
 
+        self.invoke_hooks("pre_dev", app, **options)
+
         if not run_app:
             # If we are not running the app, it means we should update requirements.
             update_requirements = True
@@ -322,6 +324,7 @@ class DevCommand(RunAppMixin, BaseCommand):
                 self.app_module_path(app).parent / app.dist_info_name,
             )
 
+        state = None
         if run_app:
             if app.test_mode:
                 self.console.info(
@@ -329,10 +332,13 @@ class DevCommand(RunAppMixin, BaseCommand):
                 )
             else:
                 self.console.info("Starting in dev mode...", prefix=app.app_name)
-            return self.run_dev_app(
+            state = self.run_dev_app(
                 app,
                 env=self.get_environment(app),
                 venv=venv,
                 passthrough=[] if passthrough is None else passthrough,
                 **options,
             )
+
+        self.invoke_hooks("post_dev", app, **options)
+        return state
