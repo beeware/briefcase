@@ -349,9 +349,8 @@ def test_vswhere_empty_list_content(mock_tools, vswhere_path):
     """If VSWhere can be executed, but reports no installations, Visual Studio is
     considered not installed.
 
-    This happens when only the standalone Visual Studio Installer (or the C++
-    Build Tools) is present: vswhere.exe exists, but returns an empty list
-    (#942).
+    This happens when only the standalone Visual Studio Installer (or the C++ Build
+    Tools) is present: vswhere.exe exists, but returns an empty list (#942).
     """
     # MSBuild is not on the path, and vswhere returns JSON content,
     # but not in the format expected
