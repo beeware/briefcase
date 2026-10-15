@@ -691,6 +691,32 @@ def test_app_requirements_requirement_installer_args_with_template_support(
     assert myapp.test_requires is None
 
 
+def test_app_requirements_installer_args_file_uses_lf_newlines(
+    create_command,
+    mock_venv,
+    myapp,
+    app_path,
+    app_requirements_path,
+    app_requirement_installer_args_path,
+    mock_now,
+    app_requirement_installer_args_path_index,
+):
+    """The requirement installer args file is written with LF newlines.
+
+    The file is consumed by build tooling (e.g. the Android Gradle template)
+    that splits it on ``\\n``; if it were written with platform-native CRLF
+    newlines on Windows, a stray ``\\r`` would corrupt every option (#2603).
+    """
+    myapp.requirement_installer_args = ["--no-cache", "-f", "./wheels"]
+    myapp.requires = ["my-favourite-package"]
+
+    # Install requirements into the bundle
+    create_command.install_app_requirements(myapp, mock_venv)
+
+    # The raw bytes of the file must not contain any carriage return
+    assert b"\r" not in app_requirement_installer_args_path.read_bytes()
+
+
 def test_app_requirements_requirement_installer_args_without_requires_no_template_support(  # noqa: E501
     create_command,
     mock_venv,

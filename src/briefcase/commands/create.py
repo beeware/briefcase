@@ -676,8 +676,11 @@ class CreateCommand(BaseCommand):
                         self.base_path,
                     )
                 )
+                # The file is consumed by build tooling that splits on "\n"
+                # (e.g. the Android Gradle template); pin LF newlines so a
+                # stray "\r" doesn't corrupt every option on Windows (#2603).
                 requirement_installer_args_path.write_text(
-                    f"{pip_args}\n", encoding="utf-8"
+                    f"{pip_args}\n", encoding="utf-8", newline="\n"
                 )
 
     def _install_app_requirements(
