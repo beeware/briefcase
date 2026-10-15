@@ -159,7 +159,9 @@ class PackageCommand(BaseCommand):
             self.clean_dist_folder(app, **options)
 
         # Package the app
+        self.invoke_hooks("pre_package", app, **options)
         state = self.package_app(app, **full_options(state, options))
+        self.invoke_hooks("post_package", app, **options)
 
         filename = self.distribution_path(app).relative_to(self.base_path)
         self.console.info(f"Packaged {filename}", prefix=app.app_name)

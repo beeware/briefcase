@@ -983,6 +983,8 @@ class CreateCommand(BaseCommand):
             )
             self.tools.shutil.rmtree(bundle_path)
 
+        self.invoke_hooks("pre_create", app, **options)
+
         self.console.info("Generating application template...", prefix=app.app_name)
         self.generate_app_template(app=app)
 
@@ -1056,6 +1058,8 @@ class CreateCommand(BaseCommand):
                 f"Created {bundle_path.relative_to(self.base_path)}",
                 prefix=app.app_name,
             )
+
+        self.invoke_hooks("post_create", app, **options)
 
     def verify_tools(self):
         """Verify that the tools needed to run this command exist.

@@ -14,6 +14,7 @@ from abc import ABC, abstractmethod
 from argparse import RawDescriptionHelpFormatter
 from collections.abc import Collection, Iterable
 from datetime import datetime
+from functools import cached_property
 from pathlib import Path
 from typing import Any
 
@@ -45,6 +46,8 @@ from briefcase.exceptions import (
     UnsupportedHostError,
     UnsupportedPythonVersion,
 )
+from briefcase.hooks import get_hooks
+from briefcase.hooks.base import BaseHook
 from briefcase.integrations.base import ToolCache
 from briefcase.integrations.file import File
 from briefcase.integrations.subprocess import Subprocess
@@ -419,6 +422,25 @@ Move the project to a path that does not container this character.
     def publish_command(self):
         """Publish Command factory for the same platform and format."""
         return self._command_factory("publish")
+
+    def _get_hooks(self) -> dict[str, type[BaseHook]]:
+        """Discover the available hook plugins."""
+        return get_hooks()
+
+    @cached_property
+    def hooks(self) -> list[BaseHook]:
+        """The hook plugins, instantiated once, in entry point name order."""
+        return [hook_class() for _, hook_class in sorted(self._get_hooks().items())]
+
+    def invoke_hooks(self, stage: str, app: FinalizedAppConfig, **options) -> None:
+        """Invoke every hook plugin for a stage of this command.
+
+        :param stage: The stage being run; one of ``briefcase.hooks.base.HOOK_STAGES``.
+        :param app: The application the command is operating on.
+        :param options: The options the command received for the app.
+        """
+        for hook in self.hooks:
+            hook.invoke(stage, app, command=self, **options)
 
     def template_cache_path(self, template) -> Path:
         """The path where Briefcase keeps template checkouts.
@@ -824,6 +846,9 @@ Move the project to a path that does not container this character.
         """
         self.verify_host()
         self.verify_tools()
+        # Load the hook plugins now, so a broken one fails before any app is changed.
+        for hook in self.hooks:
+            self.console.verbose(f"Using hook plugin {hook.name!r}")
 
         finalized: dict[str, FinalizedAppConfig] = {}
         for app in apps:

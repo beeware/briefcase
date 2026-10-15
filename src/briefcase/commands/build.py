@@ -89,7 +89,9 @@ class BuildCommand(BaseCommand):
 
         self.verify_app(app)
 
+        self.invoke_hooks("pre_build", app, **options)
         state = self.build_app(app, **full_options(state, options))
+        self.invoke_hooks("post_build", app, **options)
 
         qualifier = " (test mode)" if app.test_mode else ""
         qualifier += " (debug mode)" if app.debugger else ""

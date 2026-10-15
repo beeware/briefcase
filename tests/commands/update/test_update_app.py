@@ -1,5 +1,7 @@
 from briefcase.integrations.virtual_environment import VenvVirtualEnvironment
 
+from ...utils import TrackingHook
+
 
 def test_update_app(update_command, first_app, tmp_path):
     """If the app already exists, it will be updated."""
@@ -421,3 +423,41 @@ def test_update_support_app_managed_python_env(
         ("install-managed-python-env", "first", "Tester-gothic"),
         ("cleanup", "first"),
     ]
+
+
+def test_hooks_run_around_update(update_command, first_app):
+    """pre_update runs after verification; post_update after cleanup."""
+    update_command._get_hooks = lambda: {"tracking": TrackingHook}
+
+    update_command.update_app(
+        update_command.apps["first"],
+        update_requirements=False,
+        update_resources=False,
+        update_support=False,
+        update_stub=False,
+    )
+
+    assert update_command.actions == [
+        ("verify-app-template", "first"),
+        ("verify-app-tools", "first"),
+        ("hook", "pre_update", "first"),
+        ("code", "first", False),
+        ("create-app-env", "first", "Tester", "gothic", "default", False),
+        ("cleanup", "first"),
+        ("hook", "post_update", "first"),
+    ]
+
+
+def test_no_hooks_for_missing_app(update_command):
+    """An app that was never created is not updated, so no hook runs."""
+    update_command._get_hooks = lambda: {"tracking": TrackingHook}
+
+    update_command.update_app(
+        update_command.apps["first"],
+        update_requirements=False,
+        update_resources=False,
+        update_support=False,
+        update_stub=False,
+    )
+
+    assert update_command.actions == []

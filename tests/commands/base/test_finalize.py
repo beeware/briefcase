@@ -1,8 +1,9 @@
 import pytest
 
 from briefcase.config import DraftAppConfig, FinalizedAppConfig
-from briefcase.exceptions import BriefcaseConfigError
+from briefcase.exceptions import BriefcaseCommandError, BriefcaseConfigError
 
+from ...utils import BrokenHook
 from .conftest import DummyCommand
 
 
@@ -212,3 +213,13 @@ def test_unsupported_env_manager(base_command, first_app):
         ),
     ):
         base_command.finalize(apps=[first_app])
+
+
+def test_finalize_loads_hooks(base_command, first_app):
+    """Hook plugins are loaded during finalization, before any app is finalized."""
+    base_command._get_hooks = lambda: {"broken": BrokenHook}
+
+    with pytest.raises(BriefcaseCommandError, match=r"The plugin is broken\."):
+        base_command.finalize(apps=[first_app])
+
+    assert base_command.actions == [("verify-host",), ("verify-tools",)]
