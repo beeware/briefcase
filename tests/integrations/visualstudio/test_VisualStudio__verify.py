@@ -346,8 +346,12 @@ def test_vswhere_non_list_content(mock_tools, vswhere_path):
 
 
 def test_vswhere_empty_list_content(mock_tools, vswhere_path):
-    """If VSWhere can be executed, but the outermost content is an empty list, an error
-    is raised."""
+    """If VSWhere can be executed, but reports no installations, Visual Studio is
+    considered not installed.
+
+    This happens when only the standalone Visual Studio Installer (or the C++ Build
+    Tools) is present: vswhere.exe exists, but returns an empty list (#942).
+    """
     # MSBuild is not on the path, and vswhere returns JSON content,
     # but not in the format expected
     mock_tools.subprocess.check_output.side_effect = [
@@ -358,10 +362,7 @@ def test_vswhere_empty_list_content(mock_tools, vswhere_path):
     # Verify the installation
     with pytest.raises(
         BriefcaseCommandError,
-        match=(
-            r"Visual Studio appears to exist, "
-            r"but Briefcase can't retrieve installation metadata."
-        ),
+        match=r"Visual Studio does not appear to be installed.",
     ):
         VisualStudio.verify(mock_tools)
 
