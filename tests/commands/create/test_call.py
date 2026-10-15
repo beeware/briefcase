@@ -3,6 +3,8 @@ import pytest
 from briefcase.commands.create import Git
 from briefcase.exceptions import BriefcaseCommandError
 
+from ...utils import BrokenHook, TrackingHook
+
 
 def test_no_git(tracking_create_command, monkeypatch):
     """If Git is not installed, an error is raised."""
@@ -223,3 +225,43 @@ def test_create_external(tracking_create_command, tmp_path):
     assert (tmp_path / "base_path/build/first/tester/dummy/new").exists()
     # ... but the package path has been removed
     assert not (tmp_path / "base_path/build/first/tester/dummy/src/package").exists()
+
+
+def test_hooks_run_around_external_create(tracking_create_command):
+    """An external app's creation also runs the create hooks."""
+    tracking_create_command._get_hooks = lambda: {"tracking": TrackingHook}
+    app = tracking_create_command.apps["first"]
+    app.sources = None
+    app.external_package_path = "path/to/package"
+
+    tracking_create_command(app=app)
+
+    assert tracking_create_command.actions == [
+        ("verify-host",),
+        ("verify-tools",),
+        ("finalize-app-config", "first"),
+        ("hook", "pre_create", "first"),
+        ("generate", "first"),
+        ("verify-app-template", "first"),
+        ("verify-app-tools", "first"),
+        ("resources", "first"),
+        ("hook", "post_create", "first"),
+    ]
+
+
+def test_broken_hook_fails_before_the_app_is_removed(
+    tracking_create_command,
+    tmp_path,
+):
+    """A hook plugin that fails to load stops the command before an existing app is
+    removed."""
+    tracking_create_command._get_hooks = lambda: {"broken": BrokenHook}
+    tracking_create_command.console.values = ["y"]
+    bundle_path = tmp_path / "base_path/build/first/tester/dummy"
+    bundle_path.mkdir(parents=True)
+    (bundle_path / "original").write_text("original template!", encoding="utf-8")
+
+    with pytest.raises(BriefcaseCommandError, match=r"The plugin is broken\."):
+        tracking_create_command()
+
+    assert (bundle_path / "original").exists()

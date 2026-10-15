@@ -99,3 +99,69 @@ For example, the iOS App Store channel is implemented using the following config
 [project.entry-points."briefcase.channels.iOS.Xcode"]
 appstore = "briefcase.channels.appstore:AppStorePublicationChannel"
 ```
+
+## `briefcase.hooks` { #hook-interface }
+
+Briefcase provides a plugin interface for running custom steps before and after each command that operates on an app. A hook plugin might compile resources before the app's code is installed, post-process a generated project, or upload build artefacts.
+
+To add a custom `briefcase.hooks` plugin, add a `[project.entry-points."briefcase.hooks"]` section to your `pyproject.toml` file; each name/value pair under that section will be interpreted as a hook plugin. The name is the identifier of the plugin; the value is a string identifying a class that implements the `briefcase.hooks.base.BaseHook` abstract base class.
+
+A `BaseHook` subclass must implement `name`, an abstract `str` property returning the human-readable name of the hook. It can then override any of the stage methods, each taking `(app, command, **options)` and doing nothing by default:
+
+- `pre_create` and `post_create`, around the generation of the app's template and the installation of its support package, code, requirements and resources.
+- `pre_update` and `post_update`, around an update of an existing app.
+- `pre_build` and `post_build`, around the build of the app.
+- `pre_run` and `post_run`, around the execution of the app; `post_run` runs after the app has exited.
+- `pre_package` and `post_package`, around the packaging of the app.
+- `pre_publish` and `post_publish`, around the publication of the app.
+- `pre_dev` and `post_dev`, around the execution of the app in the dev environment.
+
+`app` is the `FinalizedAppConfig` for the application; `command` satisfies the `HookCommandAPI` protocol (see below); `options` are the command-line options the command does not consume itself (typically platform-specific ones, such as `identity` for `package`); settings such as `test_mode`, `debugger` and `packaging_format` are attributes of `app`. A plugin that handles every stage in the same way can override `invoke(stage, app, command, **options)` instead of the individual stage methods.
+
+The `HookCommandAPI` protocol (`briefcase.hooks.base.HookCommandAPI`) defines the stable API surface that plugins can rely on from the `command` parameter:
+
+- `console` - the console object for user interaction
+- `tools` - the tool registry
+- `base_path` - the path to the project directory
+- `platform` and `output_format` - the platform and output format the command targets (`briefcase dev` has no output format: it is an empty string)
+- `command` - the name of the command invoking the hook (e.g., `build`)
+- `bundle_path(app)` - returns the path to the generated project for the given app
+- `build_path(app)` - returns the path containing all platform artefacts for the given app
+
+Every installed plugin is invoked for every stage, in the alphabetical order of the plugin names; a plugin decides for itself whether a stage applies to it. A command that invokes another command runs the hooks of both: `briefcase build` on a project that has not been created yet runs `pre_create`, `post_create`, `pre_build` and `post_build`, in that order. If a hook raises an exception, or the command fails, the command stops and no later stage runs; a `post_` stage runs only after its command succeeded. Hooks always run on the machine running Briefcase, with its tools, also when a Linux build is performed inside Docker; a plugin that must run inside the build container can use `command.tools[app].app_context`.
+
+A hook that changes the app's bundle should do so before Briefcase signs it: in `pre_build`, or in `pre_package` when packaging. On macOS, `briefcase build` signs the app with an ad-hoc identity at the end of the build, and `briefcase package` signs it with the packaging identity before creating the distributable artefact; both sign any binary or framework added to `Contents/Frameworks` or `Contents/Resources`, but a change made in `post_build` invalidates the ad-hoc signature. On every platform, the distributable artefact is created before `post_package` runs, so a change made in `post_package` doesn't reach it.
+
+Briefcase ships one hook plugin, `commands`, which runs the commands an app lists in its [`hooks`][] setting.
+
+For example, a plugin that compiles resources before an app's code is installed is implemented using the following configuration:
+
+```toml
+[project.entry-points."briefcase.hooks"]
+resources = "my_plugin:ResourceHook"
+```
+
+with:
+
+```python
+from briefcase.hooks.base import BaseHook
+
+
+class ResourceHook(BaseHook):
+    @property
+    def name(self):
+        return "resources"
+
+    def pre_create(self, app, command, **options):
+        self.compile(app, command)
+
+    def pre_update(self, app, command, **options):
+        self.compile(app, command)
+
+    def compile(self, app, command):
+        command.tools.subprocess.run(
+            ["pyside6-rcc", "resources.qrc", "-o", "resources.py"],
+            check=True,
+            cwd=command.base_path,
+        )
+```

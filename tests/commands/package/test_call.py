@@ -2,7 +2,7 @@ import pytest
 
 from briefcase.exceptions import BriefcaseCommandError
 
-from ...utils import create_file
+from ...utils import RecordingHook, TrackingHook, create_file
 
 
 def test_no_args_package_one_app(package_command, first_app, tmp_path):
@@ -1068,3 +1068,40 @@ def test_create_before_package_external_app(
 
     # The dist folder has been created.
     assert (tmp_path / "base_path/dist").exists()
+
+
+def test_hooks_run_around_package(package_command, first_app):
+    """pre_package runs after the dist folder is cleaned; post_package after."""
+    package_command._get_hooks = lambda: {"tracking": TrackingHook}
+    package_command.apps = {"first": first_app}
+    options, _ = package_command.parse_options([])
+
+    package_command(**options)
+
+    assert package_command.actions == [
+        ("verify-host",),
+        ("verify-tools",),
+        ("finalize-app-config", "first"),
+        ("verify-app-template", "first"),
+        ("verify-app-tools", "first"),
+        ("hook", "pre_package", "first"),
+        ("package", "first", {"adhoc_sign": False, "identity": None}),
+        ("hook", "post_package", "first"),
+    ]
+
+
+def test_hooks_receive_the_unconsumed_options(package_command, first_app):
+    """Hooks receive the options the command doesn't consume itself."""
+    package_command._get_hooks = lambda: {"recording": RecordingHook}
+    package_command.apps = {"first": first_app}
+    options, _ = package_command.parse_options(["--identity", "Example Identity"])
+
+    package_command(**options)
+
+    expected_options = {"adhoc_sign": False, "identity": "Example Identity"}
+    assert [
+        action for action in package_command.actions if action[0] == "RecordingHook"
+    ] == [
+        ("RecordingHook", "pre_package", "first", expected_options),
+        ("RecordingHook", "post_package", "first", expected_options),
+    ]

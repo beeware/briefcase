@@ -4,7 +4,7 @@ from unittest.mock import MagicMock
 import pytest
 
 from briefcase.debuggers.pdb import PdbDebugger
-from briefcase.exceptions import BriefcaseCommandError
+from briefcase.exceptions import BriefcaseCommandError, BriefcaseConfigError
 from briefcase.platforms.linux import parse_freedesktop_os_release
 from briefcase.platforms.linux.system import LinuxSystemRunCommand
 
@@ -643,3 +643,47 @@ def test_finalized_attrs(create_command, first_app_config):
     assert finalized_config.debugger is debugger
     assert finalized_config.debugger_host == "some-host"
     assert finalized_config.debugger_port == 8765
+
+
+def test_hooks_merged_from_vendor_config(create_command, first_app_config):
+    """A vendor layer's hooks table merges into the app's."""
+    create_command.target_image = "somevendor:surprising"
+    create_command.tools.docker = MagicMock()
+    create_command.target_glibc_version = MagicMock(return_value="2.42")
+    create_command.tools.docker.check_output.return_value = dedent(
+        """\
+        ID=somevendor
+        VERSION_CODENAME=surprising
+        ID_LIKE=debian
+        """
+    )
+    first_app_config.hooks = {"pre_build": [["echo", "app"]]}
+    first_app_config.somevendor = {"hooks": {"post_create": [["echo", "vendor"]]}}
+
+    finalized_config = create_command.finalize_app_config(first_app_config)
+
+    assert finalized_config.hooks == {
+        "pre_build": [["echo", "app"]],
+        "post_create": [["echo", "vendor"]],
+    }
+
+
+def test_hooks_from_vendor_config_validated(create_command, first_app_config):
+    """A vendor layer's hooks table is validated after it is merged."""
+    create_command.target_image = "somevendor:surprising"
+    create_command.tools.docker = MagicMock()
+    create_command.target_glibc_version = MagicMock(return_value="2.42")
+    create_command.tools.docker.check_output.return_value = dedent(
+        """\
+        ID=somevendor
+        VERSION_CODENAME=surprising
+        ID_LIKE=debian
+        """
+    )
+    first_app_config.somevendor = {"hooks": {"after_build": [["echo"]]}}
+
+    with pytest.raises(
+        BriefcaseConfigError,
+        match="'after_build' is not a hook stage for app 'first-app'",
+    ):
+        create_command.finalize_app_config(first_app_config)

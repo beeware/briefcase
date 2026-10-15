@@ -2,6 +2,8 @@ import pytest
 
 from briefcase.exceptions import BriefcaseCommandError
 
+from ...utils import FailingHook, TrackingHook
+
 
 def test_specific_app(build_command, first_app, second_app):
     """If a specific app is requested, build it."""
@@ -1515,3 +1517,62 @@ def test_build_external_app(build_command, first_app, second_app):
         match=r"'first' is declared as an external app",
     ):
         build_command(**options)
+
+
+def test_hooks_run_around_build(build_command, first_app):
+    """pre_build runs after verification; post_build after the build."""
+    build_command._get_hooks = lambda: {"tracking": TrackingHook}
+    build_command.apps = {"first": first_app}
+    options, _ = build_command.parse_options([])
+
+    build_command(**options)
+
+    assert build_command.actions == [
+        ("verify-host",),
+        ("verify-tools",),
+        ("finalize-app-config", "first"),
+        ("verify-app-template", "first"),
+        ("verify-app-tools", "first"),
+        ("hook", "pre_build", "first"),
+        ("build", "first", False, False, {}),
+        ("hook", "post_build", "first"),
+    ]
+
+
+def test_failing_hook_stops_the_build(build_command, first_app):
+    """A hook that raises stops the command before the app is built."""
+    # "failing" sorts before "tracking", so it runs first.
+    build_command._get_hooks = lambda: {
+        "failing": FailingHook,
+        "tracking": TrackingHook,
+    }
+    build_command.apps = {"first": first_app}
+    options, _ = build_command.parse_options([])
+
+    with pytest.raises(BriefcaseCommandError, match=r"The hook failed\."):
+        build_command(**options)
+
+    assert build_command.actions == [
+        ("verify-host",),
+        ("verify-tools",),
+        ("finalize-app-config", "first"),
+        ("verify-app-template", "first"),
+        ("verify-app-tools", "first"),
+    ]
+
+
+def test_post_build_skipped_when_the_build_fails(build_command, first_app):
+    """If the build fails, the post_build stage doesn't run."""
+    build_command._get_hooks = lambda: {"tracking": TrackingHook}
+    build_command.apps = {"first": first_app}
+
+    def failing_build(app, **kwargs):
+        raise BriefcaseCommandError("The build failed.")
+
+    build_command.build_app = failing_build
+    options, _ = build_command.parse_options([])
+
+    with pytest.raises(BriefcaseCommandError, match=r"The build failed\."):
+        build_command(**options)
+
+    assert build_command.actions[-1] == ("hook", "pre_build", "first")

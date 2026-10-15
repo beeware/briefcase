@@ -587,3 +587,30 @@ def test_unknown_env_manager():
             license_files=["LICENSE"],
             env_manager="unknown",
         )
+
+
+def test_hooks_default():
+    """An app's hooks table defaults to empty."""
+    config = DraftAppConfig(
+        app_name="myapp",
+        version="1.2.3",
+        bundle="org.beeware",
+        description="A simple app",
+        sources=["src/myapp"],
+        license={"file": "LICENSE"},
+    )
+    assert config.hooks == {}
+
+
+def test_hooks_invalid():
+    """An app's hooks table is validated."""
+    with pytest.raises(BriefcaseConfigError, match="is not a hook stage"):
+        DraftAppConfig(
+            app_name="myapp",
+            version="1.2.3",
+            bundle="org.beeware",
+            description="A simple app",
+            sources=["src/myapp"],
+            license={"file": "LICENSE"},
+            hooks={"nope": [["echo"]]},
+        )

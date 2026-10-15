@@ -4,6 +4,8 @@ from briefcase.config import DraftAppConfig
 from briefcase.exceptions import UnsupportedPlatform
 from briefcase.integrations.virtual_environment import VenvVirtualEnvironment
 
+from ...utils import TrackingHook
+
 
 def test_create_app(tracking_create_command, tmp_path):
     """If the app doesn't already exist, it will be created."""
@@ -253,3 +255,37 @@ def test_create_app_managed_python_env(tracking_create_command, tmp_path, monkey
         / "base_path/build/first/tester/dummy"
         / tracking_create_command.exe_name("first")
     ).exists()
+
+
+def test_hooks_run_around_create(tracking_create_command):
+    """pre_create runs before the template is generated; post_create after cleanup."""
+    tracking_create_command._get_hooks = lambda: {"tracking": TrackingHook}
+
+    tracking_create_command.create_app(tracking_create_command.apps["first"])
+
+    assert tracking_create_command.actions == [
+        ("hook", "pre_create", "first"),
+        ("generate", "first"),
+        ("verify-app-template", "first"),
+        ("verify-app-tools", "first"),
+        ("support", "first"),
+        ("create-app-env", "first", "Tester", "gothic", "default", True),
+        ("code", "first", False),
+        ("requirements", "Tester-gothic", "first", False, False),
+        ("resources", "first"),
+        ("cleanup", "first"),
+        ("hook", "post_create", "first"),
+    ]
+
+
+def test_no_hooks_when_overwrite_declined(tracking_create_command, tmp_path):
+    """If the user keeps the existing app, no hook runs."""
+    tracking_create_command._get_hooks = lambda: {"tracking": TrackingHook}
+    tracking_create_command.console.values = ["n"]
+    bundle_path = tmp_path / "base_path/build/first/tester/dummy"
+    bundle_path.mkdir(parents=True)
+    (bundle_path / "original").write_text("original template!", encoding="utf-8")
+
+    tracking_create_command.create_app(tracking_create_command.apps["first"])
+
+    assert tracking_create_command.actions == []

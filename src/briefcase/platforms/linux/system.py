@@ -24,6 +24,7 @@ from briefcase.config import (
     EnvManagerT,
     FinalizedAppConfig,
     merge_config,
+    validate_hooks_config,
 )
 from briefcase.exceptions import BriefcaseCommandError, UnsupportedHostError
 from briefcase.integrations.docker import Docker, DockerAppContext
@@ -265,6 +266,9 @@ class LinuxSystemMixin(LinuxMixin):
             codename_config,
         ]:
             merge_config(app, config)
+
+        # A target-specific layer may add hooks; validate them as the app's were.
+        app.hooks = validate_hooks_config(app.app_name, app.hooks)
 
         app.glibc_version = self.target_glibc_version(app)
         self.console.verbose(f"Targeting glibc {app.glibc_version}")
