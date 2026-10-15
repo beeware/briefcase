@@ -230,6 +230,19 @@ This setting is only used on Windows.
 
 The application name as it should be displayed to humans. This name may contain capitalization and punctuation. If it is not specified, the `name` will be used.
 
+#### `hooks`
+
+A table of commands to run before and after Briefcase commands. Each key is a hook stage (`pre_create`, `post_create`, `pre_update`, `post_update`, `pre_build`, `post_build`, `pre_run`, `post_run`, `pre_package`, `post_package`, `pre_publish`, `post_publish`, `pre_dev` or `post_dev`; see the [hook plugin interface][hook-interface]); each value is a list of commands, each command a list of strings: the program and its arguments. The commands run in order, without a shell, from the project directory, and their output is shown. A command that exits with a non-zero status stops the Briefcase command.
+
+The environment of each command contains `BRIEFCASE_APP_NAME`, `BRIEFCASE_BUNDLE_PATH` (the generated project of the app), `BRIEFCASE_HOOK_STAGE`, `BRIEFCASE_OUTPUT_FORMAT` and `BRIEFCASE_PLATFORM`. `briefcase dev` generates no project and has no output format: for the `pre_dev` and `post_dev` stages, `BRIEFCASE_BUNDLE_PATH` is the app's build folder for the host platform, which may not exist, and `BRIEFCASE_OUTPUT_FORMAT` is empty.
+
+The table is cumulative: a platform or output format section adds stages to, or replaces stages of, the app's table. For example, to patch the Xcode project of an iOS app after it has been generated:
+
+```toml
+[tool.briefcase.app.myapp.iOS.hooks]
+post_create = [["ruby", "scripts/patch_xcode.rb"]]
+```
+
 #### `icon`
 
 A path, relative to the directory where the `pyproject.toml` file is located, to an image to use as the icon for the application. The path should *exclude* the extension; Briefcase will append a platform appropriate extension when configuring the application. For example, an icon specification of `icon = "resources/icon"` will use `resources/icon.icns` on macOS, and `resources/icon.ico` on Windows.

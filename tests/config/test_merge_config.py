@@ -1,3 +1,5 @@
+import pytest
+
 from briefcase.config import merge_config
 
 
@@ -139,3 +141,46 @@ def test_merged_keys():
         "non-merge": ["3", "4"],
         "other": 1234,
     }
+
+
+def test_merge_hooks():
+    """The hooks table is cumulative: a later layer adds or replaces stages."""
+    config = {}
+    merge_config(
+        config,
+        {"hooks": {"pre_build": [["echo", "app"]], "post_create": [["echo", "a"]]}},
+    )
+    merge_config(config, {"hooks": {"post_create": [["echo", "ios"]]}})
+
+    assert config == {
+        "hooks": {
+            "pre_build": [["echo", "app"]],
+            "post_create": [["echo", "ios"]],
+        }
+    }
+
+
+@pytest.mark.parametrize(
+    "hooks",
+    [
+        "echo done",  # a string
+        [["ruby", "patch.rb", "--verbose"]],  # commands without a stage
+    ],
+)
+def test_merge_hooks_not_a_table(hooks):
+    """A hooks value that isn't a table is kept as given, for validation to report."""
+    config = {"hooks": {"pre_build": [["echo", "app"]]}}
+
+    merge_config(config, {"hooks": hooks})
+
+    assert config == {"hooks": hooks}
+
+
+def test_merge_hooks_table_after_not_a_table():
+    """A hooks table merged over a value that isn't a table keeps that value, for
+    validation to report."""
+    config = {"hooks": [["ruby", "patch.rb", "--verbose"]]}
+
+    merge_config(config, {"hooks": {"post_create": [["echo", "ios"]]}})
+
+    assert config == {"hooks": [["ruby", "patch.rb", "--verbose"]]}

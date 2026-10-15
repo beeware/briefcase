@@ -132,6 +132,8 @@ Every installed plugin is invoked for every stage, in the alphabetical order of 
 
 A hook that changes the app's bundle should do so before Briefcase signs it: in `pre_build`, or in `pre_package` when packaging. On macOS, `briefcase build` signs the app with an ad-hoc identity at the end of the build, and `briefcase package` signs it with the packaging identity before creating the distributable artefact; both sign any binary or framework added to `Contents/Frameworks` or `Contents/Resources`, but a change made in `post_build` invalidates the ad-hoc signature. On every platform, the distributable artefact is created before `post_package` runs, so a change made in `post_package` doesn't reach it.
 
+Briefcase ships one hook plugin, `commands`, which runs the commands an app lists in its [`hooks`][] setting.
+
 For example, a plugin that compiles resources before an app's code is installed is implemented using the following configuration:
 
 ```toml

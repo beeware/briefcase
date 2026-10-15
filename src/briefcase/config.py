@@ -19,6 +19,7 @@ from packaging.utils import InvalidName, canonicalize_name
 from packaging.version import InvalidVersion, Version
 
 from briefcase.debuggers.base import BaseDebugger
+from briefcase.hooks.base import HOOK_STAGES
 from briefcase.platforms import get_output_formats, get_platforms
 
 from .constants import MIME_TYPE_REGISTRIES, RESERVED_WORDS
@@ -352,6 +353,51 @@ def validate_install_options_config(config, opt_type, **others):
     return options
 
 
+def validate_hooks_config(
+    app_name: str,
+    hooks: dict | None,
+) -> dict[str, list[list[str]]]:
+    """Validate the hooks table of an app.
+
+    Each key is a hook stage; each value is a list of commands, each command a list of
+    strings (the arguments to run, without a shell).
+
+    :param app_name: The name of the app, for error messages.
+    :param hooks: The hooks table, or None if the app defines none.
+    :returns: The validated table; an empty dict if the app defines none.
+    :raises BriefcaseConfigError: If a stage is unknown, or a command is not a non-empty
+        list of strings.
+    """
+    if hooks is None:
+        return {}
+    if not isinstance(hooks, dict):
+        raise BriefcaseConfigError(
+            f"The hooks setting for app {app_name!r} must be a table."
+        )
+
+    for stage, commands in hooks.items():
+        if stage not in HOOK_STAGES:
+            raise BriefcaseConfigError(
+                f"{stage!r} is not a hook stage for app {app_name!r}; "
+                f"the stages are: {', '.join(HOOK_STAGES)}."
+            )
+        if not (
+            isinstance(commands, list)
+            and all(
+                isinstance(command, list)
+                and command
+                and all(isinstance(arg, str) for arg in command)
+                for command in commands
+            )
+        ):
+            raise BriefcaseConfigError(
+                f"The {stage} hook for app {app_name!r} must be a list of commands, "
+                "each a list of strings."
+            )
+
+    return hooks
+
+
 VALID_BUNDLE_RE = re.compile(r"[a-zA-Z0-9-]+(\.[a-zA-Z0-9-]+)+")
 
 
@@ -618,6 +664,7 @@ class DraftAppConfig(AppConfig):
         install_option: dict | None = None,
         uninstall_option: dict | None = None,
         permission: dict | None = None,
+        hooks: dict | None = None,
         template: str | None = None,
         template_branch: str | None = None,
         template_hash: str | None = None,
@@ -649,6 +696,7 @@ class DraftAppConfig(AppConfig):
         self.icon = icon
         self.document_types = {} if document_type is None else document_type
         self.permission = {} if permission is None else permission
+        self.hooks = validate_hooks_config(app_name, hooks)
         self.template = template
         self.template_branch = template_branch
         self.template_hash = template_hash
@@ -779,11 +827,19 @@ def merge_config(config, data):
             config.setdefault(option, []).extend(value)
 
     # Properties that are cumulative tables
-    for option in ["permission"]:
+    for option in ["permission", "hooks"]:
         value = data.pop(option, {})
 
         if value:
-            config.setdefault(option, {}).update(value)
+            existing = config.setdefault(option, {})
+            if option != "hooks" or (
+                isinstance(existing, dict) and isinstance(value, dict)
+            ):
+                existing.update(value)
+            elif isinstance(existing, dict):
+                # A hooks value that isn't a table replaces the table and is then
+                # kept, so that validate_hooks_config reports it.
+                config.update({option: value})
 
     config.update(data)
 

@@ -4,6 +4,7 @@ import pytest
 
 from briefcase.hooks import get_hooks
 from briefcase.hooks.base import HOOK_STAGES, BaseHook, HookCommandAPI
+from briefcase.hooks.commands import CommandsHook
 
 
 class DummyHook(BaseHook):
@@ -89,3 +90,8 @@ def test_get_hooks_discovery(monkeypatch):
         lambda group: [SimpleNamespace(name="dummy", load=lambda: DummyHook)],
     )
     assert get_hooks() == {"dummy": DummyHook}
+
+
+def test_get_hooks_builtin():
+    """The built-in commands hook is registered through entry points."""
+    assert get_hooks()["commands"] is CommandsHook

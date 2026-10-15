@@ -275,6 +275,8 @@ class CreateCommand(BaseCommand):
         extra_context.pop("template")
         extra_context.pop("template_branch")
         extra_context.pop("template_hash")
+        # Hooks run around the command; the template doesn't use them.
+        extra_context.pop("hooks")
 
         # Augment with some extra fields.
         extra_context.update(
