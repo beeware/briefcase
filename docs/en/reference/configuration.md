@@ -156,6 +156,10 @@ The only time `sources` is *not* required is if you are is [packaging an externa
 
 A hexadecimal RGB color value (e.g., `#D81B60`) for a subtle secondary color to be used throughout an application to call attention to key elements. This setting is only used if the platform allows color modification, otherwise it is ignored.
 
+#### `allow_subprocesses`
+
+A Boolean describing whether the bundled application should allow the use of Python subprocesses. Set to `false` by default; `sys.executable` will be set to an empty string in bundled applications. If set to `true`, and the platform supports subprocesses, `sys.executable` will be set to the path of a Python binary that can be used in calls to [`subprocess.run()`][subprocess.run] etc to spawn a Python interpreter.
+
 #### `build`
 
 A build identifier. An integer, used in addition to the version specifier, to identify a specific compiled version of an application.
