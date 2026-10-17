@@ -89,6 +89,40 @@ def test_create_app_environment(create_command, first_app_generated, tmp_path):
     )
 
 
+def test_install_android_requirements(create_command, first_app_generated, tmp_path):
+    """Briefcase installs dependencies for each Android ABI before Gradle runs."""
+    create_command.tools.subprocess = MagicMock(spec_set=Subprocess)
+    create_command.tools[
+        first_app_generated
+    ].app_context = create_command.tools.subprocess
+    first_app_generated.requires = ["example==1.2.3"]
+    first_app_generated.requirement_installer_args = ["--timeout", "42"]
+    venv = create_command.create_app_environment(
+        first_app_generated,
+        platform="android",
+        arch="arm64",
+    )
+
+    create_command.install_app_requirements(first_app_generated, venv)
+
+    installs = [
+        call.args[0]
+        for call in create_command.tools.subprocess.run.call_args_list
+        if "install" in call.args[0]
+    ]
+    assert len(installs) == 2
+    packages_path = tmp_path / "base_path/build/first-app/android/gradle/app_packages"
+    for command, abi in zip(installs, ["arm64-v8a", "x86_64"], strict=True):
+        assert f"--target={packages_path / abi}" in command
+        assert command[command.index("--python") + 1] == (
+            tmp_path / f"base_path/.briefcase/first-app/venv-android-{abi}/bin/python"
+        )
+        assert command[-3:] == ["--timeout", "42", "example==1.2.3"]
+        assert "https://chaquo.com/pypi-13.1/" in command
+        assert f"android_24_{abi.replace('-', '_')}" in command
+    assert (packages_path / "common").is_dir()
+
+
 @pytest.mark.parametrize(
     ("version", "build", "version_code"),
     [

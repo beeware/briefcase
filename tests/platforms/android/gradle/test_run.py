@@ -1043,7 +1043,9 @@ class ClientDebugger(BaseDebugger):
         ClientDebugger(),
     ],
 )
-def test_run_debugger(run_command, first_app_config, tmp_path, debugger):
+def test_run_debugger(
+    run_command, first_app_config, first_app_generated, tmp_path, debugger
+):
     """An app can be run in debug mode."""
     run_command.console.verbosity = LogLevel.DEBUG
 
@@ -1118,7 +1120,7 @@ def test_run_debugger(run_command, first_app_config, tmp_path, debugger):
                         "host_folder": str(
                             tmp_path
                             / "base_path/build/first-app/android/gradle/"
-                            / "app/build/python/pip/debug/common"
+                            / "app_packages/common"
                         ),
                     },
                 }

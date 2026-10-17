@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import contextlib
 import datetime
+import filecmp
 import re
 import subprocess
 import time
@@ -27,6 +28,7 @@ from briefcase.debuggers.base import (
 from briefcase.exceptions import BriefcaseCommandError
 from briefcase.integrations.android_sdk import ADB, AndroidSDK
 from briefcase.integrations.subprocess import SubprocessArgT
+from briefcase.integrations.virtual_environment import VirtualEnvironment
 
 if TYPE_CHECKING:
     from briefcase.commands.base import BaseCommand
@@ -195,6 +197,66 @@ class GradleCreateCommand(GradleMixin, CreateCommand):
             env_manager=env_manager,
             recreate=recreate,
         )
+
+    def install_app_requirements(
+        self,
+        app: FinalizedAppConfig,
+        venv: VirtualEnvironment,
+    ):
+        app_packages_path = self.app_packages_path(app)
+        if app_packages_path.exists():
+            self.tools.shutil.rmtree(app_packages_path)
+        abis = getattr(app, "android_abis", None) or ["arm64-v8a", "x86_64"]
+        for directory in ["common", *abis]:
+            (app_packages_path / directory).mkdir(parents=True)
+        super().install_app_requirements(app, venv)
+
+    def _install_app_requirements(
+        self,
+        app: FinalizedAppConfig,
+        venv: VirtualEnvironment,
+        requires: list[str],
+        app_packages_path: Path,
+    ):
+        abis = getattr(app, "android_abis", None) or ["arm64-v8a", "x86_64"]
+        for abi in abis:
+            abi_venv = (
+                venv
+                if venv.arch == abi
+                else self.create_app_environment(app, platform="android", arch=abi)
+            )
+            with self.console.wait_bar(f"Installing app requirements for {abi}..."):
+                abi_venv.install_requirements(
+                    requires,
+                    allow_editable=False,
+                    require_binary=self.require_binary_installs,
+                    min_os_version=getattr(app, "min_os_version", "24"),
+                    extra_installer_args=app.requirement_installer_args,
+                    install_path=app_packages_path / abi,
+                    install_hint=(
+                        f"\n\nCheck that Android wheels are available for {abi} "
+                        f"and Python {self.python_version_tag}.\n"
+                    ),
+                )
+
+        # Chaquopy overlays common files and files for the device's ABI at runtime.
+        # Share only files whose contents match across every requested ABI.
+        first_path = app_packages_path / abis[0]
+        for path in first_path.rglob("*"):
+            if path.is_file():
+                relative_path = path.relative_to(first_path)
+                other_paths = [
+                    app_packages_path / abi / relative_path for abi in abis[1:]
+                ]
+                if all(
+                    other.is_file() and filecmp.cmp(path, other, shallow=False)
+                    for other in other_paths
+                ):
+                    common_path = app_packages_path / "common" / relative_path
+                    common_path.parent.mkdir(parents=True, exist_ok=True)
+                    path.rename(common_path)
+                    for other in other_paths:
+                        other.unlink()
 
     def support_package_filename(self, support_revision):
         """The query arguments to use in a support package query request."""
@@ -482,7 +544,7 @@ class GradleRunCommand(GradleMixin, RunCommand):
         :param app: The config object for the app
         :returns: The path mappings for the app packages
         """
-        app_packages_path = self.bundle_path(app) / "app/build/python/pip/debug/common"
+        app_packages_path = self.app_packages_path(app) / "common"
         return AppPackagesPathMappings(
             sys_path_regex="requirements$",
             host_folder=f"{app_packages_path}",
