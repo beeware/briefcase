@@ -7,7 +7,7 @@ import subprocess
 import time
 from collections.abc import Collection
 from pathlib import Path
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, Literal
 
 from briefcase.commands import (
     BuildCommand,
@@ -18,7 +18,7 @@ from briefcase.commands import (
     RunCommand,
     UpdateCommand,
 )
-from briefcase.config import FinalizedAppConfig
+from briefcase.config import EnvManagerT, FinalizedAppConfig
 from briefcase.console import ANSI_ESC_SEQ_RE_DEF
 from briefcase.debuggers.base import (
     AppPackagesPathMappings,
@@ -167,6 +167,34 @@ class GradleCreateCommand(GradleMixin, CreateCommand):
     description = "Create and populate an Android Gradle project."
     app_template_hash = "sha1:f3ab88bddd3c47eeee8c86c44c3f64d553a2adfa"
     hidden_app_properties: Collection[str] = {"permission", "feature"}
+
+    def create_app_environment(
+        self,
+        app: FinalizedAppConfig,
+        platform: str,
+        arch: str,
+        env_manager: EnvManagerT | Literal["default"] | None = "default",
+        recreate: bool = True,
+    ):
+        """Create a cross environment for one of the app's Android ABIs.
+
+        :param app: The config object for the app.
+        :param platform: The platform being targeted.
+        :param arch: The requested ABI, or the host architecture on initial creation.
+        :param env_manager: The environment manager to use.
+        :param recreate: Whether to recreate an existing environment.
+        :returns: The Android cross environment.
+        """
+        abis = getattr(app, "android_abis", None) or ["arm64-v8a", "x86_64"]
+        if arch not in abis:
+            arch = abis[0]
+        return super().create_app_environment(
+            app=app,
+            platform=platform,
+            arch=arch,
+            env_manager=env_manager,
+            recreate=recreate,
+        )
 
     def support_package_filename(self, support_revision):
         """The query arguments to use in a support package query request."""

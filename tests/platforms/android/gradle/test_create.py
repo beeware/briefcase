@@ -5,6 +5,7 @@ import pytest
 from packaging.version import Version
 
 from briefcase.exceptions import BriefcaseCommandError, UnsupportedHostError
+from briefcase.integrations.subprocess import Subprocess
 from briefcase.platforms.android.gradle import GradleCreateCommand
 
 
@@ -56,6 +57,35 @@ def test_support_package_filename(create_command):
     assert (
         create_command.support_package_filename(52)
         == f"Python-3.{sys.version_info.minor}-Android-support.b52.zip"
+    )
+
+
+def test_create_app_environment(create_command, first_app_generated, tmp_path):
+    """Android dependencies are installed using an Android cross environment."""
+    create_command.tools.subprocess = MagicMock(spec_set=Subprocess)
+    first_app_generated.android_abis = ["arm64-v8a"]
+
+    venv = create_command.create_app_environment(
+        first_app_generated,
+        platform="android",
+        arch="arm64",
+    )
+
+    assert venv.platform == "android"
+    assert venv.arch == "arm64-v8a"
+    create_command.tools.subprocess.run.assert_called_once_with(
+        [
+            sys.executable,
+            "-m",
+            "xvenv",
+            "--platform",
+            "android",
+            "--arch",
+            "aarch64",
+            "--without-pip",
+            tmp_path / "base_path/.briefcase/first-app/venv-android-arm64-v8a",
+        ],
+        check=True,
     )
 
 
