@@ -70,10 +70,17 @@ def test_support_package_filename(create_command):
     )
 
 
-def test_create_app_environment(create_command, first_app_generated, tmp_path):
+@pytest.mark.parametrize("version", [(3, 11, 9), (3, 12, 10), (3, 13, 0)])
+def test_create_app_environment(
+    create_command,
+    first_app_generated,
+    tmp_path,
+    version,
+):
     """Android dependencies are installed using an Android cross environment."""
     create_command.tools.subprocess = MagicMock(spec_set=Subprocess)
     first_app_generated.android_abis = ["arm64-v8a"]
+    create_command.tools.sys.version_info = version
 
     venv = create_command.create_app_environment(
         first_app_generated,
@@ -255,11 +262,18 @@ def test_android_abis(
     assert context["ndk"] == {"abi_filters": abi_filters}
 
 
+@pytest.mark.parametrize("version", [(3, 11, 9), (3, 12, 10), (3, 13, 0)])
 @pytest.mark.parametrize("abi", ["invalid-abi", "armeabi-v7a", "x86"])
-def test_unsupported_android_abi(create_command, first_app_generated, abi):
+def test_unsupported_android_abi(
+    create_command,
+    first_app_generated,
+    abi,
+    version,
+):
     """Unsupported ABIs are reported before creating an environment."""
     create_command.tools.subprocess = MagicMock(spec_set=Subprocess)
     first_app_generated.android_abis = [abi]
+    create_command.tools.sys.version_info = version
 
     with pytest.raises(
         BriefcaseConfigError,

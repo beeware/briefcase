@@ -29,9 +29,6 @@ from briefcase.exceptions import BriefcaseCommandError, BriefcaseConfigError
 from briefcase.integrations.android_sdk import ADB, AndroidSDK
 from briefcase.integrations.subprocess import SubprocessArgT
 from briefcase.integrations.virtual_environment import VirtualEnvironment
-from briefcase.integrations.virtual_environment.android import (
-    LegacyAndroidVirtualEnvironment,
-)
 
 if TYPE_CHECKING:
     from briefcase.commands.base import BaseCommand
@@ -107,13 +104,10 @@ class GradleMixin(_MixinBase):
         """Return the Android ABIs included in the app.
 
         :param app: The config object for the app.
-        :returns: The configured ABIs, or the defaults for the Python version.
+        :returns: The configured ABIs, or the default 64-bit ABIs.
         """
         defaults = ["arm64-v8a", "x86_64"]
         supported = set(defaults)
-        if self.tools.sys.version_info[:2] < (3, 12):
-            defaults.insert(1, "armeabi-v7a")
-            supported.update({"armeabi-v7a", "x86"})
         abis = getattr(app, "android_abis", None) or defaults
         for abi in abis:
             if abi not in supported:
@@ -191,7 +185,7 @@ class GradleMixin(_MixinBase):
 
 class GradleCreateCommand(GradleMixin, CreateCommand):
     description = "Create and populate an Android Gradle project."
-    app_template_hash = "sha1:9fa7d28f505ce316687874465648b3bc6f03a60b"
+    app_template_hash = "sha1:4694bb0af97a0a1384f28ed6ab2bfa41edcc186c"
     hidden_app_properties: Collection[str] = {"permission", "feature"}
 
     def create_app_environment(
@@ -214,17 +208,6 @@ class GradleCreateCommand(GradleMixin, CreateCommand):
         abis = self.android_abis(app)
         if arch not in abis:
             arch = abis[0]
-        if self.tools.sys.version_info[:2] < (3, 13):
-            venv = LegacyAndroidVirtualEnvironment(
-                app=app,
-                tools=self.tools,
-                base_path=self.base_path,
-                name=f"{platform}-{arch}",
-                platform=platform,
-                arch=arch,
-            )
-            venv.prepare(recreate=recreate)
-            return venv
         return super().create_app_environment(
             app=app,
             platform=platform,

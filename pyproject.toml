@@ -70,7 +70,8 @@ dependencies = [
     "pip >= 25.1",
     "setuptools >= 60",
     "wheel >= 0.37",
-    "xbuild >= 0.4.0",
+    # Replace this pin with a release requirement once xbuild PR #108 is released.
+    "xbuild @ git+https://github.com/beeware/xbuild.git@95eb40d5f37caf4abca6dd502111d2196fd456e3",
     #
     # For the remaining packages: We set the lower version limit to the lowest possible
     # version that satisfies our API needs. If the package uses semver, we set a limit

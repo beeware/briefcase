@@ -56,7 +56,7 @@ When generating an Android project, Briefcase produces a Gradle project.
 
 Gradle requires an install of a Java 17 JDK and the Android SDK.
 
-On Python 3.13 and later, Briefcase uses [xbuild](https://github.com/beeware/xbuild) to create an isolated cross-platform environment for each Android ABI, downloading the target Python distribution when needed. Use the latest maintenance release of your Python version; early Python 3.13 releases cannot install packages in an Android cross environment. On older Python versions, Briefcase installs wheels using pip with Android wheel tags and environment markers.
+Briefcase uses [xbuild](https://github.com/beeware/xbuild) to create an isolated cross-platform environment for each Android ABI, downloading the target Python distribution when needed. Use the latest maintenance release of your Python version; early Python 3.13 releases cannot install packages in an Android cross environment.
 
 If the methods below fail to find an Android SDK or Java JDK, Briefcase will download and install an isolated copy in its data directory.
 
@@ -188,7 +188,7 @@ The following options can be added to the `tool.briefcase.app.<appname>.android`
 
 ### `android_abis`
 
-A list of strings that explicitly specifies the Android ABIs (platforms) the app will support. The supported ABIs are `arm64-v8a` and `x86_64`; both are included by default. Python 3.11 also supports `armeabi-v7a` (included by default) and `x86` (available when explicitly requested). Briefcase installs Python dependencies for each selected ABI and sets the corresponding `abiFilters` in the Android app's `build.gradle` file. Regenerate the project with `briefcase create android` after changing this setting so Gradle uses the updated ABI filters.
+A list of strings that explicitly specifies the Android ABIs (platforms) the app will support. The supported ABIs are `arm64-v8a` and `x86_64`; both are included by default. The 32-bit `armeabi-v7a` and `x86` ABIs are not supported, including on Python 3.11. Briefcase installs Python dependencies for each selected ABI and sets the corresponding `abiFilters` in the Android app's `build.gradle` file. Regenerate the project with `briefcase create android` after changing this setting so Gradle uses the updated ABI filters.
 
 For example, specifying:
 
@@ -369,7 +369,7 @@ feature."android.hardware.location.gps" = True
 
 Briefcase is able to use third-party packages in Android apps. As long as the package is available on PyPI, or you can provide a wheel file for the package, it can be added to the [`requires`][] declaration in your `pyproject.toml` file and used by your app at runtime.
 
-Briefcase installs these packages during `briefcase create android` and `briefcase update android -r`. Dependencies are resolved separately for each ABI, using Android environment markers and compatible wheel tags. The installed packages are stored in `app/app_packages` inside the generated Gradle project, with shared files in `common` and ABI-specific files in separate directories. Chaquopy packages these directories without running pip. Additional [`requirement_installer_args`][] are passed to Briefcase's installer for each ABI.
+Briefcase installs these packages during `briefcase create android` and `briefcase update android -r`. Dependencies are resolved separately for each ABI, using Android environment markers and compatible wheel tags. The cross environment reports `sys_platform == "android"` on all supported Python versions. The installed packages are stored in `app/app_packages` inside the generated Gradle project, with shared files in `common` and ABI-specific files in separate directories. Chaquopy packages these directories without running pip. Additional [`requirement_installer_args`][] are passed to Briefcase's installer for each ABI.
 
 Projects generated with the older requirements-file template must be regenerated with `briefcase create android` before they can use this dependency installation workflow.
 
