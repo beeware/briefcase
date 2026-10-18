@@ -25,10 +25,13 @@ from briefcase.debuggers.base import (
     AppPackagesPathMappings,
     DebuggerConnectionMode,
 )
-from briefcase.exceptions import BriefcaseCommandError
+from briefcase.exceptions import BriefcaseCommandError, BriefcaseConfigError
 from briefcase.integrations.android_sdk import ADB, AndroidSDK
 from briefcase.integrations.subprocess import SubprocessArgT
 from briefcase.integrations.virtual_environment import VirtualEnvironment
+from briefcase.integrations.virtual_environment.android import (
+    LegacyAndroidVirtualEnvironment,
+)
 
 if TYPE_CHECKING:
     from briefcase.commands.base import BaseCommand
@@ -84,7 +87,7 @@ def android_log_clean_filter(line):
 class GradleMixin(_MixinBase):
     output_format = "gradle"
     platform = "android"
-    platform_target_version = "0.3.27"
+    platform_target_version = "0.4.7"
 
     @property
     def packaging_formats(self):
@@ -99,6 +102,27 @@ class GradleMixin(_MixinBase):
 
     def project_path(self, app):
         return self.bundle_path(app)
+
+    def android_abis(self, app: FinalizedAppConfig) -> list[str]:
+        """Return the Android ABIs included in the app.
+
+        :param app: The config object for the app.
+        :returns: The configured ABIs, or the defaults for the Python version.
+        """
+        defaults = ["arm64-v8a", "x86_64"]
+        supported = set(defaults)
+        if self.tools.sys.version_info[:2] < (3, 12):
+            defaults.insert(1, "armeabi-v7a")
+            supported.update({"armeabi-v7a", "x86"})
+        abis = getattr(app, "android_abis", None) or defaults
+        for abi in abis:
+            if abi not in supported:
+                raise BriefcaseConfigError(
+                    f"Unsupported Android ABI {abi!r} for Python "
+                    f"{self.python_version_tag}. Supported ABIs: "
+                    f"{', '.join(sorted(supported))}."
+                )
+        return list(dict.fromkeys(abis))
 
     def binary_path(self, app):
         return (
@@ -167,7 +191,7 @@ class GradleMixin(_MixinBase):
 
 class GradleCreateCommand(GradleMixin, CreateCommand):
     description = "Create and populate an Android Gradle project."
-    app_template_hash = "sha1:f3ab88bddd3c47eeee8c86c44c3f64d553a2adfa"
+    app_template_hash = "sha1:9fa7d28f505ce316687874465648b3bc6f03a60b"
     hidden_app_properties: Collection[str] = {"permission", "feature"}
 
     def create_app_environment(
@@ -178,18 +202,29 @@ class GradleCreateCommand(GradleMixin, CreateCommand):
         env_manager: EnvManagerT | Literal["default"] | None = "default",
         recreate: bool = True,
     ):
-        """Create a cross environment for one of the app's Android ABIs.
+        """Create an installation environment for one of the app's Android ABIs.
 
         :param app: The config object for the app.
         :param platform: The platform being targeted.
         :param arch: The requested ABI, or the host architecture on initial creation.
         :param env_manager: The environment manager to use.
         :param recreate: Whether to recreate an existing environment.
-        :returns: The Android cross environment.
+        :returns: The Android installation environment.
         """
-        abis = getattr(app, "android_abis", None) or ["arm64-v8a", "x86_64"]
+        abis = self.android_abis(app)
         if arch not in abis:
             arch = abis[0]
+        if self.tools.sys.version_info[:2] < (3, 13):
+            venv = LegacyAndroidVirtualEnvironment(
+                app=app,
+                tools=self.tools,
+                base_path=self.base_path,
+                name=f"{platform}-{arch}",
+                platform=platform,
+                arch=arch,
+            )
+            venv.prepare(recreate=recreate)
+            return venv
         return super().create_app_environment(
             app=app,
             platform=platform,
@@ -206,7 +241,7 @@ class GradleCreateCommand(GradleMixin, CreateCommand):
         app_packages_path = self.app_packages_path(app)
         if app_packages_path.exists():
             self.tools.shutil.rmtree(app_packages_path)
-        abis = getattr(app, "android_abis", None) or ["arm64-v8a", "x86_64"]
+        abis = self.android_abis(app)
         for directory in ["common", *abis]:
             (app_packages_path / directory).mkdir(parents=True)
         super().install_app_requirements(app, venv)
@@ -218,7 +253,7 @@ class GradleCreateCommand(GradleMixin, CreateCommand):
         requires: list[str],
         app_packages_path: Path,
     ):
-        abis = getattr(app, "android_abis", None) or ["arm64-v8a", "x86_64"]
+        abis = self.android_abis(app)
         for abi in abis:
             abi_venv = (
                 venv
@@ -316,7 +351,7 @@ class GradleCreateCommand(GradleMixin, CreateCommand):
             "version_code": version_code,
             "safe_formal_name": safe_formal_name(app.formal_name),
             "build_gradle_dependencies": {"implementation": dependencies},
-            "ndk": {"abi_filters": getattr(app, "android_abis", None)},
+            "ndk": {"abi_filters": self.android_abis(app)},
         }
 
     def permissions_context(

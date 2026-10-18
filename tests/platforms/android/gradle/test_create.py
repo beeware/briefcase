@@ -4,7 +4,11 @@ from unittest.mock import MagicMock
 import pytest
 from packaging.version import Version
 
-from briefcase.exceptions import BriefcaseCommandError, UnsupportedHostError
+from briefcase.exceptions import (
+    BriefcaseCommandError,
+    BriefcaseConfigError,
+    UnsupportedHostError,
+)
 from briefcase.integrations.subprocess import Subprocess
 from briefcase.platforms.android.gradle import GradleCreateCommand
 
@@ -16,6 +20,8 @@ def create_command(dummy_console, tmp_path, first_app_config):
         base_path=tmp_path / "base_path",
         data_path=tmp_path / "briefcase",
     )
+    command.tools.sys = MagicMock(spec_set=sys)
+    command.tools.sys.version_info = (3, 13, 0)
     return command
 
 
@@ -28,11 +34,15 @@ def test_unsupported_host_os(create_command, host_os):
         create_command()
 
 
-def test_unsupported_template_version(create_command, first_app_config):
+@pytest.mark.parametrize("template_version", ["0.3.16", "0.3.27"])
+def test_unsupported_template_version(
+    create_command, first_app_config, template_version
+):
     """Error raised if template's target version is not supported."""
     # Skip rolling out the template and support package
     create_command.generate_app_template = MagicMock()
     create_command.install_app_support_package = MagicMock()
+    create_command.tools.subprocess = MagicMock(spec_set=Subprocess)
 
     # Skip tool verification
     create_command.verify_tools = MagicMock()
@@ -40,7 +50,7 @@ def test_unsupported_template_version(create_command, first_app_config):
     create_command.verify_app = MagicMock(wraps=create_command.verify_app)
 
     create_command._briefcase_toml.update(
-        {first_app_config: {"briefcase": {"target_version": "0.3.16"}}}
+        {first_app_config: {"briefcase": {"target_version": template_version}}}
     )
 
     with pytest.raises(
@@ -56,7 +66,7 @@ def test_support_package_filename(create_command):
     """The Android support package filename has been customized."""
     assert (
         create_command.support_package_filename(52)
-        == f"Python-3.{sys.version_info.minor}-Android-support.b52.zip"
+        == "Python-3.13-Android-support.b52.zip"
     )
 
 
@@ -91,6 +101,7 @@ def test_create_app_environment(create_command, first_app_generated, tmp_path):
 
 def test_install_android_requirements(create_command, first_app_generated, tmp_path):
     """Briefcase installs dependencies for each Android ABI before Gradle runs."""
+    create_command.tools.host_os = "Darwin"
     create_command.tools.subprocess = MagicMock(spec_set=Subprocess)
     create_command.tools[
         first_app_generated
@@ -222,10 +233,11 @@ def test_build_gradle_dependencies(
 @pytest.mark.parametrize(
     ("input", "abi_filters"),
     [
-        (None, None),
-        ([], []),
+        (None, ["arm64-v8a", "x86_64"]),
+        ([], ["arm64-v8a", "x86_64"]),
         (["arm64-v8a"], ["arm64-v8a"]),
         (["arm64-v8a", "x86_64"], ["arm64-v8a", "x86_64"]),
+        (["arm64-v8a", "arm64-v8a"], ["arm64-v8a"]),
     ],
 )
 def test_android_abis(
@@ -241,6 +253,25 @@ def test_android_abis(
 
     context = create_command.output_format_template_context(first_app_config)
     assert context["ndk"] == {"abi_filters": abi_filters}
+
+
+@pytest.mark.parametrize("abi", ["invalid-abi", "armeabi-v7a", "x86"])
+def test_unsupported_android_abi(create_command, first_app_generated, abi):
+    """Unsupported ABIs are reported before creating an environment."""
+    create_command.tools.subprocess = MagicMock(spec_set=Subprocess)
+    first_app_generated.android_abis = [abi]
+
+    with pytest.raises(
+        BriefcaseConfigError,
+        match=f"Unsupported Android ABI {abi!r}",
+    ):
+        create_command.create_app_environment(
+            first_app_generated,
+            platform="android",
+            arch="arm64",
+        )
+
+    create_command.tools.subprocess.run.assert_not_called()
 
 
 @pytest.mark.parametrize(

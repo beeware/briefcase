@@ -112,6 +112,11 @@ class VirtualEnvironment(ABC):
             # No --platform flag needed
             return None
 
+    @property
+    def pip_args(self):
+        """Arguments for running Briefcase's pip against this environment."""
+        return ["-m", "pip", "--python", self.executable]
+
     def install_requirements(
         self,
         requires: list[str],
@@ -203,10 +208,7 @@ class VirtualEnvironment(ABC):
                     "-u",
                     "-X",
                     "utf8",
-                    "-m",
-                    "pip",
-                    "--python",
-                    self.executable,
+                    *self.pip_args,
                     "install",
                     "--disable-pip-version-check",
                     "--no-user",
