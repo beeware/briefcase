@@ -106,6 +106,8 @@ class VirtualEnvironment(ABC):
         elif self.platform in {"iphoneos", "iphonesimulator"}:
             min_os_tag = (min_os_version or "13.0").replace(".", "_")
             return f"ios_{min_os_tag}_{self.arch}_{self.platform}"
+        elif self.platform == "android":
+            return f"android_{min_os_version or '24'}_{self.arch.replace('-', '_')}"
         else:
             # No --platform flag needed
             return None
@@ -177,6 +179,10 @@ class VirtualEnvironment(ABC):
                         "--extra-index-url",
                         "https://pypi.anaconda.org/beeware/simple",
                     ]
+                )
+            elif self.platform == "android":
+                install_args.extend(
+                    ["--extra-index-url", "https://chaquo.com/pypi-13.1/"]
                 )
 
             if extra_installer_args:

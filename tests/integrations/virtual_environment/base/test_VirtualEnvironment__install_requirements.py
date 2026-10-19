@@ -196,7 +196,17 @@ def test_install_requirements_path_formats(
         ("windows", "ARM64", None, []),
         ("linux", "x86_64", None, []),
         ("linux", "aarch64", None, []),
-        ("android", "arm64_v8a", None, []),
+        (
+            "android",
+            "arm64-v8a",
+            None,
+            [
+                "--platform",
+                "android_24_arm64_v8a",
+                "--extra-index-url",
+                "https://chaquo.com/pypi-13.1/",
+            ],
+        ),
     ],
 )
 @pytest.mark.parametrize("preexisting", [True, False])

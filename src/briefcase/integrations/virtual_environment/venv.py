@@ -64,6 +64,14 @@ class VenvVirtualEnvironment(VirtualEnvironment):
                         "--archive",
                         self.support_path,
                     ]
+                elif self.platform == "android":
+                    args = [
+                        "xvenv",
+                        "--platform",
+                        "android",
+                        "--arch",
+                        {"arm64-v8a": "aarch64", "x86_64": "x86_64"}[self.arch],
+                    ]
                 else:
                     args = ["venv"]
                 self.tools.subprocess.run(
