@@ -142,6 +142,8 @@ If this setting is set to `False`, the installer will include the checkbox, but 
 
 If this setting is undefined, or set to an empty string, the installer will not include an option to create a shortcut, and no shortcut will be created.
 
+If the MSI defines a shortcut option, the `DESKTOP_SHORTCUT` environment variable can be used to control the behavior of the installer when running in unattended/quiet mode (i.e., `msiexec /qn`). A value of `1` will enable creation of a shortcut; `0` will disable shortcut creation.
+
 ### `dotnet_rollforward`
 
 The version roll-forward policy used when checking for compatible runtimes. Defaults to `"LatestMinor"`. This maps directly to .NET's [roll-forward behavior](https://learn.microsoft.com/en-us/dotnet/core/versions/selection#control-roll-forward-behavior). Valid values are:
