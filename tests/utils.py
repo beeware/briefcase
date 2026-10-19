@@ -19,6 +19,8 @@ from tenacity import (
 )
 
 from briefcase.console import Console, InputDisabled
+from briefcase.exceptions import BriefcaseCommandError
+from briefcase.hooks.base import BaseHook
 
 
 class PartialMatchString(str):
@@ -407,3 +409,55 @@ def assert_url_resolvable(url: str):
     with httpx2.Client(follow_redirects=True) as client:
         response = client.head(url, timeout=10)
         response.raise_for_status()
+
+
+class TrackingHook(BaseHook):
+    """A hook plugin that records every stage it is invoked for.
+
+    It appends ``("hook", stage, app_name)`` to the ``actions`` list of the command
+    invoking it, so command tests can assert where hooks run.
+    """
+
+    @property
+    def name(self):
+        return "tracking"
+
+    def invoke(self, stage, app, command, **options):
+        command.actions.append(("hook", stage, app.app_name))
+
+
+class RecordingHook(BaseHook):
+    """A hook plugin that records the options every stage receives.
+
+    It appends ``(name, stage, app_name, options)`` to the ``actions`` list of the
+    command invoking it; a subclass records under its own class name.
+    """
+
+    @property
+    def name(self):
+        return type(self).__name__
+
+    def invoke(self, stage, app, command, **options):
+        command.actions.append((self.name, stage, app.app_name, options))
+
+
+class FailingHook(BaseHook):
+    """A hook plugin whose pre_build stage raises an error."""
+
+    @property
+    def name(self):
+        return "failing"
+
+    def pre_build(self, app, command, **options):
+        raise BriefcaseCommandError("The hook failed.")
+
+
+class BrokenHook(BaseHook):
+    """A hook plugin that fails to load."""
+
+    def __init__(self):
+        raise BriefcaseCommandError("The plugin is broken.")
+
+    @property
+    def name(self):
+        return "broken"

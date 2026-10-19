@@ -2,6 +2,7 @@ import pytest
 
 from briefcase.exceptions import BriefcaseCommandError
 
+from ...utils import TrackingHook
 from .conftest import _make_channel_class
 
 
@@ -297,4 +298,24 @@ def test_unbuilt(publish_command, first_app_unbuilt, second_app):
         ("verify-app-template", "second"),
         ("verify-app-tools", "second"),
         ("publish", "second", "s3", {"publish_state": "first"}),
+    ]
+
+
+def test_hooks_run_around_publish(publish_command, first_app):
+    """pre_publish runs after verification; post_publish after the channel ran."""
+    publish_command._get_hooks = lambda: {"tracking": TrackingHook}
+    publish_command._get_channels = lambda: {"only": _make_channel_class("only")}
+    publish_command.apps = {"first": first_app}
+
+    publish_command(channel=None)
+
+    assert publish_command.actions == [
+        ("verify-host",),
+        ("verify-tools",),
+        ("finalize-app-config", "first"),
+        ("verify-app-template", "first"),
+        ("verify-app-tools", "first"),
+        ("hook", "pre_publish", "first"),
+        ("publish", "first", "only", {}),
+        ("hook", "post_publish", "first"),
     ]

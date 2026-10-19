@@ -2,6 +2,8 @@ import pytest
 
 from briefcase.exceptions import BriefcaseCommandError
 
+from ...utils import TrackingHook
+
 
 def test_no_args_one_app(run_command, first_app):
     """If there is one app, run starts that app by default."""
@@ -1169,3 +1171,40 @@ def test_run_external_app(run_command, first_app):
         match=r"'first' is declared as an external app",
     ):
         run_command(**options)
+
+
+def test_hooks_run_around_run(run_command, first_app):
+    """pre_run runs after verification; post_run after the app exits."""
+    run_command._get_hooks = lambda: {"tracking": TrackingHook}
+    run_command.apps = {"first": first_app}
+    options, _ = run_command.parse_options([])
+
+    run_command(**options)
+
+    assert run_command.actions == [
+        ("verify-host",),
+        ("verify-tools",),
+        ("finalize-app-config", "first"),
+        ("verify-app-template", "first"),
+        ("verify-app-tools", "first"),
+        ("hook", "pre_run", "first"),
+        ("run", "first", False, False, (None, None), {"passthrough": []}),
+        ("hook", "post_run", "first"),
+    ]
+
+
+def test_post_run_skipped_when_the_app_fails(run_command, first_app):
+    """If running the app fails, the post_run stage doesn't run."""
+    run_command._get_hooks = lambda: {"tracking": TrackingHook}
+    run_command.apps = {"first": first_app}
+
+    def failing_run(app, **kwargs):
+        raise BriefcaseCommandError("The app failed.")
+
+    run_command.run_app = failing_run
+    options, _ = run_command.parse_options([])
+
+    with pytest.raises(BriefcaseCommandError, match=r"The app failed\."):
+        run_command(**options)
+
+    assert run_command.actions[-1] == ("hook", "pre_run", "first")
