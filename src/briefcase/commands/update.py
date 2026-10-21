@@ -60,6 +60,8 @@ class UpdateCommand(CreateCommand):
 
         self.verify_app(app)
 
+        self.invoke_hooks("pre_update", app, **options)
+
         self.console.info("Updating application code...", prefix=app.app_name)
         self.install_app_code(app=app)
 
@@ -114,6 +116,8 @@ class UpdateCommand(CreateCommand):
         self.cleanup_app_content(app=app)
 
         self.console.info("Application updated.", prefix=app.app_name)
+
+        self.invoke_hooks("post_update", app, **options)
 
     def __call__(
         self,

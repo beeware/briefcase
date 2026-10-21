@@ -422,10 +422,12 @@ class RunCommand(RunAppMixin, BaseCommand):
                 "(apps defining 'external_package_path') cannot be run."
             )
 
+        self.invoke_hooks("pre_run", app, **options)
         state = self.run_app(
             app,
             passthrough=[] if passthrough is None else passthrough,
             **full_options(state, options),
         )
+        self.invoke_hooks("post_run", app, **options)
 
         return state

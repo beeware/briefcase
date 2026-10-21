@@ -158,6 +158,9 @@ PySide6 = "briefcase.bootstraps.pyside6:PySide6GuiBootstrap"
 pdb = "briefcase.debuggers.pdb:PdbDebugger"
 debugpy = "briefcase.debuggers.debugpy:DebugpyDebugger"
 
+[project.entry-points."briefcase.hooks"]
+commands = "briefcase.hooks.commands:CommandsHook"
+
 [project.entry-points."briefcase.platforms"]
 android = "briefcase.platforms.android"
 iOS = "briefcase.platforms.iOS"

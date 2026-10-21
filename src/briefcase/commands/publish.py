@@ -90,7 +90,9 @@ class PublishCommand(BaseCommand):
 
         self.verify_app(app)
 
+        self.invoke_hooks("pre_publish", app, **options)
         state = channel.publish_app(app, command=self, **full_options(state, options))
+        self.invoke_hooks("post_publish", app, **options)
 
         return state
 
