@@ -56,7 +56,7 @@ To build a mobile app, include the platform name in the `build` command - for ex
 $ briefcase build iOS --debug debugpy -r
 ```
 
-The `-r` option reinstalls your app's requirements so the debugger is included. Without it, an app that has already been built won't have the debugger added.
+The `-r` option ensures your app’s requirements are reinstalled so the debugger is included. Without it, an app that has already been built won't have the debugger added.
 
 This will build your app in debug mode and add [debugpy](https://code.visualstudio.com/docs/debugtest/debugging#_debug-console-repl), and a package that automatically starts `debugpy` at the startup of your bundled app.
 
