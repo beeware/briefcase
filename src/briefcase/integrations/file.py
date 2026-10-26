@@ -16,6 +16,7 @@ from pathlib import Path
 import httpx2
 from tenacity import retry, retry_if_exception_type, stop_after_attempt, wait_fixed
 
+from briefcase.constants import WINDOWS_RESERVED_WORDS
 from briefcase.exceptions import (
     BadNetworkResourceError,
     BriefcaseCommandError,
@@ -324,7 +325,8 @@ class File(Tool):
                     filename = msg.get_filename()
                     if filename:
                         cache_full_name = filename
-                cache_name = cache_full_name.split("/")[-1]
+
+                cache_name = self._safe_cache_name(cache_full_name)
                 filename = download_path / cache_name
 
                 if expected_hash is None:
@@ -355,7 +357,8 @@ class File(Tool):
                     self.tools.console.info(f"Downloading {cache_name}...")
                     self._fetch_and_write_content(
                         response,
-                        filename,
+                        download_path,
+                        cache_name,
                         role=role,
                         algorithm=algorithm,
                         digest=digest,
@@ -415,6 +418,40 @@ class File(Tool):
 
         return filename
 
+    def _safe_cache_name(self, cache_full_name: str) -> str:
+        """Reduce a server-provided filename to a name that is safe to use inside the
+        download cache.
+
+        :param full_name: The server-provided filename or URL path.
+        :returns: A bare cache filename with no path components.
+        :raises BriefcaseCommandError: If no safe filename can be derived.
+        """
+        # Reject names that are:
+        # * empty,
+        # * refer to a directory, or
+        # * any name containing a colon, which Windows interprets as a
+        #   drive-relative path (`D:file`) or an NTFS alternate data stream
+        #   (`file:stream`).
+        # * a Windows reserved word (NUL, AUX, CON1-9, LPT1-9 etc), or the
+        #   filename starts with a reserved word (e.g., NUL.txt)
+        # * more than 200 characters long.
+        cache_name = cache_full_name.replace("\\", "/").split("/")[-1].strip(" .")
+        if (
+            not cache_name
+            or ":" in cache_name
+            or cache_name.lower() in WINDOWS_RESERVED_WORDS
+            or any(
+                cache_name.lower().startswith(f"{word}.")
+                for word in WINDOWS_RESERVED_WORDS
+            )
+            or len(cache_name) > 200
+        ):
+            raise BriefcaseCommandError(
+                "Unable to determine a safe download filename "
+                f"from {cache_full_name!r}."
+            )
+        return cache_name
+
     def _parse_expected_hash(
         self,
         expected_hash: str | None,
@@ -447,7 +484,8 @@ class File(Tool):
     def _fetch_and_write_content(
         self,
         response: httpx2.Response,
-        filename: Path,
+        download_path: Path,
+        cache_name: Path,
         role: str | None,
         algorithm: str | None,
         digest: str | None,
@@ -456,16 +494,18 @@ class File(Tool):
 
         The data is initially written in to a temporary file in the Briefcase
         cache. This avoids partially downloaded files masquerading as complete
-        downloads in later Briefcase runs. The temporary file is only moved
-        to ``filename`` if the download is successful; otherwise, it is deleted.
+        downloads in later Briefcase runs. The temporary file is only moved to
+        `download_path/cache_name` if the download is successful; otherwise, it
+        is deleted.
 
         If `algorithm` and `digest` are provided, a digest is computed while the
         content is streamed, and compared against `digest` before the temporary
-        file is moved into place. A mismatch raises `CorruptContentError` and the
-        temporary file is discarded.
+        file is moved into place. A mismatch raises `CorruptContentError` and
+        the temporary file is discarded.
 
-        :param response: ``httpx2.Response``
-        :param filename: full filesystem path to save data
+        :param response: `httpx2.Response`
+        :param download_path: The path where the file should be downloaded
+        :param cache_name: The final file name to write into the download path
         :param role: A string describing the role played by the file being
             downloaded, used to name the resource in `CorruptContentError`.
         :param algorithm: The hash algorithm to verify the content against, or
@@ -478,8 +518,7 @@ class File(Tool):
         # `temp_file` is used in the `finally` block, so make sure it's assigned
         # before the `try`.
         temp_file = tempfile.NamedTemporaryFile(  # noqa: SIM115 (use context manager)
-            dir=filename.parent,
-            prefix=f"{filename.name}.",
+            dir=download_path,
             suffix=".download",
             delete=False,
         )
@@ -504,23 +543,22 @@ class File(Tool):
             if hasher is not None:
                 if hasher.hexdigest().lower() != digest.lower():
                     raise CorruptContentError(
-                        role=role or filename.name,
+                        role=role or cache_name,
                         expected_hash=f"{hasher.name}:{digest}",
                         actual_hash=f"{hasher.name}:{hasher.hexdigest()}",
                     )
-                self.tools.console.info(
-                    f"{filename.name} hash verified ({hasher.name})."
-                )
+                self.tools.console.info(f"{cache_name} hash verified ({hasher.name}).")
 
             # This file move short circuits to a file rename when the source and
             # destination are on the same filesystem; therefore, it should complete
             # quite quickly even for large files.
+            filename = download_path / cache_name
             self.tools.shutil.move(temp_file.name, filename)
             # Temporary files are created with only read/write permissions for the
             # file's owner (i.e. 600); to match the behavior of file creation using
-            # ``open(..., "w")``, the downloaded file's permissions are updated for
+            # `open(..., "w")`, the downloaded file's permissions are updated for
             # the group and world to have read/write permissions as well. Finally,
-            # (as with ``open()``) the system's umask is respected. The current
+            # (as with `open()`) the system's umask is respected. The current
             # umask is only available as the return value to updating the umask...
             # Updating the umask affects the current process, including all threads.
             # A umask value represents permissions that should be denied; so, 022
