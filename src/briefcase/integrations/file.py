@@ -447,7 +447,8 @@ class File(Tool):
             or len(cache_name) > 200
         ):
             raise BriefcaseCommandError(
-                f"Unable to determine a safe download filename from {cache_full_name!r}."
+                "Unable to determine a safe download filename "
+                f"from {cache_full_name!r}."
             )
         return cache_name
 
