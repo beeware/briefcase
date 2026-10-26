@@ -120,7 +120,57 @@ def test_docker_doesnt_exist(mock_tools):
     )
 
 
-def test_docker_failure(mock_tools, user_mapping_run_calls, capsys):
+def test_docker_unavailable_in_wsl(mock_tools, capsys):
+    """Missing Docker in WSL stops verification with installation guidance."""
+    error = subprocess.CalledProcessError(
+        returncode=1,
+        cmd="docker --version",
+        output=dedent("""
+            The command 'docker' could not be found in this WSL 2 distro.
+            We recommend to activate the WSL integration in Docker Desktop settings.
+
+            For details about using Docker Desktop with WSL 2, visit:
+
+            https://docs.docker.com/go/wsl2/
+
+        """),
+    )
+    mock_tools.subprocess.check_output.side_effect = [
+        error,
+        VALID_DOCKER_INFO,
+        VALID_BUILDX_VERSION,
+        VALID_USER_MAPPING_IMAGE_CACHE,
+        "",  # touch host_write_file
+        "",  # rm -f host_write_file
+    ]
+
+    with pytest.raises(
+        BriefcaseCommandError,
+        match="requires Docker to be available inside your WSL distribution",
+    ) as exc_info:
+        Docker.verify(mock_tools)
+
+    assert "enable WSL integration" in str(exc_info.value)
+    assert "https://docs.docker.com/desktop/features/wsl/" in str(exc_info.value)
+    assert exc_info.value.__cause__ is error
+    mock_tools.subprocess.check_output.assert_called_once_with(
+        ["docker", "--version"], env={"DOCKER_CLI_HINTS": "false"}
+    )
+    assert not hasattr(mock_tools, "docker")
+    output = capsys.readouterr()
+    assert output.out == ""
+    assert output.err == ""
+
+
+@pytest.mark.parametrize(
+    "failure_output",
+    [
+        None,
+        "Unexpected Docker failure",
+        "この WSL 2 ディストリビューションで 'docker' コマンドが見つかりません。",
+    ],
+)
+def test_docker_failure(mock_tools, user_mapping_run_calls, capsys, failure_output):
     """If docker failed during execution, the Docker wrapper is returned with a
     warning."""
     # Mock Docker cannot be found
@@ -128,6 +178,7 @@ def test_docker_failure(mock_tools, user_mapping_run_calls, capsys):
         subprocess.CalledProcessError(
             returncode=1,
             cmd="docker --version",
+            output=failure_output,
         ),
         "Success!",
         VALID_BUILDX_VERSION,
@@ -153,6 +204,7 @@ def test_docker_failure(mock_tools, user_mapping_run_calls, capsys):
         "**            WARNING: Unable to determine if Docker is installed"
         in output.out
     )
+    assert "Briefcase will proceed" in output.out
     assert output.err == ""
 
 
