@@ -2,6 +2,13 @@
 
 <!-- towncrier release notes start -->
 
+## 0.4.7 (2026-10-27)
+
+### Bugfixes
+
+* (<nospell>GHSA-j2qc-j92x-qqhj</nospell>) The mechanism used by Briefcase to construct cache filenames has been strengthened to remove the ability for a malicious server to write arbitrary content into a Windows file system. This problem is known to exist in all versions of Briefcase from v0.3.0 to v0.4.6; however, the download hashing added in v0.4.5 makes the bug extremely difficult for an attacker to exploit. Full details can be found in [GitHub Security Advisory <nospell>GHSA-j2qc-j92x-qqhj</nospell>](https://github.com/beeware/briefcase/security/advisories/GHSA-j2qc-j92x-qqhj); a CVE has been requested. ([#3110](https://github.com/beeware/briefcase/issues/3110))
+* The minimum version of `pip` required by Briefcase has been bumped to 26.2.2 to ensure that the [<nospell>eMudhra</nospell> Intermediate CA](https://emudhra.we-have-a-problem.com) is not in use. ([#3111](https://github.com/beeware/briefcase/issues/3111))
+
 ## 0.4.6 (2026-10-13)
 
 ### Features
