@@ -9,7 +9,7 @@ import tomllib
 import unicodedata
 from email.utils import getaddresses
 from pathlib import Path
-from typing import Literal
+from typing import Any, Literal
 from urllib.parse import urlparse
 
 from build import BuildBackendException
@@ -861,11 +861,11 @@ def _write_temp_license(base_path: Path, app_name: str, text: str) -> str | None
 
 
 def _normalize_pep639_license_config(
-    config: AppConfig,
+    config: dict[str, Any],
     app_name: str,
     base_path: Path,
     console,
-):
+) -> None:
     """Finish normalizing a PEP 639 license config.
 
     :param config: The fully-merged config dict (mutated in place).
@@ -909,11 +909,11 @@ Update the `license` definition to a valid SPDX expression.
 
 
 def _normalize_pep621_license_text_config(
-    config: AppConfig,
+    config: dict[str, Any],
     app_name: str,
     base_path: Path,
     console,
-):
+) -> None:
     """Normalize a PEP 621 license.text config into PEP 639 form.
 
     Text could be a license identifier (which *might* even be valid SPDX), or full
@@ -991,11 +991,11 @@ def _normalize_pep621_license_text_config(
 
 
 def _normalize_pep621_license_file_config(
-    config: AppConfig,
+    config: dict[str, Any],
     app_name: str,
     base_path: Path,
     console,
-):
+) -> None:
     """Normalize a PEP 621 license.file config into PEP 639 form.
 
     Read the file to infer the SPDX expression.
@@ -1056,11 +1056,11 @@ def _normalize_pep621_license_file_config(
 
 
 def _normalize_pre_pep621_license_config(
-    config: AppConfig,
+    config: dict[str, Any],
     app_name: str,
     base_path: Path,
     console,
-):
+) -> None:
     """Normalize a pre-PEP 621 license config into PEP 639 form.
 
     Pre-PEP 621 free-form `license` text, with no license-files. We also know that the
@@ -1141,11 +1141,11 @@ def _normalize_pre_pep621_license_config(
 
 
 def normalize_license_config(
-    config: AppConfig,
+    config: dict[str, Any],
     app_name: str,
     base_path: Path,
     console,
-):
+) -> None:
     """Normalize the `license` and `license-files` entries in a merged config.
 
     This runs after all config layers (project, global, app, platform, format) have been
