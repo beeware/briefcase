@@ -67,7 +67,7 @@ dependencies = [
     # specify a minimum version, but no maximum, because we always want the most
     # recent version.
     "packaging >= 24.2",
-    "pip >= 24.3",
+    "pip >= 26.2.2",
     "setuptools >= 60",
     "wheel >= 0.37",
     "xbuild >= 0.4.0",

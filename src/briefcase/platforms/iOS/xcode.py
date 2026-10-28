@@ -320,7 +320,7 @@ or:
 
 class iOSXcodeCreateCommand(iOSXcodePassiveMixin, CreateCommand):
     description = "Create and populate a iOS Xcode project."
-    app_template_hash = "sha1:80b0ed7698841b0de0c02d58f20a9a580ada5f7d"
+    app_template_hash = "sha1:2d6805fe1d02b6c46197366d36cac97415cf101b"
 
     def support_package_url(self, support_revision: str) -> str:
         """The URL of the support package to use for apps of this type."""

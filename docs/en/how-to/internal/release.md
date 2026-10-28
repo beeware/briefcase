@@ -39,7 +39,22 @@ The procedure for cutting a new release is as follows:
     $ tox -e docs-lint,docs-all
     ```
 
-4. Ensure that there is a version branch for the new Briefcase version in every template that Briefcase will use at runtime:
+4. Ensure the template hashes and stub binaries are updated. The `.github` repository contains scripts to assist:
+
+    ```console
+    $ python scripts/update_support.py ../templates/briefcase-iOS-Xcode-template
+    $ python scripts/update_support.py ../templates/briefcase-linux-appimage-template
+    $ python scripts/update_support.py ../templates/briefcase-linux-flatpak-template
+    $ python scripts/update_support.py ../templates/briefcase-macOS-app-template
+    $ python scripts/update_support.py ../templates/briefcase-macOS-Xcode-template
+    $ python scripts/update_support.py ../templates/briefcase-windows-app-template
+    $ python scripts/update_support.py ../templates/briefcase-windows-VisualStudio-template
+
+    $ python scripts/update_stub.py ../templates/briefcase-macOS-app-template
+    $ python scripts/update_stub.py ../templates/briefcase-windows-app-template
+    ```
+
+5. Ensure that there is a version branch for the new Briefcase version in every template that Briefcase will use at runtime:
 
     - `briefcase-template`
     - `briefcase-macOS-app-template`
@@ -53,7 +68,7 @@ The procedure for cutting a new release is as follows:
     - `briefcase-android-gradle-template`
     - `briefcase-web-static-template`
 
-5. Update the pinned template hashes to match the branches created in step 4:
+6. Update the pinned template hashes to match the branches created in step 5:
 
     ```console
     $ python scripts/update_template_hashes.py v1.2.3
@@ -61,9 +76,9 @@ The procedure for cutting a new release is as follows:
 
     This writes the resolved commit hash directly into the corresponding `app_template_hash`/`template_hash` class attribute in each source file. Review the change with `git diff`, then commit it.
 
-    If the script reports any repository is missing the new branch, go back to step 4 and push that branch before continuing.
+    If the script reports any repository is missing the new branch, go back to step 5 and push that branch before continuing.
 
-6.  Tag the release, and push the branch and tag upstream:
+7.  Tag the release, and push the branch and tag upstream:
 
     ```console
     $ git tag v1.2.3
@@ -71,7 +86,7 @@ The procedure for cutting a new release is as follows:
     $ git push upstream v1.2.3
     ```
 
-7. Pushing the tag will start a workflow to create a draft release on GitHub. You can [follow the progress of the workflow on GitHub](https://github.com/beeware/briefcase/actions?query=workflow%3A%22Create+Release%22); once the workflow completes, there should be a new [draft release](https://github.com/beeware/briefcase/releases), and an entry on the [Test PyPI server](https://test.pypi.org/project/briefcase/).
+8. Pushing the tag will start a workflow to create a draft release on GitHub. You can [follow the progress of the workflow on GitHub](https://github.com/beeware/briefcase/actions?query=workflow%3A%22Create+Release%22); once the workflow completes, there should be a new [draft release](https://github.com/beeware/briefcase/releases), and an entry on the [Test PyPI server](https://test.pypi.org/project/briefcase/).
 
     Confirm that this action successfully completes. If it fails,
     there's a couple of possible causes:
@@ -79,12 +94,12 @@ The procedure for cutting a new release is as follows:
     a.  The final upload to Test PyPI failed. Test PyPI is not have the
         same service monitoring as PyPI-proper, so it sometimes has
         problems. However, it's also not critical to the release
-        process; if this step fails, you can perform Step 6 by manually
+        process; if this step fails, you can perform Step 7 by manually
         downloading the "packages" artifact from the GitHub workflow
         instead.
 
     b.  The test apps fail to build. This is likely because you forgot
-        to branch one (or more) of the templates mentioned in Step 3. If
+        to branch one (or more) of the templates mentioned in Step 5. If
         this happens, you can correct the missing template, and re-run
         the action through the GitHub Actions GUI.
 
@@ -95,7 +110,7 @@ The procedure for cutting a new release is as follows:
         GUI. If the fix requires a code change, delete the old tag, make
         the code change, and re-tag the release.
 
-8. Create a clean virtual environment, install the new release from Test PyPI, and perform any pre-release testing that may be appropriate:
+9. Create a clean virtual environment, install the new release from Test PyPI, and perform any pre-release testing that may be appropriate:
 
     ```console
     $ python3 -m venv testvenv
@@ -106,14 +121,14 @@ The procedure for cutting a new release is as follows:
     (testvenv) $ #... any other manual checks you want to perform ...
     ```
 
-9. Log into Read The Docs, visit the [Versions tab](https://readthedocs.org/projects/briefcase/versions/), and activate the new version. Ensure that the build completes; if there's a problem, you may need to correct the build configuration, roll back and re-tag the release.
+10. Log into Read The Docs, visit the [Versions tab](https://readthedocs.org/projects/briefcase/versions/), and activate the new version. Ensure that the build completes; if there's a problem, you may need to correct the build configuration, roll back and re-tag the release.
 
-10. Edit the GitHub release to add release notes. You can use the text generated by towncrier, but you'll need to update the format to Markdown, rather than ReST. If necessary, check the pre-release checkbox.
+11. Edit the GitHub release to add release notes. You can use the text generated by towncrier, but you'll need to update the format to Markdown, rather than ReST. If necessary, check the pre-release checkbox.
 
-11. Double check everything, then click Publish. This will trigger a [publication workflow on GitHub](https://github.com/beeware/briefcase/actions?query=workflow%3A%22Upload+Python+Package%22).
+12. Double check everything, then click Publish. This will trigger a [publication workflow on GitHub](https://github.com/beeware/briefcase/actions?query=workflow%3A%22Upload+Python+Package%22).
 
-12. Wait for the [package to appear on PyPI](https://pypi.org/project/briefcase/).
+13. Wait for the [package to appear on PyPI](https://pypi.org/project/briefcase/).
 
 Congratulations, you've just published a release!
 
-If anything went wrong during steps 4-10, you will need to re-start from step 4 with a new version number. Once the release has successfully appeared on PyPI (or Test PyPI), it cannot be changed; if you spot a problem in a published package, you'll need to tag a completely new release.
+If anything went wrong during steps 5-12, you will need to re-start from step 5 with a new version number. Once the release has successfully appeared on PyPI (or Test PyPI), it cannot be changed; if you spot a problem in a published package, you'll need to tag a completely new release.

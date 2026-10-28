@@ -132,6 +132,9 @@ WINDOWS_RESERVED_WORDS = {
     "com8",
     "com9",
     "com0",
+    "com¹",
+    "com²",
+    "com³",
     "lpt1",
     "lpt2",
     "lpt3",
@@ -142,6 +145,9 @@ WINDOWS_RESERVED_WORDS = {
     "lpt8",
     "lpt9",
     "lpt0",
+    "lpt¹",
+    "lpt²",
+    "lpt³",
 }
 
 NON_PYTHON_RESERVED_WORDS = set.union(
