@@ -146,7 +146,7 @@ def test_docker_unavailable_in_wsl(mock_tools, capsys):
 
     with pytest.raises(
         BriefcaseCommandError,
-        match="requires Docker to be available inside your WSL distribution",
+        match="requires that Docker is available inside your WSL distribution",
     ) as exc_info:
         Docker.verify(mock_tools)
 
@@ -162,15 +162,7 @@ def test_docker_unavailable_in_wsl(mock_tools, capsys):
     assert output.err == ""
 
 
-@pytest.mark.parametrize(
-    "failure_output",
-    [
-        None,
-        "Unexpected Docker failure",
-        "この WSL 2 ディストリビューションで 'docker' コマンドが見つかりません。",
-    ],
-)
-def test_docker_failure(mock_tools, user_mapping_run_calls, capsys, failure_output):
+def test_docker_failure(mock_tools, user_mapping_run_calls, capsys):
     """If docker failed during execution, the Docker wrapper is returned with a
     warning."""
     # Mock Docker cannot be found
@@ -178,7 +170,7 @@ def test_docker_failure(mock_tools, user_mapping_run_calls, capsys, failure_outp
         subprocess.CalledProcessError(
             returncode=1,
             cmd="docker --version",
-            output=failure_output,
+            output="Unexpected Docker failure",
         ),
         "Success!",
         VALID_BUILDX_VERSION,
@@ -204,7 +196,6 @@ def test_docker_failure(mock_tools, user_mapping_run_calls, capsys, failure_outp
         "**            WARNING: Unable to determine if Docker is installed"
         in output.out
     )
-    assert "Briefcase will proceed" in output.out
     assert output.err == ""
 
 

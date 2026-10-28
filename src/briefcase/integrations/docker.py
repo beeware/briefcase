@@ -48,7 +48,7 @@ If you have installed Docker recently and are still getting this error, you may
 need to restart your terminal session.
 """
     DOCKER_NOT_AVAILABLE_IN_WSL_ERROR = """\
-Briefcase requires Docker to be available inside your WSL distribution.
+Briefcase requires that Docker is available inside your WSL distribution.
 Install Docker Desktop and enable WSL integration for this distribution.
 See:
 
@@ -173,9 +173,7 @@ See https://docs.docker.com/go/buildx/ to install the buildx plugin.
                 """,
             )
         except subprocess.CalledProcessError as e:
-            if "The command 'docker' could not be found in this WSL 2 distro." in (
-                e.output or ""
-            ):
+            if "could not be found in this WSL 2 distro." in e.output:
                 raise BriefcaseCommandError(
                     cls.DOCKER_NOT_AVAILABLE_IN_WSL_ERROR
                 ) from e
