@@ -8,7 +8,7 @@ import time
 from collections.abc import Collection
 from dataclasses import dataclass
 from pathlib import Path
-from typing import Literal
+from typing import Literal, NamedTuple
 from uuid import UUID
 
 from packaging.version import Version
@@ -49,6 +49,15 @@ from briefcase.platforms.macOS.filters import XcodeBuildFilter, macOS_log_clean_
 DEVELOPMENT_IDENTITY_PREFIXES = ("Apple Development:", "iPhone Developer:")
 
 
+class iOSDevice(NamedTuple):
+    """A device (simulator or physical) that can run an iOS app."""
+
+    udid: str
+    os_version: str
+    name: str
+    physical: bool
+
+
 @dataclass
 class iOSSigningIdentity:
     """A signing identity for deploying an app to a physical iOS device."""
@@ -62,6 +71,20 @@ class iOSXcodePassiveMixin(iOSMixin):
     output_format = "Xcode"
     supported_env_managers: Collection[EnvManagerT] = {"venv", "uv"}
 
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+
+        # The device the app will run on, and (for a physical device) the
+        # identity used to sign the app. These are selected by the run command.
+        self.target_device: iOSDevice | None = None
+        self.signing_identity: iOSSigningIdentity | None = None
+
+    def clone_options(self, command):
+        """Clone the target device and signing identity."""
+        super().clone_options(command)
+        self.target_device = command.target_device
+        self.signing_identity = command.signing_identity
+
     @property
     def packaging_formats(self):
         return ["ipa"]
@@ -74,11 +97,12 @@ class iOSXcodePassiveMixin(iOSMixin):
         return self.bundle_path(app) / f"{app.formal_name}.xcodeproj"
 
     def binary_path(self, app):
+        if self.target_device and self.target_device.physical:
+            sdk = "iphoneos"
+        else:
+            sdk = "iphonesimulator"
         return (
-            self.bundle_path(app)
-            / "build"
-            / "Debug-iphonesimulator"
-            / f"{app.formal_name}.app"
+            self.bundle_path(app) / "build" / f"Debug-{sdk}" / f"{app.formal_name}.app"
         )
 
     def distribution_path(self, app):
@@ -162,8 +186,7 @@ class iOSXcodeMixin(iOSXcodePassiveMixin):
             - A device UUID.
             - A device name (e.g. `"iPhone 11"`).
             - A device name and OS version (e.g. `"iPhone 11::iOS 13.3"`).
-        :returns: A tuple containing the udid, iOS version, and device name
-            for the selected device.
+        :returns: The selected device.
         """
         simulators = self.get_simulators(self.tools, "iOS")
 
@@ -196,7 +219,7 @@ class iOSXcodeMixin(iOSXcodePassiveMixin):
                     # iOS_tag will be of the form "iOS 15.5"
                     # Drop the "iOS" prefix when reporting the version.
                     iOS_version = iOS_tag.split(" ", 1)[-1]
-                    return udid, iOS_version, device
+                    return iOSDevice(udid, iOS_version, device, udid in physical_udids)
                 except KeyError:
                     # UDID doesn't exist in this iOS version; try another.
                     pass
@@ -250,7 +273,7 @@ class iOSXcodeMixin(iOSXcodePassiveMixin):
                 self.console.info(
                     f"Automatically selected {device} simulator on {iOS_tag}"
                 )
-                return udid, iOS_version, device
+                return iOSDevice(udid, iOS_version, device, udid in physical_udids)
             elif udid_or_device and "::" in udid_or_device:
                 # A device name::version.
                 device, iOS_tag = udid_or_device.split("::")
@@ -280,7 +303,9 @@ class iOSXcodeMixin(iOSXcodePassiveMixin):
                         # Found a match;
                         # normalize back to the official name and return.
                         device = devices[udid]
-                        return udid, iOS_version, device
+                        return iOSDevice(
+                            udid, iOS_version, device, udid in physical_udids
+                        )
                     except KeyError as e:
                         raise InvalidDeviceError("device name", device) from e
                 except KeyError as e:
@@ -294,7 +319,9 @@ class iOSXcodeMixin(iOSXcodePassiveMixin):
                         # iOS_tag will be of the form "iOS 15.5"
                         # Drop the "iOS" prefix when reporting the version.
                         iOS_version = iOS_tag.split(" ", 1)[-1]
-                        return udid, iOS_version, devices[udid]
+                        return iOSDevice(
+                            udid, iOS_version, devices[udid], physical=True
+                        )
 
                 # Just a device name
                 device = udid_or_device
@@ -323,7 +350,9 @@ class iOSXcodeMixin(iOSXcodePassiveMixin):
                         # Drop the "iOS" prefix when reporting the version.
                         iOS_version = iOS_tag.split(" ", 1)[-1]
 
-                        return udid, iOS_version, device
+                        return iOSDevice(
+                            udid, iOS_version, device, udid in physical_udids
+                        )
                     except KeyError:
                         # UDID doesn't exist in this iOS version; try another.
                         pass
@@ -374,7 +403,7 @@ or:
         # Drop the "iOS" prefix when reporting the version.
         iOS_version = iOS_tag.split(" ", 1)[-1]
 
-        return udid, iOS_version, device
+        return iOSDevice(udid, iOS_version, device, udid in physical_udids)
 
     def select_identity(self, identity: str | None = None) -> iOSSigningIdentity:
         """Select the signing identity to use when deploying to a physical device.
@@ -728,29 +757,68 @@ class iOSXcodeRunCommand(iOSXcodeMixin, RunCommand):
             ),
         )
 
+    def add_options(self, parser):
+        super().add_options(parser)
+        parser.add_argument(
+            "-i",
+            "--identity",
+            dest="identity",
+            help=(
+                "The development signing identity to use when running on a "
+                "physical device; either the 40-digit hex checksum, or the "
+                "full name of the identity."
+            ),
+            required=False,
+        )
+
+    def prepare_target(
+        self,
+        app: FinalizedAppConfig,
+        *,
+        udid: str | None = None,
+        identity: str | None = None,
+        **options,
+    ) -> bool:
+        """Select the device to run on and, for a physical device, the signing identity
+        to use.
+
+        :param app: The config object for the app
+        :param udid: The device UDID, name, or name::version to target. If
+            `"auto"`, a recent "SE-class" simulator on the most recent iOS
+            version will be selected automatically. If `None`, the user will
+            be asked to select a device at runtime.
+        :param identity: The signing identity to use for a physical device. If
+            `None`, the user will be asked to select an identity.
+        :returns: True if the app must be built; a physical device always
+            requires a build, so that Xcode can sign the app with the selected
+            identity.
+        """
+        try:
+            self.target_device = self.select_target_device(udid)
+            if self.target_device.physical:
+                self.signing_identity = self.select_identity(identity)
+        except InputDisabled as e:
+            raise BriefcaseCommandError(
+                "Input has been disabled; can't select a device or signing "
+                "identity. Use -d/--device to specify the device and, for a "
+                "physical device, -i/--identity to specify the signing identity."
+            ) from e
+
+        return self.target_device.physical
+
     def run_app(
         self,
         app: FinalizedAppConfig,
         *,
         passthrough: list[str],
-        udid: str | None = None,
         **options,
     ) -> dict | None:
         """Start the application.
 
         :param app: The config object for the app
         :param passthrough: The list of arguments to pass to the app
-        :param udid: The device UDID, name, or name::version to target. If
-            `"auto"`, a recent "SE-class" simulator on the most recent iOS
-            version will be selected automatically. If `None`, the user will
-            be asked to select a device at runtime.
         """
-        try:
-            udid, iOS_version, device = self.select_target_device(udid)
-        except InputDisabled as e:
-            raise BriefcaseCommandError(
-                "Input has been disabled; can't select a device to target."
-            ) from e
+        udid, iOS_version, device, _ = self.target_device
 
         if app.test_mode:
             label = "test suite"
