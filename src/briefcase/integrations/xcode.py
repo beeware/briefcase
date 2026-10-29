@@ -5,11 +5,16 @@ import re
 import subprocess
 from collections.abc import Collection
 from pathlib import Path
+from tempfile import TemporaryDirectory
 from textwrap import dedent
 
 from packaging.version import Version
 
-from briefcase.exceptions import BriefcaseCommandError, CommandOutputParseError
+from briefcase.exceptions import (
+    BriefcaseCommandError,
+    CommandOutputParseError,
+    ParseError,
+)
 from briefcase.integrations.base import Tool, ToolCache
 from briefcase.integrations.subprocess import json_parser
 
@@ -470,6 +475,66 @@ def get_device_state(tools: ToolCache, udid: str) -> str:
         raise BriefcaseCommandError("Unable to parse output of xcrun simctl") from e
     except subprocess.CalledProcessError as e:
         raise BriefcaseCommandError("Unable to run xcrun simctl.") from e
+
+
+def get_physical_devices(tools: ToolCache, os_name: str) -> dict[str, dict[str, str]]:
+    """Obtain the physical devices connected to this machine.
+
+    The return value is a 2 level dictionary, in the same format as `get_simulators()`.
+    The outer dictionary is keyed by OS version; the inner dictionary for each OS
+    version contains the names of the usable devices, keyed by hardware UDID.
+
+    Devices that can't be used (because they aren't paired with this machine, or don't
+    have Developer Mode enabled) are reported, but not returned.
+
+    :param tools: ToolCache of available tools
+    :param os_name: The OS of the devices to find. One of `"iOS"`, `"watchOS"`, or
+        `"tvOS"`.
+    :returns: A dictionary of usable physical devices.
+    """
+    try:
+        # devicectl's JSON output file is the only interface that Apple
+        # supports for programmatic consumption.
+        with TemporaryDirectory() as tmp_path:
+            json_path = Path(tmp_path) / "devices.json"
+            tools.subprocess.check_output(
+                [
+                    "xcrun",
+                    "devicectl",
+                    "list",
+                    "devices",
+                    "--json-output",
+                    json_path,
+                    "-q",
+                ],
+            )
+            devicectl_data = json_parser(json_path.read_text(encoding="utf-8"))
+    except ParseError as e:
+        raise BriefcaseCommandError("Unable to parse output of xcrun devicectl") from e
+    except subprocess.CalledProcessError as e:
+        raise BriefcaseCommandError("Unable to run xcrun devicectl.") from e
+
+    devices = {}
+    for device in devicectl_data["result"]["devices"]:
+        if device["hardwareProperties"]["platform"] != os_name:
+            continue
+
+        name = device["deviceProperties"]["name"]
+        if device["connectionProperties"]["pairingState"] != "paired":
+            tools.console.warning(
+                f"Ignoring {name}; it is not paired with this Mac. Connect the "
+                "device, and tap Trust when prompted."
+            )
+        elif device["deviceProperties"]["developerModeStatus"] != "enabled":
+            tools.console.warning(
+                f"Ignoring {name}; Developer Mode is not enabled. Enable it "
+                "in Settings > Privacy & Security > Developer Mode on the device."
+            )
+        else:
+            os_tag = f"{os_name} {device['deviceProperties']['osVersionNumber']}"
+            devices.setdefault(os_tag, {})[device["hardwareProperties"]["udid"]] = name
+
+    return devices
 
 
 # A regex pattern that matches the content returned by `security find-identity`

@@ -28,6 +28,9 @@ def run_command(dummy_console, tmp_path):
     command.tools.xcode = mock.MagicMock()
     command.tools.xcode.version = Version("27.0")
 
+    # By default, no physical devices are connected.
+    command.get_physical_devices = mock.MagicMock(return_value={})
+
     # To satisfy coverage, the stop function must be invoked
     # at least once when streaming app logs.
     def mock_stream_app_logs(app, stop_func, **kwargs):

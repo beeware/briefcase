@@ -31,6 +31,9 @@ def dummy_command(dummy_console, tmp_path):
     mock_get_simulators = mock.MagicMock()
     cmd.get_simulators = mock_get_simulators
 
+    # Mock get_physical_devices; by default, no physical devices are connected.
+    cmd.get_physical_devices = mock.MagicMock(return_value={})
+
     return cmd
 
 
@@ -462,3 +465,76 @@ def test_auto_raises_when_no_simulators(dummy_command):
 
     # No user input was solicited
     assert dummy_command.console.prompts == []
+
+
+def test_physical_device_option(dummy_command, capsys):
+    """A physical device is offered alongside the simulators for its iOS version."""
+    dummy_command.get_simulators.return_value = {
+        "iOS 26.0": {
+            "C9A005C8-9468-47C5-8376-68A6E3408209": "iPhone 17",
+            "2D3503A3-6EB9-4B37-9B17-C7EFEF2FA32D": "iPhone 17 Pro",
+        },
+    }
+    dummy_command.get_physical_devices.return_value = {
+        "iOS 26.0": {"00008110-001122334455667E": "Test iPhone"},
+        "iOS 26.6.1": {"00008132-000A1B2C3D4E5F60": "Test iPad"},
+    }
+
+    # Return option 1 (iOS 26.0), then option 3 (Test iPhone)
+    dummy_command.console.values = ["1", "3"]
+
+    udid, iOS_version, device = dummy_command.select_target_device()
+
+    assert udid == "00008110-001122334455667E"
+    assert iOS_version == "26.0"
+    assert device == "Test iPhone"
+
+    # The physical device was labeled as such.
+    assert "3) Test iPhone (physical device)" in capsys.readouterr().out
+
+
+def test_explicit_physical_device_udid(dummy_command):
+    """If the user nominates a physical device UDID, it is used."""
+    dummy_command.get_simulators.return_value = {
+        "iOS 26.0": {
+            "C9A005C8-9468-47C5-8376-68A6E3408209": "iPhone 17",
+        },
+    }
+    dummy_command.get_physical_devices.return_value = {
+        "iOS 26.0.1": {"00008110-001122334455667E": "Test iPhone"},
+        "iOS 26.6.1": {"00008132-000A1B2C3D4E5F60": "Test iPad"},
+    }
+
+    udid, iOS_version, device = dummy_command.select_target_device(
+        "00008132-000a1b2c3d4e5f60"
+    )
+
+    assert udid == "00008132-000A1B2C3D4E5F60"
+    assert iOS_version == "26.6.1"
+    assert device == "Test iPad"
+
+    # User input was not solicited
+    assert dummy_command.console.prompts == []
+
+
+def test_auto_ignores_physical_devices(dummy_command):
+    """Automatic selection only considers simulators, even if a physical device is
+    connected."""
+    dummy_command.get_simulators.return_value = {
+        "iOS 26.0": {
+            "C9A005C8-9468-47C5-8376-68A6E3408209": "iPhone 17",
+            "2D3503A3-6EB9-4B37-9B17-C7EFEF2FA32D": "iPhone 17e",
+        },
+    }
+    dummy_command.get_physical_devices.return_value = {
+        "iOS 26.6.1": {"00008132-000A1B2C3D4E5F60": "Test iPad"},
+    }
+
+    udid, iOS_version, device = dummy_command.select_target_device("auto")
+
+    assert udid == "2D3503A3-6EB9-4B37-9B17-C7EFEF2FA32D"
+    assert iOS_version == "26.0"
+    assert device == "iPhone 17e"
+
+    # Physical devices weren't discovered.
+    dummy_command.get_physical_devices.assert_not_called()
