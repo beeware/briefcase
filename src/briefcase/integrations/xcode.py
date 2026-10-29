@@ -561,3 +561,58 @@ def get_identities(tools: ToolCache, policy: str | None = None) -> dict[str, str
 
     except subprocess.CalledProcessError as e:
         raise BriefcaseCommandError("Unable to run security find-identity.") from e
+
+
+# A regex pattern that matches the SHA-1 hash and PEM-encoded certificate of each
+# certificate returned by `security find-certificate -Z -p`
+CERTIFICATE_RE = re.compile(
+    r"^SHA-1 hash: ([0-9A-F]{40})\n"
+    r"(-----BEGIN CERTIFICATE-----\n.*?-----END CERTIFICATE-----\n)",
+    re.MULTILINE | re.DOTALL,
+)
+
+
+def get_team_id(tools: ToolCache, identity_id: str, identity_name: str) -> str:
+    """Obtain the development team ID for a signing identity.
+
+    The team ID is the organizational unit of the identity's certificate. The suffix in
+    the name of an Apple Development certificate can't be used, as it identifies the
+    team member, not the team.
+
+    :param tools: ToolCache of available tools
+    :param identity_id: The 40-digit hex checksum of the identity
+    :param identity_name: The name of the identity
+    :returns: The team ID for the identity.
+    """
+    try:
+        output = tools.subprocess.check_output(
+            [
+                "security",
+                "find-certificate",
+                "-a",
+                "-c",
+                identity_name,
+                "-Z",
+                "-p",
+            ],
+        )
+
+        # The output contains the hashes of each certificate matching the name,
+        # followed by the PEM-encoded certificate.
+        certificates = dict(CERTIFICATE_RE.findall(output))
+
+        if identity_id in certificates:
+            subject = tools.subprocess.check_output(
+                ["openssl", "x509", "-noout", "-subject", "-nameopt", "RFC2253"],
+                input=certificates[identity_id],
+            )
+            if match := re.search(r"\bOU=([^,]+)", subject):
+                return match[1]
+    except subprocess.CalledProcessError as e:
+        raise BriefcaseCommandError(
+            f"Unable to inspect the certificate for signing identity {identity_name!r}."
+        ) from e
+
+    raise BriefcaseCommandError(
+        f"Unable to determine the team ID for signing identity {identity_name!r}."
+    )

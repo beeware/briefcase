@@ -6,6 +6,7 @@ import re
 import subprocess
 import time
 from collections.abc import Collection
+from dataclasses import dataclass
 from pathlib import Path
 from typing import Literal
 from uuid import UUID
@@ -35,11 +36,26 @@ from briefcase.integrations.virtual_environment import VirtualEnvironment
 from briefcase.integrations.xcode import (
     DeviceState,
     get_device_state,
+    get_identities,
     get_physical_devices,
     get_simulators,
+    get_team_id,
 )
 from briefcase.platforms.iOS import iOSMixin
 from briefcase.platforms.macOS.filters import XcodeBuildFilter, macOS_log_clean_filter
+
+# The name prefixes of the signing identities that can be used to deploy to a
+# physical device. "iPhone Developer" is the name used by older certificates.
+DEVELOPMENT_IDENTITY_PREFIXES = ("Apple Development:", "iPhone Developer:")
+
+
+@dataclass
+class iOSSigningIdentity:
+    """A signing identity for deploying an app to a physical iOS device."""
+
+    id: str
+    name: str
+    team_id: str
 
 
 class iOSXcodePassiveMixin(iOSMixin):
@@ -95,6 +111,8 @@ class iOSXcodeMixin(iOSXcodePassiveMixin):
         # These are abstracted to enable testing without patching.
         self.get_simulators = get_simulators
         self.get_physical_devices = get_physical_devices
+        self.get_identities = get_identities
+        self.get_team_id = get_team_id
 
     def add_options(self, parser):
         super().add_options(parser)
@@ -357,6 +375,65 @@ or:
         iOS_version = iOS_tag.split(" ", 1)[-1]
 
         return udid, iOS_version, device
+
+    def select_identity(self, identity: str | None = None) -> iOSSigningIdentity:
+        """Select the signing identity to use when deploying to a physical device.
+
+        :param identity: A pre-specified identity (either the 40-digit hex checksum, or
+            the name of the identity). If not provided, the user will be asked to select
+            an identity.
+        :returns: The signing identity to use.
+        """
+        identities = {
+            identity_id: name
+            for identity_id, name in self.get_identities(
+                self.tools, "codesigning"
+            ).items()
+            if name.startswith(DEVELOPMENT_IDENTITY_PREFIXES)
+        }
+        if not identities:
+            raise BriefcaseCommandError(
+                "No development signing identities are available. Deploying to "
+                "a physical device requires an Apple Development certificate, "
+                "and its private key, to be installed in your keychain. See:\n"
+                "\n"
+                "    https://briefcase.beeware.org/en/stable/how-to/code-signing/iOS/\n"
+                "\n"
+                "for details on how to obtain a development certificate."
+            )
+
+        if identity is None:
+            identity_id = self.console.selection_question(
+                intro="Select development signing identity to use:",
+                description="Development Signing Identity",
+                options=identities,
+            )
+        elif identity in identities:
+            identity_id = identity
+        else:
+            matches = [
+                identity_id
+                for identity_id, name in identities.items()
+                if name == identity
+            ]
+            if not matches:
+                raise BriefcaseCommandError(
+                    f"Invalid development signing identity {identity!r}."
+                )
+            elif len(matches) > 1:
+                raise BriefcaseCommandError(
+                    f"More than one signing identity is named {identity!r}. "
+                    "Specify the identity using one of these fingerprints:\n\n"
+                    + "\n".join(f"    {match}" for match in matches)
+                )
+            identity_id = matches[0]
+        name = identities[identity_id]
+
+        return iOSSigningIdentity(
+            id=identity_id,
+            name=name,
+            team_id=self.get_team_id(self.tools, identity_id, name),
+        )
 
 
 class iOSXcodeCreateCommand(iOSXcodePassiveMixin, CreateCommand):
