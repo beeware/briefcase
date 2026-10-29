@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import argparse
 import contextlib
 import plistlib
 import re
@@ -128,6 +129,9 @@ class iOSXcodePassiveMixin(iOSMixin):
 
 
 class iOSXcodeMixin(iOSXcodePassiveMixin):
+    # The default value of the -d/--device option.
+    default_device = "auto"
+
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
 
@@ -145,7 +149,7 @@ class iOSXcodeMixin(iOSXcodePassiveMixin):
             "--device",
             dest="udid",
             nargs="?",
-            default="auto",
+            default=self.default_device,
             const=None,
             help=(
                 "The device to target; either a UDID, a device name "
@@ -154,10 +158,62 @@ class iOSXcodeMixin(iOSXcodePassiveMixin):
                 'automatically select a recent "SE-class" device on the '
                 "most recently released iOS version. Provide -d with no "
                 "value to select from the full list of available "
-                "simulators."
+                "simulators and connected physical devices."
             ),
             required=False,
         )
+
+    def add_identity_option(self, parser):
+        """Add the option to specify the signing identity for a physical device.
+
+        :param parser: a stub argparse parser for the command.
+        """
+        parser.add_argument(
+            "-i",
+            "--identity",
+            dest="identity",
+            help=(
+                "The development signing identity to use when running on a "
+                "physical device; either the 40-digit hex checksum, or the "
+                "full name of the identity."
+            ),
+            required=False,
+        )
+
+    def prepare_target(
+        self,
+        app: FinalizedAppConfig,
+        *,
+        udid: str | None = None,
+        identity: str | None = None,
+        **options,
+    ) -> bool:
+        """Select the device to run on and, for a physical device, the signing identity
+        to use.
+
+        :param app: The config object for the app
+        :param udid: The device UDID, name, or name::version to target. If
+            `"auto"`, a recent "SE-class" simulator on the most recent iOS
+            version will be selected automatically. If `None`, the user will
+            be asked to select a device at runtime.
+        :param identity: The signing identity to use for a physical device. If
+            `None`, the user will be asked to select an identity.
+        :returns: True if the app must be built; a physical device always
+            requires a build, so that Xcode can sign the app with the selected
+            identity.
+        """
+        try:
+            self.target_device = self.select_target_device(udid)
+            if self.target_device.physical:
+                self.signing_identity = self.select_identity(identity)
+        except InputDisabled as e:
+            raise BriefcaseCommandError(
+                "Input has been disabled; can't select a device or signing "
+                "identity. Use -d/--device to specify the device and, for a "
+                "physical device, -i/--identity to specify the signing identity."
+            ) from e
+
+        return self.target_device.physical
 
     def select_target_device(self, udid_or_device=None):
         """Select the target device to use for iOS builds.
@@ -668,9 +724,17 @@ class iOSXcodeOpenCommand(iOSXcodePassiveMixin, OpenCommand):
     description = "Open an existing iOS Xcode project."
 
 
-class iOSXcodeBuildCommand(iOSXcodePassiveMixin, BuildCommand):
+class iOSXcodeBuildCommand(iOSXcodeMixin, BuildCommand):
     description = "Build an iOS Xcode project."
     supports_debugger = True
+
+    # Unless a device is requested, build for the simulator without selecting
+    # a device.
+    default_device = argparse.SUPPRESS
+
+    def add_options(self, parser):
+        super().add_options(parser)
+        self.add_identity_option(parser)
 
     def info_plist_path(self, app: FinalizedAppConfig):
         """Obtain the path to the application's plist file.
@@ -699,6 +763,36 @@ class iOSXcodeBuildCommand(iOSXcodePassiveMixin, BuildCommand):
 
         :param app: The application to build
         """
+        # If a device was requested, and it hasn't already been selected (by
+        # the run command), select it now.
+        if self.target_device is None and "udid" in kwargs:
+            self.prepare_target(app, **kwargs)
+
+        if self.target_device and self.target_device.physical:
+            # Xcode manages provisioning, using the Apple ID for the selected
+            # identity's team. The template uses automatic signing, so the
+            # certificate is selected by Xcode, based on the team. The run
+            # destination (which determines the SDK and architecture, and is
+            # needed to register the device) is only honored when a scheme is
+            # provided; building with a scheme also requires an explicit
+            # SYMROOT to retain the usual location for the built app.
+            target_args = [
+                "-scheme",
+                app.formal_name,
+                "-destination",
+                f"id={self.target_device.udid}",
+                "-allowProvisioningUpdates",
+                "-allowProvisioningDeviceRegistration",
+                f"DEVELOPMENT_TEAM={self.signing_identity.team_id}",
+                f"SYMROOT={self.bundle_path(app) / 'build'}",
+            ]
+        else:
+            target_args = [
+                "-arch",
+                self.tools.host_arch,
+                "-sdk",
+                "iphonesimulator",
+            ]
         self.console.info("Updating app metadata...", prefix=app.app_name)
         self.update_app_metadata(app=app)
 
@@ -713,10 +807,7 @@ class iOSXcodeBuildCommand(iOSXcodePassiveMixin, BuildCommand):
                         self.project_path(app),
                         "-configuration",
                         "Debug",
-                        "-arch",
-                        self.tools.host_arch,
-                        "-sdk",
-                        "iphonesimulator",
+                        *target_args,
                         "-verbose" if self.tools.console.is_deep_debug else "-quiet",
                     ],
                     check=True,
@@ -759,52 +850,7 @@ class iOSXcodeRunCommand(iOSXcodeMixin, RunCommand):
 
     def add_options(self, parser):
         super().add_options(parser)
-        parser.add_argument(
-            "-i",
-            "--identity",
-            dest="identity",
-            help=(
-                "The development signing identity to use when running on a "
-                "physical device; either the 40-digit hex checksum, or the "
-                "full name of the identity."
-            ),
-            required=False,
-        )
-
-    def prepare_target(
-        self,
-        app: FinalizedAppConfig,
-        *,
-        udid: str | None = None,
-        identity: str | None = None,
-        **options,
-    ) -> bool:
-        """Select the device to run on and, for a physical device, the signing identity
-        to use.
-
-        :param app: The config object for the app
-        :param udid: The device UDID, name, or name::version to target. If
-            `"auto"`, a recent "SE-class" simulator on the most recent iOS
-            version will be selected automatically. If `None`, the user will
-            be asked to select a device at runtime.
-        :param identity: The signing identity to use for a physical device. If
-            `None`, the user will be asked to select an identity.
-        :returns: True if the app must be built; a physical device always
-            requires a build, so that Xcode can sign the app with the selected
-            identity.
-        """
-        try:
-            self.target_device = self.select_target_device(udid)
-            if self.target_device.physical:
-                self.signing_identity = self.select_identity(identity)
-        except InputDisabled as e:
-            raise BriefcaseCommandError(
-                "Input has been disabled; can't select a device or signing "
-                "identity. Use -d/--device to specify the device and, for a "
-                "physical device, -i/--identity to specify the signing identity."
-            ) from e
-
-        return self.target_device.physical
+        self.add_identity_option(parser)
 
     def run_app(
         self,
