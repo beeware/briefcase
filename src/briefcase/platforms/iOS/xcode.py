@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import argparse
 import contextlib
+import json
 import plistlib
 import re
 import subprocess
@@ -43,7 +44,11 @@ from briefcase.integrations.xcode import (
     get_team_id,
 )
 from briefcase.platforms.iOS import iOSMixin
-from briefcase.platforms.macOS.filters import XcodeBuildFilter, macOS_log_clean_filter
+from briefcase.platforms.macOS.filters import (
+    XcodeBuildFilter,
+    macOS_log_clean_filter,
+    nslog_clean_filter,
+)
 
 # The name prefixes of the signing identities that can be used to deploy to a
 # physical device. "iPhone Developer" is the name used by older certificates.
@@ -841,11 +846,10 @@ class iOSXcodeRunCommand(iOSXcodeMixin, RunCommand):
         :param app: The config object for the app
         :returns: The path mappings for the app packages
         """
+        sdk = "iphoneos" if self.target_device.physical else "iphonesimulator"
         return AppPackagesPathMappings(
             sys_path_regex="app_packages$",
-            host_folder=str(
-                self.app_packages_path(app).parent / "app_packages.iphonesimulator"
-            ),
+            host_folder=str(self.app_packages_path(app).parent / f"app_packages.{sdk}"),
         )
 
     def add_options(self, parser):
@@ -878,6 +882,15 @@ class iOSXcodeRunCommand(iOSXcodeMixin, RunCommand):
             ),
             prefix=app.app_name,
         )
+
+        # Add additional environment variables
+        env = {}
+        if app.debugger:
+            env["BRIEFCASE_DEBUGGER"] = app.debugger.get_env_config(self, app)
+
+        if self.target_device.physical:
+            self._run_app_on_device(app, label=label, passthrough=passthrough, env=env)
+            return {"udid": udid}
 
         # The simulator needs to be booted before being started.
         # If it's shut down, we can boot it again; but if it's currently
@@ -1024,11 +1037,6 @@ class iOSXcodeRunCommand(iOSXcodeMixin, RunCommand):
         # Wait for the log stream start up
         time.sleep(0.25)
 
-        # Add additional environment variables
-        env = {}
-        if app.debugger:
-            env["BRIEFCASE_DEBUGGER"] = app.debugger.get_env_config(self, app)
-
         # Set additional environment variables while the app is running
         # (no-op if no environment variables are set).
         with self.setup_env(env, udid):
@@ -1080,6 +1088,79 @@ class iOSXcodeRunCommand(iOSXcodeMixin, RunCommand):
 
         # Preserve the device selection as state.
         return {"udid": udid}
+
+    def _run_app_on_device(
+        self,
+        app: FinalizedAppConfig,
+        label: str,
+        passthrough: list[str],
+        env: dict[str, str],
+    ):
+        """Install and start the application on a physical device.
+
+        :param app: The config object for the app
+        :param label: The label describing what is being run
+        :param passthrough: The list of arguments to pass to the app
+        :param env: Additional environment variables for the app
+        """
+        udid = self.target_device.udid
+        try:
+            with self.console.wait_bar(f"Installing new {label} version..."):
+                self.tools.subprocess.run(
+                    [
+                        "xcrun",
+                        "devicectl",
+                        "device",
+                        "install",
+                        "app",
+                        "-q",
+                        "--device",
+                        udid,
+                        self.binary_path(app),
+                    ],
+                    check=True,
+                )
+        except subprocess.CalledProcessError as e:
+            raise BriefcaseCommandError(
+                f"Unable to install new version of app {app.app_name}."
+            ) from e
+
+        # Launch the app with the console attached, so that the app's output
+        # is streamed until the app exits. The app's launcher sends Python
+        # output to the console (rather than the system log) when requested.
+        self.console.info(f"Starting {label}...", prefix=app.app_name)
+        launch_popen = self.tools.subprocess.Popen(
+            [
+                "xcrun",
+                "devicectl",
+                "device",
+                "process",
+                "launch",
+                "-q",
+                "--device",
+                udid,
+                "--console",
+                "--terminate-existing",
+                "--environment-variables",
+                json.dumps({"BRIEFCASE_CONSOLE_OUTPUT": "1", **env}),
+                app.bundle_identifier,
+                *passthrough,
+            ],
+            stdout=subprocess.PIPE,
+            stderr=subprocess.STDOUT,
+            bufsize=1,
+        )
+
+        self.console.info(
+            "Following device console output (type CTRL-C to stop)...",
+            prefix=app.app_name,
+        )
+        self._stream_app_logs(
+            app,
+            popen=launch_popen,
+            clean_filter=nslog_clean_filter,
+            clean_output=True,
+        )
 
     @contextlib.contextmanager
     def setup_env(

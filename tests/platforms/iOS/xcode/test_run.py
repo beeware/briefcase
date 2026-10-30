@@ -16,6 +16,7 @@ from briefcase.platforms.iOS.xcode import (
     iOSXcodeRunCommand,
 )
 from briefcase.platforms.macOS import macOS_log_clean_filter
+from briefcase.platforms.macOS.filters import nslog_clean_filter
 
 
 @pytest.fixture
@@ -1931,3 +1932,132 @@ def test_run_app_debugger(run_command, first_app_generated, tmp_path, dummy_debu
         stop_func=mock.ANY,
         log_stream=True,
     )
+
+
+def test_run_app_physical_device(
+    run_command,
+    first_app_generated,
+    tmp_path,
+    dummy_debugger,
+):
+    """An iOS App can be installed and started on a physical device, with its console
+    output streamed."""
+    run_command.target_device = iOSDevice(
+        "00008110-001122334455667E",
+        "26.0.1",
+        "Test iPhone",
+        physical=True,
+    )
+    launch_popen = mock.MagicMock(spec_set=subprocess.Popen)
+    run_command.tools.subprocess.Popen.return_value = launch_popen
+    run_command._stream_app_logs.side_effect = None
+
+    first_app_generated.debugger = dummy_debugger
+    first_app_generated.debugger_host = "somehost"
+    first_app_generated.debugger_port = 9999
+
+    state = run_command.run_app(first_app_generated, passthrough=["foo", "--bar"])
+
+    # The app was installed on the device
+    run_command.tools.subprocess.run.assert_called_once_with(
+        [
+            "xcrun",
+            "devicectl",
+            "device",
+            "install",
+            "app",
+            "-q",
+            "--device",
+            "00008110-001122334455667E",
+            tmp_path
+            / "base_path/build/first-app/ios/xcode/build/"
+            / "Debug-iphoneos/First App.app",
+        ],
+        check=True,
+    )
+
+    # The app was launched with the console attached, sending Python output to
+    # the console, and using the device's app packages for the debugger.
+    run_command.tools.subprocess.Popen.assert_called_once_with(
+        [
+            "xcrun",
+            "devicectl",
+            "device",
+            "process",
+            "launch",
+            "-q",
+            "--device",
+            "00008110-001122334455667E",
+            "--console",
+            "--terminate-existing",
+            "--environment-variables",
+            json.dumps(
+                {
+                    "BRIEFCASE_CONSOLE_OUTPUT": "1",
+                    "BRIEFCASE_DEBUGGER": json.dumps(
+                        {
+                            "debugger": "dummy",
+                            "host": "somehost",
+                            "port": 9999,
+                            "host_os": platform.system(),
+                            "app_path_mappings": {
+                                "device_sys_path_regex": "app$",
+                                "device_subfolders": ["first_app"],
+                                "host_folders": [
+                                    str(tmp_path / "base_path/src/first_app")
+                                ],
+                            },
+                            "app_packages_path_mappings": {
+                                "sys_path_regex": "app_packages$",
+                                "host_folder": str(
+                                    tmp_path
+                                    / "base_path/build/first-app/ios/xcode/"
+                                    / "app_packages.iphoneos"
+                                ),
+                            },
+                        }
+                    ),
+                }
+            ),
+            "com.example.first-app",
+            "foo",
+            "--bar",
+        ],
+        stdout=subprocess.PIPE,
+        stderr=subprocess.STDOUT,
+        bufsize=1,
+    )
+
+    # The console output was streamed
+    run_command._stream_app_logs.assert_called_once_with(
+        first_app_generated,
+        popen=launch_popen,
+        clean_filter=nslog_clean_filter,
+        clean_output=True,
+    )
+
+    # The device selection is preserved as state
+    assert state == {"udid": "00008110-001122334455667E"}
+
+
+def test_run_app_physical_device_install_failure(run_command, first_app_generated):
+    """If the app can't be installed on a physical device, an error is raised."""
+    run_command.target_device = iOSDevice(
+        "00008110-001122334455667E",
+        "26.0.1",
+        "Test iPhone",
+        physical=True,
+    )
+    run_command.tools.subprocess.run.side_effect = subprocess.CalledProcessError(
+        cmd=["xcrun", "devicectl", "device", "install", "app"],
+        returncode=1,
+    )
+
+    with pytest.raises(
+        BriefcaseCommandError,
+        match=r"Unable to install new version of app first-app\.",
+    ):
+        run_command.run_app(first_app_generated, passthrough=[])
+
+    # The app wasn't launched
+    run_command.tools.subprocess.Popen.assert_not_called()

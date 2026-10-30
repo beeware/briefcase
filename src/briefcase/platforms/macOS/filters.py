@@ -43,6 +43,29 @@ def macOS_log_clean_filter(line):
     return line, False
 
 
+NSLOG_PREFIX_REGEX = re.compile(
+    r"\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2}\.\d{3} .*?\[\d+:\d+\] (?P<content>.*)"
+)
+
+
+def nslog_clean_filter(line):
+    """Filter the console output of an app to strip any NSLog prefixes.
+
+    NSLog messages (such as those from the app's launcher) are cleaned, but excluded
+    from analysis; anything else is Python output.
+
+    :param line: The raw line from the console output
+    :returns: A tuple, containing (a) the line, stripped of any NSLog prefix, and (b) a
+        boolean indicating if the message should be included for analysis purposes
+        (i.e., it's Python content, not a launcher message).
+    """
+    match = NSLOG_PREFIX_REGEX.match(line)
+    if match:
+        return match["content"], False
+
+    return line, True
+
+
 class XcodeBuildFilter:
     # The prefix for all xcodebuild messages.
     XCODEBUILD_PREFIX = (
