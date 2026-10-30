@@ -89,11 +89,27 @@ iOS allows for some customization of the colors used by your app:
 
 The following options can be provided at the command line when producing iOS projects:
 
+### build
+
+#### `-d [<device>]` / `--device [<device>]`
+
+The device to build for. Accepts the same values as the `-d`/`--device` option for `run`. If a physical device is selected, the app will be built and signed for that device. If this option isn't provided, the app is built for the iOS simulator.
+
+#### `-i <identity>` / `--identity <identity>`
+
+The development signing identity to use when building for a physical device. Accepts the same values as the `-i`/`--identity` option for `run`.
+
 ### run
 
 #### `-d [<device>]` / `--device [<device>]`
 
-The device simulator to target. Can be either a UDID, a device name (e.g., `"iPhone 11"`), a device name and OS version (`"iPhone 11::iOS 13.3"`), or `auto`. `auto` is the default behavior; Briefcase will automatically select an "entry level" iPhone simulator (e.g., an iPhone SE, or iPhone 16e) on the most recent available iOS version. To see the full list of available simulators and select from that list, provide `-d`/`--device` with no value.
+The device to target. Can be either a UDID, a device name (e.g., `"iPhone 11"`), a device name and OS version (`"iPhone 11::iOS 13.3"`), or `auto`. `auto` is the default behavior; Briefcase will automatically select an "entry level" iPhone simulator (e.g., an iPhone SE, or iPhone 16e) on the most recent available iOS version. To see the full list of available simulators and connected physical devices, and select from that list, provide `-d`/`--device` with no value.
+
+Physical devices are listed alongside the simulators for the same iOS version, and are labeled as physical devices. A physical device can also be selected using its name, or its UDID (as reported by `xcrun devicectl list devices --columns udid`). See [Deployment to physical iOS devices][ios-deploy] for details.
+
+#### `-i <identity>` / `--identity <identity>`
+
+The development signing identity to use when running on a physical device. Can be either the 40-digit hex checksum of the identity, or its full name (e.g., `"Apple Development: jane@example.com (A1B2C3D4E5)"`). If this option isn't provided when a physical device is selected, Briefcase will ask you to select from the development signing identities that are available. This option is ignored when running on a simulator.
 
 ## Application configuration
 
@@ -201,16 +217,32 @@ cleanup_paths = [
 
 This will find and purge all `.a` content in your app's dependencies. You can add additional patterns to remove other problematic content.
 
-### Deployment to Simulated and Physical iOS Devices  { #ios-deploy }
+### Deployment to physical iOS devices  { #ios-deploy }
 
-Briefcase provides support for deployment to simulated iOS devices through the command line.
+Briefcase can run your app on a physical iPhone or iPad running iOS or iPadOS 17 or later. Before you can deploy to a device, you need a development signing certificate, your Apple ID added to Xcode, and a device that is paired with your Mac and has Developer Mode enabled. A free Apple ID is sufficient. See [iOS code signing][code-signing-ios] for setup instructions.
 
-If you want to deploy to a physical iOS device, you will need need to use Xcode through the following steps:
+When a device is connected, it will be offered as a target when you provide `-d`/`--device` with no value:
 
-1. Run `briefcase open ios` in the command line. This will open your application in Xcode.
-2.  Setup your Apple Developer account with your certificate in Xcode.
-3. In the project navigator, select your application at the top level (the root of the project).
-4.  Select the *Signing and Capabilities* tab in the editor area.
-5. Select your Apple Developer team or individual account from the *Team* drop-down.
-6.  Select your specific device.
-7.  Press the run button.
+```console
+$ briefcase run iOS -d
+```
+
+Briefcase will then ask you to select a development signing identity, unless you provide one with `-i`/`--identity`. Briefcase will build the app for the device, install it, and start it, streaming the app's output to the console until the app exits. Type CTRL-C to stop the app.
+
+Running `briefcase run iOS` without `-d` will always select a simulator, even when a physical device is connected.
+
+When you deploy to a physical device, Briefcase always rebuilds the app, so that Xcode can update the app's signing and provisioning profile if required.
+
+If you deploy to a physical device in debug mode, the debugger runs on the device, so it must be reachable over the network from your Mac. Use `--debugger-host 0.0.0.0` so that the debugger listens on all of the device's network interfaces, and connect your debugger to the device's IP address. Your Mac and device must be on the same network.
+
+#### Troubleshooting
+
+* *The device isn't listed*: Confirm that the device is unlocked, paired with your Mac, and has Developer Mode enabled. Briefcase reports devices that are visible, but not paired or not in Developer Mode. You can check the state of your devices with `xcrun devicectl list devices`.
+* *No development signing identities are available*: You need to create an Apple Development certificate. See [iOS code signing][code-signing-ios].
+* *The app can't be launched, because the profile "has not been explicitly trusted by the user"*: On the device, open *Settings > General > VPN & Device Management*, select your Apple ID under *Developer App*, and tap *Trust*.
+* *The bundle identifier can't be registered*: Bundle identifiers must be unique across all Apple developer teams. Change the [`bundle`][] of your app to one based on a domain that you control.
+* *The app stops starting after a week*: Provisioning profiles for free Apple IDs expire after 7 days. Run the app again with Briefcase to renew the profile.
+
+### Distributing iOS apps  { #ios-distribute }
+
+Briefcase can't produce a distributable iOS artefact. To distribute your app through the App Store or TestFlight, run `briefcase open iOS` to open your project in Xcode, and use Xcode's app distribution workflow.

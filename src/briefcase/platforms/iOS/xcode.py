@@ -127,7 +127,7 @@ class iOSXcodePassiveMixin(iOSMixin):
 
                     and use Xcode's app distribution workflow described at:
 
-                        https://briefcase.readthedocs.io/en/stable/reference/platforms/iOS/xcode.html#ios-deploy
+                        https://briefcase.beeware.org/en/stable/reference/platforms/iOS/xcode/#ios-distribute
                 """,
             )
         )
