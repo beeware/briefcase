@@ -484,8 +484,8 @@ def get_physical_devices(tools: ToolCache, os_name: str) -> dict[str, dict[str, 
     The outer dictionary is keyed by OS version; the inner dictionary for each OS
     version contains the names of the usable devices, keyed by hardware UDID.
 
-    Devices that can't be used (because they aren't paired with this machine, or don't
-    have Developer Mode enabled) are reported, but not returned.
+    Devices that can't be used (because they aren't paired with this machine, don't have
+    Developer Mode enabled, or can't be reached) are reported, but not returned.
 
     :param tools: ToolCache of available tools
     :param os_name: The OS of the devices to find. One of `"iOS"`, `"watchOS"`, or
@@ -529,6 +529,12 @@ def get_physical_devices(tools: ToolCache, os_name: str) -> dict[str, dict[str, 
             tools.console.warning(
                 f"Ignoring {name}; Developer Mode is not enabled. Enable it "
                 "in Settings > Privacy & Security > Developer Mode on the device."
+            )
+        elif device["connectionProperties"]["tunnelState"] == "unavailable":
+            tools.console.warning(
+                f"Ignoring {name}; it can't be reached. Unlock the device, and "
+                "connect it to this Mac with a cable, or to the same network as "
+                "this Mac."
             )
         else:
             os_tag = f"{os_name} {device['deviceProperties']['osVersionNumber']}"

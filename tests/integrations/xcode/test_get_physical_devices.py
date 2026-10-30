@@ -56,6 +56,10 @@ def test_physical_devices(mock_tools):
             "Ignoring No Dev Mode iPhone; Developer Mode is not enabled. Enable it "
             "in Settings > Privacy & Security > Developer Mode on the device."
         ),
+        mock.call(
+            "Ignoring Offline iPhone; it can't be reached. Unlock the device, and "
+            "connect it to this Mac with a cable, or to the same network as this Mac."
+        ),
     ]
 
 

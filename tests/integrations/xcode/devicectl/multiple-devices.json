@@ -401,6 +401,92 @@
           "lastConnectionDate": "2026-10-09T03:54:00.000Z",
           "pairingState": "paired",
           "potentialHostnames": [
+            "Offline-iPhone.coredevice.local",
+            "66666666-7777-5888-8999-AAAAAAAAAAAA.coredevice.local",
+            "00008110-00AAAAAAAAAAAA00.coredevice.local"
+          ],
+          "tunnelState": "unavailable"
+        },
+        "deviceProperties": {
+          "bootedFromSnapshot": true,
+          "bootedSnapshotName": "com.apple.os.update-0000000000000000000000000000000000000000000000000000000000000000",
+          "ddiServicesAvailable": false,
+          "developerModeStatus": "enabled",
+          "hasInternalOSBuild": false,
+          "name": "Offline iPhone",
+          "osBuildUpdate": "23G83",
+          "osVersionNumber": "26.0.1",
+          "rootFileSystemIsWritable": false,
+          "supportsCheckedAllocations": false
+        },
+        "hardwareProperties": {
+          "cpuType": {
+            "name": "arm64e",
+            "subType": 2,
+            "type": 16777228
+          },
+          "deviceType": "iPhone",
+          "ecid": 1234567890123456,
+          "hardwareModel": "J718AP",
+          "internalStorageCapacity": 1000555581440,
+          "isProductionFused": true,
+          "marketingName": "iPhone 15",
+          "platform": "iOS",
+          "productType": "iPad16,4",
+          "reality": "physical",
+          "serialNumber": "ABCD1234EF",
+          "supportedCPUTypes": [
+            {
+              "name": "arm64e",
+              "subType": 2,
+              "type": 16777228
+            },
+            {
+              "name": "arm64",
+              "subType": 0,
+              "type": 16777228
+            }
+          ],
+          "supportedDeviceFamilies": [
+            1,
+            2
+          ],
+          "thinningProductType": "iPad16,4-B",
+          "udid": "00008110-00AAAAAAAAAAAA00"
+        },
+        "identifier": "66666666-7777-5888-8999-AAAAAAAAAAAA",
+        "tags": [],
+        "visibilityClass": "default"
+      },
+      {
+        "capabilities": [
+          {
+            "featureIdentifier": "com.apple.coredevice.feature.acquireusageassertion",
+            "name": "Acquire Usage Assertion"
+          },
+          {
+            "featureIdentifier": "com.apple.coredevice.feature.connectdevice",
+            "name": "Connect to Device"
+          },
+          {
+            "featureIdentifier": "com.apple.coredevice.feature.tags",
+            "name": "Modify Tags"
+          },
+          {
+            "featureIdentifier": "com.apple.coredevice.feature.default.user.credentials",
+            "name": "Modify credentials for default users for a device"
+          },
+          {
+            "featureIdentifier": "com.apple.coredevice.feature.unpairdevice",
+            "name": "Unpair Device"
+          }
+        ],
+        "connectionProperties": {
+          "authenticationType": "manualPairing",
+          "isMobileDeviceOnly": false,
+          "lastConnectionDate": "2026-10-09T03:54:00.000Z",
+          "pairingState": "paired",
+          "potentialHostnames": [
             "Test-Watch.coredevice.local",
             "55555555-6666-5777-8888-999999999999.coredevice.local",
             "00008310-0011223344556677.coredevice.local"
