@@ -31,6 +31,9 @@ def dummy_command(dummy_console, tmp_path):
     mock_get_simulators = mock.MagicMock()
     cmd.get_simulators = mock_get_simulators
 
+    # Mock get_physical_devices; by default, no physical devices are connected.
+    cmd.get_physical_devices = mock.MagicMock(return_value={})
+
     return cmd
 
 
@@ -47,7 +50,7 @@ def test_explicit_device_udid(dummy_command):
 
     # The target device will be the one the user specified as an option.
     result = dummy_command.select_target_device("2D3503A3-6EB9-4B37-9B17-C7EFEF2FA32D")
-    udid, iOS_version, device = result
+    udid, iOS_version, device, _ = result
 
     assert udid == "2D3503A3-6EB9-4B37-9B17-C7EFEF2FA32D"
     assert iOS_version == "13.2"
@@ -73,7 +76,7 @@ def test_explicit_device_name_should_find_highest_version(dummy_command):
 
     # Try to load an iPhone 8.
     # It matches case insensitive, and finds the highest iOS version.
-    udid, iOS_version, device = dummy_command.select_target_device("iphone 8")
+    udid, iOS_version, device, _ = dummy_command.select_target_device("iphone 8")
 
     assert udid == "C9A005C8-9468-47C5-8376-68A6E3408209"
     assert iOS_version == "13.2"
@@ -105,7 +108,7 @@ def test_explicit_device_name_should_find_highest_version_no_os(dummy_command):
 
     # Try to load an iPhone 8.
     # It matches case insensitive, and finds the highest iOS version.
-    udid, iOS_version, device = dummy_command.select_target_device("iphone 8")
+    udid, iOS_version, device, _ = dummy_command.select_target_device("iphone 8")
 
     assert udid == "C9A005C8-9468-47C5-8376-68A6E3408209"
     assert iOS_version == "13.2"
@@ -134,7 +137,9 @@ def test_explicit_device_name_and_version(dummy_command):
 
     # Specify an iPhone 8 on 10.3
     # It matches case insensitive, and finds the explicit iOS version.
-    udid, iOS_version, device = dummy_command.select_target_device("iphone 8::ios 10.3")
+    udid, iOS_version, device, _ = dummy_command.select_target_device(
+        "iphone 8::ios 10.3"
+    )
 
     assert udid == "68A6E340-8376-47C5-9468-C9A005C88209"
     assert iOS_version == "10.3"
@@ -227,7 +232,7 @@ def test_implied_device(dummy_command):
         }
     }
 
-    udid, iOS_version, device = dummy_command.select_target_device()
+    udid, iOS_version, device, _ = dummy_command.select_target_device()
 
     assert udid == "2D3503A3-6EB9-4B37-9B17-C7EFEF2FA32D"
     assert iOS_version == "13.2"
@@ -251,7 +256,7 @@ def test_implied_os(dummy_command):
     # Return option 2 (iPhone 11)
     dummy_command.console.values = ["2"]
 
-    udid, iOS_version, device = dummy_command.select_target_device()
+    udid, iOS_version, device, _ = dummy_command.select_target_device()
 
     assert udid == "2D3503A3-6EB9-4B37-9B17-C7EFEF2FA32D"
     assert iOS_version == "13.2"
@@ -280,7 +285,7 @@ def test_multiple_os_implied_device(dummy_command):
     dummy_command.console.values = ["2"]
 
     # Device for iOS 13.2 is implied.
-    udid, iOS_version, device = dummy_command.select_target_device()
+    udid, iOS_version, device, _ = dummy_command.select_target_device()
 
     assert udid == "2D3503A3-6EB9-4B37-9B17-C7EFEF2FA32D"
     assert iOS_version == "13.2"
@@ -309,7 +314,7 @@ def test_os_and_device_options(dummy_command):
     # Return option 2 (13.2), then option 1 (iPhone 8)
     dummy_command.console.values = ["2", "1"]
 
-    udid, iOS_version, device = dummy_command.select_target_device()
+    udid, iOS_version, device, _ = dummy_command.select_target_device()
 
     assert udid == "C9A005C8-9468-47C5-8376-68A6E3408209"
     assert iOS_version == "13.2"
@@ -358,7 +363,7 @@ def test_auto_device(dummy_command, se_device):
         },
     }
 
-    udid, iOS_version, device = dummy_command.select_target_device("auto")
+    udid, iOS_version, device, _ = dummy_command.select_target_device("auto")
 
     assert udid == "2D3503A3-6EB9-4B37-9B17-C7EFEF2FA32D"
     assert iOS_version == "17.5"
@@ -377,7 +382,7 @@ def test_auto_single_iOS_version(dummy_command):
         },
     }
 
-    udid, iOS_version, device = dummy_command.select_target_device("auto")
+    udid, iOS_version, device, _ = dummy_command.select_target_device("auto")
 
     assert udid == "2D3503A3-6EB9-4B37-9B17-C7EFEF2FA32D"
     assert iOS_version == "18.1"
@@ -397,7 +402,7 @@ def test_auto_multiple_se_class_matches_tie_break(dummy_command):
         },
     }
 
-    udid, iOS_version, device = dummy_command.select_target_device("auto")
+    udid, iOS_version, device, _ = dummy_command.select_target_device("auto")
 
     # "iPhone SE (3rd generation)" sorts after "iPhone 16e" alphabetically.
     assert udid == "2D3503A3-6EB9-4B37-9B17-C7EFEF2FA32D"
@@ -462,3 +467,78 @@ def test_auto_raises_when_no_simulators(dummy_command):
 
     # No user input was solicited
     assert dummy_command.console.prompts == []
+
+
+def test_physical_device_option(dummy_command, capsys):
+    """A physical device is offered alongside the simulators for its iOS version."""
+    dummy_command.get_simulators.return_value = {
+        "iOS 26.0": {
+            "C9A005C8-9468-47C5-8376-68A6E3408209": "iPhone 17",
+            "2D3503A3-6EB9-4B37-9B17-C7EFEF2FA32D": "iPhone 17 Pro",
+        },
+    }
+    dummy_command.get_physical_devices.return_value = {
+        "iOS 26.0": {"00008110-001122334455667E": "Test iPhone"},
+        "iOS 26.6.1": {"00008132-000A1B2C3D4E5F60": "Test iPad"},
+    }
+
+    # Return option 1 (iOS 26.0), then option 3 (Test iPhone)
+    dummy_command.console.values = ["1", "3"]
+
+    udid, iOS_version, device, physical = dummy_command.select_target_device()
+
+    assert udid == "00008110-001122334455667E"
+    assert iOS_version == "26.0"
+    assert device == "Test iPhone"
+    assert physical
+
+    # The physical device was labeled as such.
+    assert "3) Test iPhone (physical device)" in capsys.readouterr().out
+
+
+def test_explicit_physical_device_udid(dummy_command):
+    """If the user nominates a physical device UDID, it is used."""
+    dummy_command.get_simulators.return_value = {
+        "iOS 26.0": {
+            "C9A005C8-9468-47C5-8376-68A6E3408209": "iPhone 17",
+        },
+    }
+    dummy_command.get_physical_devices.return_value = {
+        "iOS 26.0.1": {"00008110-001122334455667E": "Test iPhone"},
+        "iOS 26.6.1": {"00008132-000A1B2C3D4E5F60": "Test iPad"},
+    }
+
+    udid, iOS_version, device, physical = dummy_command.select_target_device(
+        "00008132-000a1b2c3d4e5f60"
+    )
+
+    assert udid == "00008132-000A1B2C3D4E5F60"
+    assert iOS_version == "26.6.1"
+    assert device == "Test iPad"
+    assert physical
+
+    # User input was not solicited
+    assert dummy_command.console.prompts == []
+
+
+def test_auto_ignores_physical_devices(dummy_command):
+    """Automatic selection only considers simulators, even if a physical device is
+    connected."""
+    dummy_command.get_simulators.return_value = {
+        "iOS 26.0": {
+            "C9A005C8-9468-47C5-8376-68A6E3408209": "iPhone 17",
+            "2D3503A3-6EB9-4B37-9B17-C7EFEF2FA32D": "iPhone 17e",
+        },
+    }
+    dummy_command.get_physical_devices.return_value = {
+        "iOS 26.6.1": {"00008132-000A1B2C3D4E5F60": "Test iPad"},
+    }
+
+    udid, iOS_version, device, _ = dummy_command.select_target_device("auto")
+
+    assert udid == "2D3503A3-6EB9-4B37-9B17-C7EFEF2FA32D"
+    assert iOS_version == "26.0"
+    assert device == "iPhone 17e"
+
+    # Physical devices weren't discovered.
+    dummy_command.get_physical_devices.assert_not_called()
