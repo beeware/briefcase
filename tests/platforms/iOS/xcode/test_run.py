@@ -2061,3 +2061,33 @@ def test_run_app_physical_device_install_failure(run_command, first_app_generate
 
     # The app wasn't launched
     run_command.tools.subprocess.Popen.assert_not_called()
+
+
+def test_run_app_physical_device_launch_failure(run_command, first_app_generated):
+    """If the app doesn't run successfully on a physical device, the error includes the
+    likely causes of a launch failure."""
+    run_command.target_device = iOSDevice(
+        "00008110-001122334455667E",
+        "26.0.1",
+        "Test iPhone",
+        physical=True,
+    )
+    run_command._stream_app_logs.side_effect = BriefcaseCommandError(
+        "Problem running app first-app (return code 1)."
+    )
+
+    with pytest.raises(BriefcaseCommandError) as exc_info:
+        run_command.run_app(first_app_generated, passthrough=[])
+
+    assert str(exc_info.value) == (
+        "Problem running app first-app (return code 1).\n"
+        "\n"
+        "If the app didn't start on Test iPhone, check that the device is "
+        "unlocked, and\n"
+        "that your developer certificate is trusted on the device (in Settings >\n"
+        "General > VPN & Device Management). See:\n"
+        "\n"
+        "    https://briefcase.beeware.org/en/stable/reference/platforms/iOS/xcode/#ios-deploy\n"
+        "\n"
+        "for help with deploying to physical devices."
+    )

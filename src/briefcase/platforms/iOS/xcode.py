@@ -1155,12 +1155,31 @@ class iOSXcodeRunCommand(iOSXcodeMixin, RunCommand):
             "Following device console output (type CTRL-C to stop)...",
             prefix=app.app_name,
         )
-        self._stream_app_logs(
-            app,
-            popen=launch_popen,
-            clean_filter=nslog_clean_filter,
-            clean_output=True,
-        )
+        try:
+            self._stream_app_logs(
+                app,
+                popen=launch_popen,
+                clean_filter=nslog_clean_filter,
+                clean_output=True,
+            )
+        except BriefcaseCommandError as e:
+            # A failure to launch the app (e.g., because the device is locked)
+            # can't be distinguished from the app failing, so add the likely
+            # causes of a launch failure.
+            raise BriefcaseCommandError(
+                f"{e}\n"
+                "\n"
+                f"If the app didn't start on {self.target_device.name}, check that "
+                "the device is unlocked, and\n"
+                "that your developer certificate is trusted on the device (in "
+                "Settings >\n"
+                "General > VPN & Device Management). See:\n"
+                "\n"
+                "    https://briefcase.beeware.org/en/stable/reference/platforms/"
+                "iOS/xcode/#ios-deploy\n"
+                "\n"
+                "for help with deploying to physical devices."
+            ) from e
 
     @contextlib.contextmanager
     def setup_env(
