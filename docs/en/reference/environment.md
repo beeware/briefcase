@@ -31,3 +31,18 @@ It is *highly* inadvisable to generate production apps while this environment va
 Both macOS and Windows provide mechanisms for running x86_64 binaries on ARM64 hardware. These tools can make it very difficult to generate a packaged application, as it can be difficult to ensure a packaged application contains code matching the right architecture when the platform provides misleading answers about the current platform. As a result, Briefcase will raise an error if it detects that the version of Python that is being used doesn't match the underlying hardware architecture.
 
 However, it is possible to disable this check by setting the `BRIEFCASE_ALLOW_EMULATION` environment variable. This will cause Briefcase to output a warning if it appears that Python is running in emulation mode, but it will allow Briefcase commands to run.
+
+### HTTP downloads
+
+Briefcase honors the following environment variables when downloading tools, support packages, and other resources:
+
+- `HTTP_PROXY`: The proxy URL for HTTP requests.
+- `HTTPS_PROXY`: The proxy URL for HTTPS requests.
+- `ALL_PROXY`: The proxy URL for requests of either scheme.
+- `NO_PROXY`: A comma-separated list of hosts or URLs that should bypass proxies.
+- `SSL_CERT_FILE`: A CA certificate bundle file to use instead of the default certificates.
+- `SSL_CERT_DIR`: A directory of CA certificates in the OpenSSL layout (prepared using `c_rehash`) to use instead of the default certificates. `SSL_CERT_FILE` takes precedence if both certificate variables are set.
+
+For full details and examples, see the [httpx2 environment variable documentation](https://pydantic.dev/docs/httpx2/api/environment_variables/).
+
+If a download fails, check that certificate paths exist, have the correct type, and are readable, and that proxy URLs are valid and reachable. Correct or unset variables that refer to obsolete certificate or proxy configurations.

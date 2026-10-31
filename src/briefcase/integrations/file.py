@@ -9,7 +9,7 @@ import ssl
 import sys
 import tempfile
 from collections.abc import Iterable, Sequence
-from contextlib import suppress
+from contextlib import ExitStack, contextmanager, suppress
 from email.message import Message
 from pathlib import Path
 
@@ -20,6 +20,7 @@ from briefcase.constants import WINDOWS_RESERVED_WORDS
 from briefcase.exceptions import (
     BadNetworkResourceError,
     BriefcaseCommandError,
+    BriefcaseConfigError,
     CorruptContentError,
     MissingNetworkResourceError,
     NetworkFailure,
@@ -245,6 +246,43 @@ class File(Tool):
             },
         )
 
+    @contextmanager
+    def _http_stream(self, url):
+        """Open a download stream, explaining HTTP configuration failures."""
+        # Match httpx2's precedence: SSL_CERT_FILE overrides SSL_CERT_DIR.
+        for variable in ("SSL_CERT_FILE", "SSL_CERT_DIR"):
+            if value := os.environ.get(variable):
+                path = Path(value)
+                valid = path.is_file() if variable == "SSL_CERT_FILE" else path.is_dir()
+                if not valid:
+                    kind = "file" if variable == "SSL_CERT_FILE" else "directory"
+                    raise BriefcaseConfigError(
+                        f"{variable} points to '{value}', "
+                        f"which is not an existing {kind}. "
+                        f"Set {variable} to a valid certificate {kind}, or unset it "
+                        "to use the default certificate configuration."
+                    )
+                break
+
+        with ExitStack() as stack:
+            try:
+                response = stack.enter_context(
+                    self.tools.httpx2.stream(
+                        "GET",
+                        url,
+                        follow_redirects=True,
+                        verify=True,
+                    )
+                )
+            except (OSError, ValueError, httpx2.InvalidURL) as e:
+                raise BriefcaseConfigError(
+                    "Unable to configure HTTP downloads. Check SSL_CERT_FILE, "
+                    "SSL_CERT_DIR, HTTP_PROXY, HTTPS_PROXY, and ALL_PROXY. "
+                    "Certificate paths must be readable and contain valid CA "
+                    "certificates; proxies must use a supported URL."
+                ) from e
+            yield response
+
     def download(
         self,
         url: str,
@@ -293,12 +331,7 @@ class File(Tool):
         download_path.mkdir(parents=True, exist_ok=True)
         filename: Path | None = None
         try:
-            with self.tools.httpx2.stream(
-                "GET",
-                url,
-                follow_redirects=True,
-                verify=True,
-            ) as response:
+            with self._http_stream(url) as response:
                 if response.status_code == 404:
                     raise MissingNetworkResourceError(url=url)
                 elif response.status_code != 200:
@@ -396,11 +429,14 @@ class File(Tool):
                         "a connection to the server could not be established due to "
                         "a certificate verification problem.\n\n"
                         "This probably indicates an issue with a proxy configuration "
-                        "on your computer."
+                        "on your computer. Check SSL_CERT_FILE, SSL_CERT_DIR, "
+                        "and your proxy environment variables."
                     )
                 else:
                     hint = (
                         "a connection to the server could not be established.\n\n"
+                        "Check HTTP_PROXY, HTTPS_PROXY, ALL_PROXY, and NO_PROXY "
+                        "if you use a proxy.\n\n"
                         f"The reported cause of the problem was {e}"
                     )
             else:
