@@ -176,6 +176,7 @@ def test_single_author():
 
     assert briefcase_config == {
         "key": "value",
+        "authors": [{"name": "Jane Developer", "email": "jane@example.com"}],
         "author": "Jane Developer",
         "author_email": "jane@example.com",
     }
@@ -203,6 +204,7 @@ def test_multiple_authors():
 
     assert briefcase_config == {
         "key": "value",
+        "authors": [{"name": "Jane Developer", "email": "jane@example.com"}],
         "author": "Jane Developer",
         "author_email": "jane@example.com",
     }
@@ -225,6 +227,7 @@ def test_mising_author_name():
 
     assert briefcase_config == {
         "key": "value",
+        "authors": [{"email": "jane@example.com"}],
         "author_email": "jane@example.com",
     }
 
@@ -246,6 +249,7 @@ def test_missing_author_email():
 
     assert briefcase_config == {
         "key": "value",
+        "authors": [{"name": "Jane Developer"}],
         "author": "Jane Developer",
     }
 
@@ -268,6 +272,7 @@ def test_existing_author_name():
 
     assert briefcase_config == {
         "key": "value",
+        "authors": [{"name": "Jane Developer", "email": "jane@example.com"}],
         "author": "Grace Hopper",
         "author_email": "jane@example.com",
     }
@@ -291,6 +296,7 @@ def test_existing_author_email():
 
     assert briefcase_config == {
         "key": "value",
+        "authors": [{"name": "Jane Developer", "email": "jane@example.com"}],
         "author": "Jane Developer",
         "author_email": "grace@hopper.org",
     }

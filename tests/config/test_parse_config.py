@@ -740,6 +740,7 @@ def test_pep_621_merge(tmp_path):
         "version": "1.2.3",
         "license": "MIT",
         "license_files": ["LICENSE"],
+        "authors": [{"name": "Kim Park", "email": "kim@example.com"}],
         "author": "Kim Park",
         "author_email": "kim@example.com",
         "url": "https://example.com/awesome",
@@ -1634,6 +1635,7 @@ def test_pep621_dynamic(monkeypatch, tmp_path):
     awesome = apps["awesome"]
     assert awesome == {
         "app_name": "awesome",
+        "authors": [{"name": "Kim Park", "email": "kim@example.com"}],
         "author": "Kim Park",
         "author_email": "kim@example.com",
         "bundle": "com.example",

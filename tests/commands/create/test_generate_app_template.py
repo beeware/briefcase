@@ -40,6 +40,7 @@ def full_context():
         "url": "https://example.com",
         "author": "First Last",
         "author_email": "first@example.com",
+        "authors": None,
         "requires": None,
         "icon": None,
         "supported": True,

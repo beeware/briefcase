@@ -425,6 +425,7 @@ class GlobalConfig(BaseConfig):
         url=None,
         author=None,
         author_email=None,
+        authors=None,
         requires_python=None,
         **kwargs,
     ):
@@ -435,6 +436,7 @@ class GlobalConfig(BaseConfig):
         self.url = url
         self.author = author
         self.author_email = author_email
+        self.authors = authors
         self.license = license
         self.license_files = [] if license_files is None else license_files
         self.requires_python = requires_python
@@ -475,6 +477,7 @@ class AppConfig(BaseConfig):
     formal_name: str
     url: str | None
     author: str | None
+    authors: list[dict] | None
     author_email: str | None
     requires: list[str] | None
     icon: str | None
@@ -612,6 +615,7 @@ class DraftAppConfig(AppConfig):
         url: str | None = None,
         author: str | None = None,
         author_email: str | None = None,
+        authors: list[dict] | None = None,
         requires: list[str] | None = None,
         icon: str | None = None,
         document_type: dict | None = None,
@@ -645,6 +649,7 @@ class DraftAppConfig(AppConfig):
         self.url = url
         self.author = author
         self.author_email = author_email
+        self.authors = authors
         self.requires = requires
         self.icon = icon
         self.document_types = {} if document_type is None else document_type
@@ -1326,7 +1331,16 @@ def merge_pep621_config(global_config, pep621_config):
     maybe_update("url", "urls", "Homepage")
     maybe_update("version", "version")
 
-    # Use the details of the first author as the Briefcase author.
+    # `authors` is the PEP 621 representation.
+
+    if "authors" not in global_config:
+        try:
+            global_config["authors"] = [pep621_config["authors"][0]]
+        except (KeyError, IndexError):
+            pass
+
+    # The deprecated `author` and `author_email` settings.
+
     if "author" not in global_config:
         try:
             global_config["author"] = pep621_config["authors"][0]["name"]
@@ -1378,6 +1392,26 @@ def warn_invalid_legacy_project_name(global_config, console):
         )
 
 
+def warn_deprecated_author_config(global_config, console):
+    """Warn if author or author_email is used instead of authors."""
+    if not {"author", "author_email"} & global_config.keys():
+        return
+
+    console.warning_banner(
+        "Deprecated author configuration",
+        """
+            The `author` and `author_email` settings are deprecated in favour of
+            `authors`.
+
+            Update your configuration to use `authors`:
+
+                authors = [
+                    {name = "Jane Developer", email = "jane@example.com"},
+                ]
+        """,
+    )
+
+
 def parse_config(config_file: Path, platform, output_format, console):
     """Parse the briefcase section of the pyproject.toml configuration file.
 
@@ -1419,6 +1453,10 @@ def parse_config(config_file: Path, platform, output_format, console):
         global_config = pyproject["tool"]["briefcase"]
     except KeyError as e:
         raise BriefcaseConfigError("No tool.briefcase section in pyproject.toml") from e
+
+    # Must run before the PEP 621 merge: afterwards, `author` may have been
+    # derived from `[project] authors` rather than written by the user.
+    warn_deprecated_author_config(global_config, console)
 
     # Merge the PEP621 configuration (if it exists)
     try:

@@ -101,9 +101,23 @@ Examples of valid version strings:
 
 The person or organization responsible for the project.
 
+This setting is deprecated; use [`authors`][] instead.
+
 #### `author_email`
 
 The contact email address for the person or organization responsible for the project.
+
+This setting is deprecated; use [`authors`][] instead.
+
+#### `authors`
+
+A list containing the people responsible for the project and/or the contact email address for the same people.
+
+```toml
+authors = [
+    {name = "Jane Developer", email = "jane@example.com"},
+]
+```
 
 #### `env_manager`
 
