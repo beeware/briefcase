@@ -702,7 +702,7 @@ class DraftAppConfig(AppConfig):
         )
         self.uninstall_options = validate_install_options_config(
             uninstall_option,
-            "uininstall",
+            "uninstall",
             install=self.install_options,
         )
 
