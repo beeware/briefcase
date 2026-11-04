@@ -41,7 +41,7 @@ Briefcase honors the following environment variables when downloading tools, sup
 - `ALL_PROXY`: The proxy URL for requests of either scheme.
 - `NO_PROXY`: A comma-separated list of hosts or URLs that should bypass proxies.
 - `SSL_CERT_FILE`: A CA certificate bundle file to use instead of the default certificates.
-- `SSL_CERT_DIR`: A directory of CA certificates in the <nospell>OpenSSL</nospell> layout (prepared using `c_rehash`) to use instead of the default certificates. `SSL_CERT_FILE` takes precedence if both certificate variables are set.
+- `SSL_CERT_DIR`: A directory of CA certificates in the OpenSSL layout.
 
 For full details and examples, see the [HTTPX2 environment variable documentation](https://pydantic.dev/docs/httpx2/api/environment_variables/).
 
