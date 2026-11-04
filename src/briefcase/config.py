@@ -426,6 +426,7 @@ class GlobalConfig(BaseConfig):
         author=None,
         author_email=None,
         requires_python=None,
+        default_app=None,
         **kwargs,
     ):
         super().__init__(**kwargs)
@@ -438,6 +439,10 @@ class GlobalConfig(BaseConfig):
         self.license = license
         self.license_files = [] if license_files is None else license_files
         self.requires_python = requires_python
+        # The default app may also be spelled `default-app` in pyproject.toml.
+        self.default_app = (
+            default_app if default_app is not None else kwargs.get("default-app")
+        )
 
         # Version number is compliant with PEP440 (and related updates):
         try:
@@ -1433,6 +1438,11 @@ def parse_config(config_file: Path, platform, output_format, console):
 
     warn_invalid_legacy_project_name(global_config, console)
 
+    # The default app may be spelled `default-app` or `default_app` in
+    # pyproject.toml; normalize to `default_app` before building app configs.
+    if "default-app" in global_config:
+        global_config["default_app"] = global_config.pop("default-app")
+
     # For consistent results, sort the platforms and formats
     all_platforms = sorted(get_platforms().keys())
     all_formats = sorted(get_output_formats(platform).keys())
@@ -1531,5 +1541,14 @@ def parse_config(config_file: Path, platform, output_format, console):
         # Construct a configuration object, and add it to the list
         # of configurations that are being handled.
         app_configs[app_name] = config
+
+    # A declared default app must name an app defined in this project.
+    default_app = global_config.get("default_app")
+    if default_app is not None and (
+        not isinstance(default_app, str) or default_app not in app_configs
+    ):
+        raise BriefcaseConfigError(
+            f"Default app {default_app!r} is not defined in pyproject.toml"
+        )
 
     return global_config, app_configs
