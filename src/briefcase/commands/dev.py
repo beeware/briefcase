@@ -53,7 +53,18 @@ class DevCommand(RunAppMixin, BaseCommand):
         raise NotImplementedError()
 
     def add_options(self, parser):
-        parser.add_argument("-a", "--app", dest="appname", help="The app to run")
+        parser.add_argument(
+            "-a",
+            "--app",
+            dest="appname",
+            # `-a` with no value yields an empty string, which signals that
+            # the app selection menu should be shown, even if a default app
+            # is configured; mirroring `-d`/`--device` handling on mobile.
+            nargs="?",
+            default=None,
+            const="",
+            help="The app to run",
+        )
         parser.add_argument(
             "-r",
             "--update-requirements",
@@ -234,7 +245,11 @@ class DevCommand(RunAppMixin, BaseCommand):
     ):
         # Which app should we run? If there's only one defined
         # in pyproject.toml, then we can use it as a default;
-        # otherwise look for a -a/--app option.
+        # otherwise look for a -a/--app option, then the project's
+        # configured default app. An empty `appname` means `-a` was given
+        # with no value, which forces the selection menu even if a
+        # default app is configured.
+        default_app_name = getattr(self.global_config, "default_app", None)
         if len(self.apps) == 1:
             app = next(iter(self.apps.values()))
         elif appname:
@@ -245,8 +260,11 @@ class DevCommand(RunAppMixin, BaseCommand):
                     f"Project doesn't define an application named '{appname}'"
                 ) from e
 
+        elif appname is None and default_app_name in self.apps:
+            app = self.apps[default_app_name]
         else:
-            # Multiple apps, and no explicit --app was provided.
+            # Multiple apps, and no explicit --app was provided, and no
+            # configured default app applies.
             # If --no-input was passed, do not prompt - raise error.
             if not self.console.input_enabled:
                 raise BriefcaseCommandError(
@@ -260,8 +278,13 @@ class DevCommand(RunAppMixin, BaseCommand):
                 for app_name, app_config in self.apps.items()
             }
 
-            # Default app is the first listed in the config file
-            default_app_name = next(iter(self.apps.keys()))
+            # The menu defaults to the configured default app, if any;
+            # otherwise, the first listed in the config file.
+            menu_default_app_name = (
+                default_app_name
+                if default_app_name in self.apps
+                else next(iter(self.apps.keys()))
+            )
 
             # Display interactive menu to select the app
             selected_app_name = self.console.selection_question(
@@ -271,7 +294,7 @@ class DevCommand(RunAppMixin, BaseCommand):
                     "Which application would you like to start (in dev mode)?"
                 ),
                 options=app_options,
-                default=default_app_name,
+                default=menu_default_app_name,
             )
 
             # Use the selected app
