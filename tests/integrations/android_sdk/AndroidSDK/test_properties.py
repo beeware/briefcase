@@ -189,7 +189,7 @@ def test_default_skin(monkeypatch, android_sdk):
     """The default skin is enabled under non-CI configurations."""
     monkeypatch.delenv("CI", raising=False)
 
-    assert android_sdk.DEFAULT_DEVICE_SKIN == "pixel_7_pro"
+    assert android_sdk.DEFAULT_DEVICE_SKIN == "pixel_7"
 
 
 def test_default_skin_ci(monkeypatch, android_sdk):

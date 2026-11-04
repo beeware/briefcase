@@ -59,6 +59,7 @@ def test_create_emulator(
         "invalid name",  # A name with a space
         "annoying!",  # a name with non-alpha characters
         "new-emulator",  # A valid name!
+        "",  # default device type
     ]
 
     # Mock the initial output of an AVD config file.
@@ -79,8 +80,8 @@ def test_create_emulator(
     # The call was made to create the emulator
     android_sdk._create_emulator.assert_called_once_with(
         avd="new-emulator",
-        device_type="pixel",
-        skin="pixel_7_pro",
+        device_type="pixel_7",
+        skin="pixel_7",
         system_image=f"system-images;android-31;default;{emulator_abi}",
     )
 
@@ -90,8 +91,8 @@ def test_default_name(mock_tools, android_sdk, tmp_path):
     # This test doesn't validate most of the test process;
     # it only checks that the emulator is created with the default name.
 
-    # User provides no input; default name will be used
-    mock_tools.console.values = [""]
+    # User provides no input; default name and device type will be used
+    mock_tools.console.values = ["", ""]
 
     # Mock the internal emulator creation method
     android_sdk._create_emulator = MagicMock()
@@ -118,7 +119,7 @@ def test_default_name_with_collisions(mock_tools, android_sdk, tmp_path):
             "beePhone",
         ]
     )
-    mock_tools.console.values = [""]
+    mock_tools.console.values = ["", ""]
 
     # Mock the internal emulator creation method
     android_sdk._create_emulator = MagicMock()
@@ -128,3 +129,31 @@ def test_default_name_with_collisions(mock_tools, android_sdk, tmp_path):
 
     # The expected device AVD was created.
     assert avd == "beePhone-31-3"
+
+
+def test_custom_device_type(mock_tools, android_sdk, tmp_path):
+    """A custom device type can be created with the default name."""
+    # This test doesn't validate most of the test process;
+    # it only checks that the emulator is created with the default name.
+
+    mock_tools.console.values = [
+        "",  # Accept default name
+        "12",  # Option 12: Pixel 9 Pro XL.
+    ]
+
+    # Mock the internal emulator creation method
+    android_sdk._create_emulator = MagicMock()
+
+    # Create the emulator
+    avd = android_sdk.create_emulator()
+
+    # The expected device AVD was created.
+    assert avd == "beePhone-31"
+
+    # The call was made to create the emulator
+    android_sdk._create_emulator.assert_called_once_with(
+        avd="beePhone-31",
+        device_type="pixel_9_pro_xl",
+        skin="pixel_9_pro_xl",
+        system_image="system-images;android-31;default;x86_64",
+    )

@@ -192,15 +192,59 @@ class AndroidSDK(ManagedTool):
             ) from None
 
     @property
+    def device_types(self) -> dict[str, str]:
+        "A mapping of known device types to a human descriptor"
+        return {
+            "pixel_6": "Google Pixel 6",
+            "pixel_6_pro": "Google Pixel 6 pro",
+            "pixel_6a": "Google Pixel 6a",
+            "pixel_7": "Google Pixel 7",
+            "pixel_7_pro": "Google Pixel 7 Pro",
+            "pixel_7a": "Google Pixel 7a",
+            "pixel_8": "Google Pixel 8",
+            "pixel_8_pro": "Google Pixel 8 Pro",
+            "pixel_8a": "Google Pixel 8a",
+            "pixel_9": "Google Pixel 9",
+            "pixel_9_pro": "Google Pixel 9 Pro",
+            # "pixel_9_pro_fold": "Google Pixel 9 Pro Fold",
+            "pixel_9_pro_xl": "Google Pixel 9 Pro XL",
+            # "pixel_fold": "Google Pixel Fold",
+            "pixel_tablet": "Google Pixel Tablet",
+            "small_phone": "Small phone (skinless)",
+            "medium_phone": "Medium phone (skinless)",
+            "medium_tablet": "Medium tablet (skinless)",
+        }
+
+    @property
+    def device_skins(self) -> dict[str, str]:
+        return {
+            "pixel_6": "pixel_6",
+            "pixel_6_pro": "pixel_6_pro",
+            "pixel_6a": "pixel_6a",
+            "pixel_7": "pixel_7",
+            "pixel_7_pro": "pixel_7_pro",
+            "pixel_7a": "pixel_7a",
+            "pixel_8": "pixel_8",
+            "pixel_8_pro": "pixel_8_pro",
+            "pixel_8a": "pixel_8a",
+            "pixel_9": "pixel_9",
+            "pixel_9_pro": "pixel_9_pro",
+            "pixel_9_pro_fold": "pixel_9_pro_fold",
+            "pixel_9_pro_xl": "pixel_9_pro_xl",
+            "pixel_fold": "pixel_fold",
+            "pixel_tablet": "pixel_tablet",
+        }
+
+    @property
     def DEFAULT_DEVICE_TYPE(self) -> str:
-        return "pixel"
+        return "pixel_7"
 
     @property
     def DEFAULT_DEVICE_SKIN(self) -> str:
         # Skins are entirely cosmetic. In a CI environment, default to no skin.
         if "CI" in os.environ:
             return None
-        return "pixel_7_pro"
+        return self.device_skins.get(self.DEFAULT_DEVICE_TYPE, None)
 
     @property
     def DEFAULT_ANDROID_SDK_LEVEL(self) -> int:
@@ -931,7 +975,7 @@ connection.
             device id (a hex string), an emulator id (`emulator-5554`), or an
             emulator AVD name (`@robotfriend`), a JSON payload describing the
             properties of an emulator that will be created (e.g.,
-            `'{"avd":"beePhone","device_type":"pixel","skin":"pixel_3a","system_image":"system-images;android-31;default;arm64-v8a"}'`)
+            `'{"avd":"beePhone","device_type":"pixel_7","skin":"pixel_7","system_image":"system-images;android-31;default;arm64-v8a"}'`)
             or `auto` to select an appropriate device automatically (creating
             one if necessary). If `None`, the user will be asked to select a
             device from the list available.
@@ -1159,9 +1203,13 @@ a default name '{default_avd}'.
             validator=create_avd_validator(emulators),
         )
 
-        # TODO: Provide a list of options for device types with matching skins
-        device_type = self.DEFAULT_DEVICE_TYPE
-        skin = self.DEFAULT_DEVICE_SKIN
+        device_type = self.tools.console.selection_question(
+            intro="What type of device would you like to emulate?",
+            description="Device Type",
+            options=self.device_types,
+            default=self.DEFAULT_DEVICE_TYPE,
+        )
+        skin = self.device_skins.get(device_type)
 
         # TODO: Provide a list of options for system images.
         system_image = self.DEFAULT_SYSTEM_IMAGE
