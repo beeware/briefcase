@@ -82,8 +82,28 @@ def test_minimal_GlobalConfig():
     assert config.author is None
     assert config.author_email is None
     assert config.requires_python is None
+    assert config.default_app is None
 
     assert repr(config) == "<My Project v1.2.3 GlobalConfig>"
+
+
+def test_default_app():
+    """A config can declare a default app, spelled either way."""
+    config = GlobalConfig(
+        project_name="My Project",
+        version="1.2.3",
+        bundle="org.beeware",
+        default_app="second",
+    )
+    assert config.default_app == "second"
+
+    hyphen_config = GlobalConfig(
+        project_name="My Project",
+        version="1.2.3",
+        bundle="org.beeware",
+        **{"default-app": "second"},
+    )
+    assert hyphen_config.default_app == "second"
 
 
 def test_extra_attrs():
