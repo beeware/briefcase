@@ -1258,30 +1258,51 @@ or
         }[app.packaging_format]
 
         subprocess_kwargs: dict[str, Any] = {}
-        key_file_path: Path | None = None
+        public_key_path: Path | None = None
+        agent_socket_dir: Path | None = None
 
         try:
             if self.use_docker:
-                # When packaging inside Docker, the secret key must be made
-                # available to the container. Export the key to the bundle path
-                # (which is mounted in to the container), then import it and sign
-                # the package in a single container run, so the key is not
-                # retained in the image or container.
-                #
-                # The bundle and dist folders are mounted in to the container,
-                # and the Docker layer rewrites the host paths in the commands to
-                # their container equivalents.
-                key_file_path = self.bundle_path(app) / "signing-key.gpg"
-                subprocess_kwargs["mounts"] = [(self.dist_path, "/dist")]
-                self.tools.gnupg.export_secret_key(identity, key_file_path)
-                self.tools.os.chmod(key_file_path, 0o600)
+                # When packaging inside Docker, the package is signed using the
+                # host's GPG agent, so the secret key never leaves the host.
+                # The host's public key is imported into a throwaway keyring
+                # inside the container, and the host's agent socket is mounted in
+                # so the agent can perform the actual signing operation.
+                gnupg_home = "/tmp/briefcase-gnupg"
+                public_key_path = self.bundle_path(app) / "signing-public-key.gpg"
+                agent_socket_path = self.tools.gnupg.agent_socket_path()
+                agent_socket_dir = agent_socket_path.parent
+
+                subprocess_kwargs["mounts"] = [
+                    (agent_socket_dir, "/run/briefcase/gnupg-agent"),
+                    (self.dist_path, "/dist"),
+                ]
+                subprocess_kwargs["env"] = {"GNUPGHOME": gnupg_home}
+
+                self.tools.gnupg.export_public_key(identity, public_key_path)
+                self.tools.os.chmod(public_key_path, 0o644)
+
                 sign_command = [
                     "sh",
                     "-c",
                     " && ".join(
                         " ".join(shlex.quote(arg) for arg in command)
                         for command in [
-                            ["gpg", "--batch", "--import", str(key_file_path)],
+                            ["rm", "-rf", gnupg_home],
+                            ["mkdir", "-p", gnupg_home],
+                            ["chmod", "700", gnupg_home],
+                            [
+                                "gpg",
+                                "--batch",
+                                "--import",
+                                str(public_key_path),
+                            ],
+                            [
+                                "ln",
+                                "-sf",
+                                "/run/briefcase/gnupg-agent/S.gpg-agent",
+                                f"{gnupg_home}/S.gpg-agent",
+                            ],
                             sign_command,
                         ]
                     ),
@@ -1298,8 +1319,9 @@ or
                 f"{app.app_name}."
             ) from e
         finally:
-            if self.use_docker:
-                key_file_path.unlink(missing_ok=True)
+            if self.use_docker:  # noqa: SIM102
+                if public_key_path is not None:  # pragma: no branch
+                    public_key_path.unlink(missing_ok=True)
 
     def clean_dist_folder(self, app, **options):
         super().clean_dist_folder(app, **options)

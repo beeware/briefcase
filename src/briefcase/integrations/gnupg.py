@@ -68,11 +68,12 @@ class GnuPG(Tool):
 
         return identities
 
-    def export_secret_key(self, identity: str, output_path: Path):
-        """Export a secret key to a file.
+    def export_public_key(self, identity: str, output_path: Path):
+        """Export the public key for an identity to a file.
 
-        The exported key can be imported into a different environment (e.g., a Docker
-        container) to enable signing there.
+        The exported public key can be imported into a different environment (e.g., a
+        Docker container) so that it can be associated with the secret key held by the
+        host's GPG agent.
 
         :param identity: The fingerprint of the identity to export
         :param output_path: The path of the file to write the exported key to
@@ -84,12 +85,29 @@ class GnuPG(Tool):
                     "--batch",
                     "--output",
                     output_path,
-                    "--export-secret-keys",
+                    "--export",
                     identity,
                 ],
                 check=True,
             )
         except subprocess.CalledProcessError as e:
             raise BriefcaseCommandError(
-                f"Error exporting the GPG signing key for identity {identity}."
+                f"Error exporting the GPG public key for identity {identity}."
             ) from e
+
+    def agent_socket_path(self) -> Path:
+        """Return the path of the host's GPG agent socket.
+
+        :returns: The path of the socket used to communicate with the GPG agent.
+        """
+        try:
+            socket_path = self.tools.subprocess.check_output(
+                ["gpgconf", "--list-dirs", "agent-socket"],
+                quiet=1,
+            ).strip()
+        except (OSError, subprocess.CalledProcessError) as e:
+            raise BriefcaseCommandError(
+                "Can't determine the path of the GPG agent socket. Ensure that "
+                "gpgconf is installed and the GPG agent is running."
+            ) from e
+        return Path(socket_path)

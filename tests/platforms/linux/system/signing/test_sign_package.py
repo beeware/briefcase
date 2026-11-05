@@ -153,27 +153,46 @@ def test_sign_package_in_docker(
 
     make_docker_context(package_command, first_app)
 
-    key_file_path = package_command.bundle_path(first_app) / "signing-key.gpg"
-    key_file_path.touch()
+    public_key_path = package_command.bundle_path(first_app) / "signing-public-key.gpg"
+    public_key_path.touch()
+    agent_socket_path = Path("/run/user/1000/gnupg/S.gpg-agent")
+    mock_gpg.agent_socket_path.return_value = agent_socket_path
 
     package_command.sign_package(first_app, identity=JANE)
 
-    mock_gpg.export_secret_key.assert_called_once_with(JANE, key_file_path)
-    package_command.tools.os.chmod.assert_called_once_with(key_file_path, 0o600)
+    mock_gpg.export_public_key.assert_called_once_with(JANE, public_key_path)
+    package_command.tools.os.chmod.assert_called_once_with(public_key_path, 0o644)
 
-    import_command = ["gpg", "--batch", "--import", str(key_file_path)]
+    gnupg_home = "/tmp/briefcase-gnupg"
+    container_commands = [
+        ["rm", "-rf", gnupg_home],
+        ["mkdir", "-p", gnupg_home],
+        ["chmod", "700", gnupg_home],
+        ["gpg", "--batch", "--import", str(public_key_path)],
+        [
+            "ln",
+            "-sf",
+            "/run/briefcase/gnupg-agent/S.gpg-agent",
+            f"{gnupg_home}/S.gpg-agent",
+        ],
+        sign_command,
+    ]
     command = " && ".join(
         " ".join(shlex.quote(arg) for arg in cmd)
-        for cmd in [import_command, sign_command]
+        for cmd in container_commands
     )
     package_command.tools[first_app].app_context.run.assert_called_once_with(
         ["sh", "-c", command],
         check=True,
-        mounts=[(package_command.dist_path, "/dist")],
+        mounts=[
+            (agent_socket_path.parent, "/run/briefcase/gnupg-agent"),
+            (package_command.dist_path, "/dist"),
+        ],
+        env={"GNUPGHOME": gnupg_home},
     )
 
-    # The exported key file is removed after signing.
-    assert not key_file_path.exists()
+    # The exported public key is removed after signing.
+    assert not public_key_path.exists()
 
 
 def test_sign_package_error_in_docker(package_command, first_app, mock_gpg):
@@ -184,13 +203,16 @@ def test_sign_package_error_in_docker(package_command, first_app, mock_gpg):
         return_value=Path("/path/to/dist/first-app.deb")
     )
     app_context = make_docker_context(package_command, first_app)
+    mock_gpg.agent_socket_path.return_value = Path(
+        "/run/user/1000/gnupg/S.gpg-agent"
+    )
     app_context.run.side_effect = subprocess.CalledProcessError(
         returncode=1,
-        cmd=["sh", "-c", "gpg --batch --import signing-key.gpg && debsigs"],
+        cmd=["sh", "-c", "debsigs"],
     )
 
-    key_file_path = package_command.bundle_path(first_app) / "signing-key.gpg"
-    key_file_path.touch()
+    public_key_path = package_command.bundle_path(first_app) / "signing-public-key.gpg"
+    public_key_path.touch()
 
     with pytest.raises(
         BriefcaseCommandError,
@@ -198,8 +220,8 @@ def test_sign_package_error_in_docker(package_command, first_app, mock_gpg):
     ):
         package_command.sign_package(first_app, identity=JANE)
 
-    # The exported key file is removed after signing.
-    assert not key_file_path.exists()
+    # The exported public key is removed after signing.
+    assert not public_key_path.exists()
 
 
 def test_sign_package_key_export_error_in_docker(package_command, first_app, mock_gpg):
@@ -210,13 +232,16 @@ def test_sign_package_key_export_error_in_docker(package_command, first_app, moc
         return_value=Path("/path/to/dist/first-app.deb")
     )
     make_docker_context(package_command, first_app)
-    mock_gpg.export_secret_key.side_effect = BriefcaseCommandError("boom")
+    mock_gpg.agent_socket_path.return_value = Path(
+        "/run/user/1000/gnupg/S.gpg-agent"
+    )
+    mock_gpg.export_public_key.side_effect = BriefcaseCommandError("boom")
 
-    key_file_path = package_command.bundle_path(first_app) / "signing-key.gpg"
-    key_file_path.touch()
+    public_key_path = package_command.bundle_path(first_app) / "signing-public-key.gpg"
+    public_key_path.touch()
 
     with pytest.raises(BriefcaseCommandError, match=r"boom"):
         package_command.sign_package(first_app, identity=JANE)
 
     package_command.tools[first_app].app_context.run.assert_not_called()
-    assert not key_file_path.exists()
+    assert not public_key_path.exists()
