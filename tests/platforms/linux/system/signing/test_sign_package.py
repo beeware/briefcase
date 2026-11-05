@@ -178,8 +178,7 @@ def test_sign_package_in_docker(
         sign_command,
     ]
     command = " && ".join(
-        " ".join(shlex.quote(arg) for arg in cmd)
-        for cmd in container_commands
+        " ".join(shlex.quote(arg) for arg in cmd) for cmd in container_commands
     )
     package_command.tools[first_app].app_context.run.assert_called_once_with(
         ["sh", "-c", command],
@@ -203,9 +202,7 @@ def test_sign_package_error_in_docker(package_command, first_app, mock_gpg):
         return_value=Path("/path/to/dist/first-app.deb")
     )
     app_context = make_docker_context(package_command, first_app)
-    mock_gpg.agent_socket_path.return_value = Path(
-        "/run/user/1000/gnupg/S.gpg-agent"
-    )
+    mock_gpg.agent_socket_path.return_value = Path("/run/user/1000/gnupg/S.gpg-agent")
     app_context.run.side_effect = subprocess.CalledProcessError(
         returncode=1,
         cmd=["sh", "-c", "debsigs"],
@@ -232,9 +229,7 @@ def test_sign_package_key_export_error_in_docker(package_command, first_app, moc
         return_value=Path("/path/to/dist/first-app.deb")
     )
     make_docker_context(package_command, first_app)
-    mock_gpg.agent_socket_path.return_value = Path(
-        "/run/user/1000/gnupg/S.gpg-agent"
-    )
+    mock_gpg.agent_socket_path.return_value = Path("/run/user/1000/gnupg/S.gpg-agent")
     mock_gpg.export_public_key.side_effect = BriefcaseCommandError("boom")
 
     public_key_path = package_command.bundle_path(first_app) / "signing-public-key.gpg"

@@ -76,4 +76,3 @@ def test_agent_socket_path_error(mock_tools, gpg):
         match=r"Can't determine the path of the GPG agent socket",
     ):
         gpg.agent_socket_path()
-
