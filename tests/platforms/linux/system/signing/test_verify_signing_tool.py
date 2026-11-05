@@ -48,7 +48,30 @@ def test_verify_signing_tool_missing(
         BriefcaseCommandError,
         match=(
             rf"Can't find the {tool_name} tools. "
-            rf"Try running `sudo apt install {package_name}`."
+            rf"Try running `sudo apt install {package_name}`. "
+            r"Alternatively, use `--adhoc-sign` to skip signing the package."
+        ),
+    ):
+        package_command._verify_signing_tool(first_app)
+
+
+def test_verify_signing_tool_missing_suse(package_command, first_app):
+    """On SUSE, the missing tool hint for rpmsign names the rpm-build package."""
+    first_app.packaging_format = "rpm"
+    first_app.target_vendor_base = "suse"
+    package_command.tools[
+        first_app
+    ].app_context.check_output.side_effect = subprocess.CalledProcessError(
+        returncode=1,
+        cmd=["sh", "-c", "command -v rpmsign"],
+    )
+
+    with pytest.raises(
+        BriefcaseCommandError,
+        match=(
+            r"Can't find the rpmsign tools. "
+            r"Try running `sudo zypper install rpm-build`\. "
+            r"Alternatively, use `--adhoc-sign` to skip signing the package."
         ),
     ):
         package_command._verify_signing_tool(first_app)
@@ -68,7 +91,10 @@ def test_verify_signing_tool_missing_unknown_vendor(package_command, first_app):
 
     with pytest.raises(
         BriefcaseCommandError,
-        match=r"Can't find the debsigs tool. Install this first to sign the deb.",
+        match=(
+            r"Can't find the debsigs tool. Install this first to sign the deb. "
+            r"Alternatively, use `--adhoc-sign` to skip signing the package."
+        ),
     ):
         package_command._verify_signing_tool(first_app)
 

@@ -2,11 +2,12 @@ from __future__ import annotations
 
 import gzip
 import re
+import shlex
 import subprocess
 import tarfile
 from collections.abc import Collection
 from pathlib import Path
-from typing import cast
+from typing import Any, cast
 
 from briefcase.commands import (
     BuildCommand,
@@ -273,6 +274,31 @@ class LinuxSystemMixin(LinuxMixin):
 
         self.console.verbose(f"Targeting Python{app.python_version_tag}")
 
+        # If no packaging format was selected (or the "system" alias was used),
+        # determine the format implied by the vendor base. This must be done
+        # before the app tools are verified, so the Docker image can be built
+        # with the tools needed to package and sign the app.
+        if getattr(app, "packaging_format", None) in (None, "system"):
+            app.packaging_format = {
+                DEBIAN: "deb",
+                RHEL: "rpm",
+                ARCH: "pkg",
+                SUSE: "rpm",
+            }.get(app.target_vendor_base)
+
+            if app.packaging_format is None:
+                if self.use_docker:
+                    raise BriefcaseCommandError(
+                        "Briefcase doesn't know the system packaging format for "
+                        f"{app.target_vendor}. You may be able to proceed by "
+                        "manually specifying a format with the packaging_format "
+                        "option in the app configuration"
+                    )
+
+                # Native builds don't require a packaging format until the app
+                # is packaged; retain the unresolved "system" alias.
+                app.packaging_format = "system"
+
         return LinuxSystemAppConfig(super().finalize_app_config(app, **kwargs))
 
     def _deb_devirtualize(self, package: str) -> str:
@@ -387,6 +413,30 @@ class LinuxSystemMixin(LinuxMixin):
             system_verify,
             system_installer,
         )
+
+    def _signing_tool(self, app: LinuxSystemAppConfig) -> tuple[str, str, str]:
+        """Utility method returning the tool used to sign a package.
+
+        :param app: The app being packaged
+        :returns: A triple of (tool name, executable name, package name) for the tool
+            used to sign the package.
+        :raises KeyError: If the packaging format cannot be determined.
+        """
+        # The packaging format may not be set on a draft app config.
+        packaging_format = getattr(app, "packaging_format", None)
+        tool_name, executable_name, package_name = {
+            "deb": ("debsigs", "debsigs", "debsigs"),
+            "rpm": ("rpmsign", "rpmsign", "rpm-sign"),
+            "pkg": ("gpg", "gpg", "gnupg"),
+        }[packaging_format]
+        if (
+            packaging_format == "rpm"
+            and getattr(app, "target_vendor_base", None) == SUSE
+        ):
+            # On SUSE, rpmsign is provided by rpm-build; there is no separate
+            # `rpm-sign` package.
+            package_name = "rpm-build"
+        return tool_name, executable_name, package_name
 
     def verify_system_packages(self, app: LinuxSystemAppConfig):
         """Verify that the required system packages are installed.
@@ -742,6 +792,22 @@ Install Docker Engine and try again or run Briefcase on an Arch host system.
         verify_python = not hasattr(self.tools[app], "app_context")
 
         if self.use_docker:
+            # The Docker image is built before the signing identity is selected,
+            # so the signing tool must be installed in the image for the signing
+            # step to be able to run inside the container.
+            system_requires = getattr(app, "system_requires", None)
+            if system_requires is None:
+                system_requires = []
+                app.system_requires = system_requires
+            try:
+                _, _, package_name = self._signing_tool(app)
+            except KeyError:
+                # An unknown packaging format has no signing tool that can be
+                # identified.
+                package_name = None
+            if package_name is not None and package_name not in system_requires:
+                system_requires.append(package_name)
+
             DockerAppContext.verify(
                 tools=self.tools,
                 app=app,
@@ -1057,19 +1123,6 @@ class LinuxSystemSigningMixin(_MixinBase):
         "available on the system."
     )
 
-    def _signing_tool(self, app: LinuxSystemAppConfig) -> tuple[str, str, str]:
-        """Utility method returning the tool used to sign a package.
-
-        :param app: The app being packaged
-        :returns: A triple of (tool name, executable name, package name) for the tool
-            used to sign the package.
-        """
-        return {
-            "deb": ("debsigs", "debsigs", "debsigs"),
-            "rpm": ("rpmsign", "rpmsign", "rpm-sign"),
-            "pkg": ("gpg", "gpg", "gnupg"),
-        }[app.packaging_format]
-
     def _verify_signing_tool(self, app: LinuxSystemAppConfig):
         """Verify that the app environment contains the signing tool.
 
@@ -1090,12 +1143,14 @@ class LinuxSystemSigningMixin(_MixinBase):
             if install_cmd := self._system_requirement_tools(app)[3]:
                 raise BriefcaseCommandError(
                     f"Can't find the {tool_name} tools. "
-                    f"Try running `sudo {' '.join(install_cmd)} {package_name}`."
+                    f"Try running `sudo {' '.join(install_cmd)} {package_name}`. "
+                    "Alternatively, use `--adhoc-sign` to skip signing the package."
                 ) from None
             else:
                 raise BriefcaseCommandError(
                     f"Can't find the {executable_name} tool. "
-                    f"Install this first to sign the {app.packaging_format}."
+                    f"Install this first to sign the {app.packaging_format}. "
+                    "Alternatively, use `--adhoc-sign` to skip signing the package."
                 ) from None
 
     def signature_path(self, app: LinuxSystemAppConfig) -> Path:
@@ -1202,13 +1257,71 @@ or
             ],
         }[app.packaging_format]
 
+        subprocess_kwargs: dict[str, Any] = {}
+        public_key_path: Path | None = None
+        agent_socket_dir: Path | None = None
+
         try:
-            self.tools[app].app_context.run(sign_command, check=True)
+            if self.use_docker:
+                # When packaging inside Docker, the package is signed using the
+                # host's GPG agent, so the secret key never leaves the host.
+                # The host's public key is imported into a throwaway keyring
+                # inside the container, and the host's agent socket is mounted in
+                # so the agent can perform the actual signing operation.
+                gnupg_home = "/tmp/briefcase-gnupg"
+                public_key_path = self.bundle_path(app) / "signing-public-key.gpg"
+                agent_socket_path = self.tools.gnupg.agent_socket_path()
+                agent_socket_dir = agent_socket_path.parent
+
+                subprocess_kwargs["mounts"] = [
+                    (agent_socket_dir, "/run/briefcase/gnupg-agent"),
+                    (self.dist_path, "/dist"),
+                ]
+                subprocess_kwargs["env"] = {"GNUPGHOME": gnupg_home}
+
+                self.tools.gnupg.export_public_key(identity, public_key_path)
+                self.tools.os.chmod(public_key_path, 0o644)
+
+                sign_command = [
+                    "sh",
+                    "-c",
+                    " && ".join(
+                        " ".join(shlex.quote(arg) for arg in command)
+                        for command in [
+                            ["rm", "-rf", gnupg_home],
+                            ["mkdir", "-p", gnupg_home],
+                            ["chmod", "700", gnupg_home],
+                            [
+                                "gpg",
+                                "--batch",
+                                "--import",
+                                str(public_key_path),
+                            ],
+                            [
+                                "ln",
+                                "-sf",
+                                "/run/briefcase/gnupg-agent/S.gpg-agent",
+                                f"{gnupg_home}/S.gpg-agent",
+                            ],
+                            sign_command,
+                        ]
+                    ),
+                ]
+
+            self.tools[app].app_context.run(
+                sign_command,
+                check=True,
+                **subprocess_kwargs,
+            )
         except subprocess.CalledProcessError as e:
             raise BriefcaseCommandError(
                 f"Error while signing .{app.packaging_format} package for "
                 f"{app.app_name}."
             ) from e
+        finally:
+            if self.use_docker:  # noqa: SIM102
+                if public_key_path is not None:  # pragma: no branch
+                    public_key_path.unlink(missing_ok=True)
 
     def clean_dist_folder(self, app, **options):
         super().clean_dist_folder(app, **options)
@@ -1237,12 +1350,6 @@ or
         else:
             identity = self.select_identity(identity=identity)
             if identity:
-                if self.use_docker:
-                    raise BriefcaseCommandError(
-                        "Signing system packages is not supported when using "
-                        "Docker. Re-run the package command without the "
-                        "`--target` option, or select `Don't sign`."
-                    )
                 # Signing is required; verify the signing tool is available.
                 self._verify_signing_tool(app)
             else:
@@ -1285,13 +1392,25 @@ class LinuxSystemPackageCommand(
     def packaging_formats(self):
         return ["deb", "rpm", "pkg", "system"]
 
+    @property
+    def default_packaging_format(self):
+        # The app's finalized configuration determines the packaging format.
+        return None
+
     def _verify_packaging_tools(self, app: LinuxSystemAppConfig):
         """Verify that the local environment contains the packaging tools."""
-        tool_name, executable_name, package_name = {
-            "deb": ("dpkg", "dpkg-deb", "dpkg-dev"),
-            "rpm": ("rpm-build", "rpmbuild", "rpm-build"),
-            "pkg": ("makepkg", "makepkg", "pacman"),
-        }[app.packaging_format]
+        try:
+            tool_name, executable_name, package_name = {
+                "deb": ("dpkg", "dpkg-deb", "dpkg-dev"),
+                "rpm": ("rpm-build", "rpmbuild", "rpm-build"),
+                "pkg": ("makepkg", "makepkg", "pacman"),
+            }[app.packaging_format]
+        except KeyError as e:
+            raise BriefcaseCommandError(
+                "Briefcase doesn't know the system packaging format for "
+                f"{app.target_vendor}. You may be able to build a package "
+                "by manually specifying a format with -p/--packaging-format"
+            ) from e
 
         if not self.tools.shutil.which(executable_name):
             if install_cmd := self._system_requirement_tools(app)[3]:
@@ -1308,21 +1427,6 @@ class LinuxSystemPackageCommand(
     def verify_app_tools(self, app: FinalizedAppConfig):
         app = cast(LinuxSystemAppConfig, app)
         super().verify_app_tools(app)
-        # If "system" packaging format was selected, determine what that means.
-        if app.packaging_format == "system":
-            app.packaging_format = {
-                DEBIAN: "deb",
-                RHEL: "rpm",
-                ARCH: "pkg",
-                SUSE: "rpm",
-            }.get(app.target_vendor_base)
-
-        if app.packaging_format is None:
-            raise BriefcaseCommandError(
-                "Briefcase doesn't know the system packaging format for "
-                f"{app.target_vendor}. You may be able to build a package "
-                "by manually specifying a format with -p/--packaging-format"
-            )
 
         if not self.use_docker:
             self._verify_packaging_tools(app)
@@ -1696,6 +1800,11 @@ no extension).
 
 class LinuxSystemPublishCommand(LinuxSystemDockerMixin, PublishCommand):
     description = "Publish a Linux system project."
+
+    @property
+    def default_packaging_format(self):
+        # The app's finalized configuration determines the packaging format.
+        return None
 
 
 # Declare the briefcase command bindings

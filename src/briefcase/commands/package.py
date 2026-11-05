@@ -104,8 +104,11 @@ class PackageCommand(BaseCommand):
         :param packaging_format: The format of the packaging artefact to create.
         """
         # Annotate the packaging format onto the app so that distribution path
-        # resolution works correctly during the resume check.
-        app.packaging_format = packaging_format
+        # resolution works correctly during the resume check. If no packaging
+        # format was specified, the format determined during app finalization
+        # is used.
+        if packaging_format:
+            app.packaging_format = packaging_format
 
         resume = self.can_resume(app, **options)
 
