@@ -1734,3 +1734,33 @@ def test_pep621_backend_error(monkeypatch, tmp_path):
             output_format="app",
             console=Console(),
         )
+
+
+def test_deprecated_author_config(tmp_path):
+    """Using the deprecated author settings raises a warning."""
+    config_file = create_file(
+        tmp_path / "pyproject.toml",
+        """
+        [tool.briefcase]
+        project_name = "awesome-app"
+        bundle = "com.example"
+        version = "1.2.3"
+        license = "MIT"
+        author = "Jane Developer"
+
+        [tool.briefcase.app.awesome]
+        """,
+    )
+
+    console = Mock()
+    parse_config(
+        config_file,
+        platform="macOS",
+        output_format="app",
+        console=console,
+    )
+
+    console.warning_banner.assert_called_once_with(
+        "Deprecated author configuration",
+        PartialMatchString("deprecated in favour of"),
+    )

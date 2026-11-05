@@ -407,3 +407,30 @@ def test_test_dependencies_with_requires():
         "key": "value",
         "test_requires": ["dep1", "dep2", "first", "second"],
     }
+
+
+def test_existing_authors():
+    "If authors is defined in the global config, the PEP621 value is ignored"
+    briefcase_config = {
+        "key": "value",
+        "authors": [{"name": "Grace Hopper", "email": "grace@hopper.org"}],
+    }
+
+    merge_pep621_config(
+        briefcase_config,
+        {
+            "authors": [
+                {
+                    "name": "Jane Developer",
+                    "email": "jane@example.com",
+                }
+            ]
+        },
+    )
+
+    assert briefcase_config == {
+        "key": "value",
+        "authors": [{"name": "Grace Hopper", "email": "grace@hopper.org"}],
+        "author": "Jane Developer",
+        "author_email": "jane@example.com",
+    }
