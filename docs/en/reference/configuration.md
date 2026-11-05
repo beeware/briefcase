@@ -107,7 +107,7 @@ The contact email address for the person or organization responsible for the pro
 
 #### `default_app`
 
-The app that `briefcase run` and `briefcase dev` start when no `-a`/`--app` option is given and the project defines more than one app. It must name an app defined in the project; naming an undefined app is a configuration error. When no default app is configured, the app selection menu is shown, and passing `-a` with no value still shows that menu, with the configured default app preselected.
+The app that `briefcase run` and `briefcase dev` start when no `-a`/`--app` option is given and the project defines more than one app. It must name an app defined in the project; naming an undefined app is a configuration error. When no default app is configured, the app selection menu is shown, and passing `-a` with no value still shows that menu, with the configured default app selected.
 
 #### `env_manager`
 
