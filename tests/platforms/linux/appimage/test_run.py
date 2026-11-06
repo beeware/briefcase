@@ -3,6 +3,7 @@ from unittest import mock
 
 import pytest
 
+from briefcase.config import GlobalConfig
 from briefcase.console import LogLevel
 from briefcase.exceptions import UnsupportedHostError
 from briefcase.integrations.subprocess import Subprocess
@@ -17,6 +18,13 @@ def run_command(dummy_console, tmp_path):
         data_path=tmp_path / "briefcase",
     )
     command.tools.home_path = tmp_path / "home"
+    # In real use, __main__ parses the config before the command runs,
+    # so global_config is always a GlobalConfig.
+    command.global_config = GlobalConfig(
+        project_name="Tester",
+        version="0.0.1",
+        bundle="org.beeware",
+    )
 
     # Set the host architecture for test purposes.
     command.tools.host_arch = "x86_64"

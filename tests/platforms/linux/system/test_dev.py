@@ -5,6 +5,7 @@ from unittest import mock
 
 import pytest
 
+from briefcase.config import GlobalConfig
 from briefcase.integrations.subprocess import Subprocess
 from briefcase.platforms.linux.system import LinuxSystemDevCommand
 
@@ -33,6 +34,13 @@ def dev_command(monkeypatch, dummy_console, first_app, tmp_path):
     command.tools.home_path = tmp_path / "home"
     command.tools.subprocess = mock.MagicMock(spec_set=Subprocess)
     command._stream_app_logs = mock.MagicMock()
+    # In real use, __main__ parses the config before the command runs,
+    # so global_config is always a GlobalConfig.
+    command.global_config = GlobalConfig(
+        project_name="Tester",
+        version="0.0.1",
+        bundle="org.beeware",
+    )
     return command
 
 

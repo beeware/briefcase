@@ -2,7 +2,7 @@ import pytest
 
 from briefcase.commands import RunCommand
 from briefcase.commands.base import full_options
-from briefcase.config import DraftAppConfig
+from briefcase.config import DraftAppConfig, GlobalConfig
 
 from ...utils import create_file
 
@@ -22,6 +22,14 @@ class DummyRunCommand(RunCommand):
         super().__init__(*args, apps={}, **kwargs)
 
         self.actions = []
+        # In real use, __main__ parses the config before the command runs,
+        # so global_config is always a GlobalConfig; default_app is None
+        # unless the project declares one.
+        self.global_config = GlobalConfig(
+            project_name="Tester",
+            version="0.0.1",
+            bundle="org.beeware",
+        )
 
     def briefcase_toml(self, app):
         # default any app to an empty `briefcase.toml`

@@ -131,6 +131,109 @@ def test_no_args_two_apps_non_interactive(run_command, first_app, second_app):
     assert run_command.actions == []
 
 
+def test_no_args_two_apps_default_app(run_command, first_app, second_app):
+    """If a default app is configured, run starts it without prompting."""
+    # Add two apps
+    run_command.apps = {
+        "first": first_app,
+        "second": second_app,
+    }
+    run_command.global_config.default_app = "second"
+
+    # Configure no command line options
+    options, _ = run_command.parse_options([])
+
+    # Run the run command
+    run_command(**options)
+
+    # The right sequence of things will be done, for the default app.
+    assert run_command.actions == [
+        # Host OS is verified
+        ("verify-host",),
+        # Tools are verified
+        ("verify-tools",),
+        # App config has been finalized
+        ("finalize-app-config", "second"),
+        # App template is verified
+        ("verify-app-template", "second"),
+        # App tools are verified
+        ("verify-app-tools", "second"),
+        # Run the second app
+        (
+            "run",
+            "second",
+            False,
+            False,
+            (None, None),
+            {"passthrough": []},
+        ),
+    ]
+
+
+def test_no_args_two_apps_default_app_non_interactive(
+    run_command,
+    first_app,
+    second_app,
+):
+    """A configured default app also applies when input is disabled."""
+    # Add two apps
+    run_command.apps = {
+        "first": first_app,
+        "second": second_app,
+    }
+    run_command.global_config.default_app = "second"
+
+    # Simulate --no-input on the command line
+    options, _ = run_command.parse_options(["--no-input"])
+
+    # Run the run command; no prompt is needed.
+    run_command(**options)
+
+    assert ("finalize-app-config", "second") in run_command.actions
+    assert run_command.actions[-1][1] == "second"
+
+
+def test_app_flag_no_value_shows_menu(
+    run_command,
+    first_app,
+    second_app,
+    monkeypatch,
+):
+    """`-a` with no value shows the menu, even with a default app configured."""
+    # Add two apps
+    run_command.apps = {
+        "first": first_app,
+        "second": second_app,
+    }
+    run_command.global_config.default_app = "second"
+
+    # Interactive mode
+    run_command.console.input_enabled = True
+
+    # Capture the menu's default, and fake the user selecting "second"
+    seen_kwargs = {}
+
+    def fake_selection_question(**kwargs):
+        seen_kwargs.update(kwargs)
+        return "second"
+
+    monkeypatch.setattr(
+        run_command.console,
+        "selection_question",
+        fake_selection_question,
+    )
+
+    # `-a` with no value parses to an empty app name.
+    options, _ = run_command.parse_options(["-a"])
+    assert options["appname"] == ""
+
+    # This should follow the menu path and run without error.
+    run_command(**options)
+
+    # The menu defaults to the configured default app.
+    assert run_command.actions[-1][1] == "second"
+
+
 def test_with_arg_one_app(run_command, first_app):
     """If there is one app, and a -a argument, run starts that app."""
     # Add a single app

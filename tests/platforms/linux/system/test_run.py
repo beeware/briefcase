@@ -7,6 +7,7 @@ from unittest import mock
 
 import pytest
 
+from briefcase.config import GlobalConfig
 from briefcase.console import LogLevel
 from briefcase.exceptions import UnsupportedHostError
 from briefcase.integrations.docker import Docker
@@ -27,6 +28,13 @@ def run_command(dummy_console, tmp_path, first_app, monkeypatch):
         apps={"app": first_app},
     )
     command.tools.home_path = tmp_path / "home"
+    # In real use, __main__ parses the config before the command runs,
+    # so global_config is always a GlobalConfig.
+    command.global_config = GlobalConfig(
+        project_name="Tester",
+        version="0.0.1",
+        bundle="org.beeware",
+    )
 
     # Default to running on Linux
     command.tools.host_os = "Linux"
