@@ -94,7 +94,7 @@ Briefcase is an end-user tool; dependency choices directly affect every downstre
 - **Branching**: Feature branches off `main`. All changes arrive via pull request.
 - **CI gates**: Pre-commit, test suite (all Python versions x platforms), coverage (100%), towncrier check, and docs build MUST pass before merge.
 - **Changelog**: Every change MUST include a towncrier fragment categorized as `feature`, `bugfix`, `removal`, `doc`, or `misc`. Fragments MUST describe user-facing impact, not implementation details. Minor or housekeeping changes SHOULD use `misc`, as SHOULD any bugfix or change to a feature that has not yet been part of a formal release.
-- **Documentation**: Docs are built using `tox -e docs-all` (MkDocs via beeware-docs-tools, on Python 3.12). API or behavioral changes MUST include corresponding documentation updates.
+- **Documentation**: Docs are built using `tox -e docs-all` (Zensical via beeware-docs-tools, on Python 3.12). API or behavioral changes MUST include corresponding documentation updates.
 - **Versioning**: The project uses setuptools_scm (git-tag-derived versions). Release tags MUST follow PEP 440.
 
 ## Governance
