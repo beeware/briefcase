@@ -1,3 +1,5 @@
+from unittest import mock
+
 import pytest
 
 from briefcase.exceptions import BriefcaseCommandError
@@ -1169,3 +1171,55 @@ def test_run_external_app(run_command, first_app):
         match=r"'first' is declared as an external app",
     ):
         run_command(**options)
+
+
+def test_prepare_target_requires_build(run_command, first_app):
+    """If preparing the target requires a build, an existing app is rebuilt."""
+    run_command.apps = {
+        "first": first_app,
+    }
+    run_command.prepare_target = mock.MagicMock(return_value=True)
+
+    options, _ = run_command.parse_options([])
+    run_command(**options)
+
+    # The target was prepared for the finalized app
+    run_command.prepare_target.assert_called_once_with(first_app)
+
+    # The right sequence of things will be done
+    assert run_command.actions == [
+        # Host OS is verified
+        ("verify-host",),
+        # Tools are verified
+        ("verify-tools",),
+        # App config has been finalized
+        ("finalize-app-config", "first"),
+        # The app is built, even though it already exists
+        (
+            "build",
+            "first",
+            False,
+            False,
+            {
+                "update": False,
+                "update_requirements": False,
+                "update_resources": False,
+                "update_support": False,
+                "update_stub": False,
+                "no_update": False,
+            },
+        ),
+        # App template is verified
+        ("verify-app-template", "first"),
+        # App tools are verified
+        ("verify-app-tools", "first"),
+        # Run the first app
+        (
+            "run",
+            "first",
+            False,
+            False,
+            (None, None),
+            {"build_state": "first", "passthrough": []},
+        ),
+    ]

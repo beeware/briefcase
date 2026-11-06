@@ -95,6 +95,7 @@ IDEs
 indygreg's
 installable
 iOS
+iPadOS
 jarsigner
 JDK
 jks
@@ -136,6 +137,7 @@ OpenJDK
 openSUSE
 OpenSuSE
 OSX
+passcode
 passthrough
 Passthrough
 pbb
@@ -214,6 +216,7 @@ subprocess
 subprocesses
 TCP
 templated
+TestFlight
 Tk
 Tkinter
 toml
@@ -250,6 +253,7 @@ verbing
 visionOS
 VM
 VOC
+VPN
 watchOS
 Wayland
 WearOS
@@ -259,5 +263,6 @@ WPF
 Wunjo
 Xauth
 Xcode
+Xcode's
 Xr
 Xs

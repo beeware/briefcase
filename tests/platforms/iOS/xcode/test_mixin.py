@@ -5,7 +5,7 @@ import pytest
 
 import briefcase.integrations.xcode
 from briefcase.exceptions import NoDistributionArtefact
-from briefcase.platforms.iOS.xcode import iOSXcodeCreateCommand
+from briefcase.platforms.iOS.xcode import iOSDevice, iOSXcodeCreateCommand
 
 
 @pytest.fixture
@@ -17,7 +17,32 @@ def create_command(dummy_console, tmp_path):
     )
 
 
-def test_binary_path(create_command, first_app_config, tmp_path):
+@pytest.mark.parametrize(
+    ("target_device", "build_dir"),
+    [
+        # No device has been selected, so a simulator build is used
+        (None, "Debug-iphonesimulator"),
+        (
+            iOSDevice(
+                "00008110-001122334455667E",
+                "26.0.1",
+                "Test iPhone",
+                physical=True,
+            ),
+            "Debug-iphoneos",
+        ),
+    ],
+)
+def test_binary_path(
+    create_command,
+    first_app_config,
+    tmp_path,
+    target_device,
+    build_dir,
+):
+    """The binary path depends on whether the target is a physical device."""
+    create_command.target_device = target_device
+
     binary_path = create_command.binary_path(first_app_config)
 
     assert binary_path == (
@@ -28,7 +53,7 @@ def test_binary_path(create_command, first_app_config, tmp_path):
         / "ios"
         / "xcode"
         / "build"
-        / "Debug-iphonesimulator"
+        / build_dir
         / "First App.app"
     )
 
