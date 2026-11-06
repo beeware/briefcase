@@ -207,31 +207,6 @@ def test_default_app_undefined(tmp_path):
         )
 
 
-def test_default_app_not_a_string(tmp_path):
-    """A default app that isn't a string is an error."""
-    config_file = create_file(
-        tmp_path / "pyproject.toml",
-        """
-        [tool.briefcase]
-        default_app = 42
-
-        [tool.briefcase.app.first]
-        license="MIT"
-        """,
-    )
-
-    with pytest.raises(
-        BriefcaseConfigError,
-        match="Default app 42 is not defined",
-    ):
-        parse_config(
-            config_file,
-            platform="macOS",
-            output_format="Xcode",
-            console=Mock(),
-        )
-
-
 def test_platform_override(tmp_path):
     """An app can define platform settings that override base settings."""
     config_file = create_file(

@@ -87,17 +87,6 @@ def test_minimal_GlobalConfig():
     assert repr(config) == "<My Project v1.2.3 GlobalConfig>"
 
 
-def test_default_app():
-    """A config can declare a default app."""
-    config = GlobalConfig(
-        project_name="My Project",
-        version="1.2.3",
-        bundle="org.beeware",
-        default_app="second",
-    )
-    assert config.default_app == "second"
-
-
 def test_extra_attrs():
     """A config can contain attributes in addition to those required."""
     config = GlobalConfig(
@@ -112,6 +101,7 @@ def test_extra_attrs():
         license="MIT",
         license_files=["LICENSE"],
         requires_python=">=3.12",
+        default_app="second",
     )
 
     # The basic properties have been set.
@@ -124,6 +114,7 @@ def test_extra_attrs():
     assert config.license == "MIT"
     assert config.license_files == ["LICENSE"]
     assert config.requires_python == ">=3.12"
+    assert config.default_app == "second"
 
     # Explicit additional properties have been set
     assert config.first == "value 1"

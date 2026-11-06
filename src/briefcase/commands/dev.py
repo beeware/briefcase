@@ -275,14 +275,6 @@ class DevCommand(RunAppMixin, BaseCommand):
                 for app_name, app_config in self.apps.items()
             }
 
-            # The menu defaults to the configured default app, if any;
-            # otherwise, the first listed in the config file.
-            menu_default_app_name = (
-                default_app_name
-                if default_app_name in self.apps
-                else next(iter(self.apps.keys()))
-            )
-
             # Display interactive menu to select the app
             selected_app_name = self.console.selection_question(
                 description="Start dev app",
@@ -291,7 +283,7 @@ class DevCommand(RunAppMixin, BaseCommand):
                     "Which application would you like to start (in dev mode)?"
                 ),
                 options=app_options,
-                default=menu_default_app_name,
+                default=default_app_name,
             )
 
             # Use the selected app

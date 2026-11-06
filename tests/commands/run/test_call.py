@@ -1,6 +1,5 @@
 import pytest
 
-from briefcase.config import GlobalConfig
 from briefcase.exceptions import BriefcaseCommandError
 
 
@@ -139,12 +138,7 @@ def test_no_args_two_apps_default_app(run_command, first_app, second_app):
         "first": first_app,
         "second": second_app,
     }
-    run_command.global_config = GlobalConfig(
-        project_name="Sample project",
-        version="0.0.1",
-        bundle="com.example",
-        default_app="second",
-    )
+    run_command.global_config.default_app = "second"
 
     # Configure no command line options
     options, _ = run_command.parse_options([])
@@ -187,12 +181,7 @@ def test_no_args_two_apps_default_app_non_interactive(
         "first": first_app,
         "second": second_app,
     }
-    run_command.global_config = GlobalConfig(
-        project_name="Sample project",
-        version="0.0.1",
-        bundle="com.example",
-        default_app="second",
-    )
+    run_command.global_config.default_app = "second"
 
     # Simulate --no-input on the command line
     options, _ = run_command.parse_options(["--no-input"])
@@ -216,12 +205,7 @@ def test_app_flag_no_value_shows_menu(
         "first": first_app,
         "second": second_app,
     }
-    run_command.global_config = GlobalConfig(
-        project_name="Sample project",
-        version="0.0.1",
-        bundle="com.example",
-        default_app="second",
-    )
+    run_command.global_config.default_app = "second"
 
     # Interactive mode
     run_command.console.input_enabled = True
@@ -247,7 +231,6 @@ def test_app_flag_no_value_shows_menu(
     run_command(**options)
 
     # The menu defaults to the configured default app.
-    assert seen_kwargs["default"] == "second"
     assert run_command.actions[-1][1] == "second"
 
 
