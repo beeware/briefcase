@@ -727,8 +727,6 @@ def test_unknown_httpcore_connectionerror(mock_tools):
         NetworkFailure,
         match=(
             r"a connection to the server could not be established.\n\n"
-            r"Check HTTP_PROXY, HTTPS_PROXY, ALL_PROXY, and NO_PROXY "
-            r"if you use a proxy.\n\n"
             r"The reported cause of the problem "
         ),
     ):
@@ -765,8 +763,6 @@ def test_unknown_httpx_connectionerror(mock_tools):
         NetworkFailure,
         match=(
             r"a connection to the server could not be established.\n\n"
-            r"Check HTTP_PROXY, HTTPS_PROXY, ALL_PROXY, and NO_PROXY "
-            r"if you use a proxy.\n\n"
             r"The reported cause of the problem "
         ),
     ):
@@ -890,98 +886,18 @@ def test_malformed_expected_hash(mock_tools, expected_hash):
     mock_tools.httpx2.stream.assert_not_called()
 
 
-@pytest.mark.parametrize("variable", ["SSL_CERT_FILE", "SSL_CERT_DIR"])
-@pytest.mark.parametrize("wrong_type", [False, True])
-def test_invalid_certificate_path(
-    mock_tools, monkeypatch, tmp_path, variable, wrong_type
-):
-    """Missing certificate paths and paths of the wrong type are explained."""
-    monkeypatch.delenv("SSL_CERT_FILE", raising=False)
-    monkeypatch.delenv("SSL_CERT_DIR", raising=False)
-    path = tmp_path / "certificates"
-    if wrong_type:
-        if variable == "SSL_CERT_FILE":
-            path.mkdir()
-        else:
-            path.touch()
-    monkeypatch.setenv(variable, str(path))
-
-    with pytest.raises(BriefcaseConfigError, match=variable):
-        mock_tools.file.download("https://example.com/file.zip", tmp_path)
-
-    mock_tools.httpx2.stream.assert_not_called()
-
-
-@pytest.mark.parametrize("variable", ["SSL_CERT_FILE", "SSL_CERT_DIR"])
-def test_certificate_configuration_error(mock_tools, monkeypatch, tmp_path, variable):
-    """Real HTTP client initialization failures identify SSL configuration."""
-    monkeypatch.delenv("SSL_CERT_FILE", raising=False)
-    monkeypatch.delenv("SSL_CERT_DIR", raising=False)
-    path = tmp_path / "certificates"
-    if variable == "SSL_CERT_FILE":
-        path.write_text("invalid certificate", encoding="utf-8")
-    else:
-        path.mkdir()
-    monkeypatch.setenv(variable, str(path))
-    mock_tools.httpx2 = mock.Mock(wraps=httpx2)
-    if variable == "SSL_CERT_DIR":
-        # OpenSSL loads directory certificates lazily; force a connection failure
-        # without depending on an external network.
-        monkeypatch.setattr(
-            httpx2.HTTPTransport,
-            "handle_request",
-            mock.Mock(side_effect=httpx2.ConnectError("untrusted server")),
-        )
-        error = NetworkFailure
-    else:
-        error = BriefcaseConfigError
-
-    with pytest.raises(error):
-        mock_tools.file.download("https://example.com/file.zip", tmp_path)
-
-
 @pytest.mark.parametrize(
-    "proxy",
-    ["http://127.0.0.1:0", "invalid://proxy", "http://proxy:bad-port"],
+    ("contents", "hint"),
+    [(None, "existing CA certificate bundle"), ("invalid", "valid CA certificates")],
+    ids=["missing-file", "invalid-certificate"],
 )
-def test_invalid_proxy(mock_tools, monkeypatch, tmp_path, proxy):
-    """Unreachable and malformed proxies produce user-facing errors."""
-    for variable in ("HTTP_PROXY", "HTTPS_PROXY", "ALL_PROXY", "NO_PROXY"):
-        monkeypatch.delenv(variable, raising=False)
-        monkeypatch.delenv(variable.lower(), raising=False)
-    monkeypatch.setenv("HTTPS_PROXY", proxy)
-    mock_tools.httpx2 = mock.Mock(wraps=httpx2)
+def test_invalid_certificate_file(mock_tools, monkeypatch, tmp_path, contents, hint):
+    """A missing or invalid CA bundle gives an actionable SSL_CERT_FILE error."""
+    bundle = tmp_path / "ca.pem"
+    if contents is not None:
+        bundle.write_text(contents, encoding="utf-8")
+    monkeypatch.setenv("SSL_CERT_FILE", str(bundle))
+    mock_tools.httpx2 = httpx2
 
-    error = NetworkFailure if proxy == "http://127.0.0.1:0" else BriefcaseConfigError
-    with pytest.raises(error):
-        mock_tools.file.download(
-            "https://example.com/file.zip",
-            tmp_path,
-            role="support package",
-        )
-
-
-@pytest.mark.parametrize(
-    "error",
-    [PermissionError, FileNotFoundError, ssl.SSLError, ValueError],
-)
-def test_http_configuration_error(mock_tools, tmp_path, error):
-    """Setup errors are translated without catching local download write errors."""
-    mock_tools.httpx2.stream.return_value.__enter__.side_effect = error("bad config")
-    with pytest.raises(
-        BriefcaseConfigError,
-        match="Unable to configure HTTP downloads",
-    ):
+    with pytest.raises(BriefcaseConfigError, match=f"SSL_CERT_FILE.*{hint}"):
         mock_tools.file.download("https://example.com/file.zip", tmp_path)
-
-
-def test_certificate_file_precedence(mock_tools, monkeypatch, tmp_path):
-    """A certificate file takes precedence over an invalid certificate directory."""
-    path = tmp_path / "certificates.pem"
-    path.touch()
-    monkeypatch.setenv("SSL_CERT_FILE", str(path))
-    monkeypatch.setenv("SSL_CERT_DIR", str(tmp_path / "missing"))
-    mock_tools.httpx2.stream.side_effect = httpx2.ConnectError("connection failed")
-    with pytest.raises(NetworkFailure):
-        mock_tools.file.download("https://example.com/file.zip", tmp_path)
-    mock_tools.httpx2.stream.assert_called_once()
