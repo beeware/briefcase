@@ -35,8 +35,8 @@ It will also have the following keys, derived from your application's `pyproject
 The metadata may also contain the following keys, if they have been defined in your app's `pyproject.toml` configuration:
 
 - **Home-page** - [`url`][]
-- **Author** - [`author`][]
-- **Author-email** - [`author_email`][]
+- **Author** - the `name` values from [`authors`][]
+- **Author-email** - the `email` values from [`authors`][]
 
 For example, the metadata for the app constructed by the [BeeWare Tutorial](https://tutorial.beeware.org/tutorial/tutorial-1/) would contain:
 

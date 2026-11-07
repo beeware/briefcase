@@ -176,6 +176,7 @@ def test_single_author():
 
     assert briefcase_config == {
         "key": "value",
+        "authors": [{"name": "Jane Developer", "email": "jane@example.com"}],
         "author": "Jane Developer",
         "author_email": "jane@example.com",
     }
@@ -203,6 +204,7 @@ def test_multiple_authors():
 
     assert briefcase_config == {
         "key": "value",
+        "authors": [{"name": "Jane Developer", "email": "jane@example.com"}],
         "author": "Jane Developer",
         "author_email": "jane@example.com",
     }
@@ -225,6 +227,7 @@ def test_mising_author_name():
 
     assert briefcase_config == {
         "key": "value",
+        "authors": [{"email": "jane@example.com"}],
         "author_email": "jane@example.com",
     }
 
@@ -246,6 +249,7 @@ def test_missing_author_email():
 
     assert briefcase_config == {
         "key": "value",
+        "authors": [{"name": "Jane Developer"}],
         "author": "Jane Developer",
     }
 
@@ -268,6 +272,7 @@ def test_existing_author_name():
 
     assert briefcase_config == {
         "key": "value",
+        "authors": [{"name": "Jane Developer", "email": "jane@example.com"}],
         "author": "Grace Hopper",
         "author_email": "jane@example.com",
     }
@@ -291,6 +296,7 @@ def test_existing_author_email():
 
     assert briefcase_config == {
         "key": "value",
+        "authors": [{"name": "Jane Developer", "email": "jane@example.com"}],
         "author": "Jane Developer",
         "author_email": "grace@hopper.org",
     }
@@ -400,4 +406,31 @@ def test_test_dependencies_with_requires():
     assert briefcase_config == {
         "key": "value",
         "test_requires": ["dep1", "dep2", "first", "second"],
+    }
+
+
+def test_existing_authors():
+    "If authors is defined in the global config, the PEP621 value is ignored"
+    briefcase_config = {
+        "key": "value",
+        "authors": [{"name": "Grace Hopper", "email": "grace@hopper.org"}],
+    }
+
+    merge_pep621_config(
+        briefcase_config,
+        {
+            "authors": [
+                {
+                    "name": "Jane Developer",
+                    "email": "jane@example.com",
+                }
+            ]
+        },
+    )
+
+    assert briefcase_config == {
+        "key": "value",
+        "authors": [{"name": "Grace Hopper", "email": "grace@hopper.org"}],
+        "author": "Jane Developer",
+        "author_email": "jane@example.com",
     }

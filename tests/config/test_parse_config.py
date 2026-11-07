@@ -793,6 +793,7 @@ def test_pep_621_merge(tmp_path):
         "version": "1.2.3",
         "license": "MIT",
         "license_files": ["LICENSE"],
+        "authors": [{"name": "Kim Park", "email": "kim@example.com"}],
         "author": "Kim Park",
         "author_email": "kim@example.com",
         "url": "https://example.com/awesome",
@@ -1687,6 +1688,7 @@ def test_pep621_dynamic(monkeypatch, tmp_path):
     awesome = apps["awesome"]
     assert awesome == {
         "app_name": "awesome",
+        "authors": [{"name": "Kim Park", "email": "kim@example.com"}],
         "author": "Kim Park",
         "author_email": "kim@example.com",
         "bundle": "com.example",
@@ -1785,3 +1787,33 @@ def test_pep621_backend_error(monkeypatch, tmp_path):
             output_format="app",
             console=Console(),
         )
+
+
+def test_deprecated_author_config(tmp_path):
+    """Using the deprecated author settings raises a warning."""
+    config_file = create_file(
+        tmp_path / "pyproject.toml",
+        """
+        [tool.briefcase]
+        project_name = "awesome-app"
+        bundle = "com.example"
+        version = "1.2.3"
+        license = "MIT"
+        author = "Jane Developer"
+
+        [tool.briefcase.app.awesome]
+        """,
+    )
+
+    console = Mock()
+    parse_config(
+        config_file,
+        platform="macOS",
+        output_format="app",
+        console=console,
+    )
+
+    console.warning_banner.assert_called_once_with(
+        "Deprecated author configuration",
+        PartialMatchString("deprecated in favour of"),
+    )
