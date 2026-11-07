@@ -97,21 +97,9 @@ Examples of valid version strings:
 
 ### Optional values
 
-#### `author`
-
-The person or organization responsible for the project.
-
-This setting is deprecated; use [`authors`][] instead.
-
-#### `author_email`
-
-The contact email address for the person or organization responsible for the project.
-
-This setting is deprecated; use [`authors`][] instead.
-
 #### `authors`
 
-A list containing the people responsible for the project and/or the contact email address for the same people.
+A list containing the names and/or contact email addresses of people who originally created the project, in [PEP 621 format](https://packaging.python.org/en/latest/guides/writing-pyproject-toml/#authors-maintainers) for authors.
 
 ```toml
 authors = [
@@ -535,7 +523,7 @@ The following `[project]` metadata keys will be used by Briefcase if they are av
 - `name` is normalized and maps to the Briefcase [`project_name`][] setting.
 - `version` maps to the same key in Briefcase.
 - `license` and `license-files` map to the same key in Briefcase. Legacy formats for these keys will be [coerced into PEP 639 format][license-definitions].
-- `authors` The `email` and `name` keys of the first value in the `authors` setting map to [`author`][] and [`author_email`][].
+- `authors` maps to the same key in Briefcase.
 - `dependencies` maps to the Briefcase [`requires`][] setting. This is a cumulative setting; any packages defined in the [`requires`][] setting at the `[tool.briefcase]` level will be appended to the packages defined with `dependencies` at the `[project]` level.
 - `description` maps to the same key in Briefcase.
 - `test` in an `[project.optional-dependencies]` section maps to [`test_requires`][]., As with `dependencies`/[`requires`][], this is a cumulative setting.

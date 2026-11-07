@@ -71,10 +71,23 @@ def write_dist_info(app: FinalizedAppConfig, dist_info_path: Path):
             f.write(f"Download-URL: {app.url}\n")
         else:
             f.write("Download-URL: \n")
-        if app.author:
-            f.write(f"Author: {app.author}\n")
-        if app.author_email:
-            f.write(f"Author-email: {app.author_email}\n")
+
+        names = []
+        for entry in app.authors or []:
+            if entry.get("name"):
+                names.append(entry["name"])
+        author = ", ".join(names)
+
+        emails = []
+        for entry in app.authors or []:
+            if entry.get("email"):
+                emails.append(entry["email"])
+        author_email = ", ".join(emails)
+
+        if author:
+            f.write(f"Author: {author}\n")
+        if author_email:
+            f.write(f"Author-email: {author_email}\n")
         f.write(f"Summary: {app.description}\n")
     with (dist_info_path / "top_level.txt").open("w", encoding="utf-8") as f:
         f.write(f"{app.module_name}\n")
