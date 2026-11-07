@@ -15,6 +15,7 @@ import pytest
 from briefcase.exceptions import (
     BadNetworkResourceError,
     BriefcaseCommandError,
+    BriefcaseConfigError,
     CorruptContentError,
     MissingNetworkResourceError,
     NetworkFailure,
@@ -883,3 +884,20 @@ def test_malformed_expected_hash(mock_tools, expected_hash):
         )
 
     mock_tools.httpx2.stream.assert_not_called()
+
+
+@pytest.mark.parametrize(
+    ("contents", "hint"),
+    [(None, "existing CA certificate bundle"), ("invalid", "valid CA certificates")],
+    ids=["missing-file", "invalid-certificate"],
+)
+def test_invalid_certificate_file(mock_tools, monkeypatch, tmp_path, contents, hint):
+    """A missing or invalid CA bundle gives an actionable SSL_CERT_FILE error."""
+    bundle = tmp_path / "ca.pem"
+    if contents is not None:
+        bundle.write_text(contents, encoding="utf-8")
+    monkeypatch.setenv("SSL_CERT_FILE", str(bundle))
+    mock_tools.httpx2 = httpx2
+
+    with pytest.raises(BriefcaseConfigError, match=f"SSL_CERT_FILE.*{hint}"):
+        mock_tools.file.download("https://example.com/file.zip", tmp_path)

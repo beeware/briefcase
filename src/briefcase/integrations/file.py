@@ -20,6 +20,7 @@ from briefcase.constants import WINDOWS_RESERVED_WORDS
 from briefcase.exceptions import (
     BadNetworkResourceError,
     BriefcaseCommandError,
+    BriefcaseConfigError,
     CorruptContentError,
     MissingNetworkResourceError,
     NetworkFailure,
@@ -363,6 +364,17 @@ class File(Tool):
                         algorithm=algorithm,
                         digest=digest,
                     )
+        except FileNotFoundError as e:
+            raise BriefcaseConfigError(
+                f"A file required for the download could not be found: {e}\n\n"
+                "If SSL_CERT_FILE is set, check that it points to an existing "
+                "CA certificate bundle."
+            ) from e
+        except ssl.SSLError as e:
+            raise BriefcaseConfigError(
+                f"Unable to configure SSL for the download: {e}\n\n"
+                "If SSL_CERT_FILE is set, check that it contains valid CA certificates."
+            ) from e
         except httpx2.RequestError as e:
             if role:
                 description = role
@@ -395,8 +407,8 @@ class File(Tool):
                     hint = (
                         "a connection to the server could not be established due to "
                         "a certificate verification problem.\n\n"
-                        "This probably indicates an issue with a proxy configuration "
-                        "on your computer."
+                        "Check your proxy settings and the CA certificates configured "
+                        "by SSL_CERT_FILE or SSL_CERT_DIR."
                     )
                 else:
                     hint = (
@@ -409,6 +421,12 @@ class File(Tool):
                 hint = (
                     "is your computer offline?\n\n"
                     f"The reported cause of the problem was {e}"
+                )
+
+            if isinstance(e, (httpx2.ConnectError, httpx2.ProxyError)):
+                hint += (
+                    "\n\nIf you use a proxy, check HTTP_PROXY, HTTPS_PROXY, "
+                    "ALL_PROXY, and NO_PROXY."
                 )
 
             raise NetworkFailure(
