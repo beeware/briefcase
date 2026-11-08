@@ -1,11 +1,15 @@
 import pytest
 
+from ....utils import create_file
 
-@pytest.fixture
-def test_device(tmp_path):
+
+@pytest.fixture(params=["testDevice.avd", "originalDevice.avd"])
+def test_device(tmp_path, request):
     """Create an AVD configuration file."""
-    config_file = tmp_path / "home/.android/avd/testDevice.avd/config.ini"
+    avd_path = tmp_path / "home/.android/avd"
+    config_file = avd_path / request.param / "config.ini"
     config_file.parent.mkdir(parents=True)
+    create_file(avd_path / "testDevice.ini", f"path={config_file.parent}\n")
 
     # Write a default config. It contains:
     # * blank lines
@@ -87,3 +91,26 @@ skin.name=pixel_3a
 skin.path=skins/pixel_3a
 """
     )
+
+
+def test_update_relative_path(android_sdk, tmp_path):
+    """Updates go to the same directory that the emulator selects for reading."""
+    relative_config = create_file(
+        android_sdk.avd_path / "originalDevice.avd/config.ini",
+        "hw.device.name=pixel\n",
+    )
+    absolute_config = create_file(
+        tmp_path / "anotherDevice.avd/config.ini",
+        "hw.device.name=slab\n",
+    )
+    create_file(
+        android_sdk.avd_path / "testDevice.ini",
+        f"path={absolute_config.parent}\npath.rel=avd/originalDevice.avd\n",
+    )
+
+    android_sdk.update_emulator_config("testDevice", {"hw.keyboard": "yes"})
+
+    assert relative_config.read_text(encoding="utf-8") == (
+        "hw.device.name=pixel\nhw.keyboard=yes\n"
+    )
+    assert absolute_config.read_text(encoding="utf-8") == "hw.device.name=slab\n"
