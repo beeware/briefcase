@@ -20,7 +20,6 @@ from briefcase.constants import WINDOWS_RESERVED_WORDS
 from briefcase.exceptions import (
     BadNetworkResourceError,
     BriefcaseCommandError,
-    BriefcaseConfigError,
     CorruptContentError,
     MissingNetworkResourceError,
     NetworkFailure,
@@ -365,13 +364,13 @@ class File(Tool):
                         digest=digest,
                     )
         except FileNotFoundError as e:
-            raise BriefcaseConfigError(
+            raise BriefcaseCommandError(
                 f"A file required for the download could not be found: {e}\n\n"
                 "If SSL_CERT_FILE is set, check that it points to an existing "
                 "CA certificate bundle."
             ) from e
         except ssl.SSLError as e:
-            raise BriefcaseConfigError(
+            raise BriefcaseCommandError(
                 f"Unable to configure SSL for the download: {e}\n\n"
                 "If SSL_CERT_FILE is set, check that it contains valid CA certificates."
             ) from e
@@ -413,20 +412,21 @@ class File(Tool):
                 else:
                     hint = (
                         "a connection to the server could not be established.\n\n"
-                        f"The reported cause of the problem was {e}"
+                        f"The reported cause of the problem was {e}\n\n"
+                        "If you use a proxy, check HTTP_PROXY, HTTPS_PROXY, "
+                        "ALL_PROXY, and NO_PROXY."
                     )
+            elif isinstance(e, httpx2.ProxyError):
+                hint = (
+                    f"the proxy reported an error: {e}\n\n"
+                    "Please check HTTP_PROXY, HTTPS_PROXY, ALL_PROXY, and NO_PROXY."
+                )
             else:
                 # httpx2.TransportError
                 # Use the default hint for generic network communication errors
                 hint = (
                     "is your computer offline?\n\n"
                     f"The reported cause of the problem was {e}"
-                )
-
-            if isinstance(e, (httpx2.ConnectError, httpx2.ProxyError)):
-                hint += (
-                    "\n\nIf you use a proxy, check HTTP_PROXY, HTTPS_PROXY, "
-                    "ALL_PROXY, and NO_PROXY."
                 )
 
             raise NetworkFailure(
