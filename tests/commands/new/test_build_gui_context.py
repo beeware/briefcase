@@ -356,7 +356,6 @@ class {{ cookiecutter.class_name }}(QtWidgets.QMainWindow):
 
     def init_ui(self):
         self.setWindowTitle("{{ cookiecutter.app_name }}")
-        self.show()
 
 
 def main():
@@ -377,7 +376,10 @@ def main():
     QtWidgets.QApplication.setApplicationName(metadata["Formal-Name"])
 
     app = QtWidgets.QApplication(sys.argv)
-    _ = {{ cookiecutter.class_name }}()
+
+    main_window = {{ cookiecutter.class_name }}()
+    main_window.show()
+
     sys.exit(app.exec())
 """,
         "pyproject_table_briefcase_app_extra_content": """
