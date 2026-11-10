@@ -63,7 +63,7 @@ The project enforces 100% code coverage with no exceptions.
 
 Automated tooling gates MUST run before code reaches review.
 
-- Pre-commit hooks (`ruff-format`, `ruff-check`, `codespell`, `docformatter`, `trailing-whitespace`, `end-of-file-fixer`) MUST pass on every commit. Contributors MUST NOT bypass hooks via `--no-verify`.
+- Pre-commit hooks (`ruff-format`, `ruff-check`, `codespell`, `trailing-whitespace`, `end-of-file-fixer`) MUST pass on every commit. Contributors MUST NOT bypass hooks via `--no-verify`.
 - Ruff lint rules defined in `pyproject.toml` under `[tool.ruff.lint]` are the project standard. Adding new `ignore` entries requires explicit justification in the PR description.
 - Changelog entries MUST be present for *all* changes, managed via `towncrier` fragments in the `changes/` directory. Minor changes or housekeeping updates SHOULD use the `misc` fragment type, as SHOULD any bugfix or change to a feature that has not yet been part of a formal release. Snippet text MUST describe the user- facing impact of a change, not the specifics of the implementation. CI enforces this with `towncrier check`.
 - Spelling MUST be verified by `codespell`. Domain-specific terms MUST be added to the ignore list rather than disabling the check.
