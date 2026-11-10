@@ -419,7 +419,8 @@ class File(Tool):
             elif isinstance(e, httpx2.ProxyError):
                 hint = (
                     f"the proxy reported an error: {e}\n\n"
-                    "Please check HTTP_PROXY, HTTPS_PROXY, ALL_PROXY, and NO_PROXY."
+                    "Check that HTTP_PROXY, HTTPS_PROXY, ALL_PROXY, and NO_PROXY "
+                    "are set correctly."
                 )
             else:
                 # httpx2.TransportError
