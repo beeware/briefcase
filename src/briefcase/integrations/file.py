@@ -363,6 +363,17 @@ class File(Tool):
                         algorithm=algorithm,
                         digest=digest,
                     )
+        except FileNotFoundError as e:
+            raise BriefcaseCommandError(
+                f"A file required for the download could not be found: {e}\n\n"
+                "If SSL_CERT_FILE is set, check that it points to an existing "
+                "CA certificate bundle."
+            ) from e
+        except ssl.SSLError as e:
+            raise BriefcaseCommandError(
+                f"Unable to configure SSL for the download: {e}\n\n"
+                "If SSL_CERT_FILE is set, check that it contains valid CA certificates."
+            ) from e
         except httpx2.RequestError as e:
             if role:
                 description = role
@@ -395,14 +406,22 @@ class File(Tool):
                     hint = (
                         "a connection to the server could not be established due to "
                         "a certificate verification problem.\n\n"
-                        "This probably indicates an issue with a proxy configuration "
-                        "on your computer."
+                        "Check your proxy settings and the CA certificates configured "
+                        "by SSL_CERT_FILE or SSL_CERT_DIR."
                     )
                 else:
                     hint = (
                         "a connection to the server could not be established.\n\n"
-                        f"The reported cause of the problem was {e}"
+                        f"The reported cause of the problem was {e}\n\n"
+                        "If you use a proxy, check that HTTP_PROXY, HTTPS_PROXY, "
+                        "ALL_PROXY, and NO_PROXY are set correctly."
                     )
+            elif isinstance(e, httpx2.ProxyError):
+                hint = (
+                    f"the proxy reported an error: {e}\n\n"
+                    "Check that HTTP_PROXY, HTTPS_PROXY, ALL_PROXY, and NO_PROXY "
+                    "are set correctly."
+                )
             else:
                 # httpx2.TransportError
                 # Use the default hint for generic network communication errors

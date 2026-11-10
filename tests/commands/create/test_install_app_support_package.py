@@ -445,9 +445,11 @@ def test_offline_install(
     myapp,
     support_path,
     app_requirements_path_index,
+    monkeypatch,
 ):
     """If the computer is offline, an error is raised."""
-    stream_mock = create_command.tools.httpx2.stream = mock.MagicMock()
+    stream_mock = mock.MagicMock()
+    monkeypatch.setattr(create_command.tools.httpx2, "stream", stream_mock)
     stream_mock.return_value.__enter__.side_effect = httpx2.TransportError(
         "Unstable connection"
     )
