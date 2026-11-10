@@ -25,7 +25,6 @@ def test_toga_bootstrap(new_command):
     assert context == {
         "app_source": '''\
 import toga
-from toga.style.pack import COLUMN, ROW
 
 
 class {{ cookiecutter.class_name }}(toga.App):
@@ -378,7 +377,7 @@ def main():
     QtWidgets.QApplication.setApplicationName(metadata["Formal-Name"])
 
     app = QtWidgets.QApplication(sys.argv)
-    main_window = {{ cookiecutter.class_name }}()
+    _ = {{ cookiecutter.class_name }}()
     sys.exit(app.exec())
 """,
         "pyproject_table_briefcase_app_extra_content": """

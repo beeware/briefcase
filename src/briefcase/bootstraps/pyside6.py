@@ -40,7 +40,7 @@ def main():
     QtWidgets.QApplication.setApplicationName(metadata["Formal-Name"])
 
     app = QtWidgets.QApplication(sys.argv)
-    main_window = {{ cookiecutter.class_name }}()
+    _ = {{ cookiecutter.class_name }}()
     sys.exit(app.exec())
 """
 
