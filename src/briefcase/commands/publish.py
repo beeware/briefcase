@@ -78,9 +78,14 @@ class PublishCommand(BaseCommand):
         state = None
 
         # Annotate the packaging format onto the app. If no packaging format was
-        # specified, the format determined during app finalization is used.
-        if packaging_format:  # pragma: no branch
+        # specified, the format determined during app finalization is used; if
+        # finalization didn't determine a format, the attribute is created
+        # with a `None` value so the backend can apply its own default during
+        # app verification.
+        if packaging_format:
             app.packaging_format = packaging_format
+        else:
+            app.setdefault("packaging_format", None)
 
         if update or not self.distribution_path(app).exists():
             state = self.package_command(

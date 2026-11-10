@@ -1082,6 +1082,19 @@ def test_package_app_no_packaging_format(package_command, first_app):
     assert first_app.packaging_format == "pkg"
 
 
+def test_package_app_unresolved_packaging_format(package_command, first_app):
+    """If no packaging format is specified, and finalization didn't determine one, the
+    packaging format is annotated as unresolved."""
+    # The app has been finalized without determining a packaging format
+    assert not hasattr(first_app, "packaging_format")
+
+    package_command._package_app(first_app, update=False, packaging_format=None)
+
+    # The packaging format exists, but is left unresolved for the backend to
+    # default during app verification.
+    assert first_app.packaging_format is None
+
+
 def test_package_app_explicit_packaging_format(package_command, first_app):
     """An explicitly specified packaging format is annotated onto the app."""
     # The app has been finalized with a concrete packaging format

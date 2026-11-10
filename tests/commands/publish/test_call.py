@@ -237,6 +237,45 @@ def test_publish_passes_packaging_format_to_package(
     assert package_actions[0][2]["packaging_format"] == "Dummy"
 
 
+def test_publish_app_no_packaging_format(publish_command, first_app):
+    """If no packaging format is specified, the finalized packaging format on the app is
+    retained."""
+    # The app has been finalized with a concrete packaging format
+    first_app.packaging_format = "deb"
+
+    publish_command._publish_app(
+        first_app,
+        update=False,
+        packaging_format=None,
+        channel=_make_channel_class("s3")(),
+    )
+
+    # The finalized packaging format was not modified
+    assert first_app.packaging_format == "deb"
+    # The app was published to the channel
+    assert ("publish", "first", "s3", {}) in publish_command.actions
+
+
+def test_publish_app_unresolved_packaging_format(publish_command, first_app):
+    """If no packaging format is specified, and finalization didn't determine one, the
+    packaging format is annotated as unresolved."""
+    # The app has been finalized without determining a packaging format
+    assert not hasattr(first_app, "packaging_format")
+
+    publish_command._publish_app(
+        first_app,
+        update=False,
+        packaging_format=None,
+        channel=_make_channel_class("s3")(),
+    )
+
+    # The packaging format exists, but is left unresolved for the backend to
+    # default during app verification.
+    assert first_app.packaging_format is None
+    # The app was published to the channel
+    assert ("publish", "first", "s3", {}) in publish_command.actions
+
+
 def test_non_existent(publish_command, first_app_config, second_app):
     """Publishing an app that hasn't been created cascades through packaging."""
     # Add two apps; use the "config only" version of the first app.
