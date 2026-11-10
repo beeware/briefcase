@@ -724,7 +724,7 @@ def test_proxy_error(mock_tools):
 
     message = str(exc_info.value)
     assert "407 Proxy Authentication Required" in message
-    assert "check HTTP_PROXY, HTTPS_PROXY, ALL_PROXY, and NO_PROXY" in message
+    assert "HTTP_PROXY, HTTPS_PROXY, ALL_PROXY, and NO_PROXY" in message
     assert "is your computer offline?" not in message
 
 
