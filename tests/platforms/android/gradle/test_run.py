@@ -10,6 +10,7 @@ from unittest import mock
 import httpx2
 import pytest
 
+from briefcase.config import GlobalConfig
 from briefcase.console import LogLevel
 from briefcase.debuggers.base import BaseDebugger, DebuggerConnectionMode
 from briefcase.exceptions import BriefcaseCommandError
@@ -55,6 +56,14 @@ def run_command(dummy_console, tmp_path, first_app_config, jdk):
     command.tools.sys = mock.MagicMock(spec_set=sys)
 
     command._stream_app_logs = mock.MagicMock()
+
+    # In real use, __main__ parses the config before the command runs,
+    # so global_config is always a GlobalConfig.
+    command.global_config = GlobalConfig(
+        project_name="Tester",
+        version="0.0.1",
+        bundle="org.beeware",
+    )
 
     return command
 

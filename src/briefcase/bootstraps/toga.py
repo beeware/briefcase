@@ -48,10 +48,9 @@ test_requires = [
 
     def pyproject_table_macOS(self):
         return """\
-universal_build = true
 requires = [
     "toga-cocoa~=0.5.0",
-    "std-nslog~=2.0.0",
+    "std-nslog~=2.0.0; python_version < '3.14'",
 ]
 """
 

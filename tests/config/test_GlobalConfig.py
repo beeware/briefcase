@@ -82,6 +82,7 @@ def test_minimal_GlobalConfig():
     assert config.author is None
     assert config.author_email is None
     assert config.requires_python is None
+    assert config.default_app is None
 
     assert repr(config) == "<My Project v1.2.3 GlobalConfig>"
 
@@ -100,6 +101,7 @@ def test_extra_attrs():
         license="MIT",
         license_files=["LICENSE"],
         requires_python=">=3.12",
+        default_app="second",
     )
 
     # The basic properties have been set.
@@ -112,6 +114,7 @@ def test_extra_attrs():
     assert config.license == "MIT"
     assert config.license_files == ["LICENSE"]
     assert config.requires_python == ">=3.12"
+    assert config.default_app == "second"
 
     # Explicit additional properties have been set
     assert config.first == "value 1"

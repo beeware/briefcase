@@ -158,7 +158,19 @@ class AndroidSDK(ManagedTool):
         return self.dot_android_path / "avd"
 
     def avd_config_filename(self, avd: str) -> Path:
-        return self.avd_path / f"{avd}.avd/config.ini"
+        metadata = self._read_avd_config(avd, self.avd_path / f"{avd}.ini")
+
+        # Match the emulator's preference for a valid relative path. Android Studio
+        # can rename an AVD without renaming its content directory.
+        if relative_path := metadata.get("path.rel"):
+            avd_dir = self.dot_android_path / relative_path
+            if avd_dir.is_dir():
+                return avd_dir / "config.ini"
+
+        if absolute_path := metadata.get("path"):
+            return Path(absolute_path) / "config.ini"
+
+        raise BriefcaseCommandError(f"Unable to read configuration of AVD @{avd}")
 
     @property
     def env(self) -> dict[str, str]:
@@ -1270,10 +1282,14 @@ In future, you can specify this device by running:
 
         :params avd: The AVD whose config will be retrieved
         """
+        return self._read_avd_config(avd, self.avd_config_filename(avd))
+
+    def _read_avd_config(self, avd: str, path: Path) -> dict[str, str]:
+        """Read an AVD metadata or configuration file as key-value pairs."""
         # Parse the existing config into key-value pairs
         avd_config = {}
         try:
-            with self.avd_config_filename(avd).open("r", encoding="utf-8") as f:
+            with path.open("r", encoding="utf-8") as f:
                 for line in f:
                     try:
                         key, value = line.rstrip().split("=", 1)
