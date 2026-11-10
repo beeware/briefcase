@@ -413,8 +413,8 @@ class File(Tool):
                     hint = (
                         "a connection to the server could not be established.\n\n"
                         f"The reported cause of the problem was {e}\n\n"
-                        "If you use a proxy, check HTTP_PROXY, HTTPS_PROXY, "
-                        "ALL_PROXY, and NO_PROXY."
+                        "If you use a proxy, check that HTTP_PROXY, HTTPS_PROXY, "
+                        "ALL_PROXY, and NO_PROXY are set correctly."
                     )
             elif isinstance(e, httpx2.ProxyError):
                 hint = (
