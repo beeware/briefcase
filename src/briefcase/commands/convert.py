@@ -296,7 +296,7 @@ class ConvertCommand(NewCommand):
 
         :returns: The project
         """
-        options = list(self.pep621_data.get("urls", {}).values())
+        options = list(dict.fromkeys(self.pep621_data.get("urls", {}).values()))
 
         if not options or override_value:
             default = self.make_project_url("com.example", app_name)
@@ -388,11 +388,13 @@ class ConvertCommand(NewCommand):
             "This could be your own name, or the name of your company you work for."
         )
 
-        options = [
-            author["name"]
-            for author in self.pep621_data.get("authors", [])
-            if "name" in author
-        ]
+        options = list(
+            dict.fromkeys(
+                author["name"]
+                for author in self.pep621_data.get("authors", [])
+                if "name" in author
+            )
+        )
 
         default_author = "Jane Developer"
         if not options or override_value is not None:

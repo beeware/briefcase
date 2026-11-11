@@ -73,6 +73,38 @@ def test_single_pep621_author(convert_command, monkeypatch):
     )
 
 
+def test_duplicate_pep621_authors(convert_command, monkeypatch):
+    """Duplicate author names in PEP 621 authors are de-duplicated in options."""
+    mock_selection_question = MagicMock()
+    mock_selection_question.return_value = "Jane Developer"
+    monkeypatch.setattr(
+        convert_command.console, "selection_question", mock_selection_question
+    )
+
+    (convert_command.base_path / "pyproject.toml").write_text(
+        "[project]\n"
+        "authors = [\n"
+        '    {name="Jane Developer", email="jane@work.com"},\n'
+        '    {name="Jane Developer", email="jane@personal.com"},\n'
+        "]",
+        encoding="utf-8",
+    )
+    convert_command.input_author(None)
+
+    mock_selection_question.assert_called_once_with(
+        intro=PartialMatchString(
+            "We found these author names in the PEP621 formatted 'pyproject.toml'."
+        ),
+        description="Author",
+        options=[
+            "Jane Developer",
+            "Other",
+        ],
+        default="Jane Developer",
+        override_value=None,
+    )
+
+
 def test_multiple_pep621_authors_select_other(convert_command, monkeypatch):
     """If you select "Other", then you can type in a name."""
     mock_selection_question = MagicMock()

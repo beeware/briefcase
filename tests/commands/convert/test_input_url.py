@@ -105,3 +105,35 @@ def test_prompted_url(convert_command):
     assert (
         convert_command.input_url("some-name", None) == "https://example.com/some-name"
     )
+
+
+def test_duplicate_pep621_urls(convert_command, monkeypatch):
+    """Duplicate URLs in PEP 621 urls are de-duplicated in options."""
+    mock_selection_question = MagicMock()
+    mock_selection_question.return_value = "https://github.com/rmartin16/qbittorrentui"
+    monkeypatch.setattr(
+        convert_command.console, "selection_question", mock_selection_question
+    )
+
+    (convert_command.base_path / "pyproject.toml").write_text(
+        "[project.urls]\n"
+        'Homepage="https://github.com/rmartin16/qbittorrentui"\n'
+        'Repository="https://github.com/rmartin16/qbittorrentui"\n'
+        'Documentation="https://github.com/rmartin16/qbittorrentui"',
+        encoding="utf-8",
+    )
+    convert_command.input_url("some-name", None)
+    mock_selection_question.assert_called_once_with(
+        intro=(
+            "What website URL do you want to use for this application? The "
+            "following URLs are defined in your existing 'pyproject.toml'; "
+            "select 'Other' to provide a different URL."
+        ),
+        description="Application URL",
+        default="https://github.com/rmartin16/qbittorrentui",
+        options=[
+            "https://github.com/rmartin16/qbittorrentui",
+            "Other",
+        ],
+        override_value=None,
+    )
