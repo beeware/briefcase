@@ -781,14 +781,13 @@ def normalize_config(
         been normalized.
     :returns: The normalized dictionary.
     """
-    if normalized is not None and id(data) in normalized:
+    if normalized is None:
+        normalized = set()
+    elif id(data) in normalized:
         return data
 
     keys = list(data.keys())
     for key in keys:
-        if key.startswith("_"):
-            continue
-
         if "-" in key:
             underscore_key = key.replace("-", "_")
             if underscore_key in data:
@@ -810,9 +809,7 @@ def normalize_config(
                     f"use {hyphen_key!r} instead."
                 )
 
-    if normalized is not None:
-        normalized.add(id(data))
-
+    normalized.add(id(data))
     return data
 
 

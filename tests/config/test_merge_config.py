@@ -279,3 +279,10 @@ def test_normalize_config_idempotent():
     normalize_config(data, console=console, normalized=normalized)
     assert console.warning.call_count == 1
     assert data["formal_name"] == "My App"
+
+
+def test_normalize_config_without_normalized_set():
+    """normalize_config can be called directly without passing normalized."""
+    data = {"formal-name": "My App"}
+    res = normalize_config(data)
+    assert res == {"formal_name": "My App"}
