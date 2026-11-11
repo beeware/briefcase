@@ -40,6 +40,8 @@ Each setting can be specified:
 
 When building an application in a particular output format, Briefcase will look for settings in the same order. For example, if you're building a macOS DMG for an application called `myapp`, Briefcase will look for macOS DMG settings for `myapp`, then for macOS settings for `myapp`, then for `myapp` settings, then for project-level settings.
 
+Multi-word Briefcase configuration setting names prefer hyphens (e.g., `test-requires`, `cleanup-paths`, `formal-name`) rather than underscores. Underscore-separated setting names are accepted for backwards compatibility, but emit a deprecation warning.
+
 ### `[tool.briefcase]`
 
 The base `[tool.briefcase]` section declares settings that project specific, or are common to all applications in this repository.

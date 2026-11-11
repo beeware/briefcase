@@ -1,3 +1,5 @@
+from unittest.mock import Mock
+
 import pytest
 
 from briefcase.config import merge_pep621_config
@@ -401,3 +403,65 @@ def test_test_dependencies_with_requires():
         "key": "value",
         "test_requires": ["dep1", "dep2", "first", "second"],
     }
+
+
+def test_requires_python_underscore_warning():
+    """If PEP 621 config specifies requires_python with underscore, warn and merge."""
+    briefcase_config = {"key": "value"}
+    console = Mock()
+
+    merge_pep621_config(
+        briefcase_config,
+        {"requires_python": ">=3.10"},
+        console=console,
+    )
+
+    assert briefcase_config == {
+        "key": "value",
+        "requires_python": ">=3.10",
+    }
+    console.warning.assert_called_once_with(
+        "Configuration setting 'requires_python' is deprecated; "
+        "use 'requires-python' instead."
+    )
+
+
+def test_requires_python_conflict():
+    """If PEP 621 config specifies both forms of requires-python, raise an error."""
+    briefcase_config = {"key": "value"}
+
+    with pytest.raises(
+        BriefcaseConfigError,
+        match=(
+            r"Configuration specifies both 'requires-python' and 'requires_python'; "
+            r"use 'requires-python'\."
+        ),
+    ):
+        merge_pep621_config(
+            briefcase_config,
+            {
+                "requires-python": ">=3.10",
+                "requires_python": ">=3.11",
+            },
+        )
+
+
+def test_optional_dependencies_underscore_warning():
+    """If PEP 621 config specifies optional_dependencies with underscore, warn."""
+    briefcase_config = {"key": "value"}
+    console = Mock()
+
+    merge_pep621_config(
+        briefcase_config,
+        {"optional_dependencies": {"test": ["pytest"]}},
+        console=console,
+    )
+
+    assert briefcase_config == {
+        "key": "value",
+        "test_requires": ["pytest"],
+    }
+    console.warning.assert_called_once_with(
+        "Configuration setting 'optional_dependencies' is deprecated; "
+        "use 'optional-dependencies' instead."
+    )

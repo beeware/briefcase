@@ -1785,3 +1785,136 @@ def test_pep621_backend_error(monkeypatch, tmp_path):
             output_format="app",
             console=Console(),
         )
+
+
+def test_hyphenated_settings_normalized(tmp_path):
+    """Hyphenated settings are preferred and properly normalized without warnings."""
+    (tmp_path / "LICENSE").write_text("MIT License text", encoding="utf-8")
+    config_file = create_file(
+        tmp_path / "pyproject.toml",
+        """
+        [project]
+        name = "my-app"
+        version = "1.2.3"
+        description = "My Application"
+        requires-python = ">=3.10"
+        license = "MIT"
+        license-files = ["LICENSE"]
+
+        [tool.briefcase]
+        project-name = "My App"
+        bundle = "com.example"
+        author-email = "dev@example.com"
+
+        [tool.briefcase.app.my_app]
+        formal-name = "My Formal App"
+        test-requires = ["pytest"]
+        cleanup-paths = ["build"]
+
+        [tool.briefcase.app.my_app.macOS]
+        test-sources = ["tests/mac"]
+        """,
+    )
+
+    console = Mock()
+    global_options, apps = parse_config(
+        config_file,
+        platform="macOS",
+        output_format="app",
+        console=console,
+    )
+
+    assert global_options["project_name"] == "My App"
+    assert global_options["author_email"] == "dev@example.com"
+    assert global_options["requires_python"] == ">=3.10"
+
+    app = apps["my_app"]
+    assert app["formal_name"] == "My Formal App"
+    assert app["test_requires"] == ["pytest"]
+    assert app["cleanup_paths"] == ["build"]
+    assert app["test_sources"] == ["tests/mac"]
+    console.warning.assert_not_called()
+
+
+def test_underscore_setting_emits_warning(tmp_path):
+    """Underscore settings emit deprecation warnings when parsed."""
+    (tmp_path / "LICENSE").write_text("MIT License text", encoding="utf-8")
+    config_file = create_file(
+        tmp_path / "pyproject.toml",
+        """
+        [project]
+        name = "my-app"
+        version = "1.2.3"
+        description = "My Application"
+        requires_python = ">=3.10"
+        license = "MIT"
+        license-files = ["LICENSE"]
+
+        [tool.briefcase]
+        project_name = "My App"
+        bundle = "com.example"
+
+        [tool.briefcase.app.my_app]
+        formal_name = "My Formal App"
+        """,
+    )
+
+    console = Mock()
+    parse_config(
+        config_file,
+        platform="macOS",
+        output_format="app",
+        console=console,
+    )
+
+    assert console.warning.call_count == 3
+    warning_msgs = [call.args[0] for call in console.warning.call_args_list]
+    assert (
+        "Configuration setting 'requires_python' is deprecated; "
+        "use 'requires-python' instead." in warning_msgs
+    )
+    assert (
+        "Configuration setting 'project_name' is deprecated; "
+        "use 'project-name' instead." in warning_msgs
+    )
+    assert (
+        "Configuration setting 'formal_name' is deprecated; "
+        "use 'formal-name' instead." in warning_msgs
+    )
+
+
+def test_conflicting_settings_in_section(tmp_path):
+    """Specifying both hyphen and underscore forms in a section raises error."""
+    config_file = create_file(
+        tmp_path / "pyproject.toml",
+        """
+        [project]
+        name = "my-app"
+        version = "1.2.3"
+        description = "My Application"
+        license = "MIT"
+        license-files = ["LICENSE"]
+
+        [tool.briefcase]
+        bundle = "com.example"
+
+        [tool.briefcase.app.my_app]
+        formal-name = "Formal A"
+        formal_name = "Formal B"
+        """,
+    )
+
+    console = Mock()
+    with pytest.raises(
+        BriefcaseConfigError,
+        match=(
+            r"Configuration specifies both 'formal-name' and 'formal_name'; "
+            r"use 'formal-name'\."
+        ),
+    ):
+        parse_config(
+            config_file,
+            platform="macOS",
+            output_format="app",
+            console=console,
+        )
