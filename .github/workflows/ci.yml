@@ -136,6 +136,9 @@ jobs:
             python-version: "3.13"
           - platform: "ubuntu-24.04"
             python-version: "3.14"
+          # Also test the in-development Python
+          - platform: "ubuntu-24.04"
+            python-version: "3.16"
     steps:
     - name: Checkout
       uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1  # v7.0.1
