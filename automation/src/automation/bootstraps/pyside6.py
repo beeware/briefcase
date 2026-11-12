@@ -63,10 +63,10 @@ def main():
         # for details.
         return """\
 universal_build = true
-# Pyside 6.10 (required for Python 3.14 support) enforces a macOS 13 minimum.
-min_os_version = "13.0"
+# Pyside 6.12 (required for Python 3.15 support) enforces a macOS 14 minimum.
+min_os_version = "14.0"
 requires = [
-    "PySide6-Addons~=6.8",
+    "PySide6-Addons~=6.12",
     "std-nslog~=2.0.0",
 ]
 """
