@@ -206,10 +206,14 @@ class File(Tool):
 
     @property
     def supported_archive_extensions(self) -> set[str]:
+        # Explicitly exclude wheels, even though they're in the supported list
+        # for unpacking in Python 3.16+. If we have a wheel, it needs to be
+        # installed, not unpacked.
         return {
             extension
             for archive_format in shutil.get_unpack_formats()
             for extension in archive_format[1]
+            if archive_format[0] != "whl"
         }
 
     def unpack_archive(
