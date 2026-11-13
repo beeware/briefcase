@@ -79,8 +79,7 @@ def test_minimal_GlobalConfig():
     assert config.url is None
     assert config.license is None
     assert config.license_files == []
-    assert config.author is None
-    assert config.author_email is None
+    assert config.authors is None
     assert config.requires_python is None
     assert config.default_app is None
 
