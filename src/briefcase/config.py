@@ -123,6 +123,11 @@ def validate_url(candidate):
     :returns: True. If there are any validation problems, raises ValueError with a
         diagnostic message.
     """
+    # The candidate has to be a string. Convert any non-string into an empty string
+    # which will then trigger "bad URL" behavior
+    if not isinstance(candidate, str):
+        candidate = ""
+
     result = urlparse(candidate)
     if not all([result.scheme, result.netloc]):
         raise ValueError("Not a valid URL!")
