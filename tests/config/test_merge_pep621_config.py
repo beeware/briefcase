@@ -153,9 +153,7 @@ def test_empty_authors():
         {"authors": []},
     )
 
-    assert briefcase_config == {
-        "key": "value",
-    }
+    assert briefcase_config == {"key": "value", "authors": []}
 
 
 def test_single_author():
@@ -177,13 +175,11 @@ def test_single_author():
     assert briefcase_config == {
         "key": "value",
         "authors": [{"name": "Jane Developer", "email": "jane@example.com"}],
-        "author": "Jane Developer",
-        "author_email": "jane@example.com",
     }
 
 
 def test_multiple_authors():
-    "If there are multiple authors, the first author is recorded"
+    "If there are multiple authors, all of them are recorded"
     briefcase_config = {"key": "value"}
 
     merge_pep621_config(
@@ -204,9 +200,10 @@ def test_multiple_authors():
 
     assert briefcase_config == {
         "key": "value",
-        "authors": [{"name": "Jane Developer", "email": "jane@example.com"}],
-        "author": "Jane Developer",
-        "author_email": "jane@example.com",
+        "authors": [
+            {"name": "Jane Developer", "email": "jane@example.com"},
+            {"name": "John Assistant", "email": "john@somewhere.com"},
+        ],
     }
 
 
@@ -228,7 +225,6 @@ def test_mising_author_name():
     assert briefcase_config == {
         "key": "value",
         "authors": [{"email": "jane@example.com"}],
-        "author_email": "jane@example.com",
     }
 
 
@@ -250,7 +246,6 @@ def test_missing_author_email():
     assert briefcase_config == {
         "key": "value",
         "authors": [{"name": "Jane Developer"}],
-        "author": "Jane Developer",
     }
 
 
@@ -272,9 +267,7 @@ def test_existing_author_name():
 
     assert briefcase_config == {
         "key": "value",
-        "authors": [{"name": "Jane Developer", "email": "jane@example.com"}],
-        "author": "Grace Hopper",
-        "author_email": "jane@example.com",
+        "authors": [{"name": "Grace Hopper"}],
     }
 
 
@@ -296,9 +289,7 @@ def test_existing_author_email():
 
     assert briefcase_config == {
         "key": "value",
-        "authors": [{"name": "Jane Developer", "email": "jane@example.com"}],
-        "author": "Jane Developer",
-        "author_email": "grace@hopper.org",
+        "authors": [{"email": "grace@hopper.org"}],
     }
 
 
@@ -431,6 +422,4 @@ def test_existing_authors():
     assert briefcase_config == {
         "key": "value",
         "authors": [{"name": "Grace Hopper", "email": "grace@hopper.org"}],
-        "author": "Jane Developer",
-        "author_email": "jane@example.com",
     }

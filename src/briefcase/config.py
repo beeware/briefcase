@@ -472,7 +472,7 @@ class AppConfig(BaseConfig):
     sources: list[str] | None
     formal_name: str
     url: str | None
-    authors: list[dict] | None
+    authors: list[dict[str, str]] | None
     requires: list[str] | None
     icon: str | None
     document_types: dict
@@ -1376,26 +1376,51 @@ def warn_invalid_legacy_project_name(global_config, console):
         )
 
 
-def warn_deprecated_author_config(global_config, console):
-    """Warn if author or author_email is used instead of authors."""
+def handle_deprecated_author_config(global_config, console):
+    """Warn about, and coerce, the deprecated `author`/`author_email` settings."""
     if not {"author", "author_email"} & global_config.keys():
         return
 
+    author = global_config.pop("author", None)
+    author_email = global_config.pop("author_email", None)
+
+    if "authors" in global_config and (author or author_email):
+        raise BriefcaseConfigError(
+            "The configuration defines both `authors` and the deprecated "
+            "`author`/`author_email` settings. Remove the deprecated settings "
+            "and use `authors` alone."
+        )
+
+    fields = []
+    if author:
+        fields.append(f'name = "{author}"')
+    if author_email:
+        fields.append(f'email = "{author_email}"')
+
     console.warning_banner(
         "Deprecated author configuration",
-        """
+        f"""
             The `author` and `author_email` settings are deprecated in favour of
             `authors`.
 
             Update your configuration to use `authors`:
 
                 authors = [
-                    {name = "Jane Developer", email = "jane@example.com"},
+                    {{{", ".join(fields)}}},
                 ]
 
             See https://briefcase.beeware.org/en/latest/reference/configuration/#authors
         """,
     )
+
+    # Coerce the historical settings into the PEP 621 `authors` representation.
+    if "authors" not in global_config and (author or author_email):
+        entry = {}
+        if author:
+            entry["name"] = author
+        if author_email:
+            entry["email"] = author_email
+        global_config["authors"] = [entry]
 
 
 def parse_config(config_file: Path, platform, output_format, console):
@@ -1440,9 +1465,9 @@ def parse_config(config_file: Path, platform, output_format, console):
     except KeyError as e:
         raise BriefcaseConfigError("No tool.briefcase section in pyproject.toml") from e
 
-    # Must run before the PEP 621 merge, which removes the historical
-    # `author`/`author_email` settings once they have been coerced.
-    warn_deprecated_author_config(global_config, console)
+    # Must run before the PEP 621 merge, so the coerced `authors` value takes
+    # precedence over any `[project]` definition.
+    handle_deprecated_author_config(global_config, console)
 
     # Merge the PEP621 configuration (if it exists)
     try:
