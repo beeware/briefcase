@@ -1391,11 +1391,15 @@ def handle_deprecated_author_config(global_config, console):
             "and use `authors` alone."
         )
 
-    fields = []
+    # Coerce the historical settings into the PEP 621 `authors` representation.
+    entry = {}
     if author:
-        fields.append(f'name = "{author}"')
+        entry["name"] = author
     if author_email:
-        fields.append(f'email = "{author_email}"')
+        entry["email"] = author_email
+    global_config["authors"] = [entry]
+
+    inline_table = ", ".join(f'{key} = "{value}"' for key, value in entry.items())
 
     console.warning_banner(
         "Deprecated author configuration",
@@ -1406,21 +1410,12 @@ def handle_deprecated_author_config(global_config, console):
             Update your configuration to use `authors`:
 
                 authors = [
-                    {{{", ".join(fields)}}},
+                    {{{inline_table}}},
                 ]
 
             See https://briefcase.beeware.org/en/latest/reference/configuration/#authors
         """,
     )
-
-    # Coerce the historical settings into the PEP 621 `authors` representation.
-    if "authors" not in global_config and (author or author_email):
-        entry = {}
-        if author:
-            entry["name"] = author
-        if author_email:
-            entry["email"] = author_email
-        global_config["authors"] = [entry]
 
 
 def parse_config(config_file: Path, platform, output_format, console):

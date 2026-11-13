@@ -5,6 +5,7 @@ import re
 import subprocess
 import tarfile
 from collections.abc import Collection
+from email.utils import formataddr
 from pathlib import Path
 from typing import cast
 
@@ -1033,6 +1034,12 @@ class LinuxSystemDevCommand(LinuxSystemMixin, DevCommand):
         super().install_dev_requirements(app, venv, **options)
 
 
+def maintainer(app):
+    """The primary author of an app, formatted as an RFC 822 address."""
+    entry = (app.authors or [{}])[0]
+    return formataddr((entry.get("name", ""), entry.get("email", "")))
+
+
 def debian_multiline_description(description):
     """Generate a Debian multiline description string.
 
@@ -1367,7 +1374,7 @@ class LinuxSystemPackageCommand(
                             f"Package: {app.bundle_name}",
                             f"Version: {app.version}",
                             f"Architecture: {self.deb_abi(app)}",
-                            f"Maintainer: {app.author} <{app.author_email}>",
+                            f"Maintainer: {maintainer(app)}",
                             f"Homepage: {app.url}",
                             f"Description: {app.description}",
                             f" {debian_multiline_description(app.long_description)}",
@@ -1650,8 +1657,8 @@ no extension).
                 f.write(
                     "\n".join(
                         [
-                            f"# Maintainer: {app.author} <{app.author_email}>",
-                            f'export PACKAGER="{app.author} <{app.author_email}>"',
+                            f"# Maintainer: {maintainer(app)}",
+                            f'export PACKAGER="{maintainer(app)}"',
                             f"pkgname={app.app_name}",
                             f"pkgver={app.version}",
                             f"pkgrel={getattr(app, 'revision', 1)}",
