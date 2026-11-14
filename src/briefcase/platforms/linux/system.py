@@ -88,7 +88,7 @@ class LinuxSystemMixin(LinuxMixin):
         return self.project_path(app)
 
     def rpm_tag(self, app):
-        if app.target_vendor == "fedora":
+        if app.target_vendor in {"fedora", "nobara"}:
             return f"fc{app.target_codename}"
         else:
             return f"el{app.target_codename}"
