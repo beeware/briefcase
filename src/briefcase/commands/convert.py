@@ -378,8 +378,7 @@ class ConvertCommand(NewCommand):
         )
 
     def input_author(self, override_value: str | None) -> str:
-        """Ask about the author name, using hints from the pyproject.toml file if there
-        are any.
+        """Ask about the author name.
 
         :returns: author name
         """
@@ -388,67 +387,25 @@ class ConvertCommand(NewCommand):
             "This could be your own name, or the name of your company you work for."
         )
 
-        options = [
-            author["name"]
-            for author in self.pep621_data.get("authors", [])
-            if "name" in author
-        ]
-
         default_author = "Jane Developer"
-        if not options or override_value is not None:
-            git_username = self.get_git_config_value("user", "name")
-            if git_username is not None:
-                default_author = git_username
-                intro = (
-                    f"{intro}\n\n"
-                    f"Based on your git configuration,"
-                    f" we believe it could be '{git_username}'."
-                )
-
-            return self.console.text_question(
-                intro=intro,
-                description="Author",
-                default=default_author,
-                override_value=override_value,
-            )
-        elif len(options) > 1:
-            # Add a line with all authors joined: E.g. 'Jane Developer & Joe Developer'
-            # and a line with Other
-            options.append(", ".join(options[:-1]) + f" & {options[-1]}")
-
-        options.append("Other")
-
-        # We want to use text_question if override_value is provided or if the selected
-        # author is "Other". However, since we don't want the selection_question prompt
-        # if an override value is provided, we need to initialise the author variable
-        # here.
-        author = self.console.selection_question(
-            intro=(
+        git_username = self.get_git_config_value("user", "name")
+        if git_username is not None:
+            default_author = git_username
+            intro = (
                 f"{intro}\n\n"
-                "We found these author names in the PEP621 formatted "
-                "'pyproject.toml'. Who do you want to be credited as the author of "
-                "this application?"
-            ),
-            description="Author",
-            options=options,
-            default=options[0],
-            override_value=None,
-        )
-        if author == "Other":
-            author = self.console.text_question(
-                intro=(
-                    "Who do you want to be credited as the author of this application?"
-                ),
-                description="Author",
-                default=default_author,
-                override_value=None,
+                f"Based on your git configuration,"
+                f" we believe it could be '{git_username}'."
             )
 
-        return author
+        return self.console.text_question(
+            intro=intro,
+            description="Author",
+            default=default_author,
+            override_value=override_value,
+        )
 
     def input_email(self, author: str, bundle: str, override_value: str | None) -> str:
-        """Ask about the author email, using hints from the pyproject.toml file if there
-        are any.
+        """Ask about the author email.
 
         :returns: author email
         """
@@ -459,11 +416,6 @@ class ConvertCommand(NewCommand):
         else:
             default = git_email
             default_source = "your git configuration"
-
-        for author_info in self.pep621_data.get("authors", []):
-            if author_info.get("name") == author and author_info.get("email"):
-                default = author_info["email"]
-                default_source = "the selected author name"
 
         intro = (
             "What email address should people use to contact the developers of this "
