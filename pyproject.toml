@@ -112,11 +112,11 @@ towncrier = [
 ]
 
 tox-uv = [
-    "tox-uv == 1.37.3",
+    "tox-uv == 1.37.7",
 ]
 
 ty = [
-    "ty == 0.0.95",
+    "ty == 0.0.99",
 ]
 
 dev = [
@@ -126,7 +126,7 @@ dev = [
 ]
 
 test = [
-    "coverage[toml] == 7.17.0",
+    "coverage[toml] == 7.17.2",
     "coverage-conditional-plugin == 0.9.0",
     "pytest == 9.2.0",
     "pytest-xdist == 3.8.0",
