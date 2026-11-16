@@ -51,6 +51,34 @@ VARIANT="Container Image"
 VARIANT_ID=container
 """,
     #######################################################
+    # Nobara 44
+    #######################################################
+    "nobara:44": """\
+NAME="Nobara Linux"
+VERSION="44 (KDE Plasma Desktop Edition)"
+ID=nobara
+ID_LIKE="rhel centos fedora"
+VERSION_ID=44
+VERSION_CODENAME=""
+PLATFORM_ID="platform:f44"
+PRETTY_NAME="Nobara Linux 44 (KDE Plasma Desktop Edition)"
+ANSI_COLOR="0;38;2;60;110;180"
+LOGO=nobara-logo-icon
+CPE_NAME="cpe:/o:nobaraproject:nobara:44"
+DEFAULT_HOSTNAME="nobara"
+HOME_URL="https://nobaraproject.org/"
+DOCUMENTATION_URL="https://wiki.nobaraproject.org/"
+SUPPORT_URL="https://www.nobaraproject.org/"
+BUG_REPORT_URL="https://github.com/nobara-project/rpm-baseos"
+REDHAT_BUGZILLA_PRODUCT="Nobara"
+REDHAT_BUGZILLA_PRODUCT_VERSION=44
+REDHAT_SUPPORT_PRODUCT="Nobara"
+REDHAT_SUPPORT_PRODUCT_VERSION=44
+SUPPORT_END=2026-12-02
+VARIANT="KDE Plasma Desktop Edition"
+VARIANT_ID=kde
+""",
+    #######################################################
     # AlmaLinux 9.1
     #######################################################
     "almalinux:9.1": """\
