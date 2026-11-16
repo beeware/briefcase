@@ -72,18 +72,113 @@ def test_binary_path(create_command, first_app_config, tmp_path):
 
 
 @pytest.mark.parametrize(
-    ("packaging_format", "vendor_base", "filename"),
+    ("packaging_format", "vendor", "vendor_base", "filename"),
     [
-        ("deb", "debian", "first-app_0.0.1-1~somevendor-surprising_wonky.deb"),
-        ("rpm", "fedora", "first-app-0.0.1-1.elsurprising.wonky.rpm"),
-        ("rpm", "suse", "first-app-0.0.1-1.wonky.rpm"),
-        ("pkg", "arch", "first-app-0.0.1-1-wonky.pkg.tar.zst"),
+        pytest.param(
+            "pkg",
+            "manjaro",
+            "arch",
+            "first-app-0.0.1-1-wonky.pkg.tar.zst",
+            id="manjaro",
+        ),
+        pytest.param(
+            "pkg",
+            "arch",
+            "arch",
+            "first-app-0.0.1-1-wonky.pkg.tar.zst",
+            id="arch",
+        ),
+        pytest.param(
+            "pkg",
+            "cachyos",
+            "arch",
+            "first-app-0.0.1-1-wonky.pkg.tar.zst",
+            id="cachyos",
+        ),
+        pytest.param(
+            "rpm",
+            "fedora",
+            "rhel",
+            "first-app-0.0.1-1.fc42.wonky.rpm",
+            id="fedora",
+        ),
+        pytest.param(
+            "rpm",
+            "rhel",
+            "rhel",
+            "first-app-0.0.1-1.el42.wonky.rpm",
+            id="rhel",
+        ),
+        pytest.param(
+            "rpm",
+            "nobara",
+            "rhel",
+            "first-app-0.0.1-1.fc42.wonky.rpm",
+            id="rhel",
+        ),
+        pytest.param(
+            "rpm",
+            "almalinux",
+            "rhel",
+            "first-app-0.0.1-1.el42.wonky.rpm",
+            id="almalinux",
+        ),
+        pytest.param(
+            "rpm",
+            "centos",
+            "rhel",
+            "first-app-0.0.1-1.el42.wonky.rpm",
+            id="centos",
+        ),
+        pytest.param(
+            "rpm",
+            "opensuse-leap",
+            "suse",
+            "first-app-0.0.1-1.wonky.rpm",
+            id="opensuse-leap",
+        ),
+        pytest.param(
+            "rpm",
+            "opensuse-tumbleweed",
+            "suse",
+            "first-app-0.0.1-1.wonky.rpm",
+            id="opensuse-tumbleweed",
+        ),
+        pytest.param(
+            "deb",
+            "debian",
+            "debian",
+            "first-app_0.0.1-1~debian-42_wonky.deb",
+            id="debian",
+        ),
+        pytest.param(
+            "deb",
+            "ubuntu",
+            "debian",
+            "first-app_0.0.1-1~ubuntu-42_wonky.deb",
+            id="ubuntu",
+        ),
+        pytest.param(
+            "deb",
+            "pop",
+            "debian",
+            "first-app_0.0.1-1~pop-42_wonky.deb",
+            id="pop",
+        ),
+        pytest.param(
+            "deb",
+            "linuxmint",
+            "debian",
+            "first-app_0.0.1-1~linuxmint-42_wonky.deb",
+            id="linuxmint",
+        ),
     ],
 )
 def test_distribution_path(
     create_command,
     first_app_config,
     packaging_format,
+    vendor,
     vendor_base,
     filename,
     tmp_path,
@@ -96,8 +191,8 @@ def test_distribution_path(
     first_app_config.target_vendor_base = vendor_base
 
     # Force a dummy vendor:codename for test purposes.
-    first_app_config.target_vendor = "somevendor"
-    first_app_config.target_codename = "surprising"
+    first_app_config.target_vendor = vendor
+    first_app_config.target_codename = "42"
     first_app_config.packaging_format = packaging_format
 
     assert (
