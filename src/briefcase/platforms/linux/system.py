@@ -1034,10 +1034,17 @@ class LinuxSystemDevCommand(LinuxSystemMixin, DevCommand):
         super().install_dev_requirements(app, venv, **options)
 
 
+def maintainers(app):
+    """All authors of an app, formatted as RFC 822 addresses."""
+    return [
+        formataddr((entry.get("name", ""), entry.get("email", "")))
+        for entry in app.authors or []
+    ]
+
+
 def maintainer(app):
     """The primary author of an app, formatted as an RFC 822 address."""
-    entry = (app.authors or [{}])[0]
-    return formataddr((entry.get("name", ""), entry.get("email", "")))
+    return next(iter(maintainers(app)), "")
 
 
 def debian_multiline_description(description):
@@ -1657,7 +1664,7 @@ no extension).
                 f.write(
                     "\n".join(
                         [
-                            f"# Maintainer: {maintainer(app)}",
+                            *(f"# Maintainer: {m}" for m in maintainers(app)),
                             f'export PACKAGER="{maintainer(app)}"',
                             f"pkgname={app.app_name}",
                             f"pkgver={app.version}",
