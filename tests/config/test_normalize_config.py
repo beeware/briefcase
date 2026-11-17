@@ -92,9 +92,17 @@ def test_normalize_conflict_reverse_order():
 
 def test_normalize_without_console():
     """normalize_config can be called directly without passing a console."""
-    data = {"formal-name": "My App", "version": "1.0.0"}
+    data = {
+        "formal-name": "My App",
+        "description_summary": "Test App",
+        "version": "1.0.0",
+    }
     res = normalize_config(data)
-    assert res == {"formal_name": "My App", "version": "1.0.0"}
+    assert res == {
+        "formal_name": "My App",
+        "description_summary": "Test App",
+        "version": "1.0.0",
+    }
 
 
 def test_normalize_unaffected_keys():
