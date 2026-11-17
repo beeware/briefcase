@@ -1782,7 +1782,7 @@ def test_deprecated_author_email_config(tmp_path):
     )
 
     console = Mock()
-    global_config, _apps = parse_config(
+    global_config, apps = parse_config(
         config_file, platform="macOS", output_format="app", console=console
     )
 

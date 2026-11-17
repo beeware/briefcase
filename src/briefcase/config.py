@@ -607,7 +607,7 @@ class DraftAppConfig(AppConfig):
         sources: list[str] | None = None,
         formal_name: str | None = None,
         url: str | None = None,
-        authors: list[dict] | None = None,
+        authors: list[dict[str, str]] | None = None,
         requires: list[str] | None = None,
         icon: str | None = None,
         document_type: dict | None = None,
@@ -1320,20 +1320,6 @@ def merge_pep621_config(global_config, pep621_config):
     maybe_update("license-files", "license-files")
     maybe_update("url", "urls", "Homepage")
     maybe_update("version", "version")
-
-    # Coerce the historical `author`/`author_email` settings into the PEP 621
-    # `authors` representation.
-    author = global_config.pop("author", None)
-    author_email = global_config.pop("author_email", None)
-
-    if "authors" not in global_config and (author or author_email):
-        entry = {}
-        if author:
-            entry["name"] = author
-        if author_email:
-            entry["email"] = author_email
-        global_config["authors"] = [entry]
-
     maybe_update("authors", "authors")
 
     # Briefcase requires is cumulative over PEP621 dependencies
@@ -1379,6 +1365,7 @@ def warn_invalid_legacy_project_name(global_config, console):
 def handle_deprecated_author_config(global_config, console):
     """Warn about, and coerce, the deprecated `author`/`author_email` settings."""
     if not {"author", "author_email"} & global_config.keys():
+        # No deprecated keys in the configuration.
         return
 
     author = global_config.pop("author", None)
@@ -1404,8 +1391,8 @@ def handle_deprecated_author_config(global_config, console):
     console.warning_banner(
         "Deprecated author configuration",
         f"""
-            The `author` and `author_email` settings are deprecated in favour of
-            `authors`.
+            The `author` and `author_email` settings have been deprecated in favour of
+            a PEP 621 formatted `authors` setting.
 
             Update your configuration to use `authors`:
 

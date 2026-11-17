@@ -249,50 +249,6 @@ def test_missing_author_email():
     }
 
 
-def test_existing_author_name():
-    "If the author is defined in the global config, the PEP621 value is ignored"
-    briefcase_config = {"key": "value", "author": "Grace Hopper"}
-
-    merge_pep621_config(
-        briefcase_config,
-        {
-            "authors": [
-                {
-                    "name": "Jane Developer",
-                    "email": "jane@example.com",
-                }
-            ]
-        },
-    )
-
-    assert briefcase_config == {
-        "key": "value",
-        "authors": [{"name": "Grace Hopper"}],
-    }
-
-
-def test_existing_author_email():
-    "If the author email is missing, the name is still recorded"
-    briefcase_config = {"key": "value", "author_email": "grace@hopper.org"}
-
-    merge_pep621_config(
-        briefcase_config,
-        {
-            "authors": [
-                {
-                    "name": "Jane Developer",
-                    "email": "jane@example.com",
-                }
-            ]
-        },
-    )
-
-    assert briefcase_config == {
-        "key": "value",
-        "authors": [{"email": "grace@hopper.org"}],
-    }
-
-
 def test_no_dependencies():
     "If there are no global dependencies, requires are used as is."
     briefcase_config = {"key": "value", "requires": ["first", "second"]}
