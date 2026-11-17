@@ -1,4 +1,4 @@
-from briefcase.config import merge_config
+from briefcase.config import BaseConfig, merge_config
 
 
 def test_merge_no_options_no_data():
@@ -139,3 +139,19 @@ def test_merged_keys():
         "non-merge": ["3", "4"],
         "other": 1234,
     }
+
+
+def test_merge_into_base_config_instance():
+    """Merging into a BaseConfig instance updates attributes."""
+    config = BaseConfig(formal_name="Old", test_requires=["a"])
+
+    merge_config(
+        config,
+        {
+            "formal_name": "New",
+            "test_requires": ["b"],
+        },
+    )
+
+    assert config.formal_name == "New"
+    assert config.test_requires == ["a", "b"]

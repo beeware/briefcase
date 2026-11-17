@@ -72,7 +72,7 @@ def test_base_keys():
             "version": "1.2.3",
             "urls": {"Homepage": "https://example.com"},
             "license": {"text": "BSD License"},
-            "requires-python": ">=3.9",
+            "requires_python": ">=3.9",
         },
     )
 
@@ -363,7 +363,7 @@ def test_optional_non_test_dependencies():
 
     merge_pep621_config(
         briefcase_config,
-        {"optional-dependencies": {"other": ["dep1", "dep2"]}},
+        {"optional_dependencies": {"other": ["dep1", "dep2"]}},
     )
 
     assert briefcase_config == {
@@ -379,7 +379,7 @@ def test_test_dependencies_without_requires():
 
     merge_pep621_config(
         briefcase_config,
-        {"optional-dependencies": {"test": ["dep1", "dep2"]}},
+        {"optional_dependencies": {"test": ["dep1", "dep2"]}},
     )
 
     assert briefcase_config == {
@@ -394,10 +394,25 @@ def test_test_dependencies_with_requires():
 
     merge_pep621_config(
         briefcase_config,
-        {"optional-dependencies": {"test": ["dep1", "dep2"]}},
+        {"optional_dependencies": {"test": ["dep1", "dep2"]}},
     )
 
     assert briefcase_config == {
         "key": "value",
         "test_requires": ["dep1", "dep2", "first", "second"],
     }
+
+
+def test_specified_license_files():
+    """The license_files setting is included in the briefcase config if specified in the
+    PEP621 config."""
+    briefcase_config = {"key": "value"}
+
+    merge_pep621_config(
+        briefcase_config,
+        {
+            "license_files": ["LICENSE"],
+        },
+    )
+
+    assert briefcase_config == {"key": "value", "license_files": ["LICENSE"]}

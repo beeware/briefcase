@@ -766,6 +766,49 @@ class FinalizedAppConfig(AppConfig):
         self.__dict__.update(**kwargs)
 
 
+def normalize_config(
+    data: dict[str, Any],
+    console=None,
+) -> dict[str, Any]:
+    """Normalize configuration setting names in `data`.
+
+    Any setting name with hyphens is converted to underscore form so it can
+    be accessed as a Python attribute. Setting names with underscores are
+    accepted for backwards compatibility, but produce a warning.
+
+    If both the hyphen and underscore versions of a setting name are present,
+    a BriefcaseConfigError is raised.
+
+    :param data: The configuration data dictionary to normalize in-situ.
+    :param console: The console to use for warning output.
+    :returns: The normalized dictionary.
+    """
+    keys = list(data.keys())
+    for key in keys:
+        if "-" in key:
+            underscore_key = key.replace("-", "_")
+            if underscore_key in data:
+                raise BriefcaseConfigError(
+                    f"Configuration specifies both {key!r} and {underscore_key!r}; "
+                    f"use {key!r}."
+                )
+            data[underscore_key] = data.pop(key)
+        elif "_" in key:
+            hyphen_key = key.replace("_", "-")
+            if hyphen_key in data:
+                raise BriefcaseConfigError(
+                    f"Configuration specifies both {hyphen_key!r} and {key!r}; "
+                    f"use {hyphen_key!r}."
+                )
+            if console is not None:
+                console.warning(
+                    f"Configuration setting {key!r} is deprecated; "
+                    f"use {hyphen_key!r} instead."
+                )
+
+    return data
+
+
 def merge_config(config, data):
     """Merge a new set of configuration requirements into a base configuration.
 
@@ -882,9 +925,8 @@ def _normalize_pep639_license_config(
     :param console: The Briefcase `Console` object used for warning output.
     """
     raw_license = config["license"]
-    # Remove the `license-files` key because it needs to be converted into attribute
-    # form (`license_files`)
-    raw_license_files = config.pop("license-files", None)
+    # Remove the `license_files` key because it is in attribute form
+    raw_license_files = config.pop("license_files", None)
 
     # Ensure we license-files is a list.
     if raw_license_files is None:
@@ -1167,7 +1209,7 @@ def normalize_license_config(
     :param console: The Briefcase `Console` object used for warning output.
     """
     raw_license = config.get("license")
-    raw_license_files = config.get("license-files")
+    raw_license_files = config.get("license_files")
 
     # PEP 621 table + license-files is always an error
     if isinstance(raw_license, dict) and raw_license_files is not None:
@@ -1296,7 +1338,6 @@ def resolve_dynamic_pep621_config(base_path, dynamic, console):
 
 def merge_pep621_config(global_config, pep621_config):
     """Merge a PEP621 configuration into a Briefcase configuration."""
-
     if "name" in pep621_config:
         try:
             project_name = canonicalize_name(pep621_config["name"], validate=True)
@@ -1307,7 +1348,7 @@ def merge_pep621_config(global_config, pep621_config):
 
         global_config.setdefault("project_name", project_name)
 
-    if requires_python := pep621_config.get("requires-python"):
+    if requires_python := pep621_config.get("requires_python"):
         global_config["requires_python"] = requires_python
 
     def maybe_update(field, *project_fields):
@@ -1329,7 +1370,7 @@ def merge_pep621_config(global_config, pep621_config):
     # Keys that map directly
     maybe_update("description", "description")
     maybe_update("license", "license")
-    maybe_update("license-files", "license-files")
+    maybe_update("license_files", "license_files")
     maybe_update("url", "urls", "Homepage")
     maybe_update("version", "version")
 
@@ -1355,7 +1396,7 @@ def merge_pep621_config(global_config, pep621_config):
 
     # Briefcase test_requires is cumulative over PEP621 optional test dependencies
     try:
-        pep621_test_dependencies = pep621_config["optional-dependencies"]["test"]
+        pep621_test_dependencies = pep621_config["optional_dependencies"]["test"]
         test_requires = global_config.get("test_requires", [])
         global_config["test_requires"] = pep621_test_dependencies + test_requires
     except KeyError:
@@ -1427,6 +1468,13 @@ def parse_config(config_file: Path, platform, output_format, console):
     except KeyError as e:
         raise BriefcaseConfigError("No tool.briefcase section in pyproject.toml") from e
 
+    try:
+        all_apps = global_config.pop("app")
+    except KeyError as e:
+        raise BriefcaseConfigError("No Briefcase apps defined in pyproject.toml") from e
+
+    normalize_config(global_config, console=console)
+
     # Merge the PEP621 configuration (if it exists)
     try:
         pep621_config = pyproject["project"]
@@ -1434,6 +1482,7 @@ def parse_config(config_file: Path, platform, output_format, console):
             pep621_config.update(
                 resolve_dynamic_pep621_config(base_path, dynamic, console)
             )
+        normalize_config(pep621_config, console=console)
         merge_pep621_config(global_config, pep621_config)
     except KeyError:
         pass
@@ -1443,11 +1492,6 @@ def parse_config(config_file: Path, platform, output_format, console):
     # For consistent results, sort the platforms and formats
     all_platforms = sorted(get_platforms().keys())
     all_formats = sorted(get_output_formats(platform).keys())
-
-    try:
-        all_apps = global_config.pop("app")
-    except KeyError as e:
-        raise BriefcaseConfigError("No Briefcase apps defined in pyproject.toml") from e
 
     # Build the flat configuration for each app,
     # based on the requested platform and output format
@@ -1467,8 +1511,6 @@ def parse_config(config_file: Path, platform, output_format, console):
                     # If the platform matches the requested format, preserve
                     # it for later use.
                     platform_data = platform_block
-                    merge_config(platform_data, platform_data)
-
                     # The platform configuration will contain a section
                     # for each configured output format. Iterate over all
                     # the output format of the platform, and remove these
@@ -1488,20 +1530,20 @@ def parse_config(config_file: Path, platform, output_format, console):
                         except KeyError:
                             pass
 
+                    normalize_config(platform_data, console=console)
+
                     # If we found a specific configuration for the requested
                     # output format, add it to the platform configuration,
                     # overwriting any platform-level settings with format-level
                     # values.
                     if format_data:
+                        normalize_config(format_data, console=console)
                         merge_config(platform_data, format_data)
 
             except KeyError:
                 pass
 
         # Now construct the final configuration.
-        # First, convert the requirement definition at the global level
-        merge_config(global_config, global_config)
-
         # The app's config starts as a copy of the base briefcase configuration.
         config = copy.deepcopy(global_config)
 
@@ -1509,6 +1551,7 @@ def parse_config(config_file: Path, platform, output_format, console):
         config["app_name"] = app_name
 
         # Merge the app-specific requirements
+        normalize_config(app_data, console=console)
         merge_config(config, app_data)
 
         # If there is platform-specific configuration, merge the requirements,
