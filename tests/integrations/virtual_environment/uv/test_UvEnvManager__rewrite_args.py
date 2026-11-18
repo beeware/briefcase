@@ -35,7 +35,7 @@ def test_rewrite_args_empty(venv, empty_args):
 def test_rewrite_args_replaces_system_python(venv, args, expected_suffix):
     """The head argument is replaced when it equals sys.executable."""
     result = venv.rewrite_args(args)
-    assert result == ["uv", "run", "python", *expected_suffix]
+    assert result == ["uv", "run", "--active", "python", *expected_suffix]
 
 
 @pytest.mark.parametrize(
