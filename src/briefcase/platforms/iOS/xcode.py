@@ -630,6 +630,7 @@ class iOSXcodeRunCommand(iOSXcodeMixin, RunCommand):
         except InputDisabled as e:
             raise BriefcaseCommandError(
                 "Input has been disabled; can't select a device to target."
+                "Omit the `-d`/`--device` option, or use `-d auto`."
             ) from e
 
         if app.test_mode:
