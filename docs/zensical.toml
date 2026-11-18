@@ -1,0 +1,272 @@
+[project]
+copyright = "© Russell Keith-Magee"
+not_in_nav = """
+/index.md
+/reference/platforms/linux/docker_build_options.md
+/_snippets/*
+"""
+extra_css = ["stylesheets/briefcase.css"]
+site_url = "https://briefcase.beeware.org/"
+nav = [
+    { "Tutorial" = "tutorial/index.md" },
+    { "How-to guides" = [
+        "how-to/index.md",
+        { "How to run Briefcase" = "how-to/run.md" },
+        { "Obtaining a Code Signing identity" = [
+            { "Android" = "how-to/code-signing/android.md" },
+            { "Linux" = "how-to/code-signing/linux.md" },
+            { "macOS" = "how-to/code-signing/macOS.md" },
+            { "Windows" = "how-to/code-signing/windows.md" },
+        ] },
+        { "Building different types of apps" = [
+            { "Building your App in CI with GitHub Actions" = "how-to/building/ci.md" },
+            { "Building your Console App with Briefcase" = "how-to/building/cli-apps.md" },
+            { "Packaging external apps" = "how-to/building/external-apps.md" },
+        ] },
+        { "Testing apps" = [
+            { "Testing Linux Apps with Docker" = "how-to/testing/x11passthrough.md" },
+        ] },
+        { "Debugging apps" = [
+            { "Debug via PDB" = "how-to/debugging/pdb.md" },
+            { "Debug via VS Code" = "how-to/debugging/vscode.md" },
+        ] },
+        { "Publishing your app" = [
+            "how-to/publishing/android.md",
+            "how-to/publishing/iOS.md",
+            "how-to/publishing/macOS.md",
+        ] },
+        { "Contributing to Briefcase" = [
+            "how-to/contribute/index.md",
+            { "First-time contributors" = "how-to/contribute/first-time-contributors.md" },
+            { "What can I do?" = [
+                { "Fix an issue" = "how-to/contribute/what/fix-issue.md" },
+                { "Implement a new feature" = "how-to/contribute/what/implement-feature.md" },
+                { "Write documentation" = "how-to/contribute/what/write-docs.md" },
+                { "Triage an issue" = "how-to/contribute/what/triage.md" },
+                { "Review a pull request" = "how-to/contribute/what/review-pr.md" },
+                { "Propose a new feature" = "how-to/contribute/what/propose-feature.md" },
+                { "Use the tools" = "how-to/contribute/what/use-tools.md" },
+            ] },
+            { "How do I contribute?" = [
+                { "Setting up a development environment" = "how-to/contribute/how/dev-environment.md" },
+                { "Reproducing an issue" = "how-to/contribute/how/reproduce-issue.md" },
+                { "Working from a branch" = "how-to/contribute/how/branches.md" },
+                { "Avoiding scope creep" = "how-to/contribute/how/scope-creep.md" },
+                { "Writing, running, and testing code" = "how-to/contribute/how/write-code.md" },
+                { "Building documentation" = "how-to/contribute/how/build-docs.md" },
+                { "Writing documentation" = "how-to/contribute/how/write-docs.md" },
+                { "Adding a change note" = "how-to/contribute/how/change-note.md" },
+                { "Submitting a pull request" = "how-to/contribute/how/submit-pr.md" },
+                { "Providing a review" = "how-to/contribute/how/review-pr.md" },
+                { "Submitting a new issue" = "how-to/contribute/how/new-issue.md" },
+                { "Proposing a new feature" = "how-to/contribute/how/propose-feature.md" },
+            ] },
+            { "What happens next?" = [
+                { "Pull request review process" = "how-to/contribute/next/pr-review.md" },
+                { "Release process" = "how-to/contribute/next/release.md" },
+            ] },
+            { "Policies" = [
+                { "AI Policy" = "how-to/contribute/policies/ai-policy.md" },
+            ] },
+            { "Style guides" = [
+                { "Code style guide" = "how-to/contribute/style/code-style-guide.md" },
+                { "Documentation style guide" = "how-to/contribute/style/docs-style-guide.md" },
+            ] },
+        ] },
+        { "Internal How-to guides" = [
+            { "How to cut a Briefcase release" = "how-to/internal/release.md" },
+        ] },
+        { "Upgrading from previous versions" = [
+            { "Upgrading from Briefcase v0.2" = "how-to/upgrading/upgrade-from-v0.2.md" },
+        ] },
+    ] },
+    { "Topic guides" = [
+        "topics/index.md",
+        { "Accessing Briefcase packaging metadata at runtime" = "topics/access-packaging-metadata.md" },
+    ] },
+    { "Reference" = [
+        "reference/index.md",
+        { "Briefcase configuration options" = "reference/environment.md" },
+        { "Project configuration options" = "reference/configuration.md" },
+        { "Environment Management" = [
+            "reference/env_management/index.md",
+            { "venv" = "reference/env_management/venv.md" },
+            { "uv" = "reference/env_management/uv.md" },
+            { "Conda" = "reference/env_management/conda.md" },
+        ] },
+        { "Command Reference" = [
+            "reference/commands/index.md",
+            { "new" = "reference/commands/new.md" },
+            { "convert" = "reference/commands/convert.md" },
+            { "dev" = "reference/commands/dev.md" },
+            { "create" = "reference/commands/create.md" },
+            { "build" = "reference/commands/build.md" },
+            { "update" = "reference/commands/update.md" },
+            { "run" = "reference/commands/run.md" },
+            { "package" = "reference/commands/package.md" },
+            { "publish" = "reference/commands/publish.md" },
+            { "upgrade" = "reference/commands/upgrade.md" },
+        ] },
+        { "Platform support" = [
+            "reference/platforms/index.md",
+            { "macOS" = [
+                "reference/platforms/macOS/index.md",
+                { ".app bundle" = "reference/platforms/macOS/app.md" },
+                { "macOS Xcode project" = "reference/platforms/macOS/xcode.md" },
+            ] },
+            { "Windows" = [
+                "reference/platforms/windows/index.md",
+                { "Windows App folder" = "reference/platforms/windows/app.md" },
+                { "Visual Studio project" = "reference/platforms/windows/visualstudio.md" },
+            ] },
+            { "Linux" = [
+                { "Native System Packages" = "reference/platforms/linux/system.md" },
+                { "Flatpak" = "reference/platforms/linux/flatpak.md" },
+                { "AppImage" = "reference/platforms/linux/appimage.md" },
+            ] },
+            { "iOS" = [
+                { "iOS Xcode project" = "reference/platforms/iOS/xcode.md" },
+            ] },
+            { "Android" = [
+                { "Gradle project" = "reference/platforms/android/gradle.md" },
+            ] },
+            { "Web" = [
+                { "Static Web" = "reference/platforms/web/static.md" },
+            ] },
+        ] },
+        { "Plugins" = "reference/plugins.md" },
+    ] },
+    { "About Briefcase" = [
+        "about/index.md",
+        { "Frequently asked questions" = "about/faq.md" },
+        { "Success stories" = "about/success.md" },
+        { "Release history" = "about/releases.md" },
+    ] },
+]
+
+[project.validation]
+omitted_files = "warn"
+absolute_links = "relative_to_docs"
+anchors = "warn"
+unrecognized_links = "warn"
+
+[project.extra]
+project_name = "briefcase"
+package_name = "briefcase"
+formal_name = "Briefcase"
+min_python_version = "3.11"  # The oldest supported Python version
+min_python_version_tag = "311"  # The tag version of the minimum python version
+recent_python_version = "3.15"  # The newest Python version known to work on all platforms
+docs_python_version = "3.13"  # The version of Python required to build the documentation
+contribution_guide_root = "how-to/contribute"
+social = [
+    { icon = "fontawesome/brands/github", link = "https://github.com/beeware", name = "BeeWare on GitHub" },
+    { icon = "fontawesome/brands/mastodon", link = "https://fosstodon.org/@beeware", name = "BeeWare on Mastodon" },
+    { icon = "fontawesome/brands/discord", link = "https://beeware.org/bee/chat/", name = "BeeWare on Discord" },
+]
+ci_tested = "●"
+maintainer_tested = "○"
+not_tested = "△"
+generator = false
+
+[project.theme]
+name = "material"
+language = "en"
+logo = "images/briefcase.png"
+favicon = "assets/images/brutus-256.png"
+features = [
+    "content.tabs.link",
+    "toc.follow",
+    "navigation.tabs",
+    "navigation.tabs.sticky",
+    "navigation.indexes",
+    "navigation.footer",
+    "search.suggest",
+    "search.highlight",
+    "search.share",
+]
+custom_dir = "overrides"
+
+# Palette toggle for automatic mode
+[[project.theme.palette]]
+media = "(prefers-color-scheme)"
+toggle.icon = "material/brightness-auto"
+toggle.name = "Switch to light mode"
+
+# Palette toggle for light mode
+[[project.theme.palette]]
+media = "(prefers-color-scheme: light)"
+scheme = "default"
+toggle.icon = "material/brightness-7"
+toggle.name = "Switch to dark mode"
+
+# Palette toggle for dark mode
+[[project.theme.palette]]
+media = "(prefers-color-scheme: dark)"
+scheme = "slate"
+toggle.icon = "material/brightness-4"
+toggle.name = "Switch to system preference"
+
+[project.markdown_extensions]
+# Python Markdown Extensions
+attr_list = {}
+md_in_html = {}
+# Enables easy em and en dashes.
+smarty.smart_quotes = false
+toc.permalink = true
+toc.title = "On this page"
+# PyMdown Extensions
+pymdownx.highlight = {}
+pymdownx.superfences = {}
+pymdownx.blocks.caption = {}
+# Enables admonitions.
+pymdownx.blocks.admonition.types = [
+    "note",
+    "abstract",
+    "info",
+    "tip",
+    "success",
+    "question",
+    "warning",
+    "failure",
+    "danger",
+    "bug",
+    "example",
+    "quote",
+]
+# Enables collapsible content.
+pymdownx.blocks.details.types = [
+    { name = "details-note", class = "note" },
+    { name = "details-abstract", class = "abstract" },
+    { name = "details-info", class = "info" },
+    { name = "details-tip", class = "tip" },
+    { name = "details-success", class = "success" },
+    { name = "details-question", class = "question" },
+    { name = "details-warning", class = "warning" },
+    { name = "details-failure", class = "failure" },
+    { name = "details-danger", class = "danger" },
+    { name = "details-bug", class = "bug" },
+    { name = "details-example", class = "example" },
+    { name = "details-quote", class = "quote" },
+]
+pymdownx.blocks.tab.alternate_style = true
+# Among other things, enables GitHub shorthand references.
+pymdownx.magiclink.provider = "github"
+pymdownx.magiclink.user = "beeware"
+pymdownx.magiclink.repo = "toga"
+pymdownx.magiclink.repo_url_shortener = true
+pymdownx.magiclink.repo_url_shorthand = true
+pymdownx.magiclink.normalize_issue_symbols = true
+pymdownx.snippets.base_path = ["docs/en"]
+pymdownx.snippets.url_download = true
+pymdownx.snippets.check_paths = true
+
+[project.plugins.search]
+
+[project.plugins.autorefs]
+resolve_closest = true
+
+[project.plugins.macros]
+
+[project.plugins.mkdocstrings.handlers.python]
+inventories = ["https://docs.python.org/3/objects.inv"]

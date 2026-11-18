@@ -12,6 +12,7 @@ matrix:
       - markdown.extensions.toc
       - markdown.extensions.admonition
       - markdown.extensions.attr_list
+      - markdown.extensions.md_in_html
       - pymdownx.superfences
       - pymdownx.blocks.admonition
       - pymdownx.blocks.caption
