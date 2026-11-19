@@ -233,3 +233,9 @@ Docker builds are not able to reference local paths in the [`requires`][] and [`
 ### Environment managers and Docker builds
 
 If an application defines the use of an environment manager (using the [`env_manager`][] setting), and Docker is used to build the application, the environment manager will be ignored, and raw `pip` installs will be used.
+
+### Only the first author is used as the package maintainer
+
+An app can have more than one author, but Linux packages only have room for one maintainer. Debian's `control` file has a single `Maintainer:` field, and Arch's `PKGBUILD` has a single `PACKAGER` value; both of these are set from the *first* author listed in the app's [`authors`][] setting.
+
+The `PKGBUILD` does credit the other authors. As well as `PACKAGER`, it has `# Maintainer:` comment lines, and Briefcase writes one of those for every author.
