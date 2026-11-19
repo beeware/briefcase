@@ -93,7 +93,7 @@ The following options can be provided at the command line when producing iOS pro
 
 #### `-d [<device>]` / `--device [<device>]`
 
-The device to build for. Accepts the same values as the `-d`/`--device` option for `run`. If a physical device is selected, the app will be built and signed for that device. If this option isn't provided, the app is built for the iOS simulator.
+The device to build for. Accepts the same values, and has the same default, as the `-d`/`--device` option for `run`. If a physical device is selected, the app will be built and signed for that device.
 
 #### `-i <identity>` / `--identity <identity>`
 
@@ -105,7 +105,7 @@ The development signing identity to use when building for a physical device. Acc
 
 The device to target. Can be either a UDID, a device name (e.g., `"iPhone 11"`), a device name and OS version (`"iPhone 11::iOS 13.3"`), or `auto`. `auto` is the default behavior; Briefcase will automatically select an "entry level" iPhone simulator (e.g., an iPhone SE, or iPhone 16e) on the most recent available iOS version. To see the full list of available simulators and connected physical devices, and select from that list, provide `-d`/`--device` with no value.
 
-Physical devices are listed alongside the simulators for the same iOS version, and are labeled as physical devices. A physical device can also be selected using its name, or its UDID (as reported by `xcrun devicectl list devices --columns udid`). See [Deployment to physical iOS devices][ios-deploy] for details.
+If any physical devices are known to your Mac, the list of iOS versions will include a *Physical devices* option. Devices that aren't ready to run apps (because they aren't paired with your Mac, don't have Developer Mode enabled, or can't be reached) are labeled with the reason. A physical device can also be selected using its name, or its UDID (as reported by `xcrun devicectl list devices --columns udid`). See [Deployment to physical iOS devices][ios-deploy] for details.
 
 #### `-i <identity>` / `--identity <identity>`
 
@@ -221,7 +221,7 @@ This will find and purge all `.a` content in your app's dependencies. You can ad
 
 Briefcase can run your app on a physical iPhone or iPad running iOS or iPadOS 17 or later. Before you can deploy to a device, you need a development signing certificate, your Apple ID added to Xcode, and a device that is paired with your Mac and has Developer Mode enabled. A free Apple ID is sufficient. See [iOS code signing][code-signing-ios] for setup instructions.
 
-When a device is connected, it will be offered as a target when you provide `-d`/`--device` with no value:
+When a device is connected, it will be offered as a target under *Physical devices* when you provide `-d`/`--device` with no value:
 
 ```console
 $ briefcase run iOS -d
@@ -231,17 +231,17 @@ Briefcase will then ask you to select a development signing identity, unless you
 
 Running `briefcase run iOS` without `-d` will always select a simulator, even when a physical device is connected.
 
-When you deploy to a physical device, Briefcase always rebuilds the app, so that Xcode can update the app's signing and provisioning profile if required.
+If the app has already been built for a physical device, Briefcase won't rebuild it. To rebuild the app (for example, to sign it with a different identity, or to renew an expired provisioning profile), run `briefcase build iOS -d`.
 
 If you deploy to a physical device in debug mode, the debugger runs on the device, so it must be reachable over the network from your Mac. Use `--debugger-host 0.0.0.0` so that the debugger listens on all of the device's network interfaces, and connect your debugger to the device's IP address. Your Mac and device must be on the same network.
 
 #### Troubleshooting
 
-* *The device isn't listed*: Confirm that the device is unlocked, paired with your Mac, and has Developer Mode enabled. Briefcase reports devices that are visible, but not paired or not in Developer Mode. You can check the state of your devices with `xcrun devicectl list devices`.
+* *The device isn't listed, or is labeled as not ready*: Confirm that the device is unlocked, paired with your Mac, and has Developer Mode enabled. If you select a device that isn't ready, Briefcase will describe how to fix the problem. You can check the state of your devices with `xcrun devicectl list devices`.
 * *No development signing identities are available*: You need to create an Apple Development certificate. See [iOS code signing][code-signing-ios].
 * *The app can't be launched, because the profile "has not been explicitly trusted by the user"*: On the device, open *Settings > General > VPN & Device Management*, select your Apple ID under *Developer App*, and tap *Trust*.
 * *The bundle identifier can't be registered*: Bundle identifiers must be unique across all Apple developer teams. Change the [`bundle`][] of your app to one based on a domain that you control.
-* *The app stops starting after a week*: Provisioning profiles for free Apple IDs expire after 7 days. Run the app again with Briefcase to renew the profile.
+* *The app stops starting after a week*: Provisioning profiles for free Apple IDs expire after 7 days. Rebuild the app with `briefcase build iOS -d` to renew the profile.
 
 ### Distributing iOS apps  { #ios-distribute }
 

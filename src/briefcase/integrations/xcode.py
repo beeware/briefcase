@@ -5,16 +5,11 @@ import re
 import subprocess
 from collections.abc import Collection
 from pathlib import Path
-from tempfile import TemporaryDirectory
 from textwrap import dedent
 
 from packaging.version import Version
 
-from briefcase.exceptions import (
-    BriefcaseCommandError,
-    CommandOutputParseError,
-    ParseError,
-)
+from briefcase.exceptions import BriefcaseCommandError, CommandOutputParseError
 from briefcase.integrations.base import Tool, ToolCache
 from briefcase.integrations.subprocess import json_parser
 
@@ -473,68 +468,85 @@ def get_device_state(tools: ToolCache, udid: str) -> str:
         raise BriefcaseCommandError("Unable to run xcrun simctl.") from e
 
 
-def get_physical_devices(tools: ToolCache, os_name: str) -> dict[str, dict[str, str]]:
-    """Obtain the physical devices connected to this machine.
+# The reasons a physical device can't be used for deployment.
+DEVICE_NOT_PAIRED = "not paired"
+DEVICE_DEVELOPER_MODE_DISABLED = "Developer Mode not enabled"
+DEVICE_UNREACHABLE = "not reachable"
 
-    The return value is a 2 level dictionary, in the same format as `get_simulators()`.
-    The outer dictionary is keyed by OS version; the inner dictionary for each OS
-    version contains the names of the usable devices, keyed by hardware UDID.
 
-    Devices that can't be used (because they aren't paired with this machine, don't have
-    Developer Mode enabled, or can't be reached) are reported, but not returned.
+def get_physical_devices(
+    tools: ToolCache,
+    os_name: str,
+) -> dict[str, dict[str, str | None]]:
+    """Obtain the physical devices known to this machine.
+
+    The return value is a dictionary of devices, keyed by hardware UDID. Each device is
+    described by a dictionary containing its `name`, its `os_version`, and the reason
+    it can't be used for deployment (`not_ready`). `not_ready` is `None` if the device
+    can be used; otherwise, it is one of `DEVICE_NOT_PAIRED`,
+    `DEVICE_DEVELOPER_MODE_DISABLED` or `DEVICE_UNREACHABLE`.
 
     :param tools: ToolCache of available tools
     :param os_name: The OS of the devices to find. One of `"iOS"`, `"watchOS"`, or
         `"tvOS"`.
-    :returns: A dictionary of usable physical devices.
+    :returns: A dictionary of physical devices.
     """
     try:
-        # devicectl's JSON output file is the only interface that Apple
-        # supports for programmatic consumption.
-        with TemporaryDirectory() as tmp_path:
-            json_path = Path(tmp_path) / "devices.json"
-            tools.subprocess.check_output(
-                [
-                    "xcrun",
-                    "devicectl",
-                    "list",
-                    "devices",
-                    "--json-output",
-                    json_path,
-                    "-q",
-                ],
-            )
-            devicectl_data = json_parser(json_path.read_text(encoding="utf-8"))
-    except ParseError as e:
+        devicectl_data = tools.subprocess.parse_output(
+            json_parser,
+            ["xcrun", "devicectl", "list", "devices", "--json-output", "-", "-q"],
+        )
+    except CommandOutputParseError as e:
         raise BriefcaseCommandError("Unable to parse output of xcrun devicectl") from e
     except subprocess.CalledProcessError as e:
         raise BriefcaseCommandError("Unable to run xcrun devicectl.") from e
 
     devices = {}
     for device in devicectl_data["result"]["devices"]:
-        if device["hardwareProperties"]["platform"] != os_name:
+        # Xcode 27 deprecates the `hardwareProperties`, `deviceProperties` and
+        # `connectionProperties` dictionaries, replacing them with a `properties`
+        # dictionary. Use the deprecated dictionaries if they are present.
+        if "hardwareProperties" in device:
+            hardware = device["hardwareProperties"]
+            connection = device["connectionProperties"]
+            details = device["deviceProperties"]
+            name = details.get("name")
+            os_version = details.get("osVersionNumber")
+            paired = connection.get("pairingState") == "paired"
+            developer_mode = details.get("developerModeStatus") == "enabled"
+            reachable = connection.get("tunnelState") != "unavailable"
+        else:
+            properties = device["properties"]
+            hardware = properties["hardware"]
+            connection = properties["connection"]
+            software = properties.get("software", {})
+            name = properties.get("state", {}).get("name")
+            os_version = software.get("osVersionNumber", {}).get("stringValue")
+            paired = connection.get("pairingState") == "paired"
+            developer_mode = (
+                software.get("developerModeStatus", {}).get("enabled", {}).get("mode")
+                == 1
+            )
+            reachable = connection.get("state") != "unavailable"
+
+        # Simulated devices, and devices for other platforms, aren't candidates.
+        if hardware.get("reality") == "simulated" or hardware["platform"] != os_name:
             continue
 
-        name = device["deviceProperties"]["name"]
-        if device["connectionProperties"]["pairingState"] != "paired":
-            tools.console.warning(
-                f"Ignoring {name}; it is not paired with this Mac. Connect the "
-                "device, and tap Trust when prompted."
-            )
-        elif device["deviceProperties"]["developerModeStatus"] != "enabled":
-            tools.console.warning(
-                f"Ignoring {name}; Developer Mode is not enabled. Enable it "
-                "in Settings > Privacy & Security > Developer Mode on the device."
-            )
-        elif device["connectionProperties"]["tunnelState"] == "unavailable":
-            tools.console.warning(
-                f"Ignoring {name}; it can't be reached. Unlock the device, and "
-                "connect it to this Mac with a cable, or to the same network as "
-                "this Mac."
-            )
+        if not paired:
+            not_ready = DEVICE_NOT_PAIRED
+        elif not developer_mode:
+            not_ready = DEVICE_DEVELOPER_MODE_DISABLED
+        elif not reachable:
+            not_ready = DEVICE_UNREACHABLE
         else:
-            os_tag = f"{os_name} {device['deviceProperties']['osVersionNumber']}"
-            devices.setdefault(os_tag, {})[device["hardwareProperties"]["udid"]] = name
+            not_ready = None
+
+        devices[hardware["udid"]] = {
+            "name": name,
+            "os_version": os_version,
+            "not_ready": not_ready,
+        }
 
     return devices
 

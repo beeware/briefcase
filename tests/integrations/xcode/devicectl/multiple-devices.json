@@ -5,7 +5,7 @@
       "list",
       "devices",
       "--json-output",
-      "devices.json",
+      "-",
       "-q"
     ],
     "commandType": "devicectl.list.devices",
@@ -546,6 +546,94 @@
         "identifier": "55555555-6666-5777-8888-999999999999",
         "tags": [],
         "visibilityClass": "default"
+      },
+      {
+        "capabilities": [
+          {
+            "featureIdentifier": "com.apple.coredevice.feature.acquireusageassertion",
+            "name": "Acquire Usage Assertion"
+          },
+          {
+            "featureIdentifier": "com.apple.coredevice.feature.connectdevice",
+            "name": "Connect to Device"
+          },
+          {
+            "featureIdentifier": "com.apple.coredevice.feature.tags",
+            "name": "Modify Tags"
+          },
+          {
+            "featureIdentifier": "com.apple.coredevice.feature.default.user.credentials",
+            "name": "Modify credentials for default users for a device"
+          },
+          {
+            "featureIdentifier": "com.apple.coredevice.feature.unpairdevice",
+            "name": "Unpair Device"
+          }
+        ],
+        "connectionProperties": {
+          "authenticationType": "manualPairing",
+          "isMobileDeviceOnly": false,
+          "lastConnectionDate": "2026-10-09T03:54:00.000Z",
+          "pairingState": "paired",
+          "potentialHostnames": [
+            "Test-iPhone.coredevice.local",
+            "22222222-3333-5444-8555-666666666666.coredevice.local",
+            "00008110-001122334455667E.coredevice.local"
+          ],
+          "transportType": "localNetwork",
+          "tunnelState": "disconnected",
+          "tunnelTransportProtocol": "tcp"
+        },
+        "deviceProperties": {
+          "bootedFromSnapshot": true,
+          "bootedSnapshotName": "com.apple.os.update-0000000000000000000000000000000000000000000000000000000000000000",
+          "ddiServicesAvailable": false,
+          "hasInternalOSBuild": false,
+          "name": "Test Simulator",
+          "osBuildUpdate": "23G83",
+          "osVersionNumber": "26.0.1",
+          "rootFileSystemIsWritable": false,
+          "screenViewingURL": "devices://device/open?id=22222222-3333-5444-8555-666666666666",
+          "supportsCheckedAllocations": false
+        },
+        "hardwareProperties": {
+          "cpuType": {
+            "name": "arm64e",
+            "subType": 2,
+            "type": 16777228
+          },
+          "deviceType": "iPhone",
+          "ecid": 1234567890123456,
+          "hardwareModel": "J718AP",
+          "internalStorageCapacity": 1000555581440,
+          "isProductionFused": true,
+          "marketingName": "iPhone 15",
+          "platform": "iOS",
+          "productType": "iPad16,4",
+          "reality": "simulated",
+          "serialNumber": "ABCD1234EF",
+          "supportedCPUTypes": [
+            {
+              "name": "arm64e",
+              "subType": 2,
+              "type": 16777228
+            },
+            {
+              "name": "arm64",
+              "subType": 0,
+              "type": 16777228
+            }
+          ],
+          "supportedDeviceFamilies": [
+            1,
+            2
+          ],
+          "thinningProductType": "iPad16,4-B",
+          "udid": "D0E1F2A3-B4C5-4D6E-8F70-8192A3B4C5D6"
+        },
+        "identifier": "D0E1F2A3-B4C5-4D6E-8F70-8192A3B4C5D6",
+        "tags": [],
+        "visibilityClass": "simulators"
       }
     ]
   }

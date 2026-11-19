@@ -7,24 +7,22 @@ import pytest
 from briefcase.console import Console
 from briefcase.exceptions import BriefcaseCommandError
 from briefcase.integrations.base import ToolCache
-from briefcase.integrations.xcode import get_physical_devices
+from briefcase.integrations.subprocess import Subprocess
+from briefcase.integrations.xcode import (
+    DEVICE_DEVELOPER_MODE_DISABLED,
+    DEVICE_NOT_PAIRED,
+    DEVICE_UNREACHABLE,
+    get_physical_devices,
+)
 
 
 @pytest.fixture
 def mock_tools(mock_tools) -> ToolCache:
     mock_tools.console = mock.MagicMock(spec_set=Console)
+    mock_tools.subprocess = Subprocess(mock_tools)
+    mock_tools.subprocess._subprocess = mock.MagicMock(spec_set=subprocess)
+    mock_tools.subprocess.check_output = mock.MagicMock()
     return mock_tools
-
-
-def devicectl_result(content):
-    """Mock a devicectl invocation that writes `content` as its JSON output."""
-
-    def _check_output(args, **kwargs):
-        json_path = Path(args[args.index("--json-output") + 1])
-        json_path.write_text(content, encoding="utf-8")
-        return ""
-
-    return _check_output
 
 
 def devicectl_fixture(name):
@@ -34,33 +32,60 @@ def devicectl_fixture(name):
 
 
 def test_physical_devices(mock_tools):
-    """Usable physical devices for the requested OS are returned, keyed by OS version;
-    unusable devices are reported."""
-    mock_tools.subprocess.check_output.side_effect = devicectl_result(
-        devicectl_fixture("multiple-devices")
+    """All physical devices for the requested OS are returned, with the reason any
+    device isn't ready for use."""
+    mock_tools.subprocess.check_output.return_value = devicectl_fixture(
+        "multiple-devices"
     )
 
     devices = get_physical_devices(mock_tools, "iOS")
 
+    mock_tools.subprocess.check_output.assert_called_once_with(
+        ["xcrun", "devicectl", "list", "devices", "--json-output", "-", "-q"],
+    )
     assert devices == {
-        "iOS 26.6.1": {"00008132-000A1B2C3D4E5F60": "Test iPad"},
-        "iOS 26.0.1": {"00008110-001122334455667E": "Test iPhone"},
+        "00008132-000A1B2C3D4E5F60": {
+            "name": "Test iPad",
+            "os_version": "26.6.1",
+            "not_ready": None,
+        },
+        "00008110-001122334455667E": {
+            "name": "Test iPhone",
+            "os_version": "26.0.1",
+            "not_ready": None,
+        },
+        "00008110-00AABBCCDDEEFF00": {
+            "name": "Unpaired iPhone",
+            "os_version": "26.0.1",
+            "not_ready": DEVICE_NOT_PAIRED,
+        },
+        "00008110-00FFEEDDCCBBAA00": {
+            "name": "No Dev Mode iPhone",
+            "os_version": "26.0.1",
+            "not_ready": DEVICE_DEVELOPER_MODE_DISABLED,
+        },
+        "00008110-00AAAAAAAAAAAA00": {
+            "name": "Offline iPhone",
+            "os_version": "26.0.1",
+            "not_ready": DEVICE_UNREACHABLE,
+        },
     }
 
-    assert mock_tools.console.warning.mock_calls == [
-        mock.call(
-            "Ignoring Unpaired iPhone; it is not paired with this Mac. Connect the "
-            "device, and tap Trust when prompted."
-        ),
-        mock.call(
-            "Ignoring No Dev Mode iPhone; Developer Mode is not enabled. Enable it "
-            "in Settings > Privacy & Security > Developer Mode on the device."
-        ),
-        mock.call(
-            "Ignoring Offline iPhone; it can't be reached. Unlock the device, and "
-            "connect it to this Mac with a cable, or to the same network as this Mac."
-        ),
-    ]
+
+def test_properties_layout(mock_tools):
+    """Devices described by the `properties` dictionary introduced in Xcode 27 are
+    returned."""
+    mock_tools.subprocess.check_output.return_value = devicectl_fixture(
+        "properties-layout"
+    )
+
+    assert get_physical_devices(mock_tools, "iOS") == {
+        "00008120-000123456789ABCD": {
+            "name": "New Layout iPhone",
+            "os_version": "27.0",
+            "not_ready": None,
+        },
+    }
 
 
 def test_devicectl_failure(mock_tools):
@@ -79,9 +104,7 @@ def test_devicectl_failure(mock_tools):
 
 def test_devicectl_output_parse_error(mock_tools):
     """If the devicectl JSON output can't be parsed, an exception is raised."""
-    mock_tools.subprocess.check_output.side_effect = devicectl_result(
-        "this is not JSON"
-    )
+    mock_tools.subprocess.check_output.return_value = "this is not JSON"
 
     with pytest.raises(
         BriefcaseCommandError,

@@ -4,6 +4,10 @@ import pytest
 
 from briefcase.commands.base import BaseCommand
 from briefcase.exceptions import BriefcaseCommandError, InvalidDeviceError
+from briefcase.integrations.xcode import (
+    DEVICE_DEVELOPER_MODE_DISABLED,
+    DEVICE_UNREACHABLE,
+)
 from briefcase.platforms.iOS.xcode import iOSXcodeMixin
 
 
@@ -422,7 +426,8 @@ def test_auto_raises_when_no_simulators(dummy_command):
 
 
 def test_physical_device_option(dummy_command, capsys):
-    """A physical device is offered alongside the simulators for its iOS version."""
+    """Physical devices are offered as an option alongside the simulator iOS versions;
+    devices that aren't ready are labeled with the reason."""
     dummy_command.get_simulators.return_value = {
         "iOS 26.0": {
             "C9A005C8-9468-47C5-8376-68A6E3408209": "iPhone 17",
@@ -430,22 +435,77 @@ def test_physical_device_option(dummy_command, capsys):
         },
     }
     dummy_command.get_physical_devices.return_value = {
-        "iOS 26.0": {"00008110-001122334455667E": "Test iPhone"},
-        "iOS 26.6.1": {"00008132-000A1B2C3D4E5F60": "Test iPad"},
+        "00008110-001122334455667E": {
+            "name": "Test iPhone",
+            "os_version": "26.0.1",
+            "not_ready": DEVICE_DEVELOPER_MODE_DISABLED,
+        },
+        "00008132-000A1B2C3D4E5F60": {
+            "name": "Test iPad",
+            "os_version": "26.6.1",
+            "not_ready": None,
+        },
     }
 
-    # Return option 1 (iOS 26.0), then option 3 (Test iPhone)
-    dummy_command.console.values = ["1", "3"]
+    # Return option 2 (Physical devices), then option 2 (Test iPad)
+    dummy_command.console.values = ["2", "2"]
 
     udid, iOS_version, device, physical = dummy_command.select_target_device()
 
-    assert udid == "00008110-001122334455667E"
-    assert iOS_version == "26.0"
-    assert device == "Test iPhone"
+    assert udid == "00008132-000A1B2C3D4E5F60"
+    assert iOS_version == "26.6.1"
+    assert device == "Test iPad"
     assert physical
 
-    # The physical device was labeled as such.
-    assert "3) Test iPhone (physical device)" in capsys.readouterr().out
+    output = capsys.readouterr().out
+    assert "2) Physical devices" in output
+    assert "1) Test iPhone (Developer Mode not enabled)" in output
+
+
+def test_physical_device_not_ready(dummy_command):
+    """If the user selects a physical device that isn't ready, an error explains how to
+    fix it."""
+    dummy_command.get_simulators.return_value = {}
+    dummy_command.get_physical_devices.return_value = {
+        "00008110-001122334455667E": {
+            "name": "Test iPhone",
+            "os_version": "26.0.1",
+            "not_ready": DEVICE_DEVELOPER_MODE_DISABLED,
+        },
+    }
+
+    # Return option 1 (Test iPhone)
+    dummy_command.console.values = ["1"]
+
+    with pytest.raises(
+        BriefcaseCommandError,
+        match=r"Test iPhone isn't ready to run apps \(Developer Mode not enabled\)",
+    ):
+        dummy_command.select_target_device()
+
+
+def test_explicit_physical_device_not_ready(dummy_command):
+    """If the user nominates a physical device that isn't ready, an error explains how
+    to fix it."""
+    dummy_command.get_simulators.return_value = {}
+    dummy_command.get_physical_devices.return_value = {
+        "00008132-000A1B2C3D4E5F60": {
+            "name": "Test iPad",
+            "os_version": "26.6.1",
+            "not_ready": None,
+        },
+        "00008110-001122334455667E": {
+            "name": "Test iPhone",
+            "os_version": "26.0.1",
+            "not_ready": DEVICE_UNREACHABLE,
+        },
+    }
+
+    with pytest.raises(
+        BriefcaseCommandError,
+        match=r"Test iPhone isn't ready to run apps \(not reachable\)",
+    ):
+        dummy_command.select_target_device("test iphone")
 
 
 def test_explicit_physical_device_udid(dummy_command):
@@ -456,8 +516,16 @@ def test_explicit_physical_device_udid(dummy_command):
         },
     }
     dummy_command.get_physical_devices.return_value = {
-        "iOS 26.0.1": {"00008110-001122334455667E": "Test iPhone"},
-        "iOS 26.6.1": {"00008132-000A1B2C3D4E5F60": "Test iPad"},
+        "00008110-001122334455667E": {
+            "name": "Test iPhone",
+            "os_version": "26.0.1",
+            "not_ready": None,
+        },
+        "00008132-000A1B2C3D4E5F60": {
+            "name": "Test iPad",
+            "os_version": "26.6.1",
+            "not_ready": None,
+        },
     }
 
     udid, iOS_version, device, physical = dummy_command.select_target_device(
@@ -481,9 +549,6 @@ def test_auto_ignores_physical_devices(dummy_command):
             "C9A005C8-9468-47C5-8376-68A6E3408209": "iPhone 17",
             "2D3503A3-6EB9-4B37-9B17-C7EFEF2FA32D": "iPhone 17e",
         },
-    }
-    dummy_command.get_physical_devices.return_value = {
-        "iOS 26.6.1": {"00008132-000A1B2C3D4E5F60": "Test iPad"},
     }
 
     udid, iOS_version, device, _ = dummy_command.select_target_device("auto")

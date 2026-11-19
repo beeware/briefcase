@@ -307,16 +307,15 @@ class RunCommand(RunAppMixin, BaseCommand):
 
         return args
 
-    def prepare_target(self, app: FinalizedAppConfig, **options) -> bool:
+    def prepare_target(self, app: FinalizedAppConfig, **options):
         """Prepare the target that the app will run on.
 
         This is invoked before determining whether the app needs to be built, so that
-        any selection that affects the build (such as the target device) can be made.
+        any selection that affects the build (such as the target device, which
+        determines the binary that is required) can be made.
 
         :param app: The application to start
-        :returns: True if the app must be built, even if it has already been built.
         """
-        return False
 
     @abstractmethod
     def run_app(
@@ -407,7 +406,7 @@ class RunCommand(RunAppMixin, BaseCommand):
         )
         app = finalized[app.app_name]
 
-        build_required = self.prepare_target(app, **options)
+        self.prepare_target(app, **options)
 
         template_file = self.bundle_path(app)
         exec_file = self.binary_executable_path(app)
@@ -419,7 +418,6 @@ class RunCommand(RunAppMixin, BaseCommand):
             or update_support  # An explicit support file update has been requested
             or update_stub  # An explicit stub binary update has been requested
             or (not exec_file.exists())  # Executable binary doesn't exist yet
-            or build_required  # The target requires a build
             or (app.test_mode and not no_update)  # Test mode, but updates are enabled
         ):
             state = self.build_command(

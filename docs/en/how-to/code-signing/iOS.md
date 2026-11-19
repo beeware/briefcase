@@ -15,13 +15,13 @@ These steps only need to be completed once for each Mac and device that you use.
 
 ## Add your Apple ID to Xcode
 
-Open Xcode, then open Xcode's Settings, and select the *Accounts* tab. Click the `+` button, select *Apple ID*, and sign in.
+Open Xcode, then open Xcode's Settings, and select the *Accounts* tab (*Apple Accounts* in Xcode 27 and later). Click the `+` button, select *Apple ID*, and sign in.
 
 If you have a free Apple ID, Xcode creates a *Personal Team* for you. If you're a member of one or more Apple Developer Program teams, each of those teams will also be listed.
 
 ## Create a development certificate
 
-In the *Accounts* tab, select your Apple ID, select the team you want to use, and click *Manage Certificates...*. Click the `+` button, and select *Apple Development*.
+In the same tab, select your Apple ID, select the team you want to use, and click *Manage Certificates...*. Click the `+` button, and select *Apple Development*.
 
 This creates an "Apple Development" certificate, and installs it (with its private key) in your login keychain. You can confirm that the certificate is available by running:
 
@@ -56,7 +56,7 @@ You can now run your app on the device:
 $ briefcase run iOS -d
 ```
 
-Select your device from the list. When you select a physical device, Briefcase will ask you to select a development signing identity, then build the app, install it on the device, and start it.
+Select *Physical devices* from the list, then select your device. Briefcase will ask you to select a development signing identity, then build the app, install it on the device, and start it. If the device isn't ready to run apps (for example, because Developer Mode isn't enabled), it will be labeled with the reason; if you select it, Briefcase will describe how to fix the problem.
 
 The first time you run an app signed with a free Apple ID's certificate, iOS won't start the app, and Briefcase will report that the profile "has not been explicitly trusted by the user". To trust your certificate, open *Settings > General > VPN & Device Management* on the device, select your Apple ID under *Developer App*, and tap *Trust*. Then run your app again. You only need to do this once for each certificate.
 
@@ -70,6 +70,6 @@ Each app is identified by its bundle identifier (the [`bundle`][] and app name i
 
 Apps signed with a free Apple ID have some limitations:
 
-* Provisioning profiles expire after 7 days. After that, the app won't start. Running the app again with Briefcase will renew the profile.
+* Provisioning profiles expire after 7 days. After that, the app won't start. Rebuilding the app with `briefcase build iOS -d` will renew the profile.
 * You can only register a small number of new bundle identifiers each week, and only a small number of apps signed with a free Apple ID can be installed on a device at the same time.
 * Some capabilities (such as push notifications and iCloud) aren't available.

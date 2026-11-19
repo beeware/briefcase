@@ -24,7 +24,8 @@ def build_command(dummy_console, tmp_path):
 
 
 def test_device_options(build_command):
-    """The -d and -i options can be parsed; by default, no device is selected."""
+    """The -d and -i options can be parsed; by default, a simulator is selected
+    automatically."""
     options, _ = build_command.parse_options(
         ["-d", "Test iPhone", "-i", "Apple Development: jane@example.com (MEMBER1234)"]
     )
@@ -32,7 +33,7 @@ def test_device_options(build_command):
     assert options["identity"] == "Apple Development: jane@example.com (MEMBER1234)"
 
     options, _ = build_command.parse_options([])
-    assert "udid" not in options
+    assert options["udid"] == "auto"
     assert options["identity"] is None
 
 

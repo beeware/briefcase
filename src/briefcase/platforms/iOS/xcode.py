@@ -1,6 +1,5 @@
 from __future__ import annotations
 
-import argparse
 import contextlib
 import json
 import plistlib
@@ -36,6 +35,9 @@ from briefcase.exceptions import (
 from briefcase.integrations.subprocess import is_process_dead
 from briefcase.integrations.virtual_environment import VirtualEnvironment
 from briefcase.integrations.xcode import (
+    DEVICE_DEVELOPER_MODE_DISABLED,
+    DEVICE_NOT_PAIRED,
+    DEVICE_UNREACHABLE,
     DeviceState,
     get_device_state,
     get_identities,
@@ -54,6 +56,9 @@ from briefcase.platforms.macOS.filters import (
 # physical device. "iPhone Developer" is the name used by older certificates.
 DEVELOPMENT_IDENTITY_PREFIXES = ("Apple Development:", "iPhone Developer:")
 
+# The key for the physical devices option when selecting an iOS version.
+PHYSICAL_DEVICES = "physical"
+
 
 class iOSDevice(NamedTuple):
     """A device (simulator or physical) that can run an iOS app."""
@@ -62,6 +67,40 @@ class iOSDevice(NamedTuple):
     os_version: str
     name: str
     physical: bool
+
+
+# How to resolve each of the reasons a physical device isn't ready.
+DEVICE_NOT_READY_RESOLUTIONS = {
+    DEVICE_NOT_PAIRED: (
+        "Connect the device to this Mac with a cable, unlock it, and tap Trust\n"
+        "when prompted."
+    ),
+    DEVICE_DEVELOPER_MODE_DISABLED: (
+        "Enable Developer Mode on the device, in Settings > Privacy & Security >\n"
+        "Developer Mode, and restart the device when prompted."
+    ),
+    DEVICE_UNREACHABLE: (
+        "Unlock the device, and connect it to this Mac with a cable, or to the\n"
+        "same network as this Mac."
+    ),
+}
+
+
+class iOSDeviceNotReady(BriefcaseCommandError):
+    def __init__(self, name: str, reason: str):
+        super().__init__(
+            f"""\
+{name} isn't ready to run apps ({reason}).
+
+{DEVICE_NOT_READY_RESOLUTIONS[reason]}
+
+See:
+
+    https://briefcase.beeware.org/en/stable/reference/platforms/iOS/xcode/#ios-deploy
+
+for help with deploying to physical devices.
+"""
+        )
 
 
 @dataclass
@@ -134,9 +173,6 @@ class iOSXcodePassiveMixin(iOSMixin):
 
 
 class iOSXcodeMixin(iOSXcodePassiveMixin):
-    # The default value of the -d/--device option.
-    default_device = "auto"
-
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
 
@@ -154,7 +190,7 @@ class iOSXcodeMixin(iOSXcodePassiveMixin):
             "--device",
             dest="udid",
             nargs="?",
-            default=self.default_device,
+            default="auto",
             const=None,
             help=(
                 "The device to target; either a UDID, a device name "
@@ -192,7 +228,7 @@ class iOSXcodeMixin(iOSXcodePassiveMixin):
         udid: str | None = None,
         identity: str | None = None,
         **options,
-    ) -> bool:
+    ):
         """Select the device to run on and, for a physical device, the signing identity
         to use.
 
@@ -203,9 +239,6 @@ class iOSXcodeMixin(iOSXcodePassiveMixin):
             be asked to select a device at runtime.
         :param identity: The signing identity to use for a physical device. If
             `None`, the user will be asked to select an identity.
-        :returns: True if the app must be built; a physical device always
-            requires a build, so that Xcode can sign the app with the selected
-            identity.
         """
         try:
             self.target_device = self.select_target_device(udid)
@@ -220,23 +253,19 @@ class iOSXcodeMixin(iOSXcodePassiveMixin):
                 "`-i`/`--identity`."
             ) from e
 
-        return self.target_device.physical
-
     def select_target_device(self, udid_or_device=None):
         """Select the target device to use for iOS builds.
 
         Interrogates the system to get the list of available simulators, and
-        the physical devices connected to this machine.
+        the physical devices known to this machine.
 
         If the user has specified "auto", a recent "SE-class" iPhone simulator
         is selected automatically, on the most recent iOS version, without
         prompting.
 
-        If there is only a single iOS version available, that version
-        will be selected automatically.
-
-        If there is only one simulator available, that version will be selected
-        automatically.
+        Otherwise, the user is asked to select a simulator iOS version, or the
+        physical devices (if any are known); and then a device. If there is only
+        one option, it is selected automatically.
 
         If the user has specified a device at the command line, it will be
         used in preference to any of the above.
@@ -246,10 +275,11 @@ class iOSXcodeMixin(iOSXcodePassiveMixin):
             - The literal string `"auto"` (case-insensitive); automatically
               select a recent "SE-class" simulator on the most recent
               available iOS version, without prompting.
-            - A device UUID.
+            - A simulator UUID, or a physical device UDID.
             - A device name (e.g. `"iPhone 11"`).
             - A device name and OS version (e.g. `"iPhone 11::iOS 13.3"`).
         :returns: The selected device.
+        :raises iOSDeviceNotReady: If the selected physical device can't be used.
         """
         simulators = self.get_simulators(self.tools, "iOS")
 
@@ -259,30 +289,18 @@ class iOSXcodeMixin(iOSXcodePassiveMixin):
         else:
             physical_devices = {}
 
-        # Combine the simulators and physical devices, grouped by iOS version.
-        targets = {
-            iOS_tag: {
-                **simulators.get(iOS_tag, {}),
-                **physical_devices.get(iOS_tag, {}),
-            }
-            for iOS_tag in simulators | physical_devices
-        }
-        physical_udids = {
-            udid for devices in physical_devices.values() for udid in devices
-        }
-
         try:
             # Try to convert to a UDID. If this succeeds, then the argument
             # is a UDID.
             udid = str(UUID(udid_or_device)).upper()
             # User has provided a UDID at the command line; look for it.
-            for iOS_tag, devices in targets.items():
+            for iOS_tag, devices in simulators.items():
                 try:
                     device = devices[udid]
                     # iOS_tag will be of the form "iOS 15.5"
                     # Drop the "iOS" prefix when reporting the version.
                     iOS_version = iOS_tag.split(" ", 1)[-1]
-                    return iOSDevice(udid, iOS_version, device, udid in physical_udids)
+                    return iOSDevice(udid, iOS_version, device, physical=False)
                 except KeyError:
                     # UDID doesn't exist in this iOS version; try another.
                     pass
@@ -336,7 +354,7 @@ class iOSXcodeMixin(iOSXcodePassiveMixin):
                 self.console.info(
                     f"Automatically selected {device} simulator on {iOS_tag}"
                 )
-                return iOSDevice(udid, iOS_version, device, udid in physical_udids)
+                return iOSDevice(udid, iOS_version, device, physical=False)
             elif udid_or_device and "::" in udid_or_device:
                 # A device name::version.
                 device, iOS_tag = udid_or_device.split("::")
@@ -350,7 +368,7 @@ class iOSXcodeMixin(iOSXcodePassiveMixin):
                     # "clean", official capitalization.
                     iOS_tag, devices = {
                         clean_iOS_tag.lower(): (clean_iOS_tag, details)
-                        for clean_iOS_tag, details in targets.items()
+                        for clean_iOS_tag, details in simulators.items()
                     }[iOS_tag.lower()]
 
                     # iOS_tag will be of the form "iOS 15.5"
@@ -366,9 +384,7 @@ class iOSXcodeMixin(iOSXcodePassiveMixin):
                         # Found a match;
                         # normalize back to the official name and return.
                         device = devices[udid]
-                        return iOSDevice(
-                            udid, iOS_version, device, udid in physical_udids
-                        )
+                        return iOSDevice(udid, iOS_version, device, physical=False)
                     except KeyError as e:
                         raise InvalidDeviceError("device name", device) from e
                 except KeyError as e:
@@ -376,15 +392,9 @@ class iOSXcodeMixin(iOSXcodePassiveMixin):
             elif udid_or_device:
                 # Physical device UDIDs aren't UUIDs; check for a match on
                 # a physical device UDID before treating it as a device name.
-                for iOS_tag, devices in physical_devices.items():
-                    udid = udid_or_device.upper()
-                    if udid in devices:
-                        # iOS_tag will be of the form "iOS 15.5"
-                        # Drop the "iOS" prefix when reporting the version.
-                        iOS_version = iOS_tag.split(" ", 1)[-1]
-                        return iOSDevice(
-                            udid, iOS_version, devices[udid], physical=True
-                        )
+                udid = udid_or_device.upper()
+                if udid in physical_devices:
+                    return self._physical_device(udid, physical_devices[udid])
 
                 # Just a device name
                 device = udid_or_device
@@ -394,7 +404,7 @@ class iOSXcodeMixin(iOSXcodePassiveMixin):
                 # Drop the prefix (if it exists), convert into the tuple (15, 4),
                 # and sort numerically.
                 for iOS_tag, devices in sorted(
-                    targets.items(),
+                    simulators.items(),
                     key=lambda item: tuple(
                         int(v) for v in item[0].split()[-1].split(".")
                     ),
@@ -413,26 +423,61 @@ class iOSXcodeMixin(iOSXcodePassiveMixin):
                         # Drop the "iOS" prefix when reporting the version.
                         iOS_version = iOS_tag.split(" ", 1)[-1]
 
-                        return iOSDevice(
-                            udid, iOS_version, device, udid in physical_udids
-                        )
+                        return iOSDevice(udid, iOS_version, device, physical=False)
                     except KeyError:
                         # UDID doesn't exist in this iOS version; try another.
                         pass
+
+                # No simulator matches; look for a physical device with that name.
+                for udid, details in physical_devices.items():
+                    if details["name"].lower() == device.lower():
+                        return self._physical_device(udid, details)
+
                 raise InvalidDeviceError("device name", device) from e
 
-        if len(targets) == 0:
+        # The user selects a simulator iOS version, or the physical devices.
+        options = {iOS_tag: iOS_tag for iOS_tag in simulators}
+        if physical_devices:
+            options[PHYSICAL_DEVICES] = "Physical devices"
+
+        if len(options) == 0:
             raise BriefcaseCommandError("No iOS simulators available.")
-        elif len(targets) == 1:
-            iOS_tag = next(iter(targets.keys()))
+        elif len(options) == 1:
+            iOS_tag = next(iter(options))
         else:
             iOS_tag = self.console.selection_question(
                 intro="Select iOS version:",
                 description="iOS Version",
-                options=targets.keys(),
+                options=options,
             )
 
-        devices = targets[iOS_tag]
+        if iOS_tag == PHYSICAL_DEVICES:
+            udid = self.console.selection_question(
+                intro="Select physical device to use:",
+                description="Physical device",
+                options={
+                    udid: (
+                        f"{details['name']} ({details['not_ready']})"
+                        if details["not_ready"]
+                        else details["name"]
+                    )
+                    for udid, details in physical_devices.items()
+                },
+            )
+            target_device = self._physical_device(udid, physical_devices[udid])
+
+            self.console.info(f"""
+In the future, you could specify this device by running:
+
+    $ briefcase {self.command} iOS -d "{target_device.name}"
+
+or:
+
+    $ briefcase {self.command} iOS -d {udid}
+""")
+            return target_device
+
+        devices = simulators[iOS_tag]
 
         if len(devices) == 0:
             raise BriefcaseCommandError(f"No simulators available for {iOS_tag}.")
@@ -440,12 +485,7 @@ class iOSXcodeMixin(iOSXcodePassiveMixin):
             udid = self.console.selection_question(
                 intro="Select simulator device to use:",
                 description="Simulator",
-                options={
-                    udid: (
-                        f"{name} (physical device)" if udid in physical_udids else name
-                    )
-                    for udid, name in devices.items()
-                },
+                options=devices,
             )
 
         device = devices[udid]
@@ -464,7 +504,20 @@ or:
         # Drop the "iOS" prefix when reporting the version.
         iOS_version = iOS_tag.split(" ", 1)[-1]
 
-        return iOSDevice(udid, iOS_version, device, udid in physical_udids)
+        return iOSDevice(udid, iOS_version, device, physical=False)
+
+    def _physical_device(self, udid: str, details: dict) -> iOSDevice:
+        """Construct the target for a physical device, if it is ready.
+
+        :param udid: The UDID of the physical device.
+        :param details: The details of the device, as returned by
+            `get_physical_devices()`.
+        :returns: The physical device.
+        :raises iOSDeviceNotReady: If the device can't be used.
+        """
+        if details["not_ready"]:
+            raise iOSDeviceNotReady(details["name"], details["not_ready"])
+        return iOSDevice(udid, details["os_version"], details["name"], physical=True)
 
     def select_identity(self, identity: str | None = None) -> iOSSigningIdentity:
         """Select the signing identity to use when deploying to a physical device.
@@ -732,10 +785,6 @@ class iOSXcodeOpenCommand(iOSXcodePassiveMixin, OpenCommand):
 class iOSXcodeBuildCommand(iOSXcodeMixin, BuildCommand):
     description = "Build an iOS Xcode project."
     supports_debugger = True
-
-    # Unless a device is requested, build for the simulator without selecting
-    # a device.
-    default_device = argparse.SUPPRESS
 
     def add_options(self, parser):
         super().add_options(parser)

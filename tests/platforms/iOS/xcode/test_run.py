@@ -82,23 +82,21 @@ def test_prepare_target_simulator(run_command, first_app_config):
     run_command.select_target_device = mock.MagicMock(return_value=simulator)
     run_command.select_identity = mock.MagicMock()
 
-    build_required = run_command.prepare_target(
+    run_command.prepare_target(
         first_app_config,
         udid="iPhone 11",
         identity=None,
     )
 
-    # The simulator is the target, and no build is forced.
+    # The simulator is the target.
     assert run_command.target_device == simulator
     assert run_command.signing_identity is None
-    assert not build_required
     run_command.select_target_device.assert_called_once_with("iPhone 11")
     run_command.select_identity.assert_not_called()
 
 
 def test_prepare_target_physical_device(run_command, first_app_config):
-    """If a physical device is selected, a signing identity is selected, and the app
-    must be built."""
+    """If a physical device is selected, a signing identity is selected."""
     device = iOSDevice(
         "00008110-001122334455667E",
         "26.0.1",
@@ -113,16 +111,15 @@ def test_prepare_target_physical_device(run_command, first_app_config):
     run_command.select_target_device = mock.MagicMock(return_value=device)
     run_command.select_identity = mock.MagicMock(return_value=identity)
 
-    build_required = run_command.prepare_target(
+    run_command.prepare_target(
         first_app_config,
         udid="Test iPhone",
         identity="22222222222222222222222222222222222222BB",
     )
 
-    # The device and identity are the target, and a build is required.
+    # The device and identity are the target.
     assert run_command.target_device == device
     assert run_command.signing_identity == identity
-    assert build_required
     run_command.select_identity.assert_called_once_with(
         "22222222222222222222222222222222222222BB"
     )
