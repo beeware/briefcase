@@ -161,6 +161,9 @@ def test_verify_docker(package_command, first_app_pkg, monkeypatch):
     # makepkg was not inspected
     makepkg.exists.assert_not_called()
 
+    # The signing tool has been added to the image requirements
+    assert first_app_pkg.system_requires == ["gnupg"]
+
 
 @pytest.mark.parametrize(
     "changelog_filename",

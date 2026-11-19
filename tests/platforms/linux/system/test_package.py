@@ -36,6 +36,30 @@ def test_formats(package_command):
     assert package_command.packaging_formats == ["deb", "rpm", "pkg", "system"]
 
 
+def test_default_format(package_command):
+    """No default packaging format is defined; the app configuration determines the
+    format."""
+    assert package_command.default_packaging_format is None
+
+
+def test_verify_packaging_tools_unknown_format(package_command, first_app):
+    """An unresolved packaging format raises an error naming the vendor."""
+    # Restore the real implementation of _verify_packaging_tools
+    del package_command._verify_packaging_tools
+
+    first_app.packaging_format = "system"
+
+    with pytest.raises(
+        BriefcaseCommandError,
+        match=(
+            r"Briefcase doesn't know the system packaging format for somevendor. "
+            r"You may be able to build a package by manually specifying a format "
+            r"with -p/--packaging-format"
+        ),
+    ):
+        package_command._verify_packaging_tools(first_app)
+
+
 @pytest.mark.parametrize(
     ("format", "vendor", "codename", "revision", "filename"),
     [
@@ -119,50 +143,62 @@ def test_build_env_abi_failure(package_command, first_app, format):
 
 
 @pytest.mark.parametrize(
-    ("base_vendor", "input_format", "output_format"),
+    ("base_vendor", "packaging_format", "expected_requires"),
     [
-        # System packaging maps to known formats
-        ("debian", "system", "deb"),
-        ("rhel", "system", "rpm"),
-        ("arch", "system", "pkg"),
-        # Explicit output format is preserved
-        ("debian", "deb", "deb"),
-        ("redhat", "rpm", "rpm"),
-        ("arch", "pkg", "pkg"),
-        # This is technically possible, but probably ill-advised
-        ("debian", "rpm", "rpm"),
-        # Unknown base vendor, but explicit packaging format
-        (None, "deb", "deb"),
-        (None, "rpm", "rpm"),
-        (None, "pkg", "pkg"),
+        # Known formats add the signing tool for that format
+        ("debian", "deb", ["debsigs"]),
+        ("rhel", "rpm", ["rpm-sign"]),
+        ("arch", "pkg", ["gnupg"]),
+        # On SUSE, rpmsign is provided by rpm-build; there is no `rpm-sign` package
+        ("suse", "rpm", ["rpm-build"]),
     ],
 )
-def test_adjust_packaging_format(
+def test_docker_packaging_format_adjusts_signing_tools(
     package_command,
     first_app,
     base_vendor,
-    input_format,
-    output_format,
+    packaging_format,
+    expected_requires,
 ):
-    """The packaging format can be adjusted based on host system knowledge."""
+    """When using Docker, the signing tool is added to the image requirements."""
     first_app.target_vendor_base = base_vendor
-    first_app.packaging_format = input_format
+    first_app.packaging_format = packaging_format
+    package_command.target_image = "somevendor:surprising"
+    package_command.extra_docker_build_args = []
+    package_command.verify_docker_python = mock.MagicMock()
+    package_command.tools[first_app].app_context = mock.MagicMock()
 
     package_command.verify_app_tools(first_app)
 
-    assert first_app.packaging_format == output_format
+    assert getattr(first_app, "system_requires", []) == expected_requires
 
 
-def test_unknown_packaging_format(package_command, first_app):
-    """An unknown packaging format raises an error."""
-    first_app.target_vendor_base = None
-    first_app.packaging_format = "system"
+def test_docker_packaging_format_signing_tools_are_not_duplicated(
+    package_command,
+    first_app,
+):
+    """The signing tool is not added to the image requirements more than once."""
+    first_app.target_vendor_base = "debian"
+    first_app.packaging_format = "deb"
+    package_command.target_image = "somevendor:surprising"
+    package_command.extra_docker_build_args = []
+    package_command.verify_docker_python = mock.MagicMock()
+    package_command.tools[first_app].app_context = mock.MagicMock()
 
-    with pytest.raises(
-        BriefcaseCommandError,
-        match=r"Briefcase doesn't know the system packaging format for somevendor.",
-    ):
-        package_command.verify_app_tools(first_app)
+    package_command.verify_app_tools(first_app)
+    package_command.verify_app_tools(first_app)
+
+    assert first_app.system_requires == ["debsigs"]
+
+
+def test_native_packaging_does_not_add_signing_tools(package_command, first_app):
+    """The signing tool is not added to the host requirements when not using Docker."""
+    first_app.target_vendor_base = "debian"
+    first_app.packaging_format = "deb"
+
+    package_command.verify_app_tools(first_app)
+
+    assert getattr(first_app, "system_requires", None) is None
 
 
 def test_package_deb_app(package_command, first_app, mock_gpg):

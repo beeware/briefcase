@@ -423,6 +423,69 @@ def test_adhoc_sign(
     package_command.notarize.assert_not_called()
 
 
+def test_adhoc_sign_no_packaging_format(
+    package_command,
+    first_app_with_binaries,
+    adhoc_identity,
+    tmp_path,
+):
+    """An app with no explicit packaging format can be ad-hoc signed and packaged.
+
+    The app config doesn't have a packaging format annotated on it (the default
+    format is resolved during app verification), so the packaging format must
+    be given a chance to resolve before distribution paths are computed.
+    """
+    # Remove the packaging format annotated by the test fixture, so the app
+    # matches one with no packaging format in its configuration.
+    del first_app_with_binaries.packaging_format
+
+    # Package the app with an ad-hoc identity, without specifying a packaging
+    # format. This mirrors `briefcase package macOS app --adhoc-sign`.
+    package_command._package_app(
+        first_app_with_binaries,
+        update=False,
+        packaging_format=None,
+        adhoc_sign=True,
+        notarize_app=False,
+    )
+
+    # The packaging format has been resolved to the default for a GUI app
+    assert first_app_with_binaries.packaging_format == "dmg"
+
+    # A request has been made to sign the app
+    package_command.sign_app.assert_called_once_with(
+        app=first_app_with_binaries,
+        identity=adhoc_identity,
+    )
+
+    # The DMG has been built as expected
+    package_command.dmgbuild.build_dmg.assert_called_once_with(
+        filename=os.fsdecode(tmp_path / "base_path/dist/First App-0.0.1.dmg"),
+        volume_name="First App 0.0.1",
+        settings={
+            "files": [
+                os.fsdecode(
+                    tmp_path
+                    / "base_path"
+                    / "build"
+                    / "first-app"
+                    / "macos"
+                    / "app"
+                    / "First App.app"
+                )
+            ],
+            "symlinks": {"Applications": "/Applications"},
+            "icon_locations": {
+                "First App.app": (75, 75),
+                "Applications": (225, 75),
+            },
+            "window_rect": ((600, 600), (350, 150)),
+            "icon_size": 64,
+            "text_size": 12,
+        },
+    )
+
+
 def test_notarize_adhoc_signed(package_command, first_app_with_binaries):
     """A macOS App cannot be notarized if ad-hoc signing is requested."""
 

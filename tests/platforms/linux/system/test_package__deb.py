@@ -154,6 +154,9 @@ def test_verify_docker(package_command, first_app_deb, monkeypatch):
     # dpkg_deb was not inspected
     dpkg_deb.exists.assert_not_called()
 
+    # The signing tool has been added to the image requirements
+    assert first_app_deb.system_requires == ["debsigs"]
+
 
 @pytest.mark.skipif(sys.platform == "win32", reason="Can't build debs on Windows")
 def test_deb_package(package_command, first_app_deb, mock_gpg, tmp_path):
