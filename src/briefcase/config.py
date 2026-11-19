@@ -123,6 +123,11 @@ def validate_url(candidate):
     :returns: True. If there are any validation problems, raises ValueError with a
         diagnostic message.
     """
+    # The candidate has to be a string. Convert any non-string into an empty string
+    # which will then trigger "bad URL" behavior
+    if not isinstance(candidate, str):
+        candidate = ""
+
     result = urlparse(candidate)
     if not all([result.scheme, result.netloc]):
         raise ValueError("Not a valid URL!")
@@ -426,6 +431,7 @@ class GlobalConfig(BaseConfig):
         author=None,
         author_email=None,
         requires_python=None,
+        default_app=None,
         **kwargs,
     ):
         super().__init__(**kwargs)
@@ -438,6 +444,7 @@ class GlobalConfig(BaseConfig):
         self.license = license
         self.license_files = [] if license_files is None else license_files
         self.requires_python = requires_python
+        self.default_app = default_app
 
         # Version number is compliant with PEP440 (and related updates):
         try:
@@ -702,7 +709,7 @@ class DraftAppConfig(AppConfig):
         )
         self.uninstall_options = validate_install_options_config(
             uninstall_option,
-            "uininstall",
+            "uninstall",
             install=self.install_options,
         )
 
@@ -1531,5 +1538,12 @@ def parse_config(config_file: Path, platform, output_format, console):
         # Construct a configuration object, and add it to the list
         # of configurations that are being handled.
         app_configs[app_name] = config
+
+    # A declared default app must name an app defined in this project.
+    default_app = global_config.get("default_app")
+    if default_app is not None and default_app not in app_configs:
+        raise BriefcaseConfigError(
+            f"Default app {default_app!r} is not defined in pyproject.toml"
+        )
 
     return global_config, app_configs

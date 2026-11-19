@@ -25,7 +25,6 @@ def test_toga_bootstrap(new_command):
     assert context == {
         "app_source": '''\
 import toga
-from toga.style.pack import COLUMN, ROW
 
 
 class {{ cookiecutter.class_name }}(toga.App):
@@ -62,10 +61,9 @@ test_requires = [
 ]
 """,
         "pyproject_table_macOS": """\
-universal_build = true
 requires = [
     "toga-cocoa~=0.5.0",
-    "std-nslog~=2.0.0",
+    "std-nslog~=2.0.0; python_version < '3.14'",
 ]
 """,
         "pyproject_table_linux": """\
@@ -262,7 +260,6 @@ test_requires = [
 ]
 """,
         "pyproject_table_macOS": """\
-universal_build = true
 requires = [
     # Add your macOS-specific app requirements here
 ]
@@ -359,7 +356,6 @@ class {{ cookiecutter.class_name }}(QtWidgets.QMainWindow):
 
     def init_ui(self):
         self.setWindowTitle("{{ cookiecutter.app_name }}")
-        self.show()
 
 
 def main():
@@ -380,13 +376,16 @@ def main():
     QtWidgets.QApplication.setApplicationName(metadata["Formal-Name"])
 
     app = QtWidgets.QApplication(sys.argv)
+
     main_window = {{ cookiecutter.class_name }}()
+    main_window.show()
+
     sys.exit(app.exec())
 """,
         "pyproject_table_briefcase_app_extra_content": """
 requires = [
-    "PySide6-Essentials~=6.8",
-    # "PySide6-Addons~=6.8",
+    "PySide6-Essentials~=6.12",
+    # "PySide6-Addons~=6.12",
 ]
 test_requires = [
 {% if cookiecutter.test_framework == "pytest" %}
@@ -395,11 +394,10 @@ test_requires = [
 ]
 """,
         "pyproject_table_macOS": """\
-universal_build = true
-# Pyside 6.10 (required for Python 3.14 support) enforces a macOS 13 minimum.
-min_os_version = "13.0"
+# Pyside 6.12 (required for Python 3.15 support) enforces a macOS 14 minimum.
+min_os_version = "14.0"
 requires = [
-    "std-nslog~=2.0.0",
+    "std-nslog~=2.0.0; python_version < '3.14'",
 ]
 """,
         "pyproject_table_linux": """\
@@ -531,7 +529,6 @@ test_requires = [
 ]
 """,
         "pyproject_table_macOS": """\
-universal_build = true
 requires = [
     # Add your macOS-specific app requirements here
 ]

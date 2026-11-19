@@ -214,8 +214,10 @@ class iOSXcodeMixin(iOSXcodePassiveMixin):
         except InputDisabled as e:
             raise BriefcaseCommandError(
                 "Input has been disabled; can't select a device or signing "
-                "identity. Use -d/--device to specify the device and, for a "
-                "physical device, -i/--identity to specify the signing identity."
+                "identity. Omit the `-d`/`--device` option, or use `-d auto`, to "
+                "select a simulator; or specify a physical device with "
+                "`-d`/`--device`, and its signing identity with "
+                "`-i`/`--identity`."
             ) from e
 
         return self.target_device.physical
@@ -434,8 +436,6 @@ class iOSXcodeMixin(iOSXcodePassiveMixin):
 
         if len(devices) == 0:
             raise BriefcaseCommandError(f"No simulators available for {iOS_tag}.")
-        elif len(devices) == 1:
-            udid = next(iter(devices.keys()))
         else:
             udid = self.console.selection_question(
                 intro="Select simulator device to use:",

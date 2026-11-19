@@ -194,6 +194,39 @@ def test_multiple_iOS_runtime(mock_tools, simulator):
     mock_tools.console.assert_not_called()
 
 
+def test_duplicate_iOS_runtime(mock_tools, simulator):
+    """If there are multiple runtimes for the same iOS version, they are all found."""
+    mock_tools.subprocess.check_output.return_value = simctl_result(
+        "duplicate-runtimes"
+    )
+
+    simulators = get_simulators(
+        mock_tools,
+        "iOS",
+        simulator_location=simulator,
+    )
+
+    assert simulators == {
+        "iOS 27.2": {
+            "ED7C1C89-E14F-481B-8C73-97EAEE846C2F": "iPad (A16)",
+            "7E6B9894-4C75-4598-9C6A-C48DC886E013": "iPad Air 11-inch (M4)",
+            "6B30CBBC-EEAA-4DC7-A7F7-682E58A9D1E8": "iPad Air 13-inch (M4)",
+            "BCF9AC39-8DEF-446F-BB23-C6D904DA5D82": "iPad Pro 11-inch (M5)",
+            "E61D2DCF-3F11-43C6-8CCF-2EE91BA98122": "iPad Pro 13-inch (M5)",
+            "5535511D-91BC-4814-BB89-F423B9E0CC29": "iPad mini (A20 Pro)",
+            "1D62DEB1-9F95-473B-A450-3FCD996C4196": "iPhone 17",
+            "E601C50F-1F0D-46B8-A7FF-81ECA249FA85": "iPhone 17e",
+            "9F351F02-569D-45B7-B525-729C9496F6BC": "iPhone 18 Pro",
+            "1083F348-74AF-41C4-8CA0-B1C681C7D844": "iPhone 18 Pro Max",
+            "29B86162-0F44-4FE6-BAB2-D8D93B7DFC41": "iPhone Air",
+            "51DD8293-72DF-4BC2-956D-9D261FF9AD07": "iPhone Duo",
+        }
+    }
+
+    # The prompt was not shown
+    mock_tools.console.assert_not_called()
+
+
 def test_unknown_runtime(mock_tools, simulator):
     """If an unknown runtime is requested, no devices will be found."""
     mock_tools.subprocess.check_output.return_value = simctl_result(
@@ -285,3 +318,25 @@ def test_alternate_format(mock_tools, simulator):
 
     # The prompt was not shown
     mock_input.assert_not_called()
+
+
+def test_device_unavailable(mock_tools, simulator):
+    """If a runtime has no devices, or a device is unavailable, they don't appear."""
+    mock_tools.subprocess.check_output.return_value = simctl_result(
+        "device-unavailable"
+    )
+
+    simulators = get_simulators(
+        mock_tools,
+        "iOS",
+        simulator_location=simulator,
+    )
+
+    assert simulators == {
+        "iOS 27.2": {
+            "5A720FFD-BA16-4FF3-9B51-CA8FC7717449": "iPhone 17e",
+        }
+    }
+
+    # The prompt was not shown
+    mock_tools.console.assert_not_called()

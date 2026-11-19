@@ -44,11 +44,11 @@ class CondaVirtualEnvironment(VirtualEnvironment):
 
             if Version(conda_version) < Version("26.5"):
                 raise BriefcaseCommandError(f"""\
-Briefcase requires Conda 26.5 (or newer); you have {conda_version}.
+Briefcase requires Conda 26.10 (or newer); you have {conda_version}.
 
 To upgrade your Conda version, run:
 
-    conda install --name base 'conda>=26.5'
+    conda install --name base 'conda>=26.10'
 """)
         except (FileNotFoundError, subprocess.CalledProcessError) as e:
             raise BriefcaseCommandError("""\
@@ -62,7 +62,7 @@ active Conda environment.
 
     @property
     def python_version(self) -> str:
-        """The ``major.minor`` Python version to request from conda."""
+        """The `major.minor` Python version to request from conda."""
         return f"{sys.version_info.major}.{sys.version_info.minor}"
 
     def exists(self) -> bool:
@@ -113,8 +113,6 @@ active Conda environment.
                         self.venv_path,
                         "--yes",
                         *(["--quiet"] if not self.tools.console.is_verbose else []),
-                        f"python={self.python_version}",
-                        "pip",
                     ],
                     check=True,
                 )
@@ -132,14 +130,61 @@ active Conda environment.
                         self.venv_path,
                         *(["--quiet"] if not self.tools.console.is_verbose else []),
                         "--set",
-                        "solver",
-                        "rattler",
+                        "plugins.conda_pypi_pip_warning",
+                        "false",
                     ],
                     check=True,
                 )
             except subprocess.CalledProcessError as e:
                 raise BriefcaseCommandError(
-                    f"Unable to set solver for Conda environment at {self.venv_path}"
+                    "Unable to disable conda-pypi warning "
+                    f"in Conda environment at {self.venv_path}"
+                ) from e
+
+            try:
+                self.tools.subprocess.run(
+                    [
+                        self.conda_exe,
+                        "config",
+                        "--prefix",
+                        self.venv_path,
+                        *(["--quiet"] if not self.tools.console.is_verbose else []),
+                        "--append",
+                        "channels",
+                        "conda-pypi",
+                    ],
+                    check=True,
+                )
+            except subprocess.CalledProcessError as e:
+                raise BriefcaseCommandError(
+                    "Unable to enable conda-pypi channel "
+                    f"in Conda environment at {self.venv_path}"
+                ) from e
+
+            try:
+                self.tools.subprocess.run(
+                    [
+                        self.conda_exe,
+                        "install",
+                        "--prefix",
+                        self.venv_path,
+                        "--yes",
+                        *(["--quiet"] if not self.tools.console.is_verbose else []),
+                        f"python={self.python_version}",
+                        "pip",
+                    ]
+                    # In Python3.15, conda split libpython into its own package
+                    + (
+                        [f"libpython={self.python_version}"]
+                        if sys.version_info >= (3, 15)
+                        else []
+                    ),
+                    check=True,
+                )
+            except subprocess.CalledProcessError as e:
+                raise BriefcaseCommandError(
+                    "Unable to install core packages into "
+                    f"Conda environment at {self.venv_path}"
                 ) from e
 
         return True

@@ -223,25 +223,6 @@ def test_invalid_explicit_device_name_valid_version(dummy_command):
         dummy_command.select_target_device("iphone 99::iOS 13.2")
 
 
-def test_implied_device(dummy_command):
-    """If there's only one device, no input is required; the device is returned."""
-    # get_simulators will return one option.
-    dummy_command.get_simulators.return_value = {
-        "iOS 13.2": {
-            "2D3503A3-6EB9-4B37-9B17-C7EFEF2FA32D": "iPhone 11",
-        }
-    }
-
-    udid, iOS_version, device, _ = dummy_command.select_target_device()
-
-    assert udid == "2D3503A3-6EB9-4B37-9B17-C7EFEF2FA32D"
-    assert iOS_version == "13.2"
-    assert device == "iPhone 11"
-
-    # No user input was solicited
-    assert dummy_command.console.prompts == []
-
-
 def test_implied_os(dummy_command):
     """If there is only one OS option, it's implied."""
     # get_simulators will return multiple options on 1 iOS version.
@@ -264,35 +245,6 @@ def test_implied_os(dummy_command):
 
     # User input was solicited once
     assert dummy_command.console.prompts == ["Simulator: "]
-
-
-def test_multiple_os_implied_device(dummy_command):
-    """If there are multiple OS options, but only one device on the chosen OS, device is
-    implied."""
-    # get_simulators will return multiple options on 1 iOS version.
-    dummy_command.get_simulators.return_value = {
-        "iOS 10.3": {
-            "0BB80120-FA02-4597-A1BA-DB8CDE4F086D": "iPhone 5s",
-            "D7BBAD14-38FD-48F5-ACFD-B1193F829216": "iPhone 6",
-            "6998CA09-44B5-4963-8F80-265412D99683": "iPhone 7",
-        },
-        "iOS 13.2": {
-            "2D3503A3-6EB9-4B37-9B17-C7EFEF2FA32D": "iPhone 11",
-        },
-    }
-
-    # Return option 1 (13.2)
-    dummy_command.console.values = ["2"]
-
-    # Device for iOS 13.2 is implied.
-    udid, iOS_version, device, _ = dummy_command.select_target_device()
-
-    assert udid == "2D3503A3-6EB9-4B37-9B17-C7EFEF2FA32D"
-    assert iOS_version == "13.2"
-    assert device == "iPhone 11"
-
-    # User input was solicited once
-    assert dummy_command.console.prompts == ["iOS Version: "]
 
 
 def test_os_and_device_options(dummy_command):
