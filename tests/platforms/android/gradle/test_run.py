@@ -293,8 +293,9 @@ def test_unsupported_template_version(run_command, first_app_generated):
     """Error raised if template's target version is not supported."""
     run_command.apps = {"first-app": first_app_generated}
 
-    # Skip verifying tools
+    # Skip verifying tools and selecting a device
     run_command.verify_tools = mock.MagicMock()
+    run_command.prepare_target = mock.MagicMock()
 
     # Mock the build command previously called
     create_file(run_command.binary_path(first_app_generated), content="")
@@ -314,12 +315,70 @@ def test_unsupported_template_version(run_command, first_app_generated):
     run_command.verify_app.assert_called_once_with(first_app_generated)
 
 
-def test_run_existing_device(run_command, first_app_config):
-    """An app can be run on an existing device."""
-    # Set up device selection to return a running physical device.
+def test_prepare_target_running_device(run_command, first_app_config):
+    """A running device can be selected as the target."""
     run_command.tools.android_sdk.select_target_device = mock.MagicMock(
         return_value=("exampleDevice", "ExampleDevice", None)
     )
+    run_command.tools.android_sdk.create_emulator = mock.MagicMock()
+    run_command.tools.android_sdk.verify_avd = mock.MagicMock()
+
+    run_command.prepare_target(first_app_config, device_or_avd="exampleDevice")
+
+    run_command.tools.android_sdk.select_target_device.assert_called_once_with(
+        "exampleDevice"
+    )
+    run_command.tools.android_sdk.create_emulator.assert_not_called()
+    run_command.tools.android_sdk.verify_avd.assert_not_called()
+
+    assert run_command.target_device == "exampleDevice"
+    assert run_command.target_name == "ExampleDevice"
+    assert run_command.target_avd is None
+
+
+def test_prepare_target_created_emulator(run_command, first_app_config):
+    """A new emulator can be created as the target."""
+    run_command.tools.android_sdk.select_target_device = mock.MagicMock(
+        return_value=(None, None, None)
+    )
+    run_command.tools.android_sdk.create_emulator = mock.MagicMock(
+        return_value="newDevice"
+    )
+    run_command.tools.android_sdk.verify_avd = mock.MagicMock()
+
+    run_command.prepare_target(first_app_config, device_or_avd=None)
+
+    run_command.tools.android_sdk.create_emulator.assert_called_once_with()
+    # The AVD is pre-verified through the creation process.
+    run_command.tools.android_sdk.verify_avd.assert_not_called()
+
+    assert run_command.target_device is None
+    assert run_command.target_avd == "newDevice"
+
+
+def test_prepare_target_idle_emulator(run_command, first_app_config):
+    """An existing emulator that isn't running can be selected as the target."""
+    run_command.tools.android_sdk.select_target_device = mock.MagicMock(
+        return_value=(None, "Idle Device", "idleDevice")
+    )
+    run_command.tools.android_sdk.create_emulator = mock.MagicMock()
+    run_command.tools.android_sdk.verify_avd = mock.MagicMock()
+
+    run_command.prepare_target(first_app_config, device_or_avd="@idleDevice")
+
+    run_command.tools.android_sdk.create_emulator.assert_not_called()
+    run_command.tools.android_sdk.verify_avd.assert_called_once_with("idleDevice")
+
+    assert run_command.target_device is None
+    assert run_command.target_name == "Idle Device"
+    assert run_command.target_avd == "idleDevice"
+
+
+def test_run_existing_device(run_command, first_app_config):
+    """An app can be run on an existing device."""
+    # Target a running physical device.
+    run_command.target_device = "exampleDevice"
+    run_command.target_name = "ExampleDevice"
 
     # Set up the log streamer to return a known stream
     log_popen = mock.MagicMock()
@@ -339,13 +398,7 @@ def test_run_existing_device(run_command, first_app_config):
     # Invoke run_app
     run_command.run_app(
         first_app_config,
-        device_or_avd="exampleDevice",
         passthrough=[],
-    )
-
-    # select_target_device was invoked with a specific device
-    run_command.tools.android_sdk.select_target_device.assert_called_once_with(
-        "exampleDevice"
     )
 
     # The ADB wrapper is created
@@ -396,10 +449,9 @@ def test_run_existing_device(run_command, first_app_config):
 
 def test_run_with_passthrough(run_command, first_app_config):
     """An app can be run with passthrough args."""
-    # Set up device selection to return a running physical device.
-    run_command.tools.android_sdk.select_target_device = mock.MagicMock(
-        return_value=("exampleDevice", "ExampleDevice", None)
-    )
+    # Target a running physical device.
+    run_command.target_device = "exampleDevice"
+    run_command.target_name = "ExampleDevice"
 
     # Set up the log streamer to return a known stream
     log_popen = mock.MagicMock()
@@ -419,13 +471,7 @@ def test_run_with_passthrough(run_command, first_app_config):
     # Invoke run_app with args.
     run_command.run_app(
         first_app_config,
-        device_or_avd="exampleDevice",
         passthrough=["foo", "--bar"],
-    )
-
-    # select_target_device was invoked with a specific device
-    run_command.tools.android_sdk.select_target_device.assert_called_once_with(
-        "exampleDevice"
     )
 
     # The ADB wrapper is created
@@ -468,10 +514,9 @@ def test_run_with_passthrough(run_command, first_app_config):
 
 def test_run_forward_reverse_ports(run_command, first_app_config):
     """An app can be run with port forwarding and reversing."""
-    # Set up device selection to return a running physical device.
-    run_command.tools.android_sdk.select_target_device = mock.MagicMock(
-        return_value=("exampleDevice", "ExampleDevice", None)
-    )
+    # Target a running physical device.
+    run_command.target_device = "exampleDevice"
+    run_command.target_name = "ExampleDevice"
 
     # Invoke run_app with args.
     run_command.run_app(
@@ -509,10 +554,9 @@ def test_run_forward_reverse_ports(run_command, first_app_config):
 
 def test_run_revoke_permissions(run_command, first_app_config):
     """An app can be run with revoking permissions."""
-    # Set up device selection to return a running physical device.
-    run_command.tools.android_sdk.select_target_device = mock.MagicMock(
-        return_value=("exampleDevice", "ExampleDevice", None)
-    )
+    # Target a running physical device.
+    run_command.target_device = "exampleDevice"
+    run_command.target_name = "ExampleDevice"
 
     # Invoke run_app with args.
     run_command.run_app(
@@ -545,9 +589,8 @@ def test_run_revoke_permissions(run_command, first_app_config):
 
 def test_run_slow_start(run_command, first_app_config, monkeypatch):
     """If the app is slow to start, multiple calls to pidof will be made."""
-    run_command.tools.android_sdk.select_target_device = mock.MagicMock(
-        return_value=("exampleDevice", "ExampleDevice", None)
-    )
+    run_command.target_device = "exampleDevice"
+    run_command.target_name = "ExampleDevice"
 
     # Set up the log streamer to return a known stream
     log_popen = mock.MagicMock()
@@ -559,7 +602,6 @@ def test_run_slow_start(run_command, first_app_config, monkeypatch):
 
     run_command.run_app(
         first_app_config,
-        device_or_avd="exampleDevice",
         passthrough=[],
     )
 
@@ -582,9 +624,8 @@ def test_run_slow_start(run_command, first_app_config, monkeypatch):
 
 def test_run_crash_at_start(run_command, first_app_config, monkeypatch):
     """If the app crashes before a PID can be read, a log dump is shown."""
-    run_command.tools.android_sdk.select_target_device = mock.MagicMock(
-        return_value=("exampleDevice", "ExampleDevice", None)
-    )
+    run_command.target_device = "exampleDevice"
+    run_command.target_name = "ExampleDevice"
 
     # Mock the pidof call failing multiple times before a timeout.
     run_command.tools.mock_adb.pidof.side_effect = [None] * 5
@@ -611,7 +652,6 @@ def test_run_crash_at_start(run_command, first_app_config, monkeypatch):
     ):
         run_command.run_app(
             first_app_config,
-            device_or_avd="exampleDevice",
             passthrough=[],
         )
 
@@ -630,80 +670,12 @@ def test_run_crash_at_start(run_command, first_app_config, monkeypatch):
     )
 
 
-def test_run_created_emulator(run_command, first_app_config):
-    """The user can choose to run on a newly created emulator."""
-    # Set up device selection to return a completely new emulator
-    run_command.tools.android_sdk.select_target_device = mock.MagicMock(
-        return_value=(None, None, None)
-    )
-    run_command.tools.android_sdk.create_emulator = mock.MagicMock(
-        return_value="newDevice"
-    )
-    run_command.tools.android_sdk.verify_avd = mock.MagicMock()
-    run_command.tools.android_sdk.start_emulator = mock.MagicMock(
-        return_value=("emulator-3742", "New Device")
-    )
-
-    # Set up the log streamer to return a known stream
-    log_popen = mock.MagicMock()
-    run_command.tools.mock_adb.logcat.return_value = log_popen
-
-    # Invoke run_app
-    run_command.run_app(first_app_config, passthrough=[])
-
-    # A new emulator was created
-    run_command.tools.android_sdk.create_emulator.assert_called_once_with()
-
-    # No attempt was made to verify the AVD (it is pre-verified through
-    # the creation process)
-    run_command.tools.android_sdk.verify_avd.assert_not_called()
-
-    # The emulator was started
-    run_command.tools.android_sdk.start_emulator.assert_called_once_with(
-        "newDevice", None
-    )
-
-    # The ADB wrapper is created
-    run_command.tools.android_sdk.adb.assert_called_once_with(device="emulator-3742")
-
-    # The adb wrapper is invoked with the expected arguments
-    run_command.tools.mock_adb.install_apk.assert_called_once_with(
-        run_command.binary_path(first_app_config),
-        f"{first_app_config.package_name}.{first_app_config.module_name}",
-    )
-    run_command.tools.mock_adb.force_stop_app.assert_called_once_with(
-        f"{first_app_config.package_name}.{first_app_config.module_name}",
-    )
-
-    run_command.tools.mock_adb.start_app.assert_called_once_with(
-        f"{first_app_config.package_name}.{first_app_config.module_name}",
-        "org.beeware.android.MainActivity",
-        [],
-        {},
-    )
-
-    run_command.tools.mock_adb.logcat.assert_called_once_with(pid="777")
-
-    run_command._stream_app_logs.assert_called_once_with(
-        first_app_config,
-        popen=log_popen,
-        clean_filter=android_log_clean_filter,
-        clean_output=False,
-        stop_func=mock.ANY,
-        log_stream=True,
-    )
-
-
 def test_run_idle_device(run_command, first_app_config):
-    """The user can choose to run on an idle device."""
-    # Set up device selection to return a new device that has an AVD,
-    # but not a device ID.
-    run_command.tools.android_sdk.select_target_device = mock.MagicMock(
-        return_value=(None, "Idle Device", "idleDevice")
-    )
+    """If the target emulator isn't running, it is started."""
+    # Target an emulator that has an AVD, but not a device ID.
+    run_command.target_name = "Idle Device"
+    run_command.target_avd = "idleDevice"
 
-    run_command.tools.android_sdk.create_emulator = mock.MagicMock()
-    run_command.tools.android_sdk.verify_avd = mock.MagicMock()
     run_command.tools.android_sdk.start_emulator = mock.MagicMock(
         return_value=("emulator-3742", "Idle Device")
     )
@@ -714,12 +686,6 @@ def test_run_idle_device(run_command, first_app_config):
 
     # Invoke run_app
     run_command.run_app(first_app_config, passthrough=[])
-
-    # No attempt was made to create a new emulator
-    run_command.tools.android_sdk.create_emulator.assert_not_called()
-
-    # The AVD has been verified
-    run_command.tools.android_sdk.verify_avd.assert_called_with("idleDevice")
 
     # The emulator was started
     run_command.tools.android_sdk.start_emulator.assert_called_once_with(
@@ -796,10 +762,9 @@ def test_run_test_mode(run_command, first_app_config):
     """An app can be run in test mode."""
     first_app_config.test_mode = True
 
-    # Set up device selection to return a running physical device.
-    run_command.tools.android_sdk.select_target_device = mock.MagicMock(
-        return_value=("exampleDevice", "ExampleDevice", None)
-    )
+    # Target a running physical device.
+    run_command.target_device = "exampleDevice"
+    run_command.target_name = "ExampleDevice"
 
     # Set up the log streamer to return a known stream
     log_popen = mock.MagicMock()
@@ -819,14 +784,8 @@ def test_run_test_mode(run_command, first_app_config):
     # Invoke run_app
     run_command.run_app(
         first_app_config,
-        device_or_avd="exampleDevice",
         passthrough=[],
         shutdown_on_exit=True,
-    )
-
-    # select_target_device was invoked with a specific device
-    run_command.tools.android_sdk.select_target_device.assert_called_once_with(
-        "exampleDevice"
     )
 
     # The ADB wrapper is created
@@ -871,10 +830,9 @@ def test_run_test_mode_with_passthrough(run_command, first_app_config):
     """An app can be run in test mode with passthrough args."""
     first_app_config.test_mode = True
 
-    # Set up device selection to return a running physical device.
-    run_command.tools.android_sdk.select_target_device = mock.MagicMock(
-        return_value=("exampleDevice", "ExampleDevice", None)
-    )
+    # Target a running physical device.
+    run_command.target_device = "exampleDevice"
+    run_command.target_name = "ExampleDevice"
 
     # Set up the log streamer to return a known stream
     log_popen = mock.MagicMock()
@@ -894,14 +852,8 @@ def test_run_test_mode_with_passthrough(run_command, first_app_config):
     # Invoke run_app in test mode with args.
     run_command.run_app(
         first_app_config,
-        device_or_avd="exampleDevice",
         passthrough=["foo", "--bar"],
         shutdown_on_exit=True,
-    )
-
-    # select_target_device was invoked with a specific device
-    run_command.tools.android_sdk.select_target_device.assert_called_once_with(
-        "exampleDevice"
     )
 
     # The ADB wrapper is created
@@ -942,18 +894,13 @@ def test_run_test_mode_with_passthrough(run_command, first_app_config):
     run_command.tools.mock_adb.kill.assert_called_once_with()
 
 
-def test_run_test_mode_created_emulator(run_command, first_app_config):
-    """The user can choose to run in test mode on a newly created emulator."""
+def test_run_test_mode_idle_device(run_command, first_app_config):
+    """If the target emulator isn't running in test mode, it is started."""
     first_app_config.test_mode = True
 
-    # Set up device selection to return a completely new emulator
-    run_command.tools.android_sdk.select_target_device = mock.MagicMock(
-        return_value=(None, None, None)
-    )
-    run_command.tools.android_sdk.create_emulator = mock.MagicMock(
-        return_value="newDevice"
-    )
-    run_command.tools.android_sdk.verify_avd = mock.MagicMock()
+    # Target an emulator that has an AVD, but not a device ID.
+    run_command.target_avd = "newDevice"
+
     run_command.tools.android_sdk.start_emulator = mock.MagicMock(
         return_value=("emulator-3742", "New Device")
     )
@@ -969,13 +916,6 @@ def test_run_test_mode_created_emulator(run_command, first_app_config):
         extra_emulator_args=["-no-window", "-no-audio"],
         shutdown_on_exit=True,
     )
-
-    # A new emulator was created
-    run_command.tools.android_sdk.create_emulator.assert_called_once_with()
-
-    # No attempt was made to verify the AVD (it is pre-verified through
-    # the creation process)
-    run_command.tools.android_sdk.verify_avd.assert_not_called()
 
     # The emulator was started
     run_command.tools.android_sdk.start_emulator.assert_called_once_with(
@@ -1056,10 +996,9 @@ def test_run_debugger(run_command, first_app_config, tmp_path, debugger):
     """An app can be run in debug mode."""
     run_command.console.verbosity = LogLevel.DEBUG
 
-    # Set up device selection to return a running physical device.
-    run_command.tools.android_sdk.select_target_device = mock.MagicMock(
-        return_value=("exampleDevice", "ExampleDevice", None)
-    )
+    # Target a running physical device.
+    run_command.target_device = "exampleDevice"
+    run_command.target_name = "ExampleDevice"
 
     # Set up the log streamer to return a known stream
     log_popen = mock.MagicMock()
@@ -1084,13 +1023,7 @@ def test_run_debugger(run_command, first_app_config, tmp_path, debugger):
     # Invoke run_app with args.
     run_command.run_app(
         first_app_config,
-        device_or_avd="exampleDevice",
         passthrough=[],
-    )
-
-    # select_target_device was invoked with a specific device
-    run_command.tools.android_sdk.select_target_device.assert_called_once_with(
-        "exampleDevice"
     )
 
     # The ADB wrapper is created
