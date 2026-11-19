@@ -16,8 +16,8 @@ class AppContext(TypedDict):
     test_source_dir: str
     project_name: str
     description: str
-    author: str
-    author_email: str
+    authors: str
+    copyright_holder: str
     bundle: str
     url: str
     license: str

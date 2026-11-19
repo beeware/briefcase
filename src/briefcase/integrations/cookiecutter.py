@@ -6,6 +6,8 @@ from xml.sax.saxutils import escape, quoteattr
 
 from jinja2.ext import Extension
 
+from briefcase.config import escape_toml
+
 
 class PythonVersionExtension(Extension):
     """Jinja2 extension to convert a full Python version string (3.11.0rc1) into useful
@@ -76,10 +78,6 @@ class TOMLEscape(Extension):
     def __init__(self, environment):
         """Initialize the extension with the given environment."""
         super().__init__(environment)
-
-        def escape_toml(obj):
-            """Escapes double quotes and backslashes."""
-            return obj.replace("\\", "\\\\").replace('"', '\\"')
 
         def escape_non_ascii(obj):
             """Quotes obj if non ascii characters are present."""

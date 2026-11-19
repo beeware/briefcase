@@ -25,8 +25,10 @@ def test_question_sequence(new_command):
 
     assert context == {
         "app_name": "myapplication",
-        "author": "Grace Hopper",
-        "author_email": "grace@navy.mil",
+        "authors": (
+            'authors = [\n    {name = "Grace Hopper", email = "grace@navy.mil"},\n]'
+        ),
+        "copyright_holder": "Grace Hopper",
         "bundle": "org.beeware",
         "class_name": "MyApplication",
         "description": "Cool stuff",
@@ -62,8 +64,12 @@ def test_question_sequence_with_overrides(new_command):
 
     assert context == {
         "app_name": "myoverrideapp",
-        "author": "override, author",
-        "author_email": "author@override.tld",
+        "authors": (
+            "authors = [\n"
+            '    {name = "override, author", email = "author@override.tld"},\n'
+            "]"
+        ),
+        "copyright_holder": "override, author",
         "bundle": "net.example",
         "class_name": "MyOverrideApp",
         "description": "My override description",
@@ -101,8 +107,12 @@ def test_question_sequence_with_bad_license_override(new_command):
 
     assert context == {
         "app_name": "myoverrideapp",
-        "author": "override, author",
-        "author_email": "author@override.tld",
+        "authors": (
+            "authors = [\n"
+            '    {name = "override, author", email = "author@override.tld"},\n'
+            "]"
+        ),
+        "copyright_holder": "override, author",
         "bundle": "net.example",
         "class_name": "MyOverrideApp",
         "description": "My override description",
@@ -125,8 +135,10 @@ def test_question_sequence_with_no_user_input(new_command):
 
     assert context == {
         "app_name": "helloworld",
-        "author": "Jane Developer",
-        "author_email": "jane@example.com",
+        "authors": (
+            'authors = [\n    {name = "Jane Developer", email = "jane@example.com"},\n]'
+        ),
+        "copyright_holder": "Jane Developer",
         "bundle": "com.example",
         "class_name": "HelloWorld",
         "description": "My first application",
@@ -151,8 +163,10 @@ def test_author_and_email_use_git_config_as_fallback(new_command):
 
     context = new_command.build_app_context(project_overrides={})
 
-    assert context["author"] == "Some Author"
-    assert context["author_email"] == "my@email.com"
+    assert context["authors"] == (
+        'authors = [\n    {name = "Some Author", email = "my@email.com"},\n]'
+    )
+    assert context["copyright_holder"] == "Some Author"
     assert new_command.get_git_config_value.call_args_list == [
         mock.call("user", "name"),
         mock.call("user", "email"),
