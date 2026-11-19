@@ -290,8 +290,6 @@ class iOSXcodeMixin(iOSXcodePassiveMixin):
 
         if len(devices) == 0:
             raise BriefcaseCommandError(f"No simulators available for {iOS_tag}.")
-        elif len(devices) == 1:
-            udid = next(iter(devices.keys()))
         else:
             udid = self.console.selection_question(
                 intro="Select simulator device to use:",
@@ -632,6 +630,7 @@ class iOSXcodeRunCommand(iOSXcodeMixin, RunCommand):
         except InputDisabled as e:
             raise BriefcaseCommandError(
                 "Input has been disabled; can't select a device to target."
+                "Omit the `-d`/`--device` option, or use `-d auto`."
             ) from e
 
         if app.test_mode:

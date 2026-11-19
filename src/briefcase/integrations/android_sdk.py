@@ -1083,17 +1083,12 @@ connection.
                 options=choices,
             )
         except InputDisabled as e:
-            # If input is disabled, and there's only one actual simulator,
-            # select it. If there are no simulators, select "Create simulator"
-            if len(choices) <= 2:
-                choice = next(iter(choices))
-            else:
-                raise BriefcaseCommandError(
-                    """\
+            raise BriefcaseCommandError(
+                """\
 Input has been disabled; can't select a device to target.
-Use the -d/--device option to explicitly specify the device to use.
+Omit the `-d`/`--device` option, or use `-d auto`.
 """
-                ) from e
+            ) from e
 
         # Process the user's choice
         if choice == "-":
