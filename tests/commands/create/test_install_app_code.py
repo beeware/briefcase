@@ -376,8 +376,7 @@ def test_non_latin_metadata(
     """If the app metadata contains non-Latin-1 characters, the METADATA file is written
     correctly (Briefcase#767)"""
     myapp.formal_name = "My büggy app"
-    myapp.author = "José Weiß-Müller"
-    myapp.author_email = "钱华林@中科院.中国"
+    myapp.authors = [{"name": "José Weiß-Müller", "email": "钱华林@中科院.中国"}]
     myapp.url = "https://xn--7qvx15a.cn"
     myapp.description = "A Møøse once bit my sister..."
 
@@ -798,8 +797,7 @@ def test_dist_info_with_missing_optional_fields(
     """Dist-info is created correctly when optional app fields are set to None."""
 
     myapp.url = None
-    myapp.author = None
-    myapp.author_email = None
+    myapp.authors = None
 
     # Mock shutil so we can track usage.
     create_command.tools.shutil = mock.MagicMock(spec_set=shutil)
@@ -837,3 +835,27 @@ Download-URL:\x20
 Summary: This is a simple app
 """
         )
+
+
+def test_dist_info_with_partial_authors(
+    create_command,
+    myapp,
+    app_path,
+    app_requirements_path_index,
+):
+    """Author entries that are missing a name or an email are handled."""
+
+    myapp.authors = [{"name": "Grace Hopper"}, {"email": "jane@example.com"}]
+    myapp.sources = None
+
+    # Mock shutil so we can track usage.
+    create_command.tools.shutil = mock.MagicMock(spec_set=shutil)
+    create_command.tools.os = mock.MagicMock(spec_set=os)
+
+    create_command.install_app_code(myapp)
+
+    dist_info_path = app_path / "my_app-1.2.3.dist-info"
+    metadata = (dist_info_path / "METADATA").read_text(encoding="utf-8")
+
+    assert "Author: Grace Hopper\n" in metadata
+    assert "Author-email: jane@example.com\n" in metadata

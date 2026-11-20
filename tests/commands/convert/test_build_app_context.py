@@ -24,8 +24,14 @@ def test_overrides_are_used(convert_command):
     for k, v in overrides.items():
         if k == "app_type":
             assert not out["console_app"]
+        elif k in {"author", "author_email"}:
+            # The author overrides are rendered into the `authors` setting.
+            pass
         elif k != "leftover":
             assert out[k] == v
     assert "leftover" not in out
+
+    assert out["pep621"] == {"authors": [{"name": "author", "email": "author_email"}]}
+    assert out["declare_authors"] is True
 
     assert override_input == {"leftover": "leftover"}
