@@ -14,12 +14,15 @@ def test_pep621_authors_are_used(convert_command):
     convert_command.console.text_question = MagicMock()
     convert_command.console.selection_question = MagicMock()
 
-    authors, holder = convert_command.input_authors("com.example", {})
+    authors, declare_authors = convert_command.input_authors("com.example", {})
 
+    assert authors == [
+        {"name": "Firstname Firstauthor", "email": "mail1@tld.com"},
+        {"name": "Name Secondauthor", "email": "mail2@tld.com"},
+    ]
     # The PEP 621 definition is used as-is, so it isn't repeated in the
     # Briefcase configuration.
-    assert authors == ""
-    assert holder == "Firstname Firstauthor, Name Secondauthor"
+    assert declare_authors is False
 
     # The user isn't asked anything.
     convert_command.console.text_question.assert_not_called()
@@ -42,12 +45,10 @@ def test_no_pep621_authors_prompts(convert_command, monkeypatch):
         MagicMock(return_value="grace@hopper.org"),
     )
 
-    authors, holder = convert_command.input_authors("com.example", {})
+    authors, declare_authors = convert_command.input_authors("com.example", {})
 
-    assert authors == (
-        'authors = [\n    {name = "Grace Hopper", email = "grace@hopper.org"},\n]'
-    )
-    assert holder == "Grace Hopper"
+    assert authors == [{"name": "Grace Hopper", "email": "grace@hopper.org"}]
+    assert declare_authors is True
 
 
 def test_overrides_bypass_pep621_authors(convert_command, monkeypatch):
@@ -70,11 +71,9 @@ def test_overrides_bypass_pep621_authors(convert_command, monkeypatch):
         MagicMock(return_value="grace@hopper.org"),
     )
 
-    authors, holder = convert_command.input_authors(
+    authors, declare_authors = convert_command.input_authors(
         "com.example", {"author": "Grace Hopper"}
     )
 
-    assert authors == (
-        'authors = [\n    {name = "Grace Hopper", email = "grace@hopper.org"},\n]'
-    )
-    assert holder == "Grace Hopper"
+    assert authors == [{"name": "Grace Hopper", "email": "grace@hopper.org"}]
+    assert declare_authors is True

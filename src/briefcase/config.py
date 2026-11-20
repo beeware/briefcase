@@ -24,12 +24,6 @@ from briefcase.platforms import get_output_formats, get_platforms
 from .constants import MIME_TYPE_REGISTRIES, RESERVED_WORDS
 from .exceptions import BriefcaseConfigError, InvalidVersionError
 
-
-def escape_toml(obj):
-    """Escapes double quotes and backslashes."""
-    return obj.replace("\\", "\\\\").replace('"', '\\"')
-
-
 EnvManagerT = Literal["venv", "uv", "conda"]
 
 # PEP 508 restricts the naming of modules. The PEP defines a regex that uses

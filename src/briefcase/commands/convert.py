@@ -15,13 +15,7 @@ from briefcase.config import APP_NAME_SPEC, make_class_name, validate_url
 from briefcase.exceptions import BriefcaseCommandError
 
 from ..config import get_license_from_text, is_valid_app_name
-from .new import (
-    LICENSE_OPTIONS,
-    NewCommand,
-    authors_toml,
-    copyright_holder,
-    parse_project_overrides,
-)
+from .new import LICENSE_OPTIONS, NewCommand, parse_project_overrides
 
 
 class ConvertCommand(NewCommand):
@@ -440,11 +434,16 @@ class ConvertCommand(NewCommand):
 
         return author_email
 
-    def input_authors(self, bundle: str, project_overrides: dict) -> tuple[str, str]:
+    def input_authors(
+        self,
+        bundle: str,
+        project_overrides: dict,
+    ) -> tuple[list[dict[str, str]], bool]:
         """Determine the app's authors, using the PEP 621 authors if there are any.
 
-        :returns: The `authors` setting for the Briefcase configuration (empty if the
-            PEP 621 definition can be used as-is), and the copyright holder.
+        :returns: The app's authors, and whether the Briefcase configuration needs to
+            declare them. It doesn't need to if the project's own PEP 621 definition can
+            be used.
         """
         author_override = project_overrides.pop("author", None)
         email_override = project_overrides.pop("author_email", None)
@@ -458,12 +457,11 @@ class ConvertCommand(NewCommand):
             )
             # The PEP 621 authors are merged into the Briefcase configuration when
             # the project is loaded, so there's no need to repeat the definition.
-            return "", copyright_holder(authors)
+            return authors, False
 
         author = self.input_author(override_value=author_override)
         author_email = self.input_email(author, bundle, override_value=email_override)
-        authors = [{"name": author, "email": author_email}]
-        return authors_toml(authors), copyright_holder(authors)
+        return [{"name": author, "email": author_email}], True
 
     def get_license_hint(self) -> tuple[str | None, str]:
         """Get hint for project license, either by reading pyproject.toml or the license
@@ -549,7 +547,7 @@ class ConvertCommand(NewCommand):
         )
         url = self.input_url(app_name, project_overrides.pop("url", None))
         bundle = self.input_bundle(url, app_name, project_overrides.pop("bundle", None))
-        authors, holder = self.input_authors(bundle, project_overrides)
+        authors, declare_authors = self.input_authors(bundle, project_overrides)
         project_license = self.input_license(
             override_value=project_overrides.pop("license", None)
         )
@@ -566,8 +564,8 @@ class ConvertCommand(NewCommand):
             "source_dir": source_dir,
             "test_source_dir": test_source_dir,
             "description": description,
-            "authors": authors,
-            "copyright_holder": holder,
+            "pep621": {"authors": authors},
+            "declare_authors": declare_authors,
             "bundle": bundle,
             "url": url,
             "license": project_license,

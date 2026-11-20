@@ -9,7 +9,6 @@ from importlib import metadata
 from briefcase.bootstraps import BaseGuiBootstrap
 from briefcase.config import (
     APP_NAME_SPEC,
-    escape_toml,
     get_module_name,
     is_valid_app_name,
     is_valid_bundle_identifier,
@@ -33,30 +32,6 @@ LICENSE_OPTIONS = {
     "LicenseRef-Other": "Other",
 }
 DEFAULT_LICENSE = "BSD-3-Clause"
-
-
-def authors_toml(authors):
-    """Render PEP 621 author entries as a TOML `authors` setting.
-
-    :param authors: A list of PEP 621 author definitions.
-    :returns: The `authors` setting, as TOML source.
-    """
-    entries = "\n".join(
-        "    {"
-        + ", ".join(f'{key} = "{escape_toml(value)}"' for key, value in author.items())
-        + "},"
-        for author in authors
-    )
-    return f"authors = [\n{entries}\n]"
-
-
-def copyright_holder(authors):
-    """The author names, as used in the LICENSE copyright notice.
-
-    :param authors: A list of PEP 621 author definitions.
-    :returns: The author names, comma separated.
-    """
-    return ", ".join(author["name"] for author in authors if author.get("name"))
 
 
 def get_gui_bootstraps() -> dict[str, type[BaseGuiBootstrap]]:
@@ -467,8 +442,8 @@ class NewCommand(BaseCommand):
             "test_source_dir": test_source_dir,
             "project_name": project_name,
             "description": description,
-            "authors": authors_toml(authors),
-            "copyright_holder": copyright_holder(authors),
+            "pep621": {"authors": authors},
+            "declare_authors": True,
             "bundle": bundle,
             "url": url,
             "license": project_license,

@@ -345,8 +345,6 @@ If you write files into the application folder, or you use a post-install or pre
 
 For example, consider an installer that creates a `data` folder in the app, containing 2 files `a.dat` and `b.dat`. The MSI installer has a post-installation script that deletes `b.dat`, and adds `c.dat`. When the uninstallation process is executed, registry entries for `data/b.dat` and `data` will remain in the registry. A well-behaved app should *not* delete content that the MSI app installed; and it should not leave content in locations that would prevent the MSI from removing content that the MSI installed.
 
-### Only the first author is used as the company name
+### Interpreting authors as product owners
 
-An app can have more than one author. However, a Windows app has a single `CompanyName` property, so it uses the *first* author listed in the app's [`authors`][] setting.
-
-If [`use_full_install_path`][] is turned on (which is the default), the app is installed into a folder named after `CompanyName`. This means that changing the order of the authors will also change where the app is installed.
+An app can have more than one author. However, when [`use_full_install_path`][] is enabled (as it is by default), a Windows app is installed in folder matching the company that produced the app. Briefcase will use the name of the first author listed in the app's [`authors`][] setting as the company name.
