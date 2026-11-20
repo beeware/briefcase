@@ -44,7 +44,7 @@ def create_avd_validator(emulators):
 def _parse_system_image(package: str):
     """Parse a system image package identifier into its components.
 
-    :param package: e.g. ``"system-images;android-31;default;x86_64"``
+    :param package: e.g. "system-images;android-31;default;x86_64"
     :returns: A tuple of (api_level, image_type, abi) or None if invalid.
     """
     parts = package.split(";")
@@ -77,7 +77,7 @@ def _api_level_sort_key(api_level: str) -> tuple:
 def min_api_level(app: FinalizedAppConfig) -> int:
     """The minimum API level to use for the app, as an int.
 
-    ``min_os_version`` may be configured as a string or an int, so it's
+    `min_os_version` may be configured as a string or an int, so it's
     coerced to int here to avoid a TypeError when compared against
     numeric API levels.
     """
@@ -789,7 +789,7 @@ connection.
         """Returns a set of system image package identifiers available for the current
         architecture and minimum Android version.
 
-        e.g., ``{"system-images;android-31;default;x86_64"}``
+        e.g., `{"system-images;android-31;default;x86_64"}`
 
         :param min_api_level: The minimum Android API level to include.
         """
