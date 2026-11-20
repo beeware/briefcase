@@ -438,12 +438,12 @@ def test_physical_device_option(dummy_command, capsys):
         "00008110-001122334455667E": {
             "name": "Test iPhone",
             "os_version": "26.0.1",
-            "not_ready": DEVICE_DEVELOPER_MODE_DISABLED,
+            "problem": DEVICE_DEVELOPER_MODE_DISABLED,
         },
         "00008132-000A1B2C3D4E5F60": {
             "name": "Test iPad",
             "os_version": "26.6.1",
-            "not_ready": None,
+            "problem": None,
         },
     }
 
@@ -462,7 +462,7 @@ def test_physical_device_option(dummy_command, capsys):
     assert "1) Test iPhone (Developer Mode not enabled)" in output
 
 
-def test_physical_device_not_ready(dummy_command):
+def test_physical_device_problem(dummy_command):
     """If the user selects a physical device that isn't ready, an error explains how to
     fix it."""
     dummy_command.get_simulators.return_value = {}
@@ -470,7 +470,7 @@ def test_physical_device_not_ready(dummy_command):
         "00008110-001122334455667E": {
             "name": "Test iPhone",
             "os_version": "26.0.1",
-            "not_ready": DEVICE_DEVELOPER_MODE_DISABLED,
+            "problem": DEVICE_DEVELOPER_MODE_DISABLED,
         },
     }
 
@@ -484,7 +484,7 @@ def test_physical_device_not_ready(dummy_command):
         dummy_command.select_target_device()
 
 
-def test_explicit_physical_device_not_ready(dummy_command):
+def test_explicit_physical_device_problem(dummy_command):
     """If the user nominates a physical device that isn't ready, an error explains how
     to fix it."""
     dummy_command.get_simulators.return_value = {}
@@ -492,12 +492,12 @@ def test_explicit_physical_device_not_ready(dummy_command):
         "00008132-000A1B2C3D4E5F60": {
             "name": "Test iPad",
             "os_version": "26.6.1",
-            "not_ready": None,
+            "problem": None,
         },
         "00008110-001122334455667E": {
             "name": "Test iPhone",
             "os_version": "26.0.1",
-            "not_ready": DEVICE_UNREACHABLE,
+            "problem": DEVICE_UNREACHABLE,
         },
     }
 
@@ -519,12 +519,12 @@ def test_explicit_physical_device_udid(dummy_command):
         "00008110-001122334455667E": {
             "name": "Test iPhone",
             "os_version": "26.0.1",
-            "not_ready": None,
+            "problem": None,
         },
         "00008132-000A1B2C3D4E5F60": {
             "name": "Test iPad",
             "os_version": "26.6.1",
-            "not_ready": None,
+            "problem": None,
         },
     }
 

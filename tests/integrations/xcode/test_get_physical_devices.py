@@ -47,27 +47,27 @@ def test_physical_devices(mock_tools):
         "00008132-000A1B2C3D4E5F60": {
             "name": "Test iPad",
             "os_version": "26.6.1",
-            "not_ready": None,
+            "problem": None,
         },
         "00008110-001122334455667E": {
             "name": "Test iPhone",
             "os_version": "26.0.1",
-            "not_ready": None,
+            "problem": None,
         },
         "00008110-00AABBCCDDEEFF00": {
             "name": "Unpaired iPhone",
             "os_version": "26.0.1",
-            "not_ready": DEVICE_NOT_PAIRED,
+            "problem": DEVICE_NOT_PAIRED,
         },
         "00008110-00FFEEDDCCBBAA00": {
             "name": "No Dev Mode iPhone",
             "os_version": "26.0.1",
-            "not_ready": DEVICE_DEVELOPER_MODE_DISABLED,
+            "problem": DEVICE_DEVELOPER_MODE_DISABLED,
         },
         "00008110-00AAAAAAAAAAAA00": {
             "name": "Offline iPhone",
             "os_version": "26.0.1",
-            "not_ready": DEVICE_UNREACHABLE,
+            "problem": DEVICE_UNREACHABLE,
         },
     }
 
@@ -83,7 +83,7 @@ def test_properties_layout(mock_tools):
         "00008120-000123456789ABCD": {
             "name": "New Layout iPhone",
             "os_version": "27.0",
-            "not_ready": None,
+            "problem": None,
         },
     }
 
