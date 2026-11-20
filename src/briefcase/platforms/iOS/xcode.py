@@ -70,7 +70,7 @@ class iOSDevice(NamedTuple):
         if self.physical:
             return self.name
         else:
-            return f"an {self.name} simulator running {self.os_version}"
+            return f"an {self.name} simulator running iOS {self.os_version}"
 
 
 # How to resolve each of the reasons a physical device isn't ready.
@@ -1086,45 +1086,41 @@ class iOSXcodeRunCommand(iOSXcodeMixin, RunCommand):
                 f"Unable to install new version of app {app.app_name}."
             )
 
-        # Set additional environment variables while the app is running
-        # (no-op if no environment variables are set).
+        # Set additional environment variables while the app is running. The app
+        # writes its output to the console, rather than the system log.
         with self.setup_env(
             {"BRIEFCASE_CONSOLE_OUTPUT": "1", **env},
             self.target_device.udid,
         ):
-            try:
-                self.console.info(f"Starting {label}...", prefix=app.app_name)
-                self.console.info(
-                    "Following simulator log output (type CTRL-C to stop log)...",
-                    prefix=app.app_name,
-                )
-                # Start the app in a way that lets us stream the logs
-                app_popen = self.tools.subprocess.Popen(
-                    [
-                        "xcrun",
-                        "simctl",
-                        "launch",
-                        "--console",
-                        self.target_device.udid,
-                        app.bundle_identifier,
-                        *passthrough,
-                    ],
-                    stdout=subprocess.PIPE,
-                    stderr=subprocess.STDOUT,
-                    bufsize=1,
-                )
+            self.console.info(f"Starting {label}...", prefix=app.app_name)
+            self.console.info(
+                "Following simulator log output (type CTRL-C to stop log)...",
+                prefix=app.app_name,
+            )
+            # Start the app in a way that lets us stream the logs. If the app can't
+            # be launched, the failure is reported when the log stream ends.
+            app_popen = self.tools.subprocess.Popen(
+                [
+                    "xcrun",
+                    "simctl",
+                    "launch",
+                    "--console",
+                    self.target_device.udid,
+                    app.bundle_identifier,
+                    *passthrough,
+                ],
+                stdout=subprocess.PIPE,
+                stderr=subprocess.STDOUT,
+                bufsize=1,
+            )
 
-                # Start streaming logs for the app.
-                self._stream_app_logs(
-                    app,
-                    popen=app_popen,
-                    clean_filter=nslog_clean_filter,
-                    clean_output=True,
-                )
-            except subprocess.CalledProcessError as e:
-                raise BriefcaseCommandError(
-                    f"Unable to launch {label} {app.app_name}."
-                ) from e
+            # Start streaming logs for the app.
+            self._stream_app_logs(
+                app,
+                popen=app_popen,
+                clean_filter=nslog_clean_filter,
+                clean_output=True,
+            )
 
     def _run_app_on_device(
         self,
@@ -1220,45 +1216,40 @@ class iOSXcodeRunCommand(iOSXcodeMixin, RunCommand):
     @contextlib.contextmanager
     def setup_env(
         self,
-        env: dict[str, str] | None,
+        env: dict[str, str],
         udid: str,
     ):
         """Context manager to set up the environment for the command."""
-        if env:
-            with self.console.wait_bar("Setting environment variables in simulator..."):
-                for env_key, env_value in env.items():
-                    self.tools.subprocess.check_output(
-                        [
-                            "xcrun",
-                            "simctl",
-                            "spawn",
-                            udid,
-                            "launchctl",
-                            "setenv",
-                            f"{env_key}",
-                            f"{env_value}",
-                        ]
-                    )
+        with self.console.wait_bar("Setting environment variables in simulator..."):
+            for env_key, env_value in env.items():
+                self.tools.subprocess.check_output(
+                    [
+                        "xcrun",
+                        "simctl",
+                        "spawn",
+                        udid,
+                        "launchctl",
+                        "setenv",
+                        f"{env_key}",
+                        f"{env_value}",
+                    ]
+                )
 
-            yield
+        yield
 
-            with self.console.wait_bar(
-                "Removing environment variables from simulator..."
-            ):
-                for env_key in env:
-                    self.tools.subprocess.check_output(
-                        [
-                            "xcrun",
-                            "simctl",
-                            "spawn",
-                            udid,
-                            "launchctl",
-                            "unsetenv",
-                            f"{env_key}",
-                        ]
-                    )
-        else:
-            yield  # no-op if no environment variables are set
+        with self.console.wait_bar("Removing environment variables from simulator..."):
+            for env_key in env:
+                self.tools.subprocess.check_output(
+                    [
+                        "xcrun",
+                        "simctl",
+                        "spawn",
+                        udid,
+                        "launchctl",
+                        "unsetenv",
+                        f"{env_key}",
+                    ]
+                )
 
 
 class iOSXcodePackageCommand(iOSXcodeMixin, PackageCommand):
