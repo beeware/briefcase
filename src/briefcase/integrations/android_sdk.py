@@ -53,25 +53,23 @@ def _parse_system_image(package: str):
     return parts[1], parts[2], parts[3]
 
 
-def _api_level_sort_key(api_level: str) -> tuple:
-    """Sort key for API level strings, ordering numeric levels (and their ext suffixes)
-    numerically. Non-numeric levels sort after all numeric ones.
+def _api_level_sort_key(api_level: str) -> tuple[int, ...]:
+    """Sort key for API level strings, e.g. "android-34.1" -> (34, 1).
 
-    e.g. "android-34" -> (0, 34.0, 0)      "android-34-ext9" -> (0, 34.0, 9)
-    "android-36.0-Baklava" -> (0, 36.0, 0)      "android-CANARY" -> (1, "android-
-    CANARY")
+    :raises ValueError: if the string is not "android-" followed by a dot-separated
+        sequence of at least one integer.
     """
-    value = api_level.split("-", 1)[
-        1
-    ]  # "34", "34-ext9", "36.1", "36.0-Baklava", "CANARY"
-    base, _, ext = value.partition("-ext")
-    base = base.split("-", 1)[
-        0
-    ]  # strip trailing "-Name" suffix, e.g. "36.0-Baklava" -> "36.0"
+    prefix = "android-"
+    if not api_level.startswith("android-"):
+        raise ValueError(api_level)
+    parts = api_level.removeprefix(prefix).split(".")
+    if not parts:
+        raise ValueError(api_level)
+
     try:
-        return 0, float(base), int(ext) if ext else 0
-    except ValueError:
-        return 1, api_level
+        return tuple(int(part) for part in parts)
+    except ValueError as e:
+        raise ValueError(api_level) from e
 
 
 def min_api_level(app: FinalizedAppConfig) -> int:
@@ -825,13 +823,11 @@ connection.
             api_level, _, abi = parsed
             if abi != self.emulator_abi:
                 continue
-            api_level_str = api_level.split("-")[1]  # "android-31" -> "31"
             try:
-                if int(api_level_str.split(".")[0]) < min_api_level:
+                if _api_level_sort_key(api_level)[0] < min_api_level:
                     continue
             except ValueError:
-                # Non-numeric API level (e.g. CANARY, CinnamonBun) always include.
-                pass
+                continue
             images.append(package)
         return set(images)
 

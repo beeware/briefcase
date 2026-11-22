@@ -1,4 +1,4 @@
-from unittest.mock import MagicMock
+from unittest.mock import MagicMock, call
 
 import pytest
 
@@ -34,8 +34,7 @@ def android_sdk(android_sdk) -> AndroidSDK:
             "system-images;android-31;default;arm64-v8a",
             "system-images;android-34;default;arm64-v8a",
             "system-images;android-34;google_apis;arm64-v8a",
-            "system-images;android-CANARY;google_apis;x86_64",
-            "system-images;android-CinnamonBun;google_apis_playstore;x86_64",
+            "system-images;android-37;google_apis;x86_64",
         ]
     )
     return android_sdk
@@ -167,6 +166,66 @@ def test_default_name_with_collisions(mock_tools, android_sdk, tmp_path):
     assert avd == "beePhone-31-3"
 
 
+@pytest.fixture
+def mock_selection_question(mock_tools):
+    mock_tools.console.selection_question = (mock := MagicMock())
+    return mock
+
+
+@pytest.mark.parametrize(
+    ("available_images", "options", "default"),
+    [
+        # API levels appear in numerical order, and only once each.
+        # The default API level is used if it's present, even if it isn't the lowest.
+        (
+            [
+                "system-images;android-30;google_apis;x86_64",
+                "system-images;android-31;default;x86_64",
+                "system-images;android-32;google_apis;x86_64",
+                "system-images;android-30;default;x86_64",
+            ],
+            ["android-30", "android-31", "android-32"],
+            "android-31",
+        ),
+        # Minor version numbers are sorted correctly.
+        # When the default API level isn't present, the lowest version is the default.
+        (
+            [
+                "system-images;android-31.10;default;x86_64",
+                "system-images;android-31.11;default;x86_64",
+                "system-images;android-31.1;default;x86_64",
+                "system-images;android-31.2;default;x86_64",
+            ],
+            ["android-31.1", "android-31.2", "android-31.10", "android-31.11"],
+            "android-31.1",
+        ),
+    ],
+)
+def test_api_level_selection(
+    mock_tools, mock_selection_question, android_sdk, available_images, options, default
+):
+    android_sdk.list_available_system_images = MagicMock(return_value=available_images)
+    mock_tools.console.values = [""]  # default emulator name
+    mock_selection_question.return_value = default
+    android_sdk._create_emulator = MagicMock()
+
+    android_sdk.create_emulator(MagicMock())
+    assert mock_selection_question.mock_calls == [
+        call(
+            intro="Select the API level for the emulator:",
+            description="API level",
+            options=options,
+            default=default,
+        ),
+        call(
+            intro="Select the system image type:",
+            description="Type",
+            options=["default"],
+            default="default",
+        ),
+    ]
+
+
 def test_image_type_fallback_when_default_not_available(
     mock_tools, android_sdk, tmp_path
 ):
@@ -174,7 +233,7 @@ def test_image_type_fallback_when_default_not_available(
     available type is used as the default."""
     mock_tools.console.values = [
         "",  # default emulator name
-        "3",  # select android-CANARY (option 3 in the sorted list)
+        "3",  # select android-37 (option 3 in the sorted list)
         "",  # accept first available type (google_apis; "default" is unavailable)
     ]
 
@@ -196,7 +255,7 @@ def test_image_type_fallback_when_default_not_available(
         avd="beePhone-31",
         device_type="pixel",
         skin="pixel_7_pro",
-        system_image="system-images;android-CANARY;google_apis;x86_64",
+        system_image="system-images;android-37;google_apis;x86_64",
     )
 
 

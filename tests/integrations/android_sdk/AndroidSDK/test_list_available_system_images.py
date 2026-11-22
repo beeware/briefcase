@@ -27,6 +27,9 @@ def test_list_available_system_images(mock_tools, android_sdk):
           system-images;android-34;default;x86_64     | 7       | Intel x86_64 Atom System Image
           system-images;android-31;default;x86_64     | 5       | Intel x86_64 Atom System Image
           system-images;android-23;default;x86_64     | 3       | Intel x86_64 Atom System Image
+          system-images;android;default;x86_64     | 3       | Intel x86_64 Atom System Image
+          system-images;android-;default;x86_64     | 3       | Intel x86_64 Atom System Image
+          system-images;hello-99;default;x86_64     | 3       | Intel x86_64 Atom System Image
           emulator                                    | 35.4.9  | Android Emulator
     """)  # noqa: E501
 
@@ -68,12 +71,21 @@ def test_list_available_system_images_custom_min_api_level(mock_tools, android_s
 
 
 def test_list_available_system_images_dotted_version(mock_tools, android_sdk):
-    """System images with dotted versions (e.g. android-36.1) are included."""
+    """System images with dotted versions (e.g. android-36.1) are included, but
+    extension versions and named versions are not included.
+    """
     mock_tools.subprocess.check_output.return_value = dedent("""\
         Available Packages:
           Path                                         | Version | Description
           -------                                      | ------- | -------
+          system-images;android-36;default;x86_64     | 5       | Intel x86_64 Atom System Image
           system-images;android-36.1;default;x86_64    | 1       | Intel x86_64 Atom System Image
+          system-images;android-36.1.2;default;x86_64    | 1       | Intel x86_64 Atom System Image
+          system-images;android-36-ext19;default;x86_64  | 1       | Intel x86_64 Atom System Image
+          system-images;android-36-beta1;default;x86_64  | 1       | Intel x86_64 Atom System Image
+          system-images;android-36-1;default;x86_64  | 1       | Intel x86_64 Atom System Image
+          system-images;android-CANARY;default;x86_64  | 1       | Intel x86_64 Atom System Image
+          system-images;android-canary-20260909;default;x86_64  | 1       | Intel x86_64 Atom System Image
           emulator                                     | 35.4.9  | Android Emulator
     """)  # noqa: E501
 
@@ -82,7 +94,9 @@ def test_list_available_system_images_dotted_version(mock_tools, android_sdk):
     )
 
     assert result == {
+        "system-images;android-36;default;x86_64",
         "system-images;android-36.1;default;x86_64",
+        "system-images;android-36.1.2;default;x86_64",
     }
 
 
@@ -97,7 +111,8 @@ def test_list_available_system_images_dotted_version_below_minimum(
           system-images;android-23.1;default;x86_64    | 1       | Intel x86_64 Atom System Image
           system-images;android-23.1;default;arm64-v8a | 1       | arm64 System Image
           system-images;android-31;default;x86_64      | 5       | Intel x86_64 Atom System Image
-          system-images;android-31;default;arm64-v8a   | 5       | arm64 System Image
+          system-images;android-31.0;default;x86_64      | 5       | Intel x86_64 Atom System Image
+          system-images;android-31.1;default;x86_64      | 5       | Intel x86_64 Atom System Image
           emulator                                     | 35.4.9  | Android Emulator
     """)  # noqa: E501
 
@@ -108,26 +123,8 @@ def test_list_available_system_images_dotted_version_below_minimum(
     # android-23.1 is filtered out (below minimum API level 24)
     assert result == {
         "system-images;android-31;default;x86_64",
-    }
-
-
-def test_list_available_system_images_named_version(mock_tools, android_sdk):
-    """System images with named versions (e.g. android-CANARY) are included."""
-    mock_tools.subprocess.check_output.return_value = dedent("""\
-        Available Packages:
-          Path                                               | Version    | Description
-          -------                                            | -------    | -------
-          system-images;android-CANARY;google_apis;x86_64    | 1          | Google APIs Intel x86_64
-          system-images;android-CANARY;google_apis;arm64-v8a | 1          | Google APIs arm64
-          emulator                                           | 35.4.9     | Android Emulator
-    """)  # noqa: E501
-
-    result = android_sdk.list_available_system_images(
-        min_api_level=ANDROID_MIN_OS_VERSION
-    )
-
-    assert result == {
-        "system-images;android-CANARY;google_apis;x86_64",
+        "system-images;android-31.0;default;x86_64",
+        "system-images;android-31.1;default;x86_64",
     }
 
 
