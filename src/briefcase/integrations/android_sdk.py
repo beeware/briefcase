@@ -258,6 +258,7 @@ class AndroidSDK(ManagedTool):
 
     @property
     def DEFAULT_ANDROID_SDK_LEVEL(self) -> int:
+        """An API level whose default image type is known to work well."""
         return 31
 
     @property
@@ -269,14 +270,25 @@ class AndroidSDK(ManagedTool):
         return f"android-{self.DEFAULT_ANDROID_SDK_LEVEL}"
 
     @property
-    def DEFAULT_IMAGE_TYPE(self) -> str:
-        return "default"
+    def DEFAULT_IMAGE_TYPES(self) -> list[str]:
+        """Default system image types, highest priority first. Every API level we offer
+        should have at least one of these types.
+        """
+        return [
+            # Available on all API levels except for some of the newest ones.
+            "default",
+            # Comes with some closed-source Google apps.
+            "google_apis",
+            # Same as google_apis, but uses 16 KB pages. Not all packages are compatible
+            # with this yet, but it's the only option on some of the newest API levels.
+            "google_apis_ps16k",
+        ]
 
     @property
     def DEFAULT_SYSTEM_IMAGE(self) -> str:
         return (
             f"system-images;{self.DEFAULT_API_LEVEL}"
-            f";{self.DEFAULT_IMAGE_TYPE};{self.emulator_abi}"
+            f";{self.DEFAULT_IMAGE_TYPES[0]};{self.emulator_abi}"
         )
 
     @classmethod
@@ -1301,23 +1313,19 @@ a default name '{default_avd}'.
 
         # Ask the user to select system image type for the chosen API level.
         image_types = sorted(
-            {
-                image_type
-                for level, image_type, _ in parsed_images
-                if level == api_level
-            },
-            key=lambda x: (0 if x == "default" else 1, x),
+            image_type for level, image_type, _ in parsed_images if level == api_level
         )
+        default_image_type = None
+        for t in self.DEFAULT_IMAGE_TYPES:
+            if t in image_types:
+                default_image_type = t
+                break
 
         image_type = self.tools.console.selection_question(
             intro="Select the system image type:",
-            description="Type",
+            description="Image type",
             options=image_types,
-            default=(
-                self.DEFAULT_IMAGE_TYPE
-                if self.DEFAULT_IMAGE_TYPE in image_types
-                else image_types[0]
-            ),
+            default=default_image_type,
         )
 
         system_image = f"system-images;{api_level};{image_type};{self.emulator_abi}"

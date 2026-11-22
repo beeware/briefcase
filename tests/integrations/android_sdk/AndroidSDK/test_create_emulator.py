@@ -31,10 +31,6 @@ def android_sdk(android_sdk) -> AndroidSDK:
             "system-images;android-31;default;x86_64",
             "system-images;android-34;default;x86_64",
             "system-images;android-34;google_apis;x86_64",
-            "system-images;android-31;default;arm64-v8a",
-            "system-images;android-34;default;arm64-v8a",
-            "system-images;android-34;google_apis;arm64-v8a",
-            "system-images;android-37;google_apis;x86_64",
         ]
     )
     return android_sdk
@@ -206,7 +202,7 @@ def test_api_level_selection(
 ):
     android_sdk.list_available_system_images = MagicMock(return_value=available_images)
     mock_tools.console.values = [""]  # default emulator name
-    mock_selection_question.return_value = default
+    mock_selection_question.side_effect = [default, "default"]
     android_sdk._create_emulator = MagicMock()
 
     android_sdk.create_emulator(MagicMock())
@@ -219,44 +215,77 @@ def test_api_level_selection(
         ),
         call(
             intro="Select the system image type:",
-            description="Type",
+            description="Image type",
             options=["default"],
             default="default",
         ),
     ]
 
 
-def test_image_type_fallback_when_default_not_available(
-    mock_tools, android_sdk, tmp_path
+@pytest.mark.parametrize(
+    ("available_images", "options", "default"),
+    [
+        # Image types are shown in alphabetical order.
+        # The default type is "default", then "google_apis", then "google_apis_ps16k".
+        (
+            [
+                "system-images;android-31;google_apis;x86_64",
+                "system-images;android-31;default;x86_64",
+                "system-images;android-31;google_apis_ps16k;x86_64",
+                "system-images;android-31;extra;x86_64",
+            ],
+            ["default", "extra", "google_apis", "google_apis_ps16k"],
+            "default",
+        ),
+        (
+            [
+                "system-images;android-31;google_apis_ps16k;x86_64",
+                "system-images;android-31;google_apis;x86_64",
+                "system-images;android-31;extra;x86_64",
+            ],
+            ["extra", "google_apis", "google_apis_ps16k"],
+            "google_apis",
+        ),
+        (
+            [
+                "system-images;android-31;google_apis_ps16k;x86_64",
+                "system-images;android-31;extra;x86_64",
+            ],
+            ["extra", "google_apis_ps16k"],
+            "google_apis_ps16k",
+        ),
+        (
+            [
+                "system-images;android-31;extra;x86_64",
+            ],
+            ["extra"],
+            None,
+        ),
+    ],
+)
+def test_image_type_selection(
+    mock_tools, mock_selection_question, android_sdk, available_images, options, default
 ):
-    """If the default type is not available for the selected API level, the first
-    available type is used as the default."""
-    mock_tools.console.values = [
-        "",  # default emulator name
-        "3",  # select android-37 (option 3 in the sorted list)
-        "",  # accept first available type (google_apis; "default" is unavailable)
-    ]
-
-    # Mock the internal emulator creation method
+    android_sdk.list_available_system_images = MagicMock(return_value=available_images)
+    mock_tools.console.values = [""]  # default emulator name
+    mock_selection_question.side_effect = ["android-31", default]
     android_sdk._create_emulator = MagicMock()
 
-    # Create a mock app
-    app = MagicMock()
-    del app.min_os_version  # ensure getattr fallback is used
-
-    # Create the emulator
-    avd = android_sdk.create_emulator(app)
-
-    # The expected device AVD was created.
-    assert avd == "beePhone-31"
-
-    # The call was made with the first available type, not "default"
-    android_sdk._create_emulator.assert_called_once_with(
-        avd="beePhone-31",
-        device_type="pixel",
-        skin="pixel_7_pro",
-        system_image="system-images;android-37;google_apis;x86_64",
-    )
+    android_sdk.create_emulator(MagicMock())
+    assert mock_selection_question.mock_calls == [
+        call(
+            intro="Select the API level for the emulator:",
+            description="API level",
+            options=["android-31"],
+            default="android-31",
+        ),
+        call(
+            intro="Select the system image type:",
+            description="Image type",
+            options=options,
+            default=default,
+        ),
+    ]
 
 
 def test_system_image_selection(mock_tools, android_sdk, tmp_path):
