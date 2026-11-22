@@ -88,7 +88,7 @@ class LinuxSystemMixin(LinuxMixin):
         return self.project_path(app)
 
     def rpm_tag(self, app):
-        if app.target_vendor == "fedora":
+        if app.target_vendor in {"fedora", "nobara"}:
             return f"fc{app.target_codename}"
         else:
             return f"el{app.target_codename}"
@@ -776,7 +776,7 @@ class LinuxSystemCreateCommand(
     LinuxSystemDockerMixin, LocalRequirementsMixin, CreateCommand
 ):
     description = "Create and populate a Linux system project."
-    app_template_hash = "sha1:c54c6c447641204c6742685dc914f9d4938988a7"
+    app_template_hash = "sha1:577416d8df8d91a1a8866dd45e0ec945dcce662c"
 
     def output_format_template_context(self, app: FinalizedAppConfig):
         app = cast(LinuxSystemAppConfig, app)

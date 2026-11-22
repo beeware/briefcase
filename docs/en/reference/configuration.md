@@ -105,6 +105,10 @@ The person or organization responsible for the project.
 
 The contact email address for the person or organization responsible for the project.
 
+#### `default_app`
+
+The app that `briefcase run` and `briefcase dev` start when no `-a`/`--app` option is given and the project defines more than one app. It must name an app defined in the project; naming an undefined app is a configuration error. When no default app is configured, the app selection menu is shown, and passing `-a` with no value still shows that menu, with the configured default app selected.
+
 #### `env_manager`
 
 The environment manager to use when creating isolated Python environments and installing requirements. Must be one of:
@@ -155,6 +159,10 @@ The only time `sources` is *not* required is if you are is [packaging an externa
 #### `accent_color`
 
 A hexadecimal RGB color value (e.g., `#D81B60`) for a subtle secondary color to be used throughout an application to call attention to key elements. This setting is only used if the platform allows color modification, otherwise it is ignored.
+
+#### `allow_subprocesses`
+
+A Boolean describing whether the bundled application should allow the use of Python subprocesses. Set to `false` by default; `sys.executable` will be set to an empty string in bundled applications. If set to `true`, and the platform supports subprocesses, `sys.executable` will be set to the path of a Python binary that can be used in calls to [`subprocess.run()`][subprocess.run] etc to spawn a Python interpreter.
 
 #### `build`
 

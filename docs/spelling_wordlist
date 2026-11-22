@@ -44,6 +44,7 @@ codebase
 Conda
 cookiecutter
 Cookiecutter
+CPython
 cryptographic
 CTRL
 Curve
@@ -88,6 +89,7 @@ helloworld
 hoc
 hostname
 HTTPS
+HTTPX
 IANA
 iCloud
 IDEs
@@ -132,6 +134,7 @@ NFS
 NSIS
 NumPy
 OpenJDK
+OpenSSL
 openSUSE
 OpenSuSE
 OSX

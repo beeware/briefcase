@@ -110,34 +110,62 @@ def file_perms() -> int:
     [
         # A `None` value for `content_disposition` means we skip the header.
         # Other values are passed through as HTTP header values.
-        ("https://example.com/path/to/something.zip", None),
+        pytest.param(
+            "https://example.com/path/to/something.zip",
+            None,
+            id="no-header",
+        ),
         # Ensure empty header is ignored.
-        ("https://example.com/path/to/something.zip", ""),
+        pytest.param(
+            "https://example.com/path/to/something.zip",
+            "",
+            id="empty-header",
+        ),
         # Paradigmatic case for Content-Disposition: attachment.
-        (
+        pytest.param(
             "https://example.com/path/to/irrelevant.zip",
             "attachment; filename=something.zip",
+            id="simple-filename",
         ),
         # Ensure extra parameters are ignored.
-        (
+        pytest.param(
             "https://example.com/path/to/irrelevant.zip",
             "attachment; filename=something.zip; ignored=okay",
+            id="extra-params",
         ),
         # Ensure garbage headers are ignored.
-        ("https://example.com/path/to/something.zip", "garbage"),
+        pytest.param(
+            "https://example.com/path/to/something.zip",
+            "garbage",
+            id="bad-headers",
+        ),
         # Ensure we respect unusual quoting & case permitted by RFC 6266.
-        (
+        pytest.param(
             "https://example.com/path/to/irrelevant.zip",
             'ATTACHment; filename=    "something.zip"',
+            id="quoting-and-case",
         ),
         # Ensure we use filename=, even if filename*= is provided. This makes us a
         # "legacy user agent" in the terms of RFC 6266, for our own simplicity.
-        (
+        pytest.param(
             "https://example.com/path/to/irrelevant.zip",
             (
                 'attachment; filename="something.zip"; filename*=utf-8'
                 "''%e2%82%ac%20rates"
             ),
+            id="legacy-user-agent",
+        ),
+        # RFC 2231 encoded backslash traversal
+        pytest.param(
+            "https://example.com/path/to/irrelevant.zip",
+            "attachment; filename*=UTF-8;''..%5Csomething.zip",
+            id="rfc2231-separators",
+        ),
+        # Percent-encoded backslash traversal in the URL path and no header
+        pytest.param(
+            "https://example.com/path/to/..%5C..%5Csomething.zip",
+            None,
+            id="percent-separators",
         ),
     ],
 )
@@ -183,6 +211,9 @@ def test_new_download_oneshot(
     )
     mock_tools.httpx2.stream.return_value.__enter__.return_value = response
 
+    # Mock the cache handling so we can confirm it is invoked.
+    mock_tools.file._safe_cache_name = mock.Mock(return_value="something.zip")
+
     # Download the file
     filename = mock_tools.file.download(
         url="https://example.com/support?useful=Yes",
@@ -203,10 +234,12 @@ def test_new_download_oneshot(
     # The filename is derived from the URL or header
     assert filename == mock_tools.base_path / "downloads/something.zip"
 
+    # The cache name protection was invoked.
+    mock_tools.file._safe_cache_name.assert_called_once()
+
     # Temporary file was created in download dir and was renamed
     temp_filename = Path(mock_tools.shutil.move.call_args_list[0].args[0])
     assert temp_filename.parent == mock_tools.base_path / "downloads"
-    assert temp_filename.name.startswith("something.zip.")
     assert temp_filename.name.endswith(TEMPORARY_DOWNLOAD_FILE_SUFFIX)
     mock_tools.shutil.move.assert_called_with(str(temp_filename), filename)
 
@@ -266,6 +299,9 @@ def test_new_download_chunked(mock_tools, file_perms, hash_algorithm, capsys):
     )
     mock_tools.httpx2.stream.return_value.__enter__.return_value = response
 
+    # Mock the cache handling so we can confirm it is invoked.
+    mock_tools.file._safe_cache_name = mock.Mock(return_value="something.zip")
+
     # Download the file
     filename = mock_tools.file.download(
         url="https://example.com/support?useful=Yes",
@@ -286,10 +322,12 @@ def test_new_download_chunked(mock_tools, file_perms, hash_algorithm, capsys):
     # The filename is derived from the URL
     assert filename == mock_tools.base_path / "something.zip"
 
+    # The cache name protection was invoked.
+    mock_tools.file._safe_cache_name.assert_called_once()
+
     # Temporary file was created in download dir and was renamed
     temp_filename = Path(mock_tools.shutil.move.call_args_list[0].args[0])
     assert temp_filename.parent == mock_tools.base_path
-    assert temp_filename.name.startswith("something.zip.")
     assert temp_filename.name.endswith(TEMPORARY_DOWNLOAD_FILE_SUFFIX)
     mock_tools.shutil.move.assert_called_with(str(temp_filename), filename)
 
@@ -562,7 +600,6 @@ def test_iter_bytes_connection_error(mock_tools):
     # but then also correctly cleaned up after the failure
     temp_filename = Path(mock_tools.os.remove.call_args_list[0].args[0])
     assert temp_filename.parent == mock_tools.base_path
-    assert temp_filename.name.startswith("something.zip.")
     assert temp_filename.name.endswith(TEMPORARY_DOWNLOAD_FILE_SUFFIX)
     mock_tools.os.remove.assert_called_with(str(temp_filename))
 
@@ -677,6 +714,20 @@ def test_ssl_verification_error(mock_tools):
     mock_tools.os.remove.assert_not_called()
 
 
+def test_proxy_error(mock_tools):
+    """Proxy failures identify the proxy settings and preserve the reported cause."""
+    mock_tools.httpx2.stream.side_effect = httpx2.ProxyError(
+        "407 Proxy Authentication Required"
+    )
+    with pytest.raises(NetworkFailure) as exc_info:
+        mock_tools.file.download("https://example.com/file.zip", mock_tools.base_path)
+
+    message = str(exc_info.value)
+    assert "407 Proxy Authentication Required" in message
+    assert "HTTP_PROXY, HTTPS_PROXY, ALL_PROXY, and NO_PROXY" in message
+    assert "is your computer offline?" not in message
+
+
 def test_unknown_httpcore_connectionerror(mock_tools):
     """NetworkFailure is raised if an unknown core connection error occurs."""
     # Mock a connection error at the level of httpcore2
@@ -777,8 +828,51 @@ def test_new_download_hash_mismatch(mock_tools, file_perms):
     # The temp file was cleaned up
     temp_filename = Path(mock_tools.os.remove.call_args_list[0].args[0])
     assert temp_filename.parent == mock_tools.base_path
-    assert temp_filename.name.startswith("something.zip.")
+    assert temp_filename.name.endswith(TEMPORARY_DOWNLOAD_FILE_SUFFIX)
     mock_tools.os.remove.assert_called_with(str(temp_filename))
+
+
+@pytest.mark.parametrize(
+    "url",
+    [
+        # URL with no filename component
+        pytest.param(
+            "https://example.com/path/to/",
+            id="no-filename",
+        ),
+        # URL path ending in a parent directory reference
+        pytest.param(
+            "https://example.com/path/to/..%5C..",
+            id="end-in-parent-reference",
+        ),
+    ],
+)
+def test_problem_download_url(mock_tools, url):
+    """Server URL responses with problematic paths and no headers raise an error."""
+    response = _make_httpx_response(
+        url=url,
+        status_code=200,
+        headers={},
+        stream=[b"all content"],
+    )
+    mock_tools.httpx2.stream.return_value.__enter__.return_value = response
+
+    download_path = mock_tools.base_path / "downloads"
+    with pytest.raises(
+        BriefcaseCommandError,
+        match=r"Unable to determine a safe download filename",
+    ):
+        mock_tools.file.download(
+            url="https://example.com/support?useful=Yes",
+            download_path=download_path,
+        )
+
+    # Nothing was downloaded or written.
+    response.read.assert_not_called()
+    response.iter_bytes.assert_not_called()
+    mock_tools.shutil.move.assert_not_called()
+    assert sorted(p.name for p in mock_tools.base_path.iterdir()) == ["downloads"]
+    assert list(download_path.iterdir()) == []
 
 
 @pytest.mark.parametrize(
@@ -803,3 +897,20 @@ def test_malformed_expected_hash(mock_tools, expected_hash):
         )
 
     mock_tools.httpx2.stream.assert_not_called()
+
+
+@pytest.mark.parametrize(
+    ("contents", "hint"),
+    [(None, "existing CA certificate bundle"), ("invalid", "valid CA certificates")],
+    ids=["missing-file", "invalid-certificate"],
+)
+def test_invalid_certificate_file(mock_tools, monkeypatch, tmp_path, contents, hint):
+    """A missing or invalid CA bundle gives an actionable SSL_CERT_FILE error."""
+    bundle = tmp_path / "ca.pem"
+    if contents is not None:
+        bundle.write_text(contents, encoding="utf-8")
+    monkeypatch.setenv("SSL_CERT_FILE", str(bundle))
+    mock_tools.httpx2 = httpx2
+
+    with pytest.raises(BriefcaseCommandError, match=f"SSL_CERT_FILE.*{hint}"):
+        mock_tools.file.download("https://example.com/file.zip", tmp_path)

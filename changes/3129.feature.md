@@ -1,0 +1,1 @@
+A project can now declare a default app with `default_app` in the `[tool.briefcase]` section, so `briefcase run` and `briefcase dev` start that app without requiring `-a` when the project defines more than one app.

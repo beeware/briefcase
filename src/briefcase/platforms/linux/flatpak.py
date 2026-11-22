@@ -115,7 +115,7 @@ if `flatpak_base` is defined.
 
 class LinuxFlatpakCreateCommand(LinuxFlatpakMixin, CreateCommand):
     description = "Create and populate a Linux Flatpak."
-    app_template_hash = "sha1:504bb2c693d871c2ea069c2d5b531a72b5886fa6"
+    app_template_hash = "sha1:6f2aa391587f9b2acff5ad3fd835911fc0330595"
     hidden_app_properties: Collection[str] = {"permission", "finish_arg"}
 
     def output_format_template_context(self, app: FinalizedAppConfig):

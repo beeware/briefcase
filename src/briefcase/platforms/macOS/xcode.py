@@ -48,7 +48,7 @@ class macOSXcodeMixin(macOSMixin):
 
 class macOSXcodeCreateCommand(macOSXcodeMixin, macOSCreateMixin, CreateCommand):
     description = "Create and populate a macOS Xcode project."
-    app_template_hash = "sha1:115f7fd0bb5091d4a2c88349ba9a681ff3930c9e"
+    app_template_hash = "sha1:aa98ef7183ba43f417ef82092c7ae049438967fd"
 
     def install_managed_python_env(
         self,

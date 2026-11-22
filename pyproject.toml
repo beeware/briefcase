@@ -1,7 +1,7 @@
 [build-system]
 requires = [
     # keep versions in sync with automation/pyproject.toml
-    "setuptools==84.0.0",
+    "setuptools==84.2.1",
     "setuptools_scm==10.3.4",
 ]
 build-backend = "setuptools.build_meta"
@@ -55,6 +55,7 @@ classifiers = [
     "Programming Language :: Python :: 3.13",
     "Programming Language :: Python :: 3.14",
     "Programming Language :: Python :: 3.15",
+    "Programming Language :: Python :: 3.16",
     "Programming Language :: Python :: 3 :: Only",
     "Topic :: Software Development",
     "Topic :: Utilities",
@@ -67,7 +68,7 @@ dependencies = [
     # specify a minimum version, but no maximum, because we always want the most
     # recent version.
     "packaging >= 24.2",
-    "pip >= 24.3",
+    "pip >= 26.2.2",
     "setuptools >= 60",
     "wheel >= 0.37",
     "xbuild >= 0.4.0",
@@ -83,14 +84,14 @@ dependencies = [
     # has a runtime warning that verifies "tested" chardet versions, but *doesn't* enforce
     # a version pin. We need to enforce the implied requests warning.
     "chardet < 8.0",
-    "dmgbuild >= 1.6.4, < 2.0; sys_platform == 'darwin'",
+    "dmgbuild >= 2.0.0, < 3.0; sys_platform == 'darwin'",
     "GitPython >= 3.1, < 4.0",
     "platformdirs >= 2.6, < 5.0",
     "psutil >= 5.9, < 8.0",
     "python-dateutil >= 2.9.0.post0",  # transitive dependency (beeware/briefcase#1428)
     "httpx2 >= 2.13, < 3.0",
     "rich >= 12.6, < 16.0",
-    "tenacity >= 8.0, < 10.0",
+    "tenacity >= 9.2.0, < 10.0",
     "tomli_w >= 1.0, < 2.0",
     "typing_extensions >= 4.6; python_version < '3.11'",
 ]
@@ -99,7 +100,7 @@ dependencies = [
 # Extras used by developers *of* briefcase are pinned to specific versions to
 # ensure environment consistency.
 pre-commit = [
-    "pre-commit == 4.6.2",
+    "pre-commit == 4.7.0",
 ]
 
 setuptools-scm = [
@@ -111,11 +112,11 @@ towncrier = [
 ]
 
 tox-uv = [
-    "tox-uv == 1.36.0",
+    "tox-uv == 1.37.7",
 ]
 
 ty = [
-    "ty == 0.0.84",
+    "ty == 0.0.99",
 ]
 
 dev = [
@@ -125,9 +126,9 @@ dev = [
 ]
 
 test = [
-    "coverage[toml] == 7.16.2",
+    "coverage[toml] == 7.17.2",
     "coverage-conditional-plugin == 0.9.0",
-    "pytest == 9.1.1",
+    "pytest == 9.2.0",
     "pytest-xdist == 3.8.0",
     {include-group = "setuptools-scm"},
 ]

@@ -108,9 +108,7 @@ or unset the environment variable; then re-run Briefcase.
                         / "Installer"
                         / "vswhere.exe"
                     )
-                if vswhere_path is None or not vswhere_path.exists():
-                    raise BriefcaseCommandError(
-                        f"""\
+                not_installed_message = f"""\
 Visual Studio does not appear to be installed. Visual Studio 2022 Community
 Edition can be obtained as a free download from:
 
@@ -125,30 +123,10 @@ variable that points at the MSBuild.exe provided by your Visual Studio
 installation.
 
 """
-                    ) from None
+                if vswhere_path is None or not vswhere_path.exists():
+                    raise BriefcaseCommandError(not_installed_message) from None
 
-                # Retrieve metadata for Visual Studio install
-                try:
-                    install_metadata = tools.subprocess.parse_output(
-                        json_parser,
-                        [
-                            vswhere_path,
-                            "-latest",
-                            "-prerelease",
-                            "-format",
-                            "json",
-                        ],
-                        stderr=subprocess.STDOUT,
-                    )[0]
-                except (
-                    IndexError,
-                    KeyError,
-                    CommandOutputParseError,
-                    subprocess.CalledProcessError,
-                    OSError,
-                ) as e:
-                    raise BriefcaseCommandError(
-                        f"""\
+                metadata_error_message = f"""\
 Visual Studio appears to exist, but Briefcase can't retrieve installation metadata.
 Please report this as a bug at:
 
@@ -161,7 +139,36 @@ In your report, please including the output from running:
 from the command prompt.
 
 """
-                    ) from e
+                # Retrieve metadata for Visual Studio install
+                try:
+                    vswhere_metadata = tools.subprocess.parse_output(
+                        json_parser,
+                        [
+                            vswhere_path,
+                            "-latest",
+                            "-prerelease",
+                            "-format",
+                            "json",
+                        ],
+                        stderr=subprocess.STDOUT,
+                    )
+                except (
+                    CommandOutputParseError,
+                    subprocess.CalledProcessError,
+                    OSError,
+                ) as e:
+                    raise BriefcaseCommandError(metadata_error_message) from e
+
+                # vswhere can exist without any Visual Studio installation
+                # (e.g. if only the standalone Installer or Build Tools are
+                # present); an empty list means "not installed" (#942).
+                if isinstance(vswhere_metadata, list) and not vswhere_metadata:
+                    raise BriefcaseCommandError(not_installed_message) from None
+
+                try:
+                    install_metadata = vswhere_metadata[0]
+                except (IndexError, KeyError, TypeError) as e:
+                    raise BriefcaseCommandError(metadata_error_message) from e
 
                 msbuild_path = (
                     Path(install_metadata["installationPath"])

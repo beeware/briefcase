@@ -9,7 +9,7 @@ import tomllib
 import unicodedata
 from email.utils import getaddresses
 from pathlib import Path
-from typing import Literal
+from typing import Any, Literal
 from urllib.parse import urlparse
 
 from build import BuildBackendException
@@ -123,6 +123,11 @@ def validate_url(candidate):
     :returns: True. If there are any validation problems, raises ValueError with a
         diagnostic message.
     """
+    # The candidate has to be a string. Convert any non-string into an empty string
+    # which will then trigger "bad URL" behavior
+    if not isinstance(candidate, str):
+        candidate = ""
+
     result = urlparse(candidate)
     if not all([result.scheme, result.netloc]):
         raise ValueError("Not a valid URL!")
@@ -426,6 +431,7 @@ class GlobalConfig(BaseConfig):
         author=None,
         author_email=None,
         requires_python=None,
+        default_app=None,
         **kwargs,
     ):
         super().__init__(**kwargs)
@@ -438,6 +444,7 @@ class GlobalConfig(BaseConfig):
         self.license = license
         self.license_files = [] if license_files is None else license_files
         self.requires_python = requires_python
+        self.default_app = default_app
 
         # Version number is compliant with PEP440 (and related updates):
         try:
@@ -702,7 +709,7 @@ class DraftAppConfig(AppConfig):
         )
         self.uninstall_options = validate_install_options_config(
             uninstall_option,
-            "uininstall",
+            "uninstall",
             install=self.install_options,
         )
 
@@ -861,11 +868,11 @@ def _write_temp_license(base_path: Path, app_name: str, text: str) -> str | None
 
 
 def _normalize_pep639_license_config(
-    config: AppConfig,
+    config: dict[str, Any],
     app_name: str,
     base_path: Path,
     console,
-):
+) -> None:
     """Finish normalizing a PEP 639 license config.
 
     :param config: The fully-merged config dict (mutated in place).
@@ -909,11 +916,11 @@ Update the `license` definition to a valid SPDX expression.
 
 
 def _normalize_pep621_license_text_config(
-    config: AppConfig,
+    config: dict[str, Any],
     app_name: str,
     base_path: Path,
     console,
-):
+) -> None:
     """Normalize a PEP 621 license.text config into PEP 639 form.
 
     Text could be a license identifier (which *might* even be valid SPDX), or full
@@ -991,11 +998,11 @@ def _normalize_pep621_license_text_config(
 
 
 def _normalize_pep621_license_file_config(
-    config: AppConfig,
+    config: dict[str, Any],
     app_name: str,
     base_path: Path,
     console,
-):
+) -> None:
     """Normalize a PEP 621 license.file config into PEP 639 form.
 
     Read the file to infer the SPDX expression.
@@ -1056,11 +1063,11 @@ def _normalize_pep621_license_file_config(
 
 
 def _normalize_pre_pep621_license_config(
-    config: AppConfig,
+    config: dict[str, Any],
     app_name: str,
     base_path: Path,
     console,
-):
+) -> None:
     """Normalize a pre-PEP 621 license config into PEP 639 form.
 
     Pre-PEP 621 free-form `license` text, with no license-files. We also know that the
@@ -1141,11 +1148,11 @@ def _normalize_pre_pep621_license_config(
 
 
 def normalize_license_config(
-    config: AppConfig,
+    config: dict[str, Any],
     app_name: str,
     base_path: Path,
     console,
-):
+) -> None:
     """Normalize the `license` and `license-files` entries in a merged config.
 
     This runs after all config layers (project, global, app, platform, format) have been
@@ -1531,5 +1538,12 @@ def parse_config(config_file: Path, platform, output_format, console):
         # Construct a configuration object, and add it to the list
         # of configurations that are being handled.
         app_configs[app_name] = config
+
+    # A declared default app must name an app defined in this project.
+    default_app = global_config.get("default_app")
+    if default_app is not None and default_app not in app_configs:
+        raise BriefcaseConfigError(
+            f"Default app {default_app!r} is not defined in pyproject.toml"
+        )
 
     return global_config, app_configs
