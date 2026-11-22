@@ -1258,10 +1258,12 @@ a default name '{default_avd}'.
         device_type = self.DEFAULT_DEVICE_TYPE
         skin = self.DEFAULT_DEVICE_SKIN
 
-        # Get available images, raise an error if none found.
-        available_images = self.list_available_system_images(
-            min_api_level=min_api_level(app)
-        )
+        with self.tools.console.wait_bar(
+            "Listing available system images...", transient=True
+        ):
+            available_images = self.list_available_system_images(
+                min_api_level=min_api_level(app)
+            )
         if not available_images:
             raise BriefcaseCommandError(
                 "\n".join(
