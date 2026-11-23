@@ -64,8 +64,6 @@ def api_level_sort_key(api_level: str) -> tuple[int, ...]:
     if not api_level.startswith("android-"):
         raise ValueError(api_level)
     parts = api_level.removeprefix(prefix).split(".")
-    if not parts:
-        raise ValueError(api_level)
 
     try:
         return tuple(int(part) for part in parts)
