@@ -7,6 +7,7 @@
     - [How to run Briefcase](how-to/run.md)
     - Obtaining a Code Signing identity
         - [Android](how-to/code-signing/android.md)
+        - [iOS](how-to/code-signing/iOS.md)
         - [Linux](how-to/code-signing/linux.md)
         - [macOS](how-to/code-signing/macOS.md)
         - [Windows](how-to/code-signing/windows.md)

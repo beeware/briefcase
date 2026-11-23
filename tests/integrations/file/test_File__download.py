@@ -714,6 +714,20 @@ def test_ssl_verification_error(mock_tools):
     mock_tools.os.remove.assert_not_called()
 
 
+def test_proxy_error(mock_tools):
+    """Proxy failures identify the proxy settings and preserve the reported cause."""
+    mock_tools.httpx2.stream.side_effect = httpx2.ProxyError(
+        "407 Proxy Authentication Required"
+    )
+    with pytest.raises(NetworkFailure) as exc_info:
+        mock_tools.file.download("https://example.com/file.zip", mock_tools.base_path)
+
+    message = str(exc_info.value)
+    assert "407 Proxy Authentication Required" in message
+    assert "HTTP_PROXY, HTTPS_PROXY, ALL_PROXY, and NO_PROXY" in message
+    assert "is your computer offline?" not in message
+
+
 def test_unknown_httpcore_connectionerror(mock_tools):
     """NetworkFailure is raised if an unknown core connection error occurs."""
     # Mock a connection error at the level of httpcore2
@@ -883,3 +897,20 @@ def test_malformed_expected_hash(mock_tools, expected_hash):
         )
 
     mock_tools.httpx2.stream.assert_not_called()
+
+
+@pytest.mark.parametrize(
+    ("contents", "hint"),
+    [(None, "existing CA certificate bundle"), ("invalid", "valid CA certificates")],
+    ids=["missing-file", "invalid-certificate"],
+)
+def test_invalid_certificate_file(mock_tools, monkeypatch, tmp_path, contents, hint):
+    """A missing or invalid CA bundle gives an actionable SSL_CERT_FILE error."""
+    bundle = tmp_path / "ca.pem"
+    if contents is not None:
+        bundle.write_text(contents, encoding="utf-8")
+    monkeypatch.setenv("SSL_CERT_FILE", str(bundle))
+    mock_tools.httpx2 = httpx2
+
+    with pytest.raises(BriefcaseCommandError, match=f"SSL_CERT_FILE.*{hint}"):
+        mock_tools.file.download("https://example.com/file.zip", tmp_path)

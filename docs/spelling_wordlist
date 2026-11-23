@@ -89,12 +89,14 @@ helloworld
 hoc
 hostname
 HTTPS
+HTTPX
 IANA
 iCloud
 IDEs
 indygreg's
 installable
 iOS
+iPadOS
 jarsigner
 JDK
 jks
@@ -133,9 +135,11 @@ NFS
 NSIS
 NumPy
 OpenJDK
+OpenSSL
 openSUSE
 OpenSuSE
 OSX
+passcode
 passthrough
 Passthrough
 pbb
@@ -214,6 +218,7 @@ subprocess
 subprocesses
 TCP
 templated
+TestFlight
 Tk
 Tkinter
 toml
@@ -250,6 +255,7 @@ verbing
 visionOS
 VM
 VOC
+VPN
 watchOS
 Wayland
 WearOS
@@ -259,5 +265,6 @@ WPF
 Wunjo
 Xauth
 Xcode
+Xcode's
 Xr
 Xs

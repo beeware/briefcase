@@ -1,7 +1,7 @@
 [build-system]
 requires = [
     # keep versions in sync with automation/pyproject.toml
-    "setuptools==84.1.0",
+    "setuptools==84.2.1",
     "setuptools_scm==10.3.4",
 ]
 build-backend = "setuptools.build_meta"
@@ -55,6 +55,7 @@ classifiers = [
     "Programming Language :: Python :: 3.13",
     "Programming Language :: Python :: 3.14",
     "Programming Language :: Python :: 3.15",
+    "Programming Language :: Python :: 3.16",
     "Programming Language :: Python :: 3 :: Only",
     "Topic :: Software Development",
     "Topic :: Utilities",
@@ -83,7 +84,7 @@ dependencies = [
     # has a runtime warning that verifies "tested" chardet versions, but *doesn't* enforce
     # a version pin. We need to enforce the implied requests warning.
     "chardet < 8.0",
-    "dmgbuild >= 1.6.4, < 2.0; sys_platform == 'darwin'",
+    "dmgbuild >= 2.0.0, < 3.0; sys_platform == 'darwin'",
     "GitPython >= 3.1, < 4.0",
     "platformdirs >= 2.6, < 5.0",
     "psutil >= 5.9, < 8.0",
@@ -111,11 +112,11 @@ towncrier = [
 ]
 
 tox-uv = [
-    "tox-uv == 1.37.0",
+    "tox-uv == 1.37.7",
 ]
 
 ty = [
-    "ty == 0.0.89",
+    "ty == 0.0.104",
 ]
 
 dev = [
@@ -125,9 +126,9 @@ dev = [
 ]
 
 test = [
-    "coverage[toml] == 7.16.2",
+    "coverage[toml] == 7.17.3",
     "coverage-conditional-plugin == 0.9.0",
-    "pytest == 9.1.1",
+    "pytest == 9.2.0",
     "pytest-xdist == 3.8.0",
     {include-group = "setuptools-scm"},
 ]

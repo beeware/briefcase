@@ -1,0 +1,104 @@
+{
+  "devicetypes": [
+    {
+      "productFamily": "iPhone",
+      "bundlePath": "\/Library\/Developer\/CoreSimulator\/Profiles\/DeviceTypes\/iPhone 17e.simdevicetype",
+      "maxRuntimeVersion": 4294967295,
+      "maxRuntimeVersionString": "65535.255.255",
+      "identifier": "com.apple.CoreSimulator.SimDeviceType.iPhone-17e",
+      "modelIdentifier": "iPhone18,5",
+      "minRuntimeVersionString": "26.3.0",
+      "minRuntimeVersion": 1704704,
+      "name": "iPhone 17e"
+    }
+  ],
+  "runtimes": [
+    {
+      "isAvailable": true,
+      "version": "26.5",
+      "isInternal": false,
+      "buildversion": "23F77",
+      "supportedArchitectures": ["arm64"],
+      "supportedDeviceTypes": [
+        {
+          "bundlePath": "\/Library\/Developer\/CoreSimulator\/Profiles\/DeviceTypes\/iPhone 17e.simdevicetype",
+          "name": "iPhone 17e",
+          "productFamily": "iPhone",
+          "identifier": "com.apple.CoreSimulator.SimDeviceType.iPhone-17e"
+        }
+      ],
+      "identifier": "com.apple.CoreSimulator.SimRuntime.iOS-26-5",
+      "platform": "iOS",
+      "bundlePath": "\/Library\/Developer\/CoreSimulator\/Volumes\/iOS_23F77\/Library\/Developer\/CoreSimulator\/Profiles\/Runtimes\/iOS 26.5.simruntime",
+      "runtimeRoot": "\/Library\/Developer\/CoreSimulator\/Volumes\/iOS_23F77\/Library\/Developer\/CoreSimulator\/Profiles\/Runtimes\/iOS 26.5.simruntime\/Contents\/Resources\/RuntimeRoot",
+      "lastUsage": {
+        "arm64": "2026-11-11T08:13:46Z"
+      },
+      "name": "iOS 26.5"
+    },
+    {
+      "isAvailable": true,
+      "version": "27.2",
+      "isInternal": false,
+      "buildversion": "24B8117",
+      "supportedArchitectures": ["arm64"],
+      "supportedDeviceTypes": [
+        {
+          "bundlePath": "\/Library\/Developer\/CoreSimulator\/Profiles\/DeviceTypes\/iPhone 17e.simdevicetype",
+          "name": "iPhone 17e",
+          "productFamily": "iPhone",
+          "identifier": "com.apple.CoreSimulator.SimDeviceType.iPhone-17e"
+        }
+      ],
+      "identifier": "com.apple.CoreSimulator.SimRuntime.iOS-27-2",
+      "platform": "iOS",
+      "bundlePath": "\/private\/var\/run\/com.apple.security.cryptexd\/mnt\/com.apple.iPhoneOS.SimulatorRuntime-v24.2.8117.0.9bKDmt\/Library\/Developer\/CoreSimulator\/Profiles\/Runtimes\/iOS 27.2.simruntime",
+      "runtimeRoot": "\/private\/var\/run\/com.apple.security.cryptexd\/mnt\/com.apple.iPhoneOS.SimulatorRuntime-v24.2.8117.0.9bKDmt\/Library\/Developer\/CoreSimulator\/Profiles\/Runtimes\/iOS 27.2.simruntime\/Contents\/Resources\/RuntimeRoot",
+      "lastUsage": {
+        "arm64": "2026-11-16T00:06:08Z"
+      },
+      "name": "iOS 27.2"
+    }
+  ],
+  "devices": {
+    "com.apple.CoreSimulator.SimRuntime.iOS-27-2": [
+      {
+        "dataPath": "\/Users\/rkm\/Library\/Developer\/CoreSimulator\/Devices\/5A720FFD-BA16-4FF3-9B51-CA8FC7717449\/data",
+        "dataPathSize": 5779312640,
+        "logPath": "\/Users\/rkm\/Library\/Logs\/CoreSimulator\/5A720FFD-BA16-4FF3-9B51-CA8FC7717449",
+        "udid": "5A720FFD-BA16-4FF3-9B51-CA8FC7717449",
+        "lastUsedAt": "2026-11-06T05:06:06Z",
+        "isAvailable": true,
+        "logPathSize": 442368,
+        "deviceTypeIdentifier": "com.apple.CoreSimulator.SimDeviceType.iPhone-17e",
+        "state": "Booted",
+        "name": "iPhone 17e"
+      },
+      {
+        "dataPath": "\/Users\/rkm\/Library\/Developer\/CoreSimulator\/Devices\/4EA3C255-5989-443F-BE88-9BFC076AB4A0\/data",
+        "dataPathSize": 18337792,
+        "logPath": "\/Users\/rkm\/Library\/Logs\/CoreSimulator\/4EA3C255-5989-443F-BE88-9BFC076AB4A0",
+        "udid": "4EA3C255-5989-443F-BE88-9BFC076AB4A0",
+        "isAvailable": false,
+        "deviceTypeIdentifier": "com.apple.CoreSimulator.SimDeviceType.iPhone-17",
+        "state": "Shutdown",
+        "name": "iPhone 17"
+      }
+    ],
+    "com.apple.CoreSimulator.SimRuntime.iOS-26-5": [
+      {
+        "dataPath": "\/Users\/rkm\/Library\/Developer\/CoreSimulator\/Devices\/14013343-F25E-400D-B647-AB8A0C589067\/data",
+        "dataPathSize": 7432269824,
+        "logPath": "\/Users\/rkm\/Library\/Logs\/CoreSimulator\/14013343-F25E-400D-B647-AB8A0C589067",
+        "udid": "14013343-F25E-400D-B647-AB8A0C589067",
+        "lastUsedAt": "2026-10-26T06:56:23Z",
+        "isAvailable": false,
+        "logPathSize": 1277952,
+        "deviceTypeIdentifier": "com.apple.CoreSimulator.SimDeviceType.iPhone-17e",
+        "state": "Shutdown",
+        "name": "iPhone 17e"
+      }
+    ]
+  },
+  "pairs": {}
+}

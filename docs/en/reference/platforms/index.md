@@ -48,7 +48,7 @@
 <tr>
 <td>Android</td>
 <td><a href="android/gradle"><strong>Gradle project</strong></a></td>
-<td>{{ ci_tested }}</td>
+<td>{{ not_tested }}</td>
 <td>{{ ci_tested }}</td>
 <td></td>
 <td colspan="2">{{ ci_tested }}</td>
@@ -61,7 +61,7 @@
 <tr>
 <td>iOS</td>
 <td><a href="./iOS/xcode"><strong>Xcode project</strong></a></td>
-<td>{{ ci_tested }}</td>
+<td>{{ not_tested }}</td>
 <td>{{ ci_tested }}</td>
 <td></td>
 <td colspan="2"></td>
@@ -98,7 +98,7 @@
 </tr>
 <tr>
 <td><a href="./linux/system"><strong>System package</strong></a></td>
-<td class="tested-status-symbol">{{ maintainer_tested }}</td>
+<td class="tested-status-symbol">{{ not_tested }}</td>
 <td>{{ maintainer_tested }}</td>
 <td></td>
 <td colspan="2"></td>
@@ -111,7 +111,7 @@
 <tr>
 <td rowspan="2"><a href="./macOS/">macOS</a></td>
 <td><a href="./macOS/app"><strong>.app bundle</strong></a></td>
-<td>{{ ci_tested }}</td>
+<td>{{ not_tested }}</td>
 <td>{{ ci_tested }}</td>
 <td></td>
 <td colspan="2"></td>
@@ -123,7 +123,7 @@
 </tr>
 <tr>
 <td><a href="./macOS/xcode/#"><span>Xcode project</span></a></td>
-<td class="tested-status-symbol">{{ ci_tested }}</td>
+<td class="tested-status-symbol">{{ not_tested }}</td>
 <td>{{ ci_tested }}</td>
 <td></td>
 <td colspan="2"></td>
@@ -136,7 +136,7 @@
 <tr>
 <td>Web</td>
 <td><a href="./web/static/#"><strong>Static</strong></a></td>
-<td>{{ ci_tested }}</td>
+<td>{{ not_tested }}</td>
 <td>{{ ci_tested }}</td>
 <td>{{ not_tested }}</td>
 <td colspan="2">{{ ci_tested }}</td>

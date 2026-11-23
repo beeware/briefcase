@@ -29,11 +29,14 @@ def custom_packing_format():
         ("filename.doc", False),
         ("filename.archive.doc", False),
         ("filename.archive.ext.doc", False),
-        # Even though .whl files are zips internally,
-        # they aren't identified as archives.
-        ("filename.whl", False),
-        ("filename-1.2.3-cp315-cp315-macos_11_0_universal2.whl", False),
-        ("filename-1.2.3-py3-none-any.whl", False),
+        # .whl files are zips internally. Python 3.16 added them to the
+        # list of shutil-unpackable types.
+        ("filename.whl", sys.version_info >= (3, 16)),
+        (
+            "filename-1.2.3-cp315-cp315-macos_11_0_universal2.whl",
+            sys.version_info >= (3, 16),
+        ),
+        ("filename-1.2.3-py3-none-any.whl", sys.version_info >= (3, 16)),
     ],
 )
 @pytest.mark.usefixtures("custom_packing_format")

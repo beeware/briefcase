@@ -13,6 +13,7 @@ from .os_release import OS_RELEASE
         ("cachyos:rolling", "cachyos", "rolling", "arch"),
         ("fedora:37", "fedora", "37", "rhel"),
         ("rhel/ubi8:8.7", "rhel", "8", "rhel"),
+        ("nobara:44", "nobara", "44", "rhel"),
         ("almalinux:9.1", "almalinux", "9", "rhel"),
         ("centos:8", "centos", "8", "rhel"),
         ("opensuse/leap:15.4", "opensuse-leap", "15", "suse"),

@@ -154,6 +154,59 @@ def test_multiple_minimal_apps(tmp_path):
     console.warning_banner.assert_not_called()
 
 
+def test_default_app(tmp_path):
+    """A project can declare a default app."""
+    config_file = create_file(
+        tmp_path / "pyproject.toml",
+        """
+        [tool.briefcase]
+        default_app = "second"
+
+        [tool.briefcase.app.first]
+        license="MIT"
+
+        [tool.briefcase.app.second]
+        license="BSD-3-Clause"
+        """,
+    )
+
+    global_options, apps = parse_config(
+        config_file,
+        platform="macOS",
+        output_format="Xcode",
+        console=Mock(),
+    )
+
+    assert global_options["default_app"] == "second"
+    assert apps["first"]["default_app"] == "second"
+    assert apps["second"]["default_app"] == "second"
+
+
+def test_default_app_undefined(tmp_path):
+    """A default app that isn't defined in the project is an error."""
+    config_file = create_file(
+        tmp_path / "pyproject.toml",
+        """
+        [tool.briefcase]
+        default_app = "third"
+
+        [tool.briefcase.app.first]
+        license="MIT"
+        """,
+    )
+
+    with pytest.raises(
+        BriefcaseConfigError,
+        match="Default app 'third' is not defined",
+    ):
+        parse_config(
+            config_file,
+            platform="macOS",
+            output_format="Xcode",
+            console=Mock(),
+        )
+
+
 def test_platform_override(tmp_path):
     """An app can define platform settings that override base settings."""
     config_file = create_file(
