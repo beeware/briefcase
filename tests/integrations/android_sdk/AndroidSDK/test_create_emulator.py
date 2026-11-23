@@ -64,12 +64,12 @@ def test_create_emulator(
 
     # Mock the user providing several invalid names before getting it right.
     mock_tools.console.values = [
+        "2",  # Android API level selection (android-34)
+        "1",  # image type selection (default)
         "runningEmulator",  # an existing emulator
         "invalid name",  # A name with a space
         "annoying!",  # a name with non-alpha characters
         "new-emulator",  # A valid name!
-        "2",  # Android API level selection (android-34)
-        "1",  # image type selection (default)
     ]
 
     # Mock the initial output of an AVD config file.
@@ -106,11 +106,7 @@ def test_default_name(mock_tools, android_sdk, tmp_path):
     # it only checks that the emulator is created with the default name.
 
     # User provides no input; default name, system image and image type will be used.
-    mock_tools.console.values = [
-        "",
-        "",
-        "",
-    ]
+    mock_tools.console.values = ["", "", ""]
 
     # Mock the internal emulator creation method
     android_sdk._create_emulator = MagicMock()
@@ -142,11 +138,7 @@ def test_default_name_with_collisions(mock_tools, android_sdk, tmp_path):
         ]
     )
     # Default emulator name, default system image and default image type selection.
-    mock_tools.console.values = [
-        "",
-        "",
-        "",
-    ]
+    mock_tools.console.values = ["", "", ""]
 
     # Mock the internal emulator creation method
     android_sdk._create_emulator = MagicMock()
@@ -291,9 +283,9 @@ def test_image_type_selection(
 def test_system_image_selection(mock_tools, android_sdk, tmp_path):
     """The user can select an Android version and image type."""
     mock_tools.console.values = [
-        "",  # default emulator name
         "2",  # select API level 34 (option 2 in the list)
         "2",  # image type selection (google_apis option 2 in the list)
+        "",  # default emulator name
     ]
 
     # Mock the internal emulator creation method
@@ -307,11 +299,11 @@ def test_system_image_selection(mock_tools, android_sdk, tmp_path):
     avd = android_sdk.create_emulator(app)
 
     # The expected device AVD was created.
-    assert avd == "beePhone-31"
+    assert avd == "beePhone-34"
 
     # The call was made to create the emulator
     android_sdk._create_emulator.assert_called_once_with(
-        avd="beePhone-31",
+        avd="beePhone-34",
         device_type="pixel",
         skin="pixel_7_pro",
         system_image="system-images;android-34;google_apis;x86_64",
@@ -337,9 +329,9 @@ def test_no_available_system_images(mock_tools, android_sdk, tmp_path):
 def test_create_emulator_with_min_os_version(mock_tools, android_sdk, tmp_path):
     """create_emulator passes app's min_os_version to list_available_system_images."""
     mock_tools.console.values = [
-        "new-emulator",  # emulator name
         "2",  # API level selection (android-34)
         "1",  # image type selection (default)
+        "new-emulator",  # emulator name
     ]
     # Mock the initial output of an AVD config file.
     avd_config_path = tmp_path / "home/.android/avd/new-emulator.avd/config.ini"

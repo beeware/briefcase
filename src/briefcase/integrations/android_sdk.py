@@ -30,10 +30,7 @@ ANDROID_MIN_OS_VERSION = 24
 def create_avd_validator(emulators):
     def _validate_avd_name(avd):
         if not PEP508_NAME_RE.match(avd):
-            raise ValueError(
-                "An emulator name may only contain "
-                "letters, numbers, hyphens and underscores."
-            )
+            raise ValueError("This emulator name is not a valid Python package name.")
         elif avd in emulators:
             raise ValueError(f"An emulator named '{avd}' already exists.")
         return True
@@ -41,7 +38,7 @@ def create_avd_validator(emulators):
     return _validate_avd_name
 
 
-def _parse_system_image(package: str):
+def parse_system_image(package: str):
     """Parse a system image package identifier into its components.
 
     :param package: e.g. "system-images;android-31;default;x86_64"
@@ -53,7 +50,11 @@ def _parse_system_image(package: str):
     return parts[1], parts[2], parts[3]
 
 
-def _api_level_sort_key(api_level: str) -> tuple[int, ...]:
+def default_avd_name(system_image):
+    return parse_system_image(system_image)[0].replace("android", "beePhone")
+
+
+def api_level_sort_key(api_level: str) -> tuple[int, ...]:
     """Sort key for API level strings, e.g. "android-34.1" -> (34, 1).
 
     :raises ValueError: if the string is not "android-" followed by a dot-separated
@@ -257,17 +258,9 @@ class AndroidSDK(ManagedTool):
         return "pixel_7_pro"
 
     @property
-    def DEFAULT_ANDROID_SDK_LEVEL(self) -> int:
-        """An API level whose default image type is known to work well."""
-        return 31
-
-    @property
-    def DEFAULT_AVD(self) -> str:
-        return f"beePhone-{self.DEFAULT_ANDROID_SDK_LEVEL}"
-
-    @property
     def DEFAULT_API_LEVEL(self) -> str:
-        return f"android-{self.DEFAULT_ANDROID_SDK_LEVEL}"
+        """An API level whose default image type is known to work well."""
+        return "android-31"
 
     @property
     def DEFAULT_IMAGE_TYPES(self) -> list[str]:
@@ -829,14 +822,14 @@ connection.
         images = []
         for line in output.splitlines():
             package = line.split("|")[0].strip()
-            parsed = _parse_system_image(package)
+            parsed = parse_system_image(package)
             if parsed is None:
                 continue
             api_level, _, abi = parsed
             if abi != self.emulator_abi:
                 continue
             try:
-                if _api_level_sort_key(api_level)[0] < min_api_level:
+                if api_level_sort_key(api_level)[0] < min_api_level:
                     continue
             except ValueError:
                 continue
@@ -1120,21 +1113,22 @@ connection.
                 device_index[f"@{avd}"] = name
 
         if device_or_avd == "auto":
-            default_avd = f"@{self.DEFAULT_AVD}"
+            avd_name = default_avd_name(self.DEFAULT_SYSTEM_IMAGE)
+            default_avd = f"@{avd_name}"
             try:
                 name = device_index[default_avd]
             except KeyError:
                 # The default AVD doesn't exist; create it.
                 self._create_emulator(
-                    avd=self.DEFAULT_AVD,
+                    avd=avd_name,
                     device_type=self.DEFAULT_DEVICE_TYPE,
                     skin=self.DEFAULT_DEVICE_SKIN,
                     system_image=self.DEFAULT_SYSTEM_IMAGE,
                 )
                 name = f"{default_avd} (emulator)"
 
-            device = running_avds.get(self.DEFAULT_AVD)
-            return device, name, self.DEFAULT_AVD
+            device = running_avds.get(avd_name)
+            return device, name, avd_name
 
         elif device_or_avd:
             # If a device or AVD has been provided, check it against the available
@@ -1242,30 +1236,6 @@ In future, you can specify this device by running:
         :param app: The config object for the app.
         :returns: The AVD of the newly created emulator.
         """
-        # Get the list of existing emulators
-        emulators = set(self.emulators())
-
-        default_avd = self.DEFAULT_AVD
-        i = 1
-        # Make sure the default name is unique
-        while default_avd in emulators:
-            i += 1
-            default_avd = f"{self.DEFAULT_AVD}-{i}"
-
-        # Prompt for a device avd until a valid one is provided.
-        avd = self.tools.console.text_question(
-            intro=f"""\
-You need to select a name for your new emulator. This is an identifier that
-can be used to start the emulator in future. It should follow the same naming
-conventions as a Python package (i.e., it may only contain letters, numbers,
-hyphens and underscores). If you don't provide a name, Briefcase will use the
-a default name '{default_avd}'.
-""",
-            description="Emulator Name",
-            default=default_avd,
-            validator=create_avd_validator(emulators),
-        )
-
         # TODO: Provide a list of options for device types with matching skins
         device_type = self.DEFAULT_DEVICE_TYPE
         skin = self.DEFAULT_DEVICE_SKIN
@@ -1293,12 +1263,12 @@ a default name '{default_avd}'.
             )
 
         # Parse available images once for use in both selection questions.
-        parsed_images = [_parse_system_image(img) for img in available_images]
+        parsed_images = [parse_system_image(img) for img in available_images]
 
         # Ask the user to select an API level.
         api_levels = sorted(
             {api_level for api_level, _, _ in parsed_images},
-            key=_api_level_sort_key,
+            key=api_level_sort_key,
         )
         api_level = self.tools.console.selection_question(
             intro="Select the API level for the emulator:",
@@ -1329,6 +1299,29 @@ a default name '{default_avd}'.
         )
 
         system_image = f"system-images;{api_level};{image_type};{self.emulator_abi}"
+        emulators = set(self.emulators())
+
+        default_avd = default_avd_base = default_avd_name(system_image)
+        i = 1
+        # Make sure the default name is unique
+        while default_avd in emulators:
+            i += 1
+            default_avd = f"{default_avd_base}-{i}"
+
+        # Prompt for a device avd until a valid one is provided.
+        avd = self.tools.console.text_question(
+            intro=(
+                "You need to select a name for your new emulator. This is an "
+                "identifier that can be used to start the emulator in future. It "
+                "should follow the same naming conventions as a Python package (e.g. "
+                "it may only contain letters, numbers, dots, hyphens, and "
+                "underscores). If you don't provide a name, Briefcase will use the "
+                f"default name '{default_avd}'."
+            ),
+            description="Emulator Name",
+            default=default_avd,
+            validator=create_avd_validator(emulators),
+        )
 
         self._create_emulator(
             avd=avd,

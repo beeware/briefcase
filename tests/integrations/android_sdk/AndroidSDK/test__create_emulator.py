@@ -32,7 +32,7 @@ def android_sdk(android_sdk) -> AndroidSDK:
     android_sdk.list_available_system_images = MagicMock(
         return_value=[
             "system-images;android-31;default;x86_64",
-            "system-images;android-34;default;x86_64",
+            "system-images;android-34.5;default;x86_64",
         ]
     )
     return android_sdk
@@ -327,20 +327,24 @@ def test_create_failure(mock_tools, android_sdk):
     )
 
 
-def test_default_name(mock_tools, android_sdk, tmp_path):
+@pytest.mark.parametrize(
+    ("api_level_selection", "api_level"),
+    [("1", "31"), ("2", "34.5")],
+)
+def test_default_name(
+    mock_tools, android_sdk, tmp_path, api_level_selection, api_level
+):
     """A new emulator can be created with the default name."""
     # This test doesn't validate most of the test process;
     # it only checks that the emulator is created with the default name.
 
-    # User provides no input; default name, system image and image type will be used.
-    mock_tools.console.values = [
-        "",
-        "",
-        "",
-    ]
+    # Default image type and name will be used. Name should depende on API level.
+    mock_tools.console.values = [api_level_selection, "", ""]
 
     # Mock the initial output of an AVD config file.
-    avd_config_path = tmp_path / "home/.android/avd/beePhone-31.avd/config.ini"
+    avd_config_path = (
+        tmp_path / f"home/.android/avd/beePhone-{api_level}.avd/config.ini"
+    )
     avd_config_path.parent.mkdir(parents=True)
     create_file(
         avd_config_path.parent.with_suffix(".ini"),
@@ -357,7 +361,7 @@ def test_default_name(mock_tools, android_sdk, tmp_path):
     avd = android_sdk.create_emulator(app)
 
     # The expected device AVD was created.
-    assert avd == "beePhone-31"
+    assert avd == f"beePhone-{api_level}"
 
 
 def test_default_name_with_collisions(mock_tools, android_sdk, tmp_path):
@@ -376,11 +380,7 @@ def test_default_name_with_collisions(mock_tools, android_sdk, tmp_path):
         ]
     )
     # User provides no input; default name, system image and image type will be used.
-    mock_tools.console.values = [
-        "",
-        "",
-        "",
-    ]
+    mock_tools.console.values = ["", "", ""]
 
     # Mock the initial output of an AVD config file.
     avd_config_path = tmp_path / "home/.android/avd/beePhone-31-3.avd/config.ini"
