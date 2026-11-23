@@ -438,12 +438,10 @@ class ConvertCommand(NewCommand):
         self,
         bundle: str,
         project_overrides: dict,
-    ) -> tuple[list[dict[str, str]], bool]:
+    ) -> list[dict[str, str]]:
         """Determine the app's authors, using the PEP 621 authors if there are any.
 
-        :returns: The app's authors, and whether the Briefcase configuration needs to
-            declare them. It doesn't need to if the project's own PEP 621 definition can
-            be used.
+        :returns: The app's authors.
         """
         author_override = project_overrides.pop("author", None)
         email_override = project_overrides.pop("author_email", None)
@@ -455,13 +453,11 @@ class ConvertCommand(NewCommand):
             self.console.prompt(
                 "Using author details from PEP621 formatted pyproject.toml"
             )
-            # The PEP 621 authors are merged into the Briefcase configuration when
-            # the project is loaded, so there's no need to repeat the definition.
-            return authors, False
+            return authors
 
         author = self.input_author(override_value=author_override)
         author_email = self.input_email(author, bundle, override_value=email_override)
-        return [{"name": author, "email": author_email}], True
+        return [{"name": author, "email": author_email}]
 
     def get_license_hint(self) -> tuple[str | None, str]:
         """Get hint for project license, either by reading pyproject.toml or the license
@@ -547,7 +543,7 @@ class ConvertCommand(NewCommand):
         )
         url = self.input_url(app_name, project_overrides.pop("url", None))
         bundle = self.input_bundle(url, app_name, project_overrides.pop("bundle", None))
-        authors, declare_authors = self.input_authors(bundle, project_overrides)
+        authors = self.input_authors(bundle, project_overrides)
         project_license = self.input_license(
             override_value=project_overrides.pop("license", None)
         )
@@ -565,7 +561,6 @@ class ConvertCommand(NewCommand):
             "test_source_dir": test_source_dir,
             "description": description,
             "pep621": {"authors": authors},
-            "declare_authors": declare_authors,
             "bundle": bundle,
             "url": url,
             "license": project_license,

@@ -443,7 +443,6 @@ class NewCommand(BaseCommand):
             "project_name": project_name,
             "description": description,
             "pep621": {"authors": authors},
-            "declare_authors": True,
             "bundle": bundle,
             "url": url,
             "license": project_license,

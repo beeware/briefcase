@@ -32,6 +32,5 @@ def test_overrides_are_used(convert_command):
     assert "leftover" not in out
 
     assert out["pep621"] == {"authors": [{"name": "author", "email": "author_email"}]}
-    assert out["declare_authors"] is True
 
     assert override_input == {"leftover": "leftover"}

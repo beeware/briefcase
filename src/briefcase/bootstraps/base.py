@@ -17,7 +17,6 @@ class AppContext(TypedDict):
     project_name: str
     description: str
     pep621: dict[str, list[dict[str, str]]]
-    declare_authors: bool
     bundle: str
     url: str
     license: str
