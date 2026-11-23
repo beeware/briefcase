@@ -103,10 +103,17 @@ class AndroidSDK(ManagedTool):
     name = "android_sdk"
     full_name = "Android SDK"
 
-    # Latest version for Command-Line Tools download as of May 2025
-    # **Be sure the gradle.rst docs stay in sync with version updates here**
-    SDK_MANAGER_DOWNLOAD_VER = "13114758"
-    SDK_MANAGER_VER = "19.0"
+    # The latest URLs for the command-line tools can be found at
+    # https://developer.android.com/studio#command-line-tools-only. Hashes are also
+    # listed there, and should be copied into cmdline_tools_hash. Older versions are
+    # listed in https://dl.google.com/android/repository/repository2-2.xml.
+    SDK_MANAGER_DOWNLOAD_VER = "15641748"
+
+    # The user-visible version number is in source.properties in the ZIP. 21 is the last
+    # version before they started transitioning to the `android` command, which adds
+    # complications both for downloading (macOS has separate URLs for x86_64 and arm64)
+    # and running (package listings use a different format).
+    SDK_MANAGER_VER = "21.0"
 
     def __init__(self, tools: ToolCache, root_path: Path):
         super().__init__(tools=tools)
@@ -158,9 +165,9 @@ class AndroidSDK(ManagedTool):
         """The expected sha256 hash of the command-line tools download for the current
         machine."""
         hash = {
-            "mac": "5673201e6f3869f418eeed3b5cb6c4be7401502bd0aae1b12a29d164d647a54e",
-            "linux": "7ec965280a073311c339e571cd5de778b9975026cfcbe79f2b1cdcb1e15317ee",
-            "win": "98b565cb657b012dae6794cefc0f66ae1efb4690c699b78a614b4a6a3505b003",
+            "mac": "a2253766e128f6d4ff594d23857b67f52028a7e8773b2634dcc3d3e60d13b290",
+            "linux": "a66d5ef0238fc0162e9c1446602ce0dd41702d4dd7a94d2ce42d12b7f80baf7e",
+            "win": "f911b4f03fbee117e2d22edb5f51a5efeae4e8c8aa78bb6bd3de4862ae299da6",
         }[self._cmdline_tools_platform_name()]
         return f"sha256:{hash}"
 

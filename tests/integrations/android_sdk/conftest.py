@@ -10,16 +10,16 @@ from briefcase.integrations.java import JDK
 from briefcase.integrations.subprocess import Subprocess
 
 # current versions of Android SDK Manager
-SDK_MGR_VER = "19.0"
-SDK_MGR_DL_VER = "13114758"
+SDK_MGR_VER = "21.0"
+SDK_MGR_DL_VER = "15641748"
 
 # SHA256 checksums for the command-line tools ZIP for SDK_MGR_DL_VER, keyed by
 # the same "mac"/"linux"/"win" tag used in `_test_download_tag` fixtures across
 # the AndroidSDK test suite.
 CMDLINE_TOOLS_SHA256 = {
-    "mac": "5673201e6f3869f418eeed3b5cb6c4be7401502bd0aae1b12a29d164d647a54e",
-    "linux": "7ec965280a073311c339e571cd5de778b9975026cfcbe79f2b1cdcb1e15317ee",
-    "win": "98b565cb657b012dae6794cefc0f66ae1efb4690c699b78a614b4a6a3505b003",
+    "mac": "a2253766e128f6d4ff594d23857b67f52028a7e8773b2634dcc3d3e60d13b290",
+    "linux": "a66d5ef0238fc0162e9c1446602ce0dd41702d4dd7a94d2ce42d12b7f80baf7e",
+    "win": "f911b4f03fbee117e2d22edb5f51a5efeae4e8c8aa78bb6bd3de4862ae299da6",
 }
 
 
