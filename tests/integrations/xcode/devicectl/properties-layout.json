@@ -1,0 +1,54 @@
+{
+  "info": {
+    "arguments": [
+      "devicectl",
+      "list",
+      "devices",
+      "--json-output",
+      "-",
+      "-q"
+    ],
+    "commandType": "devicectl.list.devices",
+    "environment": {},
+    "jsonVersion": 5,
+    "outcome": "success",
+    "version": "600.1"
+  },
+  "result": {
+    "devices": [
+      {
+        "identifier": "6B1F2C3D-4E5F-5A6B-8C7D-9E0F1A2B3C4D",
+        "properties": {
+          "connection": {
+            "pairingState": "paired",
+            "state": "connected",
+            "transportType": "wired"
+          },
+          "hardware": {
+            "deviceType": "iPhone",
+            "platform": "iOS",
+            "udid": "00008120-000123456789ABCD"
+          },
+          "software": {
+            "developerModeStatus": {
+              "enabled": {
+                "mode": 1
+              }
+            },
+            "osVersionNumber": {
+              "components": [
+                27,
+                0
+              ],
+              "stringValue": "27.0"
+            }
+          },
+          "state": {
+            "name": "New Layout iPhone"
+          }
+        },
+        "visibilityClass": "default"
+      }
+    ]
+  }
+}

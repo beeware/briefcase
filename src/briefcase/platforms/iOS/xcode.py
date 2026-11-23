@@ -1,13 +1,15 @@
 from __future__ import annotations
 
 import contextlib
+import json
 import plistlib
 import re
 import subprocess
 import time
 from collections.abc import Collection
+from dataclasses import dataclass
 from pathlib import Path
-from typing import Literal
+from typing import Literal, NamedTuple
 from uuid import UUID
 
 from packaging.version import Version
@@ -30,16 +32,107 @@ from briefcase.exceptions import (
     InvalidDeviceError,
     NoDistributionArtefact,
 )
-from briefcase.integrations.subprocess import is_process_dead
 from briefcase.integrations.virtual_environment import VirtualEnvironment
-from briefcase.integrations.xcode import DeviceState, get_device_state, get_simulators
+from briefcase.integrations.xcode import (
+    DEVICE_DEVELOPER_MODE_DISABLED,
+    DEVICE_NOT_PAIRED,
+    DEVICE_UNREACHABLE,
+    DeviceState,
+    get_device_state,
+    get_identities,
+    get_physical_devices,
+    get_simulators,
+    get_team_id,
+)
 from briefcase.platforms.iOS import iOSMixin
-from briefcase.platforms.macOS.filters import XcodeBuildFilter, macOS_log_clean_filter
+from briefcase.platforms.macOS.filters import (
+    XcodeBuildFilter,
+    nslog_clean_filter,
+)
+
+# The name prefixes of the signing identities that can be used to deploy to a
+# physical device. "iPhone Developer" is the name used by older certificates.
+DEVELOPMENT_IDENTITY_PREFIXES = ("Apple Development:", "iPhone Developer:")
+
+# The key for the physical devices option when selecting an iOS version.
+PHYSICAL_DEVICES = "physical"
+
+
+class iOSDevice(NamedTuple):
+    """A device (simulator or physical) that can run an iOS app."""
+
+    udid: str
+    os_version: str
+    name: str
+    physical: bool
+
+    def __str__(self):
+        if self.physical:
+            return self.name
+        else:
+            return f"an {self.name} simulator running iOS {self.os_version}"
+
+
+# How to resolve each of the reasons a physical device isn't ready.
+DEVICE_NOT_READY_RESOLUTIONS = {
+    DEVICE_NOT_PAIRED: (
+        "Connect the device to this Mac with a cable, unlock it, and tap Trust\n"
+        "when prompted."
+    ),
+    DEVICE_DEVELOPER_MODE_DISABLED: (
+        "Enable Developer Mode on the device, in Settings > Privacy & Security >\n"
+        "Developer Mode, and restart the device when prompted."
+    ),
+    DEVICE_UNREACHABLE: (
+        "Unlock the device, and connect it to this Mac with a cable, or to the\n"
+        "same network as this Mac."
+    ),
+}
+
+
+class iOSDeviceNotReady(BriefcaseCommandError):
+    def __init__(self, name: str, reason: str):
+        super().__init__(
+            f"""\
+{name} isn't ready to run apps ({reason}).
+
+{DEVICE_NOT_READY_RESOLUTIONS[reason]}
+
+See:
+
+    https://briefcase.beeware.org/en/stable/reference/platforms/iOS/xcode/#ios-deploy
+
+for help with deploying to physical devices.
+"""
+        )
+
+
+@dataclass
+class iOSSigningIdentity:
+    """A signing identity for deploying an app to a physical iOS device."""
+
+    id: str
+    name: str
+    team_id: str
 
 
 class iOSXcodePassiveMixin(iOSMixin):
     output_format = "Xcode"
     supported_env_managers: Collection[EnvManagerT] = {"venv", "uv"}
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+
+        # The device the app will run on, and (for a physical device) the
+        # identity used to sign the app. These are selected by the run command.
+        self.target_device: iOSDevice | None = None
+        self.signing_identity: iOSSigningIdentity | None = None
+
+    def clone_options(self, command):
+        """Clone the target device and signing identity."""
+        super().clone_options(command)
+        self.target_device = command.target_device
+        self.signing_identity = command.signing_identity
 
     @property
     def packaging_formats(self):
@@ -53,11 +146,12 @@ class iOSXcodePassiveMixin(iOSMixin):
         return self.bundle_path(app) / f"{app.formal_name}.xcodeproj"
 
     def binary_path(self, app):
+        if self.target_device and self.target_device.physical:
+            sdk = "iphoneos"
+        else:
+            sdk = "iphonesimulator"
         return (
-            self.bundle_path(app)
-            / "build"
-            / "Debug-iphonesimulator"
-            / f"{app.formal_name}.app"
+            self.bundle_path(app) / "build" / f"Debug-{sdk}" / f"{app.formal_name}.app"
         )
 
     def distribution_path(self, app):
@@ -76,7 +170,7 @@ class iOSXcodePassiveMixin(iOSMixin):
 
                     and use Xcode's app distribution workflow described at:
 
-                        https://briefcase.readthedocs.io/en/stable/reference/platforms/iOS/xcode.html#ios-deploy
+                        https://briefcase.beeware.org/en/stable/reference/platforms/iOS/xcode/#ios-distribute
                 """,
             )
         )
@@ -89,6 +183,9 @@ class iOSXcodeMixin(iOSXcodePassiveMixin):
         # External service APIs.
         # These are abstracted to enable testing without patching.
         self.get_simulators = get_simulators
+        self.get_physical_devices = get_physical_devices
+        self.get_identities = get_identities
+        self.get_team_id = get_team_id
 
     def add_options(self, parser):
         super().add_options(parser)
@@ -106,25 +203,73 @@ class iOSXcodeMixin(iOSXcodePassiveMixin):
                 'automatically select a recent "SE-class" device on the '
                 "most recently released iOS version. Provide -d with no "
                 "value to select from the full list of available "
-                "simulators."
+                "simulators and connected physical devices."
             ),
             required=False,
         )
 
+    def add_identity_option(self, parser):
+        """Add the option to specify the signing identity for a physical device.
+
+        :param parser: a stub argparse parser for the command.
+        """
+        parser.add_argument(
+            "-i",
+            "--identity",
+            dest="identity",
+            help=(
+                "The development signing identity to use when running on a "
+                "physical device; either the 40-digit hex checksum, or the "
+                "full name of the identity."
+            ),
+            required=False,
+        )
+
+    def prepare_target(
+        self,
+        app: FinalizedAppConfig,
+        *,
+        udid: str | None = None,
+        identity: str | None = None,
+        **options,
+    ):
+        """Select the device to run on and, for a physical device, the signing identity
+        to use.
+
+        :param app: The config object for the app
+        :param udid: The device UDID, name, or name::version to target. If
+            `"auto"`, a recent "SE-class" simulator on the most recent iOS
+            version will be selected automatically. If `None`, the user will
+            be asked to select a device at runtime.
+        :param identity: The signing identity to use for a physical device. If
+            `None`, the user will be asked to select an identity.
+        """
+        try:
+            self.target_device = self.select_target_device(udid)
+            if self.target_device.physical:
+                self.signing_identity = self.select_identity(identity)
+        except InputDisabled as e:
+            raise BriefcaseCommandError(
+                "Input has been disabled; can't select a device or signing "
+                "identity. Omit the `-d`/`--device` option, or use `-d auto`, to "
+                "select a simulator; or specify a physical device with "
+                "`-d`/`--device`, and its signing identity with "
+                "`-i`/`--identity`."
+            ) from e
+
     def select_target_device(self, udid_or_device=None):
         """Select the target device to use for iOS builds.
 
-        Interrogates the system to get the list of available simulators.
+        Interrogates the system to get the list of available simulators, and
+        the physical devices known to this machine.
 
         If the user has specified "auto", a recent "SE-class" iPhone simulator
         is selected automatically, on the most recent iOS version, without
         prompting.
 
-        If there is only a single iOS version available, that version
-        will be selected automatically.
-
-        If there is only one simulator available, that version will be selected
-        automatically.
+        Otherwise, the user is asked to select a simulator iOS version, or the
+        physical devices (if any are known); and then a device. If there is only
+        one option, it is selected automatically.
 
         If the user has specified a device at the command line, it will be
         used in preference to any of the above.
@@ -134,13 +279,20 @@ class iOSXcodeMixin(iOSXcodePassiveMixin):
             - The literal string `"auto"` (case-insensitive); automatically
               select a recent "SE-class" simulator on the most recent
               available iOS version, without prompting.
-            - A device UUID.
+            - A simulator UUID, or a physical device UDID.
             - A device name (e.g. `"iPhone 11"`).
             - A device name and OS version (e.g. `"iPhone 11::iOS 13.3"`).
-        :returns: A tuple containing the udid, iOS version, and device name
-            for the selected device.
+        :returns: The selected device.
+        :raises iOSDeviceNotReady: If the selected physical device can't be used.
         """
         simulators = self.get_simulators(self.tools, "iOS")
+
+        # Physical devices are candidates for any selection other than "auto".
+        if udid_or_device is None or udid_or_device.lower() != "auto":
+            physical_devices = self.get_physical_devices(self.tools, "iOS")
+        else:
+            physical_devices = {}
+
         try:
             # Try to convert to a UDID. If this succeeds, then the argument
             # is a UDID.
@@ -152,7 +304,7 @@ class iOSXcodeMixin(iOSXcodePassiveMixin):
                     # iOS_tag will be of the form "iOS 15.5"
                     # Drop the "iOS" prefix when reporting the version.
                     iOS_version = iOS_tag.split(" ", 1)[-1]
-                    return udid, iOS_version, device
+                    return iOSDevice(udid, iOS_version, device, physical=False)
                 except KeyError:
                     # UDID doesn't exist in this iOS version; try another.
                     pass
@@ -206,7 +358,7 @@ class iOSXcodeMixin(iOSXcodePassiveMixin):
                 self.console.info(
                     f"Automatically selected {device} simulator on {iOS_tag}"
                 )
-                return udid, iOS_version, device
+                return iOSDevice(udid, iOS_version, device, physical=False)
             elif udid_or_device and "::" in udid_or_device:
                 # A device name::version.
                 device, iOS_tag = udid_or_device.split("::")
@@ -236,12 +388,18 @@ class iOSXcodeMixin(iOSXcodePassiveMixin):
                         # Found a match;
                         # normalize back to the official name and return.
                         device = devices[udid]
-                        return udid, iOS_version, device
+                        return iOSDevice(udid, iOS_version, device, physical=False)
                     except KeyError as e:
                         raise InvalidDeviceError("device name", device) from e
                 except KeyError as e:
                     raise InvalidDeviceError("iOS Version", iOS_tag) from e
             elif udid_or_device:
+                # Physical device UDIDs aren't UUIDs; check for a match on
+                # a physical device UDID before treating it as a device name.
+                udid = udid_or_device.upper()
+                if udid in physical_devices:
+                    return self._physical_device(udid, physical_devices[udid])
+
                 # Just a device name
                 device = udid_or_device
 
@@ -269,29 +427,64 @@ class iOSXcodeMixin(iOSXcodePassiveMixin):
                         # Drop the "iOS" prefix when reporting the version.
                         iOS_version = iOS_tag.split(" ", 1)[-1]
 
-                        return udid, iOS_version, device
+                        return iOSDevice(udid, iOS_version, device, physical=False)
                     except KeyError:
                         # UDID doesn't exist in this iOS version; try another.
                         pass
+
+                # No simulator matches; look for a physical device with that name.
+                for udid, details in physical_devices.items():
+                    if details["name"].lower() == device.lower():
+                        return self._physical_device(udid, details)
+
                 raise InvalidDeviceError("device name", device) from e
 
-        if len(simulators) == 0:
+        # The user selects a simulator iOS version, or the physical devices.
+        options = {iOS_tag: iOS_tag for iOS_tag in simulators}
+        if physical_devices:
+            options[PHYSICAL_DEVICES] = "Physical devices"
+
+        if len(options) == 0:
             raise BriefcaseCommandError("No iOS simulators available.")
-        elif len(simulators) == 1:
-            iOS_tag = next(iter(simulators.keys()))
+        elif len(options) == 1:
+            iOS_tag = next(iter(options))
         else:
             iOS_tag = self.console.selection_question(
                 intro="Select iOS version:",
                 description="iOS Version",
-                options=simulators.keys(),
+                options=options,
             )
+
+        if iOS_tag == PHYSICAL_DEVICES:
+            udid = self.console.selection_question(
+                intro="Select physical device to use:",
+                description="Physical device",
+                options={
+                    udid: (
+                        f"{details['name']} ({details['problem']})"
+                        if details["problem"]
+                        else details["name"]
+                    )
+                    for udid, details in physical_devices.items()
+                },
+            )
+            target_device = self._physical_device(udid, physical_devices[udid])
+
+            self.console.info(f"""
+In the future, you could specify this device by running:
+
+    $ briefcase {self.command} iOS -d "{target_device.name}"
+
+or:
+
+    $ briefcase {self.command} iOS -d {udid}
+""")
+            return target_device
 
         devices = simulators[iOS_tag]
 
         if len(devices) == 0:
             raise BriefcaseCommandError(f"No simulators available for {iOS_tag}.")
-        elif len(devices) == 1:
-            udid = next(iter(devices.keys()))
         else:
             udid = self.console.selection_question(
                 intro="Select simulator device to use:",
@@ -315,7 +508,90 @@ or:
         # Drop the "iOS" prefix when reporting the version.
         iOS_version = iOS_tag.split(" ", 1)[-1]
 
-        return udid, iOS_version, device
+        return iOSDevice(udid, iOS_version, device, physical=False)
+
+    def _physical_device(self, udid: str, details: dict) -> iOSDevice:
+        """Construct the target for a physical device, if it is ready.
+
+        :param udid: The UDID of the physical device.
+        :param details: The details of the device, as returned by
+            `get_physical_devices()`.
+        :returns: The physical device.
+        :raises iOSDeviceNotReady: If the device can't be used.
+        """
+        if details["problem"]:
+            raise iOSDeviceNotReady(details["name"], details["problem"])
+        return iOSDevice(udid, details["os_version"], details["name"], physical=True)
+
+    def select_identity(self, identity: str | None = None) -> iOSSigningIdentity:
+        """Select the signing identity to use when deploying to a physical device.
+
+        :param identity: A pre-specified identity (either the 40-digit hex checksum, or
+            the name of the identity). If not provided, the user will be asked to select
+            an identity.
+        :returns: The signing identity to use.
+        """
+        identities = {
+            identity_id: name
+            for identity_id, name in self.get_identities(
+                self.tools, "codesigning"
+            ).items()
+            if name.startswith(DEVELOPMENT_IDENTITY_PREFIXES)
+        }
+        if not identities:
+            raise BriefcaseCommandError(
+                "No development signing identities are available. Deploying to "
+                "a physical device requires an Apple Development certificate, "
+                "and its private key, to be installed in your keychain. See:\n"
+                "\n"
+                "    https://briefcase.beeware.org/en/stable/how-to/code-signing/iOS/\n"
+                "\n"
+                "for details on how to obtain a development certificate."
+            )
+
+        if identity is None:
+            identity_id = self.console.selection_question(
+                intro="Select development signing identity to use:",
+                description="Development Signing Identity",
+                options=identities,
+            )
+
+            self.console.info(f"""
+In future, you could specify this signing identity by using:
+
+    $ briefcase {self.command} iOS --identity {identity_id} ...
+
+or
+
+    $ briefcase {self.command} iOS --identity "{identities[identity_id]}" ...
+
+""")
+        elif identity in identities:
+            identity_id = identity
+        else:
+            matches = [
+                identity_id
+                for identity_id, name in identities.items()
+                if name == identity
+            ]
+            if not matches:
+                raise BriefcaseCommandError(
+                    f"Invalid development signing identity {identity!r}."
+                )
+            elif len(matches) > 1:
+                raise BriefcaseCommandError(
+                    f"More than one signing identity is named {identity!r}. "
+                    "Specify the identity using one of these fingerprints:\n\n"
+                    + "\n".join(f"    {match}" for match in matches)
+                )
+            identity_id = matches[0]
+        identity_name = identities[identity_id]
+
+        return iOSSigningIdentity(
+            id=identity_id,
+            name=identity_name,
+            team_id=self.get_team_id(self.tools, identity_id, identity_name),
+        )
 
 
 class iOSXcodeCreateCommand(iOSXcodePassiveMixin, CreateCommand):
@@ -521,9 +797,13 @@ class iOSXcodeOpenCommand(iOSXcodePassiveMixin, OpenCommand):
     description = "Open an existing iOS Xcode project."
 
 
-class iOSXcodeBuildCommand(iOSXcodePassiveMixin, BuildCommand):
+class iOSXcodeBuildCommand(iOSXcodeMixin, BuildCommand):
     description = "Build an iOS Xcode project."
     supports_debugger = True
+
+    def add_options(self, parser):
+        super().add_options(parser)
+        self.add_identity_option(parser)
 
     def info_plist_path(self, app: FinalizedAppConfig):
         """Obtain the path to the application's plist file.
@@ -552,6 +832,36 @@ class iOSXcodeBuildCommand(iOSXcodePassiveMixin, BuildCommand):
 
         :param app: The application to build
         """
+        # If a device was requested, and it hasn't already been selected (by
+        # the run command), select it now.
+        if self.target_device is None and "udid" in kwargs:
+            self.prepare_target(app, **kwargs)
+
+        if self.target_device and self.target_device.physical:
+            # Xcode manages provisioning, using the Apple ID for the selected
+            # identity's team. The template uses automatic signing, so the
+            # certificate is selected by Xcode, based on the team. The run
+            # destination (which determines the SDK and architecture, and is
+            # needed to register the device) is only honored when a scheme is
+            # provided; building with a scheme also requires an explicit
+            # SYMROOT to retain the usual location for the built app.
+            target_args = [
+                "-scheme",
+                app.formal_name,
+                "-destination",
+                f"id={self.target_device.udid}",
+                "-allowProvisioningUpdates",
+                "-allowProvisioningDeviceRegistration",
+                f"DEVELOPMENT_TEAM={self.signing_identity.team_id}",
+                f"SYMROOT={self.bundle_path(app) / 'build'}",
+            ]
+        else:
+            target_args = [
+                "-arch",
+                self.tools.host_arch,
+                "-sdk",
+                "iphonesimulator",
+            ]
         self.console.info("Updating app metadata...", prefix=app.app_name)
         self.update_app_metadata(app=app)
 
@@ -566,10 +876,7 @@ class iOSXcodeBuildCommand(iOSXcodePassiveMixin, BuildCommand):
                         self.project_path(app),
                         "-configuration",
                         "Debug",
-                        "-arch",
-                        self.tools.host_arch,
-                        "-sdk",
-                        "iphonesimulator",
+                        *target_args,
                         "-verbose" if self.tools.console.is_deep_debug else "-quiet",
                     ],
                     check=True,
@@ -603,37 +910,28 @@ class iOSXcodeRunCommand(iOSXcodeMixin, RunCommand):
         :param app: The config object for the app
         :returns: The path mappings for the app packages
         """
+        sdk = "iphoneos" if self.target_device.physical else "iphonesimulator"
         return AppPackagesPathMappings(
             sys_path_regex="app_packages$",
-            host_folder=str(
-                self.app_packages_path(app).parent / "app_packages.iphonesimulator"
-            ),
+            host_folder=str(self.app_packages_path(app).parent / f"app_packages.{sdk}"),
         )
+
+    def add_options(self, parser):
+        super().add_options(parser)
+        self.add_identity_option(parser)
 
     def run_app(
         self,
         app: FinalizedAppConfig,
         *,
         passthrough: list[str],
-        udid: str | None = None,
         **options,
     ) -> dict | None:
         """Start the application.
 
         :param app: The config object for the app
         :param passthrough: The list of arguments to pass to the app
-        :param udid: The device UDID, name, or name::version to target. If
-            `"auto"`, a recent "SE-class" simulator on the most recent iOS
-            version will be selected automatically. If `None`, the user will
-            be asked to select a device at runtime.
         """
-        try:
-            udid, iOS_version, device = self.select_target_device(udid)
-        except InputDisabled as e:
-            raise BriefcaseCommandError(
-                "Input has been disabled; can't select a device to target."
-            ) from e
-
         if app.test_mode:
             label = "test suite"
         else:
@@ -641,21 +939,59 @@ class iOSXcodeRunCommand(iOSXcodeMixin, RunCommand):
 
         self.console.info(
             (
-                f"Starting {label} on an {device} running iOS {iOS_version} "
-                f"(device UDID {udid})"
+                f"Starting {label} on {self.target_device} "
+                f"(device UDID {self.target_device.udid})"
             ),
             prefix=app.app_name,
         )
 
+        # Add additional environment variables
+        env = {}
+        if app.debugger:
+            env["BRIEFCASE_DEBUGGER"] = app.debugger.get_env_config(self, app)
+
+        if self.target_device.physical:
+            self._run_app_on_device(
+                app,
+                label=label,
+                passthrough=passthrough,
+                env=env,
+            )
+        else:
+            self._run_app_on_simulator(
+                app,
+                label=label,
+                passthrough=passthrough,
+                env=env,
+            )
+
+        return {"udid": self.target_device.udid}
+
+    def _run_app_on_simulator(
+        self,
+        app: FinalizedAppConfig,
+        label: str,
+        passthrough: list[str],
+        env: dict[str, str],
+    ):
+        """Install and start the application on a simulator.
+
+        :param app: The config object for the app
+        :param label: The label describing what is being run
+        :param passthrough: The list of arguments to pass to the app
+        :param env: Additional environment variables for the app
+        """
         # The simulator needs to be booted before being started.
         # If it's shut down, we can boot it again; but if it's currently
         # shutting down, we need to wait for it to shut down before restarting.
-        device_state = self.get_device_state(self.tools, udid)
+        device_state = self.get_device_state(self.tools, self.target_device.udid)
         if device_state not in {DeviceState.SHUTDOWN, DeviceState.BOOTED}:
             with self.console.wait_bar("Waiting for simulator shutdown..."):
                 while device_state not in {DeviceState.SHUTDOWN, DeviceState.BOOTED}:
                     time.sleep(2)
-                    device_state = self.get_device_state(self.tools, udid)
+                    device_state = self.get_device_state(
+                        self.tools, self.target_device.udid
+                    )
 
         # We now know the simulator is either shut down or booted;
         # if it's shut down, start it again.
@@ -663,15 +999,14 @@ class iOSXcodeRunCommand(iOSXcodeMixin, RunCommand):
             try:
                 with self.console.wait_bar("Booting simulator..."):
                     self.tools.subprocess.run(
-                        ["xcrun", "simctl", "boot", udid],
+                        ["xcrun", "simctl", "boot", self.target_device.udid],
                         check=True,
                     )
             except subprocess.CalledProcessError as e:
                 raise BriefcaseCommandError(
-                    f"Unable to boot {device} simulator running {iOS_version}"
+                    f"Unable to boot {self.target_device}"
                 ) from e
 
-        device_hub_started = False
         if not app.test_mode:
             # We now know the simulator is *running*, so we can open it.
             # We don't need to open the simulator to run the test suite.
@@ -685,7 +1020,7 @@ class iOSXcodeRunCommand(iOSXcodeMixin, RunCommand):
                                 "Simulator",
                                 "--args",
                                 "-CurrentDeviceUDID",
-                                udid,
+                                self.target_device.udid,
                             ],
                             check=True,
                         )
@@ -694,10 +1029,14 @@ class iOSXcodeRunCommand(iOSXcodeMixin, RunCommand):
                             ["open", "-a", "Device Hub"],
                             check=True,
                         )
-                        device_hub_started = True
+                        self.console.warning(
+                            "Device Hub has been started. You may need to select "
+                            f"{self.target_device} in the GUI."
+                        )
+
             except subprocess.CalledProcessError as e:
                 raise BriefcaseCommandError(
-                    f"Unable to open {device} simulator running {iOS_version}"
+                    f"Unable to open {self.target_device}"
                 ) from e
 
         # Try to uninstall the app first. If the app hasn't been installed
@@ -712,7 +1051,7 @@ class iOSXcodeRunCommand(iOSXcodeMixin, RunCommand):
                     "xcrun",
                     "simctl",
                     "uninstall",
-                    udid,
+                    self.target_device.udid,
                     app.bundle_identifier,
                 ]
             ) as uninstall_popen,
@@ -734,7 +1073,7 @@ class iOSXcodeRunCommand(iOSXcodeMixin, RunCommand):
                     "xcrun",
                     "simctl",
                     "install",
-                    udid,
+                    self.target_device.udid,
                     self.binary_path(app),
                 ]
             ) as install_popen,
@@ -747,150 +1086,170 @@ class iOSXcodeRunCommand(iOSXcodeMixin, RunCommand):
                 f"Unable to install new version of app {app.app_name}."
             )
 
-        # Start log stream for the app.
-        # The following sets up a log stream filter that looks for:
-        #  1. a log sender that matches that app binary; or,
-        #  2. a log sender of that is a Python extension module,
-        #     and a process that matches the app binary.
-        # Case (1) works when the standard library is statically linked,
-        #   and for native NSLog() calls in the bootstrap binary
-        # Case (2) works when the standard library is dynamically linked,
-        #   and ctypes (which handles the NSLog integration) is an
-        #   extension module. It also catches the case for the CPython
-        #   builtin behavior of redirecting to the system log.
-        # It's not enough to filter on *just* the processImagePath,
-        # as the process will generate lots of system-level messages.
-        # We can't filter on *just* the senderImagePath, because other
-        # apps will generate log messages that would be caught by the filter.
-        simulator_log_popen = self.tools.subprocess.Popen(
+        # Set additional environment variables while the app is running. The app
+        # writes its output to the console, rather than the system log.
+        with self.setup_env(
+            {"BRIEFCASE_CONSOLE_OUTPUT": "1", **env},
+            self.target_device.udid,
+        ):
+            self.console.info(f"Starting {label}...", prefix=app.app_name)
+            self.console.info(
+                "Following simulator log output (type CTRL-C to stop log)...",
+                prefix=app.app_name,
+            )
+            # Start the app in a way that lets us stream the logs. If the app can't
+            # be launched, the failure is reported when the log stream ends.
+            app_popen = self.tools.subprocess.Popen(
+                [
+                    "xcrun",
+                    "simctl",
+                    "launch",
+                    "--console",
+                    self.target_device.udid,
+                    app.bundle_identifier,
+                    *passthrough,
+                ],
+                stdout=subprocess.PIPE,
+                stderr=subprocess.STDOUT,
+                bufsize=1,
+            )
+
+            # Start streaming logs for the app.
+            self._stream_app_logs(
+                app,
+                popen=app_popen,
+                clean_filter=nslog_clean_filter,
+                clean_output=True,
+            )
+
+    def _run_app_on_device(
+        self,
+        app: FinalizedAppConfig,
+        label: str,
+        passthrough: list[str],
+        env: dict[str, str],
+    ):
+        """Install and start the application on a physical device.
+
+        :param app: The config object for the app
+        :param label: The label describing what is being run
+        :param passthrough: The list of arguments to pass to the app
+        :param env: Additional environment variables for the app
+        """
+        try:
+            with self.console.wait_bar(f"Installing new {label} version..."):
+                self.tools.subprocess.run(
+                    [
+                        "xcrun",
+                        "devicectl",
+                        "device",
+                        "install",
+                        "app",
+                        "-q",
+                        "--device",
+                        self.target_device.udid,
+                        self.binary_path(app),
+                    ],
+                    check=True,
+                )
+        except subprocess.CalledProcessError as e:
+            raise BriefcaseCommandError(
+                f"Unable to install new version of app {app.app_name}."
+            ) from e
+
+        # Launch the app with the console attached, so that the app's output
+        # is streamed until the app exits. The app's launcher sends Python
+        # output to the console (rather than the system log) when requested.
+        self.console.info(f"Starting {label}...", prefix=app.app_name)
+        launch_popen = self.tools.subprocess.Popen(
             [
                 "xcrun",
-                "simctl",
-                "spawn",
-                udid,
-                "log",
-                "stream",
-                "--style",
-                "compact",
-                "--predicate",
-                (
-                    f'senderImagePath ENDSWITH "/{app.formal_name}"'
-                    f'OR (processImagePath ENDSWITH "/{app.formal_name}"'
-                    '  AND (senderImagePath ENDSWITH "-iphonesimulator.so"'
-                    '    OR senderImagePath ENDSWITH "-iphonesimulator.dylib"'
-                    '    OR senderImagePath ENDSWITH "_ctypes.framework/_ctypes"'
-                    '    OR senderImagePath ENDSWITH "/Python"'
-                    "  )"
-                    ")"
-                ),
+                "devicectl",
+                "device",
+                "process",
+                "launch",
+                "-q",
+                "--device",
+                self.target_device.udid,
+                "--console",
+                "--terminate-existing",
+                "--environment-variables",
+                json.dumps({"BRIEFCASE_CONSOLE_OUTPUT": "1", **env}),
+                app.bundle_identifier,
+                *passthrough,
             ],
             stdout=subprocess.PIPE,
             stderr=subprocess.STDOUT,
             bufsize=1,
         )
 
-        # Wait for the log stream start up
-        time.sleep(0.25)
-
-        # Add additional environment variables
-        env = {}
-        if app.debugger:
-            env["BRIEFCASE_DEBUGGER"] = app.debugger.get_env_config(self, app)
-
-        # Set additional environment variables while the app is running
-        # (no-op if no environment variables are set).
-        with self.setup_env(env, udid):
-            try:
-                self.console.info(f"Starting {label}...", prefix=app.app_name)
-                with self.console.wait_bar(f"Launching {label}..."):
-                    output = self.tools.subprocess.check_output(
-                        [
-                            "xcrun",
-                            "simctl",
-                            "launch",
-                            udid,
-                            app.bundle_identifier,
-                            *passthrough,
-                        ]
-                    )
-                    try:
-                        app_pid = int(output.split(":")[1].strip())
-                    except (IndexError, ValueError) as e:
-                        raise BriefcaseCommandError(
-                            f"Unable to determine PID of {label} {app.app_name}."
-                        ) from e
-
-                if device_hub_started:
-                    self.console.warning(
-                        "Device Hub has been started. You may need to select "
-                        f"the {device} device running iOS {iOS_version} in the GUI."
-                    )
-
-                # Start streaming logs for the app.
-                self.console.info(
-                    "Following simulator log output (type CTRL-C to stop log)...",
-                    prefix=app.app_name,
-                )
-
-                # Stream the app logs,
-                self._stream_app_logs(
-                    app,
-                    popen=simulator_log_popen,
-                    clean_filter=macOS_log_clean_filter,
-                    clean_output=True,
-                    stop_func=lambda: is_process_dead(app_pid),
-                    log_stream=True,
-                )
-            except subprocess.CalledProcessError as e:
-                raise BriefcaseCommandError(
-                    f"Unable to launch {label} {app.app_name}."
-                ) from e
-
-        # Preserve the device selection as state.
-        return {"udid": udid}
+        self.console.info(
+            "Following device console output (type CTRL-C to stop)...",
+            prefix=app.app_name,
+        )
+        try:
+            self._stream_app_logs(
+                app,
+                popen=launch_popen,
+                clean_filter=nslog_clean_filter,
+                clean_output=True,
+            )
+        except BriefcaseCommandError as e:
+            # A failure to launch the app (e.g., because the device is locked)
+            # can't be distinguished from the app failing, so add the likely
+            # causes of a launch failure.
+            raise BriefcaseCommandError(
+                f"{e}\n"
+                "\n"
+                f"If the app didn't start on {self.target_device.name}, check that "
+                "the device is unlocked, and\n"
+                "that your developer certificate is trusted on the device (in "
+                "Settings >\n"
+                "General > VPN & Device Management). See:\n"
+                "\n"
+                "    https://briefcase.beeware.org/en/stable/reference/platforms/"
+                "iOS/xcode/#ios-deploy\n"
+                "\n"
+                "for help with deploying to physical devices."
+            ) from e
 
     @contextlib.contextmanager
     def setup_env(
         self,
-        env: dict[str, str] | None,
+        env: dict[str, str],
         udid: str,
     ):
         """Context manager to set up the environment for the command."""
-        if env:
-            with self.console.wait_bar("Setting environment variables in simulator..."):
-                for env_key, env_value in env.items():
-                    self.tools.subprocess.check_output(
-                        [
-                            "xcrun",
-                            "simctl",
-                            "spawn",
-                            udid,
-                            "launchctl",
-                            "setenv",
-                            f"{env_key}",
-                            f"{env_value}",
-                        ]
-                    )
+        with self.console.wait_bar("Setting environment variables in simulator..."):
+            for env_key, env_value in env.items():
+                self.tools.subprocess.check_output(
+                    [
+                        "xcrun",
+                        "simctl",
+                        "spawn",
+                        udid,
+                        "launchctl",
+                        "setenv",
+                        f"{env_key}",
+                        f"{env_value}",
+                    ]
+                )
 
-            yield
+        yield
 
-            with self.console.wait_bar(
-                "Removing environment variables from simulator..."
-            ):
-                for env_key in env:
-                    self.tools.subprocess.check_output(
-                        [
-                            "xcrun",
-                            "simctl",
-                            "spawn",
-                            udid,
-                            "launchctl",
-                            "unsetenv",
-                            f"{env_key}",
-                        ]
-                    )
-        else:
-            yield  # no-op if no environment variables are set
+        with self.console.wait_bar("Removing environment variables from simulator..."):
+            for env_key in env:
+                self.tools.subprocess.check_output(
+                    [
+                        "xcrun",
+                        "simctl",
+                        "spawn",
+                        udid,
+                        "launchctl",
+                        "unsetenv",
+                        f"{env_key}",
+                    ]
+                )
 
 
 class iOSXcodePackageCommand(iOSXcodeMixin, PackageCommand):

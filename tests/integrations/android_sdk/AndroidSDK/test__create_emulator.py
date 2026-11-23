@@ -7,6 +7,8 @@ from briefcase.exceptions import BriefcaseCommandError
 from briefcase.integrations.android_sdk import AndroidSDK
 from briefcase.integrations.base import ToolCache
 
+from ....utils import create_file
+
 
 @pytest.fixture
 def mock_tools(tmp_path, mock_tools) -> ToolCache:
@@ -62,6 +64,10 @@ def test_create_emulator(
     # Mock the initial output of an AVD config file.
     avd_config_path = tmp_path / "home/.android/avd/new-emulator.avd/config.ini"
     avd_config_path.parent.mkdir(parents=True)
+    create_file(
+        avd_config_path.parent.with_suffix(".ini"),
+        f"path={avd_config_path.parent}\n",
+    )
     with avd_config_path.open("w", encoding="utf-8") as f:
         f.write("hw.device.name=pixel\n")
 
@@ -143,6 +149,10 @@ def test_create_emulator_with_defaults(
     # Mock the initial output of an AVD config file.
     avd_config_path = tmp_path / "home/.android/avd/new-emulator.avd/config.ini"
     avd_config_path.parent.mkdir(parents=True)
+    create_file(
+        avd_config_path.parent.with_suffix(".ini"),
+        f"path={avd_config_path.parent}\n",
+    )
     with avd_config_path.open("w", encoding="utf-8") as f:
         f.write("hw.device.name=pixel\n")
 
@@ -219,6 +229,10 @@ def test_create_emulator_with_defaults_no_skin(
     # Mock the initial output of an AVD config file.
     avd_config_path = tmp_path / "home/.android/avd/new-emulator.avd/config.ini"
     avd_config_path.parent.mkdir(parents=True)
+    create_file(
+        avd_config_path.parent.with_suffix(".ini"),
+        f"path={avd_config_path.parent}\n",
+    )
     with avd_config_path.open("w", encoding="utf-8") as f:
         f.write("hw.device.name=pixel\n")
 
@@ -317,6 +331,10 @@ def test_default_name(mock_tools, android_sdk, tmp_path):
     # Mock the initial output of an AVD config file.
     avd_config_path = tmp_path / "home/.android/avd/beePhone-31.avd/config.ini"
     avd_config_path.parent.mkdir(parents=True)
+    create_file(
+        avd_config_path.parent.with_suffix(".ini"),
+        f"path={avd_config_path.parent}\n",
+    )
     with avd_config_path.open("w", encoding="utf-8") as f:
         f.write("hw.device.name=pixel\n")
 
@@ -348,6 +366,10 @@ def test_default_name_with_collisions(mock_tools, android_sdk, tmp_path):
     # Mock the initial output of an AVD config file.
     avd_config_path = tmp_path / "home/.android/avd/beePhone-31-3.avd/config.ini"
     avd_config_path.parent.mkdir(parents=True)
+    create_file(
+        avd_config_path.parent.with_suffix(".ini"),
+        f"path={avd_config_path.parent}\n",
+    )
     with avd_config_path.open("w", encoding="utf-8") as f:
         f.write("hw.device.name=pixel\n")
 

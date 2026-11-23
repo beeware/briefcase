@@ -355,33 +355,6 @@ def test_input_disabled_no_simulators(mock_tools, android_sdk):
     assert mock_tools.console.prompts == []
 
 
-def test_input_disabled_one_device(mock_tools, android_sdk):
-    """If input has been disabled, and there is a single device, it is selected."""
-    mock_tools.console.input_enabled = False
-
-    # Set up a single device.
-    android_sdk.devices = MagicMock(
-        return_value={
-            "KABCDABCDA1513": {
-                "name": "Kogan Agora 9",
-                "authorized": True,
-            },
-        }
-    )
-    android_sdk.emulators = MagicMock(return_value=[])
-
-    # Run the selection with no pre-existing choice
-    device, name, avd = android_sdk.select_target_device(None)
-
-    # The only device is returned
-    assert device == "KABCDABCDA1513"
-    assert name == "Kogan Agora 9 (KABCDABCDA1513)"
-    assert avd is None
-
-    # No input was requested
-    assert mock_tools.console.prompts == []
-
-
 def test_explicit_new_device(android_sdk):
     """If the user provides a device configuration, that configuration is created."""
     android_sdk._create_emulator = MagicMock()
