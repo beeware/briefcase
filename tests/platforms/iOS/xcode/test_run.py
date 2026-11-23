@@ -15,7 +15,6 @@ from briefcase.platforms.iOS.xcode import (
     iOSSigningIdentity,
     iOSXcodeRunCommand,
 )
-from briefcase.platforms.macOS import macOS_log_clean_filter
 from briefcase.platforms.macOS.filters import nslog_clean_filter
 
 
@@ -35,13 +34,6 @@ def run_command(dummy_console, tmp_path):
 
     # By default, no physical devices are connected.
     command.get_physical_devices = mock.MagicMock(return_value={})
-
-    # To satisfy coverage, the stop function must be invoked
-    # at least once when streaming app logs.
-    def mock_stream_app_logs(app, stop_func, **kwargs):
-        stop_func()
-
-    command._stream_app_logs.side_effect = mock_stream_app_logs
 
     return command
 
@@ -206,23 +198,18 @@ def test_run_app_simulator_booted(
     # Simulator is already booted
     run_command.get_device_state = mock.MagicMock(return_value=DeviceState.BOOTED)
 
-    # Mock a process ID for the app
-    run_command.tools.subprocess.check_output.return_value = (
-        "com.example.first-app: 1234\n"
-    )
-
-    # Mock the uninstall, install, and log stream Popen processes
+    # Mock the uninstall, install, and app Popen processes
     uninstall_popen = mock.MagicMock(spec_set=subprocess.Popen)
     uninstall_popen.__enter__.return_value = uninstall_popen
     uninstall_popen.poll.side_effect = [None, None, 0]
     install_popen = mock.MagicMock(spec_set=subprocess.Popen)
     install_popen.__enter__.return_value = install_popen
     install_popen.poll.side_effect = [None, None, 0]
-    log_stream_process = mock.MagicMock(spec_set=subprocess.Popen)
+    app_popen = mock.MagicMock(spec_set=subprocess.Popen)
     run_command.tools.subprocess.Popen.side_effect = [
         uninstall_popen,
         install_popen,
-        log_stream_process,
+        app_popen,
     ]
 
     # Run the app
@@ -242,21 +229,10 @@ def test_run_app_simulator_booted(
             ),
         ]
     )
-    # Launch the new app
-    run_command.tools.subprocess.check_output.assert_called_once_with(
-        [
-            "xcrun",
-            "simctl",
-            "launch",
-            "2D3503A3-6EB9-4B37-9B17-C7EFEF2FA32D",
-            "com.example.first-app",
-        ],
-    )
+    # slept 4 times for uninstall/install
+    assert time.sleep.call_count == 4
 
-    # slept 4 times for uninstall/install and 1 time for log stream start
-    assert time.sleep.call_count == 4 + 1
-
-    # Start the uninstall, install, and  log stream
+    # Start the uninstall and install, and launch the app
     run_command.tools.subprocess.Popen.assert_has_calls(
         [
             # Uninstall the old app
@@ -281,27 +257,15 @@ def test_run_app_simulator_booted(
                     / "Debug-iphonesimulator/First App.app",
                 ],
             ),
+            # Launch the new app
             mock.call(
                 [
                     "xcrun",
                     "simctl",
-                    "spawn",
+                    "launch",
+                    "--console",
                     "2D3503A3-6EB9-4B37-9B17-C7EFEF2FA32D",
-                    "log",
-                    "stream",
-                    "--style",
-                    "compact",
-                    "--predicate",
-                    (
-                        'senderImagePath ENDSWITH "/First App"'
-                        'OR (processImagePath ENDSWITH "/First App"'
-                        '  AND (senderImagePath ENDSWITH "-iphonesimulator.so"'
-                        '    OR senderImagePath ENDSWITH "-iphonesimulator.dylib"'
-                        '    OR senderImagePath ENDSWITH "_ctypes.framework/_ctypes"'
-                        '    OR senderImagePath ENDSWITH "/Python"'
-                        "  )"
-                        ")"
-                    ),
+                    "com.example.first-app",
                 ],
                 stdout=subprocess.PIPE,
                 stderr=subprocess.STDOUT,
@@ -310,14 +274,12 @@ def test_run_app_simulator_booted(
         ]
     )
 
-    # Log stream monitoring was started
+    # The app output is streamed
     run_command._stream_app_logs.assert_called_with(
         first_app_config,
-        popen=log_stream_process,
-        clean_filter=macOS_log_clean_filter,
+        popen=app_popen,
+        clean_filter=nslog_clean_filter,
         clean_output=True,
-        stop_func=mock.ANY,
-        log_stream=True,
     )
 
 
@@ -343,30 +305,25 @@ def test_run_app_simulator_booted_underscore(
     # Simulator is already booted
     run_command.get_device_state = mock.MagicMock(return_value=DeviceState.BOOTED)
 
-    # Mock a process ID for the app
-    run_command.tools.subprocess.check_output.return_value = (
-        "com.example.first-app: 1234\n"
-    )
-
-    # Mock the uninstall, install, and log stream Popen processes
+    # Mock the uninstall, install, and app Popen processes
     uninstall_popen = mock.MagicMock(spec_set=subprocess.Popen)
     uninstall_popen.__enter__.return_value = uninstall_popen
     uninstall_popen.poll.side_effect = [None, None, 0]
     install_popen = mock.MagicMock(spec_set=subprocess.Popen)
     install_popen.__enter__.return_value = install_popen
     install_popen.poll.side_effect = [None, None, 0]
-    log_stream_process = mock.MagicMock(spec_set=subprocess.Popen)
+    app_popen = mock.MagicMock(spec_set=subprocess.Popen)
     run_command.tools.subprocess.Popen.side_effect = [
         uninstall_popen,
         install_popen,
-        log_stream_process,
+        app_popen,
     ]
 
     # Run the app
     run_command.run_app(underscore_app_config, passthrough=[])
 
-    # slept 4 times for uninstall/install and 1 time for log stream start
-    assert time.sleep.call_count == 4 + 1
+    # slept 4 times for uninstall/install
+    assert time.sleep.call_count == 4
 
     # The correct sequence of commands was issued.
     run_command.tools.subprocess.run.assert_has_calls(
@@ -382,18 +339,7 @@ def test_run_app_simulator_booted_underscore(
             ),
         ]
     )
-    # Launch the new app
-    run_command.tools.subprocess.check_output.assert_called_once_with(
-        [
-            "xcrun",
-            "simctl",
-            "launch",
-            "2D3503A3-6EB9-4B37-9B17-C7EFEF2FA32D",
-            "com.example.first-app",
-        ],
-    )
-
-    # Start the uninstall, install, and  log stream
+    # Start the uninstall and install, and launch the app
     run_command.tools.subprocess.Popen.assert_has_calls(
         [
             # Uninstall the old app
@@ -418,27 +364,15 @@ def test_run_app_simulator_booted_underscore(
                     / "Debug-iphonesimulator/First App.app",
                 ],
             ),
+            # Launch the new app
             mock.call(
                 [
                     "xcrun",
                     "simctl",
-                    "spawn",
+                    "launch",
+                    "--console",
                     "2D3503A3-6EB9-4B37-9B17-C7EFEF2FA32D",
-                    "log",
-                    "stream",
-                    "--style",
-                    "compact",
-                    "--predicate",
-                    (
-                        'senderImagePath ENDSWITH "/First App"'
-                        'OR (processImagePath ENDSWITH "/First App"'
-                        '  AND (senderImagePath ENDSWITH "-iphonesimulator.so"'
-                        '    OR senderImagePath ENDSWITH "-iphonesimulator.dylib"'
-                        '    OR senderImagePath ENDSWITH "_ctypes.framework/_ctypes"'
-                        '    OR senderImagePath ENDSWITH "/Python"'
-                        "  )"
-                        ")"
-                    ),
+                    "com.example.first-app",
                 ],
                 stdout=subprocess.PIPE,
                 stderr=subprocess.STDOUT,
@@ -447,14 +381,12 @@ def test_run_app_simulator_booted_underscore(
         ]
     )
 
-    # Log stream monitoring was started
+    # The app output is streamed
     run_command._stream_app_logs.assert_called_with(
         underscore_app_config,
-        popen=log_stream_process,
-        clean_filter=macOS_log_clean_filter,
+        popen=app_popen,
+        clean_filter=nslog_clean_filter,
         clean_output=True,
-        stop_func=mock.ANY,
-        log_stream=True,
     )
 
 
@@ -472,23 +404,18 @@ def test_run_app_with_passthrough(run_command, first_app_config, tmp_path):
     # Simulator is already booted
     run_command.get_device_state = mock.MagicMock(return_value=DeviceState.BOOTED)
 
-    # Mock a process ID for the app
-    run_command.tools.subprocess.check_output.return_value = (
-        "com.example.first-app: 1234\n"
-    )
-
-    # Mock the uninstall, install, and log stream Popen processes
+    # Mock the uninstall, install, and app Popen processes
     uninstall_popen = mock.MagicMock(spec_set=subprocess.Popen)
     uninstall_popen.__enter__.return_value = uninstall_popen
     uninstall_popen.poll.side_effect = [None, None, 0]
     install_popen = mock.MagicMock(spec_set=subprocess.Popen)
     install_popen.__enter__.return_value = install_popen
     install_popen.poll.side_effect = [None, None, 0]
-    log_stream_process = mock.MagicMock(spec_set=subprocess.Popen)
+    app_popen = mock.MagicMock(spec_set=subprocess.Popen)
     run_command.tools.subprocess.Popen.side_effect = [
         uninstall_popen,
         install_popen,
-        log_stream_process,
+        app_popen,
     ]
 
     # Run the app with passthrough args.
@@ -497,8 +424,8 @@ def test_run_app_with_passthrough(run_command, first_app_config, tmp_path):
         passthrough=["foo", "--bar"],
     )
 
-    # slept 4 times for uninstall/install and 1 time for log stream start
-    assert time.sleep.call_count == 4 + 1
+    # slept 4 times for uninstall/install
+    assert time.sleep.call_count == 4
 
     # The correct sequence of commands was issued.
     run_command.tools.subprocess.run.assert_has_calls(
@@ -514,20 +441,7 @@ def test_run_app_with_passthrough(run_command, first_app_config, tmp_path):
             ),
         ]
     )
-    # Launch the new app
-    run_command.tools.subprocess.check_output.assert_called_once_with(
-        [
-            "xcrun",
-            "simctl",
-            "launch",
-            "2D3503A3-6EB9-4B37-9B17-C7EFEF2FA32D",
-            "com.example.first-app",
-            "foo",
-            "--bar",
-        ],
-    )
-
-    # Start the uninstall, install, and  log stream
+    # Start the uninstall and install, and launch the app
     run_command.tools.subprocess.Popen.assert_has_calls(
         [
             # Uninstall the old app
@@ -552,27 +466,17 @@ def test_run_app_with_passthrough(run_command, first_app_config, tmp_path):
                     / "Debug-iphonesimulator/First App.app",
                 ],
             ),
+            # Launch the new app
             mock.call(
                 [
                     "xcrun",
                     "simctl",
-                    "spawn",
+                    "launch",
+                    "--console",
                     "2D3503A3-6EB9-4B37-9B17-C7EFEF2FA32D",
-                    "log",
-                    "stream",
-                    "--style",
-                    "compact",
-                    "--predicate",
-                    (
-                        'senderImagePath ENDSWITH "/First App"'
-                        'OR (processImagePath ENDSWITH "/First App"'
-                        '  AND (senderImagePath ENDSWITH "-iphonesimulator.so"'
-                        '    OR senderImagePath ENDSWITH "-iphonesimulator.dylib"'
-                        '    OR senderImagePath ENDSWITH "_ctypes.framework/_ctypes"'
-                        '    OR senderImagePath ENDSWITH "/Python"'
-                        "  )"
-                        ")"
-                    ),
+                    "com.example.first-app",
+                    "foo",
+                    "--bar",
                 ],
                 stdout=subprocess.PIPE,
                 stderr=subprocess.STDOUT,
@@ -581,14 +485,12 @@ def test_run_app_with_passthrough(run_command, first_app_config, tmp_path):
         ]
     )
 
-    # Log stream monitoring was started
+    # The app output is streamed
     run_command._stream_app_logs.assert_called_with(
         first_app_config,
-        popen=log_stream_process,
-        clean_filter=macOS_log_clean_filter,
+        popen=app_popen,
+        clean_filter=nslog_clean_filter,
         clean_output=True,
-        stop_func=mock.ANY,
-        log_stream=True,
     )
 
 
@@ -612,30 +514,25 @@ def test_run_app_simulator_shut_down(
 
     run_command.tools.subprocess = mock.MagicMock(spec_set=Subprocess)
 
-    # Mock a process ID for the app
-    run_command.tools.subprocess.check_output.return_value = (
-        "com.example.first-app: 1234\n"
-    )
-
-    # Mock the uninstall, install, and log stream Popen processes
+    # Mock the uninstall, install, and app Popen processes
     uninstall_popen = mock.MagicMock(spec_set=subprocess.Popen)
     uninstall_popen.__enter__.return_value = uninstall_popen
     uninstall_popen.poll.side_effect = [None, None, 0]
     install_popen = mock.MagicMock(spec_set=subprocess.Popen)
     install_popen.__enter__.return_value = install_popen
     install_popen.poll.side_effect = [None, None, 0]
-    log_stream_process = mock.MagicMock(spec_set=subprocess.Popen)
+    app_popen = mock.MagicMock(spec_set=subprocess.Popen)
     run_command.tools.subprocess.Popen.side_effect = [
         uninstall_popen,
         install_popen,
-        log_stream_process,
+        app_popen,
     ]
 
     # Run the app
     run_command.run_app(first_app_config, passthrough=[])
 
-    # slept 4 times for uninstall/install and 1 time for log stream start
-    assert time.sleep.call_count == 4 + 1
+    # slept 4 times for uninstall/install
+    assert time.sleep.call_count == 4
 
     # The correct sequence of commands was issued.
     run_command.tools.subprocess.run.assert_has_calls(
@@ -657,18 +554,7 @@ def test_run_app_simulator_shut_down(
         ]
     )
 
-    # Launch the new app
-    run_command.tools.subprocess.check_output.assert_called_once_with(
-        [
-            "xcrun",
-            "simctl",
-            "launch",
-            "2D3503A3-6EB9-4B37-9B17-C7EFEF2FA32D",
-            "com.example.first-app",
-        ],
-    )
-
-    # Start the uninstall, install, and  log stream
+    # Start the uninstall and install, and launch the app
     run_command.tools.subprocess.Popen.assert_has_calls(
         [
             # Uninstall the old app
@@ -693,27 +579,15 @@ def test_run_app_simulator_shut_down(
                     / "Debug-iphonesimulator/First App.app",
                 ],
             ),
+            # Launch the new app
             mock.call(
                 [
                     "xcrun",
                     "simctl",
-                    "spawn",
+                    "launch",
+                    "--console",
                     "2D3503A3-6EB9-4B37-9B17-C7EFEF2FA32D",
-                    "log",
-                    "stream",
-                    "--style",
-                    "compact",
-                    "--predicate",
-                    (
-                        'senderImagePath ENDSWITH "/First App"'
-                        'OR (processImagePath ENDSWITH "/First App"'
-                        '  AND (senderImagePath ENDSWITH "-iphonesimulator.so"'
-                        '    OR senderImagePath ENDSWITH "-iphonesimulator.dylib"'
-                        '    OR senderImagePath ENDSWITH "_ctypes.framework/_ctypes"'
-                        '    OR senderImagePath ENDSWITH "/Python"'
-                        "  )"
-                        ")"
-                    ),
+                    "com.example.first-app",
                 ],
                 stdout=subprocess.PIPE,
                 stderr=subprocess.STDOUT,
@@ -722,14 +596,12 @@ def test_run_app_simulator_shut_down(
         ]
     )
 
-    # Log stream monitoring was started
+    # The app output is streamed
     run_command._stream_app_logs.assert_called_with(
         first_app_config,
-        popen=log_stream_process,
-        clean_filter=macOS_log_clean_filter,
+        popen=app_popen,
+        clean_filter=nslog_clean_filter,
         clean_output=True,
-        stop_func=mock.ANY,
-        log_stream=True,
     )
 
 
@@ -759,30 +631,25 @@ def test_run_app_simulator_shutting_down(run_command, first_app_config, tmp_path
     run_command.sleep = mock.MagicMock()
     run_command.tools.subprocess = mock.MagicMock(spec_set=Subprocess)
 
-    # Mock a process ID for the app
-    run_command.tools.subprocess.check_output.return_value = (
-        "com.example.first-app: 1234\n"
-    )
-
-    # Mock the uninstall, install, and log stream Popen processes
+    # Mock the uninstall, install, and app Popen processes
     uninstall_popen = mock.MagicMock(spec_set=subprocess.Popen)
     uninstall_popen.__enter__.return_value = uninstall_popen
     uninstall_popen.poll.side_effect = [None, None, 0]
     install_popen = mock.MagicMock(spec_set=subprocess.Popen)
     install_popen.__enter__.return_value = install_popen
     install_popen.poll.side_effect = [None, None, 0]
-    log_stream_process = mock.MagicMock(spec_set=subprocess.Popen)
+    app_popen = mock.MagicMock(spec_set=subprocess.Popen)
     run_command.tools.subprocess.Popen.side_effect = [
         uninstall_popen,
         install_popen,
-        log_stream_process,
+        app_popen,
     ]
 
     # Run the app
     run_command.run_app(first_app_config, passthrough=[])
 
-    # We should have slept 4 times for shutting down and 4 time for uninstall/install
-    assert time.sleep.call_count == 4 + 4
+    # We should have slept 3 times for shutting down and 4 time for uninstall/install
+    assert time.sleep.call_count == 3 + 4
 
     # The correct sequence of commands was issued.
     run_command.tools.subprocess.run.assert_has_calls(
@@ -804,18 +671,7 @@ def test_run_app_simulator_shutting_down(run_command, first_app_config, tmp_path
         ]
     )
 
-    # Launch the new app
-    run_command.tools.subprocess.check_output.assert_called_once_with(
-        [
-            "xcrun",
-            "simctl",
-            "launch",
-            "2D3503A3-6EB9-4B37-9B17-C7EFEF2FA32D",
-            "com.example.first-app",
-        ],
-    )
-
-    # Start the uninstall, install, and  log stream
+    # Start the uninstall and install, and launch the app
     run_command.tools.subprocess.Popen.assert_has_calls(
         [
             # Uninstall the old app
@@ -840,27 +696,15 @@ def test_run_app_simulator_shutting_down(run_command, first_app_config, tmp_path
                     / "Debug-iphonesimulator/First App.app",
                 ],
             ),
+            # Launch the new app
             mock.call(
                 [
                     "xcrun",
                     "simctl",
-                    "spawn",
+                    "launch",
+                    "--console",
                     "2D3503A3-6EB9-4B37-9B17-C7EFEF2FA32D",
-                    "log",
-                    "stream",
-                    "--style",
-                    "compact",
-                    "--predicate",
-                    (
-                        'senderImagePath ENDSWITH "/First App"'
-                        'OR (processImagePath ENDSWITH "/First App"'
-                        '  AND (senderImagePath ENDSWITH "-iphonesimulator.so"'
-                        '    OR senderImagePath ENDSWITH "-iphonesimulator.dylib"'
-                        '    OR senderImagePath ENDSWITH "_ctypes.framework/_ctypes"'
-                        '    OR senderImagePath ENDSWITH "/Python"'
-                        "  )"
-                        ")"
-                    ),
+                    "com.example.first-app",
                 ],
                 stdout=subprocess.PIPE,
                 stderr=subprocess.STDOUT,
@@ -869,14 +713,12 @@ def test_run_app_simulator_shutting_down(run_command, first_app_config, tmp_path
         ]
     )
 
-    # Log stream monitoring was started
+    # The app output is streamed
     run_command._stream_app_logs.assert_called_with(
         first_app_config,
-        popen=log_stream_process,
-        clean_filter=macOS_log_clean_filter,
+        popen=app_popen,
+        clean_filter=nslog_clean_filter,
         clean_output=True,
-        stop_func=mock.ANY,
-        log_stream=True,
     )
 
 
@@ -1129,393 +971,6 @@ def test_run_app_simulator_install_failure(run_command, first_app_config, tmp_pa
 
 
 @pytest.mark.usefixtures("sleep_zero")
-def test_run_app_simulator_launch_failure(run_command, first_app_config, tmp_path):
-    """If the app fails to launch, raise an error."""
-    # A simulator has been selected as the target device.
-    run_command.target_device = iOSDevice(
-        "2D3503A3-6EB9-4B37-9B17-C7EFEF2FA32D",
-        "13.2",
-        "iPhone 11",
-        physical=False,
-    )
-
-    # Simulator is shut down
-    run_command.get_device_state = mock.MagicMock(return_value=DeviceState.SHUTDOWN)
-
-    # Mock a process ID for the app
-    run_command.tools.subprocess.check_output.side_effect = (
-        subprocess.CalledProcessError(
-            cmd=["xcrun", "simctl", "launch", "..."], returncode=1
-        )
-    )
-
-    # Mock the uninstall, install, and log stream Popen processes
-    uninstall_popen = mock.MagicMock(spec_set=subprocess.Popen)
-    uninstall_popen.__enter__.return_value = uninstall_popen
-    uninstall_popen.poll.side_effect = [None, None, 0]
-    install_popen = mock.MagicMock(spec_set=subprocess.Popen)
-    install_popen.__enter__.return_value = install_popen
-    install_popen.poll.side_effect = [None, None, 0]
-    log_stream_process = mock.MagicMock(spec_set=subprocess.Popen)
-    run_command.tools.subprocess.Popen.side_effect = [
-        uninstall_popen,
-        install_popen,
-        log_stream_process,
-    ]
-
-    # Run the app
-    with pytest.raises(BriefcaseCommandError):
-        run_command.run_app(first_app_config, passthrough=[])
-
-    # Sleep four times for uninstall/install and once for log stream start
-    assert time.sleep.call_count == 4 + 1
-
-    # The correct sequence of commands was issued.
-    run_command.tools.subprocess.run.assert_has_calls(
-        [
-            # Boot the device
-            mock.call(
-                ["xcrun", "simctl", "boot", "2D3503A3-6EB9-4B37-9B17-C7EFEF2FA32D"],
-                check=True,
-            ),
-            # Open the simulator
-            mock.call(
-                [
-                    "open",
-                    "-a",
-                    "Device Hub",
-                ],
-                check=True,
-            ),
-        ]
-    )
-
-    # Launch the new app
-    run_command.tools.subprocess.check_output.assert_called_once_with(
-        [
-            "xcrun",
-            "simctl",
-            "launch",
-            "2D3503A3-6EB9-4B37-9B17-C7EFEF2FA32D",
-            "com.example.first-app",
-        ],
-    )
-
-    # Start the uninstall, install, and  log stream
-    run_command.tools.subprocess.Popen.assert_has_calls(
-        [
-            # Uninstall the old app
-            mock.call(
-                [
-                    "xcrun",
-                    "simctl",
-                    "uninstall",
-                    "2D3503A3-6EB9-4B37-9B17-C7EFEF2FA32D",
-                    "com.example.first-app",
-                ],
-            ),
-            # Install the new app
-            mock.call(
-                [
-                    "xcrun",
-                    "simctl",
-                    "install",
-                    "2D3503A3-6EB9-4B37-9B17-C7EFEF2FA32D",
-                    tmp_path
-                    / "base_path/build/first-app/ios/xcode/build/"
-                    / "Debug-iphonesimulator/First App.app",
-                ],
-            ),
-            mock.call(
-                [
-                    "xcrun",
-                    "simctl",
-                    "spawn",
-                    "2D3503A3-6EB9-4B37-9B17-C7EFEF2FA32D",
-                    "log",
-                    "stream",
-                    "--style",
-                    "compact",
-                    "--predicate",
-                    (
-                        'senderImagePath ENDSWITH "/First App"'
-                        'OR (processImagePath ENDSWITH "/First App"'
-                        '  AND (senderImagePath ENDSWITH "-iphonesimulator.so"'
-                        '    OR senderImagePath ENDSWITH "-iphonesimulator.dylib"'
-                        '    OR senderImagePath ENDSWITH "_ctypes.framework/_ctypes"'
-                        '    OR senderImagePath ENDSWITH "/Python"'
-                        "  )"
-                        ")"
-                    ),
-                ],
-                stdout=subprocess.PIPE,
-                stderr=subprocess.STDOUT,
-                bufsize=1,
-            ),
-        ]
-    )
-
-    # Log stream failed, so it won't be monitored
-    run_command._stream_app_logs.assert_not_called()
-
-
-@pytest.mark.usefixtures("sleep_zero")
-def test_run_app_simulator_no_pid(run_command, first_app_config, tmp_path):
-    """If the app fails to provide a meaningful PID on launch, raise an error."""
-    # A simulator has been selected as the target device.
-    run_command.target_device = iOSDevice(
-        "2D3503A3-6EB9-4B37-9B17-C7EFEF2FA32D",
-        "13.2",
-        "iPhone 11",
-        physical=False,
-    )
-
-    # Simulator is shut down
-    run_command.get_device_state = mock.MagicMock(return_value=DeviceState.SHUTDOWN)
-
-    # Mock a bad return value for the PID
-    run_command.tools.subprocess.check_output.return_value = "No PID returned"
-
-    # Mock the uninstall, install, and log stream Popen processes
-    uninstall_popen = mock.MagicMock(spec_set=subprocess.Popen)
-    uninstall_popen.__enter__.return_value = uninstall_popen
-    uninstall_popen.poll.side_effect = [None, None, 0]
-    install_popen = mock.MagicMock(spec_set=subprocess.Popen)
-    install_popen.__enter__.return_value = install_popen
-    install_popen.poll.side_effect = [None, None, 0]
-    log_stream_process = mock.MagicMock(spec_set=subprocess.Popen)
-    run_command.tools.subprocess.Popen.side_effect = [
-        uninstall_popen,
-        install_popen,
-        log_stream_process,
-    ]
-
-    # Run the app
-    with pytest.raises(BriefcaseCommandError):
-        run_command.run_app(first_app_config, passthrough=[])
-
-    # Sleep four times for uninstall/install and once for log stream start
-    assert time.sleep.call_count == 4 + 1
-
-    # The correct sequence of commands was issued.
-    run_command.tools.subprocess.run.assert_has_calls(
-        [
-            # Boot the device
-            mock.call(
-                ["xcrun", "simctl", "boot", "2D3503A3-6EB9-4B37-9B17-C7EFEF2FA32D"],
-                check=True,
-            ),
-            # Open the simulator
-            mock.call(
-                [
-                    "open",
-                    "-a",
-                    "Device Hub",
-                ],
-                check=True,
-            ),
-        ]
-    )
-
-    # Launch the new app
-    run_command.tools.subprocess.check_output.assert_called_once_with(
-        [
-            "xcrun",
-            "simctl",
-            "launch",
-            "2D3503A3-6EB9-4B37-9B17-C7EFEF2FA32D",
-            "com.example.first-app",
-        ],
-    )
-
-    # Start the uninstall, install, and  log stream
-    run_command.tools.subprocess.Popen.assert_has_calls(
-        [
-            # Uninstall the old app
-            mock.call(
-                [
-                    "xcrun",
-                    "simctl",
-                    "uninstall",
-                    "2D3503A3-6EB9-4B37-9B17-C7EFEF2FA32D",
-                    "com.example.first-app",
-                ],
-            ),
-            # Install the new app
-            mock.call(
-                [
-                    "xcrun",
-                    "simctl",
-                    "install",
-                    "2D3503A3-6EB9-4B37-9B17-C7EFEF2FA32D",
-                    tmp_path
-                    / "base_path/build/first-app/ios/xcode/build/"
-                    / "Debug-iphonesimulator/First App.app",
-                ],
-            ),
-            mock.call(
-                [
-                    "xcrun",
-                    "simctl",
-                    "spawn",
-                    "2D3503A3-6EB9-4B37-9B17-C7EFEF2FA32D",
-                    "log",
-                    "stream",
-                    "--style",
-                    "compact",
-                    "--predicate",
-                    (
-                        'senderImagePath ENDSWITH "/First App"'
-                        'OR (processImagePath ENDSWITH "/First App"'
-                        '  AND (senderImagePath ENDSWITH "-iphonesimulator.so"'
-                        '    OR senderImagePath ENDSWITH "-iphonesimulator.dylib"'
-                        '    OR senderImagePath ENDSWITH "_ctypes.framework/_ctypes"'
-                        '    OR senderImagePath ENDSWITH "/Python"'
-                        "  )"
-                        ")"
-                    ),
-                ],
-                stdout=subprocess.PIPE,
-                stderr=subprocess.STDOUT,
-                bufsize=1,
-            ),
-        ]
-    )
-
-    # PID detection failed, so it won't be monitored
-    run_command._stream_app_logs.assert_not_called()
-
-
-@pytest.mark.usefixtures("sleep_zero")
-def test_run_app_simulator_non_integer_pid(run_command, first_app_config, tmp_path):
-    """If the PID returned isn't an integer, raise an error."""
-    # A simulator has been selected as the target device.
-    run_command.target_device = iOSDevice(
-        "2D3503A3-6EB9-4B37-9B17-C7EFEF2FA32D",
-        "13.2",
-        "iPhone 11",
-        physical=False,
-    )
-
-    # Simulator is shut down
-    run_command.get_device_state = mock.MagicMock(return_value=DeviceState.SHUTDOWN)
-
-    # Mock a bad process ID for the app
-    run_command.tools.subprocess.check_output.return_value = (
-        "com.example.first-app: NOT A PID\n"
-    )
-
-    # Mock the uninstall, install, and log stream Popen processes
-    uninstall_popen = mock.MagicMock(spec_set=subprocess.Popen)
-    uninstall_popen.__enter__.return_value = uninstall_popen
-    uninstall_popen.poll.side_effect = [None, None, 0]
-    install_popen = mock.MagicMock(spec_set=subprocess.Popen)
-    install_popen.__enter__.return_value = install_popen
-    install_popen.poll.side_effect = [None, None, 0]
-    log_stream_process = mock.MagicMock(spec_set=subprocess.Popen)
-    run_command.tools.subprocess.Popen.side_effect = [
-        uninstall_popen,
-        install_popen,
-        log_stream_process,
-    ]
-
-    # Run the app
-    with pytest.raises(BriefcaseCommandError):
-        run_command.run_app(first_app_config, passthrough=[])
-
-    # Sleep four times for uninstall/install and once for log stream start
-    assert time.sleep.call_count == 4 + 1
-
-    # The correct sequence of commands was issued.
-    run_command.tools.subprocess.run.assert_has_calls(
-        [
-            # Boot the device
-            mock.call(
-                ["xcrun", "simctl", "boot", "2D3503A3-6EB9-4B37-9B17-C7EFEF2FA32D"],
-                check=True,
-            ),
-            # Open the simulator
-            mock.call(
-                [
-                    "open",
-                    "-a",
-                    "Device Hub",
-                ],
-                check=True,
-            ),
-        ]
-    )
-
-    # Launch the new app
-    run_command.tools.subprocess.check_output.assert_called_once_with(
-        [
-            "xcrun",
-            "simctl",
-            "launch",
-            "2D3503A3-6EB9-4B37-9B17-C7EFEF2FA32D",
-            "com.example.first-app",
-        ],
-    )
-
-    # Start the uninstall, install, and  log stream
-    run_command.tools.subprocess.Popen.assert_has_calls(
-        [
-            # Uninstall the old app
-            mock.call(
-                [
-                    "xcrun",
-                    "simctl",
-                    "uninstall",
-                    "2D3503A3-6EB9-4B37-9B17-C7EFEF2FA32D",
-                    "com.example.first-app",
-                ],
-            ),
-            # Install the new app
-            mock.call(
-                [
-                    "xcrun",
-                    "simctl",
-                    "install",
-                    "2D3503A3-6EB9-4B37-9B17-C7EFEF2FA32D",
-                    tmp_path
-                    / "base_path/build/first-app/ios/xcode/build/"
-                    / "Debug-iphonesimulator/First App.app",
-                ],
-            ),
-            mock.call(
-                [
-                    "xcrun",
-                    "simctl",
-                    "spawn",
-                    "2D3503A3-6EB9-4B37-9B17-C7EFEF2FA32D",
-                    "log",
-                    "stream",
-                    "--style",
-                    "compact",
-                    "--predicate",
-                    (
-                        'senderImagePath ENDSWITH "/First App"'
-                        'OR (processImagePath ENDSWITH "/First App"'
-                        '  AND (senderImagePath ENDSWITH "-iphonesimulator.so"'
-                        '    OR senderImagePath ENDSWITH "-iphonesimulator.dylib"'
-                        '    OR senderImagePath ENDSWITH "_ctypes.framework/_ctypes"'
-                        '    OR senderImagePath ENDSWITH "/Python"'
-                        "  )"
-                        ")"
-                    ),
-                ],
-                stdout=subprocess.PIPE,
-                stderr=subprocess.STDOUT,
-                bufsize=1,
-            ),
-        ]
-    )
-
-    # PID detection failed, so it won't be called
-    run_command._stream_app_logs.assert_not_called()
-
-
-@pytest.mark.usefixtures("sleep_zero")
 def test_run_app_test_mode(run_command, first_app_config, tmp_path):
     """An iOS App can be started in test mode."""
     first_app_config.test_mode = True
@@ -1531,46 +986,30 @@ def test_run_app_test_mode(run_command, first_app_config, tmp_path):
     # Simulator is already booted
     run_command.get_device_state = mock.MagicMock(return_value=DeviceState.BOOTED)
 
-    # Mock a process ID for the app
-    run_command.tools.subprocess.check_output.return_value = (
-        "com.example.first-app: 1234\n"
-    )
-
-    # Mock the uninstall, install, and log stream Popen processes
+    # Mock the uninstall, install, and app Popen processes
     uninstall_popen = mock.MagicMock(spec_set=subprocess.Popen)
     uninstall_popen.__enter__.return_value = uninstall_popen
     uninstall_popen.poll.side_effect = [None, None, 0]
     install_popen = mock.MagicMock(spec_set=subprocess.Popen)
     install_popen.__enter__.return_value = install_popen
     install_popen.poll.side_effect = [None, None, 0]
-    log_stream_process = mock.MagicMock(spec_set=subprocess.Popen)
+    app_popen = mock.MagicMock(spec_set=subprocess.Popen)
     run_command.tools.subprocess.Popen.side_effect = [
         uninstall_popen,
         install_popen,
-        log_stream_process,
+        app_popen,
     ]
 
     # Run the app
     run_command.run_app(first_app_config, passthrough=[])
 
-    # Sleep four times for uninstall/install and once for log stream start
-    assert time.sleep.call_count == 4 + 1
+    # Sleep four times for uninstall/install
+    assert time.sleep.call_count == 4
 
     # Open command was not called
     run_command.tools.subprocess.run.assert_not_called()
 
-    # Launch the new app
-    run_command.tools.subprocess.check_output.assert_called_once_with(
-        [
-            "xcrun",
-            "simctl",
-            "launch",
-            "2D3503A3-6EB9-4B37-9B17-C7EFEF2FA32D",
-            "com.example.first-app",
-        ],
-    )
-
-    # Start the uninstall, install, and  log stream
+    # Start the uninstall and install, and launch the app
     run_command.tools.subprocess.Popen.assert_has_calls(
         [
             # Uninstall the old app
@@ -1595,27 +1034,15 @@ def test_run_app_test_mode(run_command, first_app_config, tmp_path):
                     / "Debug-iphonesimulator/First App.app",
                 ],
             ),
+            # Launch the new app
             mock.call(
                 [
                     "xcrun",
                     "simctl",
-                    "spawn",
+                    "launch",
+                    "--console",
                     "2D3503A3-6EB9-4B37-9B17-C7EFEF2FA32D",
-                    "log",
-                    "stream",
-                    "--style",
-                    "compact",
-                    "--predicate",
-                    (
-                        'senderImagePath ENDSWITH "/First App"'
-                        'OR (processImagePath ENDSWITH "/First App"'
-                        '  AND (senderImagePath ENDSWITH "-iphonesimulator.so"'
-                        '    OR senderImagePath ENDSWITH "-iphonesimulator.dylib"'
-                        '    OR senderImagePath ENDSWITH "_ctypes.framework/_ctypes"'
-                        '    OR senderImagePath ENDSWITH "/Python"'
-                        "  )"
-                        ")"
-                    ),
+                    "com.example.first-app",
                 ],
                 stdout=subprocess.PIPE,
                 stderr=subprocess.STDOUT,
@@ -1624,14 +1051,12 @@ def test_run_app_test_mode(run_command, first_app_config, tmp_path):
         ]
     )
 
-    # Log stream monitoring was started
+    # The app output is streamed
     run_command._stream_app_logs.assert_called_with(
         first_app_config,
-        popen=log_stream_process,
-        clean_filter=macOS_log_clean_filter,
+        popen=app_popen,
+        clean_filter=nslog_clean_filter,
         clean_output=True,
-        stop_func=mock.ANY,
-        log_stream=True,
     )
 
 
@@ -1651,23 +1076,18 @@ def test_run_app_test_mode_with_passthrough(run_command, first_app_config, tmp_p
     # Simulator is already booted
     run_command.get_device_state = mock.MagicMock(return_value=DeviceState.BOOTED)
 
-    # Mock a process ID for the app
-    run_command.tools.subprocess.check_output.return_value = (
-        "com.example.first-app: 1234\n"
-    )
-
-    # Mock the uninstall, install, and log stream Popen processes
+    # Mock the uninstall, install, and app Popen processes
     uninstall_popen = mock.MagicMock(spec_set=subprocess.Popen)
     uninstall_popen.__enter__.return_value = uninstall_popen
     uninstall_popen.poll.side_effect = [None, None, 0]
     install_popen = mock.MagicMock(spec_set=subprocess.Popen)
     install_popen.__enter__.return_value = install_popen
     install_popen.poll.side_effect = [None, None, 0]
-    log_stream_process = mock.MagicMock(spec_set=subprocess.Popen)
+    app_popen = mock.MagicMock(spec_set=subprocess.Popen)
     run_command.tools.subprocess.Popen.side_effect = [
         uninstall_popen,
         install_popen,
-        log_stream_process,
+        app_popen,
     ]
 
     # Run the app with args.
@@ -1676,26 +1096,13 @@ def test_run_app_test_mode_with_passthrough(run_command, first_app_config, tmp_p
         passthrough=["foo", "--bar"],
     )
 
-    # Sleep four times for uninstall/install and once for log stream start
-    assert time.sleep.call_count == 4 + 1
+    # Sleep four times for uninstall/install
+    assert time.sleep.call_count == 4
 
     # Open command was not called
     run_command.tools.subprocess.run.assert_not_called()
 
-    # Launch the new app
-    run_command.tools.subprocess.check_output.assert_called_once_with(
-        [
-            "xcrun",
-            "simctl",
-            "launch",
-            "2D3503A3-6EB9-4B37-9B17-C7EFEF2FA32D",
-            "com.example.first-app",
-            "foo",
-            "--bar",
-        ],
-    )
-
-    # Start the uninstall, install, and  log stream
+    # Start the uninstall and install, and launch the app
     run_command.tools.subprocess.Popen.assert_has_calls(
         [
             # Uninstall the old app
@@ -1720,27 +1127,17 @@ def test_run_app_test_mode_with_passthrough(run_command, first_app_config, tmp_p
                     / "Debug-iphonesimulator/First App.app",
                 ],
             ),
+            # Launch the new app
             mock.call(
                 [
                     "xcrun",
                     "simctl",
-                    "spawn",
+                    "launch",
+                    "--console",
                     "2D3503A3-6EB9-4B37-9B17-C7EFEF2FA32D",
-                    "log",
-                    "stream",
-                    "--style",
-                    "compact",
-                    "--predicate",
-                    (
-                        'senderImagePath ENDSWITH "/First App"'
-                        'OR (processImagePath ENDSWITH "/First App"'
-                        '  AND (senderImagePath ENDSWITH "-iphonesimulator.so"'
-                        '    OR senderImagePath ENDSWITH "-iphonesimulator.dylib"'
-                        '    OR senderImagePath ENDSWITH "_ctypes.framework/_ctypes"'
-                        '    OR senderImagePath ENDSWITH "/Python"'
-                        "  )"
-                        ")"
-                    ),
+                    "com.example.first-app",
+                    "foo",
+                    "--bar",
                 ],
                 stdout=subprocess.PIPE,
                 stderr=subprocess.STDOUT,
@@ -1749,14 +1146,12 @@ def test_run_app_test_mode_with_passthrough(run_command, first_app_config, tmp_p
         ]
     )
 
-    # Log stream monitoring was started
+    # The app output is streamed
     run_command._stream_app_logs.assert_called_with(
         first_app_config,
-        popen=log_stream_process,
-        clean_filter=macOS_log_clean_filter,
+        popen=app_popen,
+        clean_filter=nslog_clean_filter,
         clean_output=True,
-        stop_func=mock.ANY,
-        log_stream=True,
     )
 
 
@@ -1774,23 +1169,18 @@ def test_run_app_debugger(run_command, first_app_generated, tmp_path, dummy_debu
     # Simulator is already booted
     run_command.get_device_state = mock.MagicMock(return_value=DeviceState.BOOTED)
 
-    # Mock a process ID for the app
-    run_command.tools.subprocess.check_output.return_value = (
-        "com.example.first-app: 1234\n"
-    )
-
-    # Mock the uninstall, install, and log stream Popen processes
+    # Mock the uninstall, install, and app Popen processes
     uninstall_popen = mock.MagicMock(spec_set=subprocess.Popen)
     uninstall_popen.__enter__.return_value = uninstall_popen
     uninstall_popen.poll.side_effect = [None, None, 0]
     install_popen = mock.MagicMock(spec_set=subprocess.Popen)
     install_popen.__enter__.return_value = install_popen
     install_popen.poll.side_effect = [None, None, 0]
-    log_stream_process = mock.MagicMock(spec_set=subprocess.Popen)
+    app_popen = mock.MagicMock(spec_set=subprocess.Popen)
     run_command.tools.subprocess.Popen.side_effect = [
         uninstall_popen,
         install_popen,
-        log_stream_process,
+        app_popen,
     ]
 
     first_app_generated.debugger = dummy_debugger
@@ -1800,13 +1190,25 @@ def test_run_app_debugger(run_command, first_app_generated, tmp_path, dummy_debu
     # Run the app
     run_command.run_app(first_app_generated, passthrough=[])
 
-    # Sleep four times for uninstall/install and once for log stream start
-    assert time.sleep.call_count == 4 + 1
+    # Sleep four times for uninstall/install
+    assert time.sleep.call_count == 4
 
-    # Set the environment variables for the debugger and launch the app
+    # Set the environment variables for console output and the debugger, then remove
+    # them.
     run_command.tools.subprocess.check_output.assert_has_calls(
         [
-            # Set the environment variables for the debugger
+            mock.call(
+                [
+                    "xcrun",
+                    "simctl",
+                    "spawn",
+                    "2D3503A3-6EB9-4B37-9B17-C7EFEF2FA32D",
+                    "launchctl",
+                    "setenv",
+                    "BRIEFCASE_CONSOLE_OUTPUT",
+                    "1",
+                ],
+            ),
             mock.call(
                 [
                     "xcrun",
@@ -1841,17 +1243,17 @@ def test_run_app_debugger(run_command, first_app_generated, tmp_path, dummy_debu
                     ),
                 ],
             ),
-            # Launch the new app
             mock.call(
                 [
                     "xcrun",
                     "simctl",
-                    "launch",
+                    "spawn",
                     "2D3503A3-6EB9-4B37-9B17-C7EFEF2FA32D",
-                    "com.example.first-app",
+                    "launchctl",
+                    "unsetenv",
+                    "BRIEFCASE_CONSOLE_OUTPUT",
                 ],
             ),
-            # Remove the environment variables for the debugger
             mock.call(
                 [
                     "xcrun",
@@ -1866,7 +1268,7 @@ def test_run_app_debugger(run_command, first_app_generated, tmp_path, dummy_debu
         ]
     )
 
-    # Start the uninstall, install, and log stream
+    # Start the uninstall and install, and launch the app
     run_command.tools.subprocess.Popen.assert_has_calls(
         [
             # Uninstall the old app
@@ -1891,27 +1293,15 @@ def test_run_app_debugger(run_command, first_app_generated, tmp_path, dummy_debu
                     / "Debug-iphonesimulator/First App.app",
                 ],
             ),
+            # Launch the new app
             mock.call(
                 [
                     "xcrun",
                     "simctl",
-                    "spawn",
+                    "launch",
+                    "--console",
                     "2D3503A3-6EB9-4B37-9B17-C7EFEF2FA32D",
-                    "log",
-                    "stream",
-                    "--style",
-                    "compact",
-                    "--predicate",
-                    (
-                        'senderImagePath ENDSWITH "/First App"'
-                        'OR (processImagePath ENDSWITH "/First App"'
-                        '  AND (senderImagePath ENDSWITH "-iphonesimulator.so"'
-                        '    OR senderImagePath ENDSWITH "-iphonesimulator.dylib"'
-                        '    OR senderImagePath ENDSWITH "_ctypes.framework/_ctypes"'
-                        '    OR senderImagePath ENDSWITH "/Python"'
-                        "  )"
-                        ")"
-                    ),
+                    "com.example.first-app",
                 ],
                 stdout=subprocess.PIPE,
                 stderr=subprocess.STDOUT,
@@ -1920,14 +1310,12 @@ def test_run_app_debugger(run_command, first_app_generated, tmp_path, dummy_debu
         ]
     )
 
-    # Log stream monitoring was started
+    # The app output is streamed
     run_command._stream_app_logs.assert_called_with(
         first_app_generated,
-        popen=log_stream_process,
-        clean_filter=macOS_log_clean_filter,
+        popen=app_popen,
+        clean_filter=nslog_clean_filter,
         clean_output=True,
-        stop_func=mock.ANY,
-        log_stream=True,
     )
 
 

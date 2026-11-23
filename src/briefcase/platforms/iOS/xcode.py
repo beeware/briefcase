@@ -32,7 +32,6 @@ from briefcase.exceptions import (
     InvalidDeviceError,
     NoDistributionArtefact,
 )
-from briefcase.integrations.subprocess import is_process_dead
 from briefcase.integrations.virtual_environment import VirtualEnvironment
 from briefcase.integrations.xcode import (
     DEVICE_DEVELOPER_MODE_DISABLED,
@@ -48,7 +47,6 @@ from briefcase.integrations.xcode import (
 from briefcase.platforms.iOS import iOSMixin
 from briefcase.platforms.macOS.filters import (
     XcodeBuildFilter,
-    macOS_log_clean_filter,
     nslog_clean_filter,
 )
 
@@ -67,6 +65,12 @@ class iOSDevice(NamedTuple):
     os_version: str
     name: str
     physical: bool
+
+    def __str__(self):
+        if self.physical:
+            return self.name
+        else:
+            return f"an {self.name} simulator running iOS {self.os_version}"
 
 
 # How to resolve each of the reasons a physical device isn't ready.
@@ -457,8 +461,8 @@ class iOSXcodeMixin(iOSXcodePassiveMixin):
                 description="Physical device",
                 options={
                     udid: (
-                        f"{details['name']} ({details['not_ready']})"
-                        if details["not_ready"]
+                        f"{details['name']} ({details['problem']})"
+                        if details["problem"]
                         else details["name"]
                     )
                     for udid, details in physical_devices.items()
@@ -515,8 +519,8 @@ or:
         :returns: The physical device.
         :raises iOSDeviceNotReady: If the device can't be used.
         """
-        if details["not_ready"]:
-            raise iOSDeviceNotReady(details["name"], details["not_ready"])
+        if details["problem"]:
+            raise iOSDeviceNotReady(details["name"], details["problem"])
         return iOSDevice(udid, details["os_version"], details["name"], physical=True)
 
     def select_identity(self, identity: str | None = None) -> iOSSigningIdentity:
@@ -551,6 +555,17 @@ or:
                 description="Development Signing Identity",
                 options=identities,
             )
+
+            self.console.info(f"""
+In future, you could specify this signing identity by using:
+
+    $ briefcase {self.command} iOS --identity {identity_id} ...
+
+or
+
+    $ briefcase {self.command} iOS --identity "{identities[identity_id]}" ...
+
+""")
         elif identity in identities:
             identity_id = identity
         else:
@@ -570,12 +585,12 @@ or:
                     + "\n".join(f"    {match}" for match in matches)
                 )
             identity_id = matches[0]
-        name = identities[identity_id]
+        identity_name = identities[identity_id]
 
         return iOSSigningIdentity(
             id=identity_id,
-            name=name,
-            team_id=self.get_team_id(self.tools, identity_id, name),
+            name=identity_name,
+            team_id=self.get_team_id(self.tools, identity_id, identity_name),
         )
 
 
@@ -917,8 +932,6 @@ class iOSXcodeRunCommand(iOSXcodeMixin, RunCommand):
         :param app: The config object for the app
         :param passthrough: The list of arguments to pass to the app
         """
-        udid, iOS_version, device, _ = self.target_device
-
         if app.test_mode:
             label = "test suite"
         else:
@@ -926,8 +939,8 @@ class iOSXcodeRunCommand(iOSXcodeMixin, RunCommand):
 
         self.console.info(
             (
-                f"Starting {label} on an {device} running iOS {iOS_version} "
-                f"(device UDID {udid})"
+                f"Starting {label} on {self.target_device} "
+                f"(device UDID {self.target_device.udid})"
             ),
             prefix=app.app_name,
         )
@@ -938,18 +951,47 @@ class iOSXcodeRunCommand(iOSXcodeMixin, RunCommand):
             env["BRIEFCASE_DEBUGGER"] = app.debugger.get_env_config(self, app)
 
         if self.target_device.physical:
-            self._run_app_on_device(app, label=label, passthrough=passthrough, env=env)
-            return {"udid": udid}
+            self._run_app_on_device(
+                app,
+                label=label,
+                passthrough=passthrough,
+                env=env,
+            )
+        else:
+            self._run_app_on_simulator(
+                app,
+                label=label,
+                passthrough=passthrough,
+                env=env,
+            )
 
+        return {"udid": self.target_device.udid}
+
+    def _run_app_on_simulator(
+        self,
+        app: FinalizedAppConfig,
+        label: str,
+        passthrough: list[str],
+        env: dict[str, str],
+    ):
+        """Install and start the application on a simulator.
+
+        :param app: The config object for the app
+        :param label: The label describing what is being run
+        :param passthrough: The list of arguments to pass to the app
+        :param env: Additional environment variables for the app
+        """
         # The simulator needs to be booted before being started.
         # If it's shut down, we can boot it again; but if it's currently
         # shutting down, we need to wait for it to shut down before restarting.
-        device_state = self.get_device_state(self.tools, udid)
+        device_state = self.get_device_state(self.tools, self.target_device.udid)
         if device_state not in {DeviceState.SHUTDOWN, DeviceState.BOOTED}:
             with self.console.wait_bar("Waiting for simulator shutdown..."):
                 while device_state not in {DeviceState.SHUTDOWN, DeviceState.BOOTED}:
                     time.sleep(2)
-                    device_state = self.get_device_state(self.tools, udid)
+                    device_state = self.get_device_state(
+                        self.tools, self.target_device.udid
+                    )
 
         # We now know the simulator is either shut down or booted;
         # if it's shut down, start it again.
@@ -957,15 +999,14 @@ class iOSXcodeRunCommand(iOSXcodeMixin, RunCommand):
             try:
                 with self.console.wait_bar("Booting simulator..."):
                     self.tools.subprocess.run(
-                        ["xcrun", "simctl", "boot", udid],
+                        ["xcrun", "simctl", "boot", self.target_device.udid],
                         check=True,
                     )
             except subprocess.CalledProcessError as e:
                 raise BriefcaseCommandError(
-                    f"Unable to boot {device} simulator running {iOS_version}"
+                    f"Unable to boot {self.target_device}"
                 ) from e
 
-        device_hub_started = False
         if not app.test_mode:
             # We now know the simulator is *running*, so we can open it.
             # We don't need to open the simulator to run the test suite.
@@ -979,7 +1020,7 @@ class iOSXcodeRunCommand(iOSXcodeMixin, RunCommand):
                                 "Simulator",
                                 "--args",
                                 "-CurrentDeviceUDID",
-                                udid,
+                                self.target_device.udid,
                             ],
                             check=True,
                         )
@@ -988,10 +1029,14 @@ class iOSXcodeRunCommand(iOSXcodeMixin, RunCommand):
                             ["open", "-a", "Device Hub"],
                             check=True,
                         )
-                        device_hub_started = True
+                        self.console.warning(
+                            "Device Hub has been started. You may need to select "
+                            f"{self.target_device} in the GUI."
+                        )
+
             except subprocess.CalledProcessError as e:
                 raise BriefcaseCommandError(
-                    f"Unable to open {device} simulator running {iOS_version}"
+                    f"Unable to open {self.target_device}"
                 ) from e
 
         # Try to uninstall the app first. If the app hasn't been installed
@@ -1006,7 +1051,7 @@ class iOSXcodeRunCommand(iOSXcodeMixin, RunCommand):
                     "xcrun",
                     "simctl",
                     "uninstall",
-                    udid,
+                    self.target_device.udid,
                     app.bundle_identifier,
                 ]
             ) as uninstall_popen,
@@ -1028,7 +1073,7 @@ class iOSXcodeRunCommand(iOSXcodeMixin, RunCommand):
                     "xcrun",
                     "simctl",
                     "install",
-                    udid,
+                    self.target_device.udid,
                     self.binary_path(app),
                 ]
             ) as install_popen,
@@ -1041,102 +1086,41 @@ class iOSXcodeRunCommand(iOSXcodeMixin, RunCommand):
                 f"Unable to install new version of app {app.app_name}."
             )
 
-        # Start log stream for the app.
-        # The following sets up a log stream filter that looks for:
-        #  1. a log sender that matches that app binary; or,
-        #  2. a log sender of that is a Python extension module,
-        #     and a process that matches the app binary.
-        # Case (1) works when the standard library is statically linked,
-        #   and for native NSLog() calls in the bootstrap binary
-        # Case (2) works when the standard library is dynamically linked,
-        #   and ctypes (which handles the NSLog integration) is an
-        #   extension module. It also catches the case for the CPython
-        #   builtin behavior of redirecting to the system log.
-        # It's not enough to filter on *just* the processImagePath,
-        # as the process will generate lots of system-level messages.
-        # We can't filter on *just* the senderImagePath, because other
-        # apps will generate log messages that would be caught by the filter.
-        simulator_log_popen = self.tools.subprocess.Popen(
-            [
-                "xcrun",
-                "simctl",
-                "spawn",
-                udid,
-                "log",
-                "stream",
-                "--style",
-                "compact",
-                "--predicate",
-                (
-                    f'senderImagePath ENDSWITH "/{app.formal_name}"'
-                    f'OR (processImagePath ENDSWITH "/{app.formal_name}"'
-                    '  AND (senderImagePath ENDSWITH "-iphonesimulator.so"'
-                    '    OR senderImagePath ENDSWITH "-iphonesimulator.dylib"'
-                    '    OR senderImagePath ENDSWITH "_ctypes.framework/_ctypes"'
-                    '    OR senderImagePath ENDSWITH "/Python"'
-                    "  )"
-                    ")"
-                ),
-            ],
-            stdout=subprocess.PIPE,
-            stderr=subprocess.STDOUT,
-            bufsize=1,
-        )
+        # Set additional environment variables while the app is running. The app
+        # writes its output to the console, rather than the system log.
+        with self.setup_env(
+            {"BRIEFCASE_CONSOLE_OUTPUT": "1", **env},
+            self.target_device.udid,
+        ):
+            self.console.info(f"Starting {label}...", prefix=app.app_name)
+            self.console.info(
+                "Following simulator log output (type CTRL-C to stop log)...",
+                prefix=app.app_name,
+            )
+            # Start the app in a way that lets us stream the logs. If the app can't
+            # be launched, the failure is reported when the log stream ends.
+            app_popen = self.tools.subprocess.Popen(
+                [
+                    "xcrun",
+                    "simctl",
+                    "launch",
+                    "--console",
+                    self.target_device.udid,
+                    app.bundle_identifier,
+                    *passthrough,
+                ],
+                stdout=subprocess.PIPE,
+                stderr=subprocess.STDOUT,
+                bufsize=1,
+            )
 
-        # Wait for the log stream start up
-        time.sleep(0.25)
-
-        # Set additional environment variables while the app is running
-        # (no-op if no environment variables are set).
-        with self.setup_env(env, udid):
-            try:
-                self.console.info(f"Starting {label}...", prefix=app.app_name)
-                with self.console.wait_bar(f"Launching {label}..."):
-                    output = self.tools.subprocess.check_output(
-                        [
-                            "xcrun",
-                            "simctl",
-                            "launch",
-                            udid,
-                            app.bundle_identifier,
-                            *passthrough,
-                        ]
-                    )
-                    try:
-                        app_pid = int(output.split(":")[1].strip())
-                    except (IndexError, ValueError) as e:
-                        raise BriefcaseCommandError(
-                            f"Unable to determine PID of {label} {app.app_name}."
-                        ) from e
-
-                if device_hub_started:
-                    self.console.warning(
-                        "Device Hub has been started. You may need to select "
-                        f"the {device} device running iOS {iOS_version} in the GUI."
-                    )
-
-                # Start streaming logs for the app.
-                self.console.info(
-                    "Following simulator log output (type CTRL-C to stop log)...",
-                    prefix=app.app_name,
-                )
-
-                # Stream the app logs,
-                self._stream_app_logs(
-                    app,
-                    popen=simulator_log_popen,
-                    clean_filter=macOS_log_clean_filter,
-                    clean_output=True,
-                    stop_func=lambda: is_process_dead(app_pid),
-                    log_stream=True,
-                )
-            except subprocess.CalledProcessError as e:
-                raise BriefcaseCommandError(
-                    f"Unable to launch {label} {app.app_name}."
-                ) from e
-
-        # Preserve the device selection as state.
-        return {"udid": udid}
+            # Start streaming logs for the app.
+            self._stream_app_logs(
+                app,
+                popen=app_popen,
+                clean_filter=nslog_clean_filter,
+                clean_output=True,
+            )
 
     def _run_app_on_device(
         self,
@@ -1152,7 +1136,6 @@ class iOSXcodeRunCommand(iOSXcodeMixin, RunCommand):
         :param passthrough: The list of arguments to pass to the app
         :param env: Additional environment variables for the app
         """
-        udid = self.target_device.udid
         try:
             with self.console.wait_bar(f"Installing new {label} version..."):
                 self.tools.subprocess.run(
@@ -1164,7 +1147,7 @@ class iOSXcodeRunCommand(iOSXcodeMixin, RunCommand):
                         "app",
                         "-q",
                         "--device",
-                        udid,
+                        self.target_device.udid,
                         self.binary_path(app),
                     ],
                     check=True,
@@ -1187,7 +1170,7 @@ class iOSXcodeRunCommand(iOSXcodeMixin, RunCommand):
                 "launch",
                 "-q",
                 "--device",
-                udid,
+                self.target_device.udid,
                 "--console",
                 "--terminate-existing",
                 "--environment-variables",
@@ -1233,45 +1216,40 @@ class iOSXcodeRunCommand(iOSXcodeMixin, RunCommand):
     @contextlib.contextmanager
     def setup_env(
         self,
-        env: dict[str, str] | None,
+        env: dict[str, str],
         udid: str,
     ):
         """Context manager to set up the environment for the command."""
-        if env:
-            with self.console.wait_bar("Setting environment variables in simulator..."):
-                for env_key, env_value in env.items():
-                    self.tools.subprocess.check_output(
-                        [
-                            "xcrun",
-                            "simctl",
-                            "spawn",
-                            udid,
-                            "launchctl",
-                            "setenv",
-                            f"{env_key}",
-                            f"{env_value}",
-                        ]
-                    )
+        with self.console.wait_bar("Setting environment variables in simulator..."):
+            for env_key, env_value in env.items():
+                self.tools.subprocess.check_output(
+                    [
+                        "xcrun",
+                        "simctl",
+                        "spawn",
+                        udid,
+                        "launchctl",
+                        "setenv",
+                        f"{env_key}",
+                        f"{env_value}",
+                    ]
+                )
 
-            yield
+        yield
 
-            with self.console.wait_bar(
-                "Removing environment variables from simulator..."
-            ):
-                for env_key in env:
-                    self.tools.subprocess.check_output(
-                        [
-                            "xcrun",
-                            "simctl",
-                            "spawn",
-                            udid,
-                            "launchctl",
-                            "unsetenv",
-                            f"{env_key}",
-                        ]
-                    )
-        else:
-            yield  # no-op if no environment variables are set
+        with self.console.wait_bar("Removing environment variables from simulator..."):
+            for env_key in env:
+                self.tools.subprocess.check_output(
+                    [
+                        "xcrun",
+                        "simctl",
+                        "spawn",
+                        udid,
+                        "launchctl",
+                        "unsetenv",
+                        f"{env_key}",
+                    ]
+                )
 
 
 class iOSXcodePackageCommand(iOSXcodeMixin, PackageCommand):

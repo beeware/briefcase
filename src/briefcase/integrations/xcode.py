@@ -482,7 +482,7 @@ def get_physical_devices(
 
     The return value is a dictionary of devices, keyed by hardware UDID. Each device is
     described by a dictionary containing its `name`, its `os_version`, and the reason
-    it can't be used for deployment (`not_ready`). `not_ready` is `None` if the device
+    it can't be used for deployment (`problem`). `problem` is `None` if the device
     can be used; otherwise, it is one of `DEVICE_NOT_PAIRED`,
     `DEVICE_DEVELOPER_MODE_DISABLED` or `DEVICE_UNREACHABLE`.
 
@@ -534,18 +534,18 @@ def get_physical_devices(
             continue
 
         if not paired:
-            not_ready = DEVICE_NOT_PAIRED
+            problem = DEVICE_NOT_PAIRED
         elif not developer_mode:
-            not_ready = DEVICE_DEVELOPER_MODE_DISABLED
+            problem = DEVICE_DEVELOPER_MODE_DISABLED
         elif not reachable:
-            not_ready = DEVICE_UNREACHABLE
+            problem = DEVICE_UNREACHABLE
         else:
-            not_ready = None
+            problem = None
 
         devices[hardware["udid"]] = {
             "name": name,
             "os_version": os_version,
-            "not_ready": not_ready,
+            "problem": problem,
         }
 
     return devices
