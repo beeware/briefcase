@@ -394,6 +394,15 @@ class GradleRunCommand(GradleMixin, RunCommand):
     description = "Run an Android debug APK on a device (physical or virtual)."
     supports_debugger = True
 
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+
+        # The device ID, name and AVD of the device the app will run on. These
+        # are selected by `prepare_target()`.
+        self.target_device: str | None = None
+        self.target_name: str | None = None
+        self.target_avd: str | None = None
+
     def verify_tools(self):
         super().verify_tools()
         self.tools.android_sdk.verify_emulator()
@@ -467,11 +476,42 @@ class GradleRunCommand(GradleMixin, RunCommand):
             host_folder=f"{app_packages_path}",
         )
 
+    def prepare_target(
+        self,
+        app: FinalizedAppConfig,
+        *,
+        device_or_avd: str | None = None,
+        **options,
+    ):
+        """Select the device to run on, creating a new emulator if requested.
+
+        :param app: The config object for the app
+        :param device_or_avd: The device to target. If `None`, the user will
+            be asked to select a device. If `"auto"`, a default "beePhone"
+            device will be selected (and created if necessary).
+        """
+        device, name, avd = self.tools.android_sdk.select_target_device(device_or_avd)
+
+        # If there's no device ID, that means the emulator isn't running.
+        # If there's no AVD either, it means the user has chosen to create
+        # an entirely new emulator.
+        if device is None:
+            if avd is None:
+                avd = self.tools.android_sdk.create_emulator(app)
+            else:
+                # Ensure the system image for the requested emulator is available.
+                # This step is only needed if the AVD already existed; you have to
+                # have an image available to create an AVD.
+                self.tools.android_sdk.verify_avd(avd)
+
+        self.target_device = device
+        self.target_name = name
+        self.target_avd = avd
+
     def run_app(
         self,
         app: FinalizedAppConfig,
         passthrough: list[str],
-        device_or_avd: str | None = None,
         extra_emulator_args=None,
         shutdown_on_exit=False,
         revoke_permissions: list[str] | None = None,
@@ -483,9 +523,6 @@ class GradleRunCommand(GradleMixin, RunCommand):
 
         :param app: The config object for the app
         :param passthrough: The list of arguments to pass to the app
-        :param device_or_avd: The device to target. If `None`, the user will
-            be asked to re-run the command selecting a specific device. If `"auto"`,
-            a default "beePhone" device will be selected (and created if necessary).
         :param extra_emulator_args: Any additional arguments to pass to the emulator.
         :param shutdown_on_exit: Should the emulator be shut down on exit?
         :param revoke_permissions: A list of permissions to revoke before launching
@@ -493,21 +530,12 @@ class GradleRunCommand(GradleMixin, RunCommand):
         :param forward_ports: A list of ports to forward for the app.
         :param reverse_ports: A list of ports to reversed for the app.
         """
-        device, name, avd = self.tools.android_sdk.select_target_device(device_or_avd)
+        device = self.target_device
+        name = self.target_name
+        avd = self.target_avd
 
-        # If there's no device ID, that means the emulator isn't running.
-        # If there's no AVD either, it means the user has chosen to create
-        # an entirely new emulator. Create the emulator (if necessary),
-        # then start it.
+        # If there's no device ID, the selected emulator isn't running; start it.
         if device is None:
-            if avd is None:
-                avd = self.tools.android_sdk.create_emulator(app)
-            else:
-                # Ensure the system image for the requested emulator is available.
-                # This step is only needed if the AVD already existed; you have to
-                # have an image available to create an AVD.
-                self.tools.android_sdk.verify_avd(avd)
-
             if extra_emulator_args:
                 extra = f" (with {' '.join(extra_emulator_args)})"
             else:
