@@ -168,6 +168,11 @@ class GradleCreateCommand(GradleMixin, CreateCommand):
     app_template_hash = "sha1:0a2b6eb5562b6d435c6ae60351fd5339895c844c"
     hidden_app_properties: Collection[str] = {"permission", "feature"}
 
+    def cleanup_app_content(self, app: FinalizedAppConfig):
+        # Chaquopy manages bytecode in its build environment. Removing those files
+        # invalidates Gradle's up-to-date checks and reinstalls app requirements.
+        super().cleanup_app_content(app, remove_pyc=False)
+
     def support_package_filename(self, support_revision):
         """The query arguments to use in a support package query request."""
         return (
