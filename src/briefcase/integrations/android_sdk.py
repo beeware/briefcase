@@ -205,11 +205,11 @@ class AndroidSDK(ManagedTool):
 
     @property
     def DEFAULT_DEVICE_TYPE(self) -> str:
-        return "pixel"
+        return "pixel_7_pro"
 
     @property
     def DEFAULT_DEVICE_SKIN(self) -> str:
-        # Skins are entirely cosmetic. In a CI environment, default to no skin.
+        # The skin must match the device's resolution. In CI, default to no skin.
         if "CI" in os.environ:
             return None
         return "pixel_7_pro"

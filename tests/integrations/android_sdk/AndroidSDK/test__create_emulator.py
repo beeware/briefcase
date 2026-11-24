@@ -156,7 +156,7 @@ def test_create_emulator_with_defaults(
     with avd_config_path.open("w", encoding="utf-8") as f:
         f.write("hw.device.name=pixel\n")
 
-    # Create the emulator using defaults
+    # Create the emulator using a device that matches the default skin.
     android_sdk._create_emulator(avd="new-emulator")
 
     # The system image was verified
@@ -181,7 +181,7 @@ def test_create_emulator_with_defaults(
             "--package",
             f"system-images;android-31;default;{emulator_abi}",
             "--device",
-            "pixel",
+            "pixel_7_pro",
         ],
         env={
             **android_sdk.env,
@@ -311,7 +311,7 @@ def test_create_failure(mock_tools, android_sdk):
             "--package",
             "system-images;android-31;default;x86_64",
             "--device",
-            "pixel",
+            "pixel_7_pro",
         ],
         env={
             **android_sdk.env,
