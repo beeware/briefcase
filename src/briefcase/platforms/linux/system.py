@@ -1034,7 +1034,7 @@ class LinuxSystemDevCommand(LinuxSystemMixin, DevCommand):
         super().install_dev_requirements(app, venv, **options)
 
 
-def maintainers(app):
+def all_maintainers(app):
     """All authors of an app, formatted as RFC 822 addresses."""
     return [
         formataddr((entry.get("name", ""), entry.get("email", "")))
@@ -1042,9 +1042,9 @@ def maintainers(app):
     ]
 
 
-def maintainer(app):
+def primary_maintainer(app):
     """The primary author of an app, formatted as an RFC 822 address."""
-    return next(iter(maintainers(app)), "")
+    return next(iter(all_maintainers(app)), "")
 
 
 def debian_multiline_description(description):
@@ -1381,7 +1381,7 @@ class LinuxSystemPackageCommand(
                             f"Package: {app.bundle_name}",
                             f"Version: {app.version}",
                             f"Architecture: {self.deb_abi(app)}",
-                            f"Maintainer: {maintainer(app)}",
+                            f"Maintainer: {primary_maintainer(app)}",
                             f"Homepage: {app.url}",
                             f"Description: {app.description}",
                             f" {debian_multiline_description(app.long_description)}",
@@ -1664,8 +1664,8 @@ no extension).
                 f.write(
                     "\n".join(
                         [
-                            *(f"# Maintainer: {m}" for m in maintainers(app)),
-                            f'export PACKAGER="{maintainer(app)}"',
+                            *(f"# Maintainer: {m}" for m in all_maintainers(app)),
+                            f'export PACKAGER="{primary_maintainer(app)}"',
                             f"pkgname={app.app_name}",
                             f"pkgver={app.version}",
                             f"pkgrel={getattr(app, 'revision', 1)}",
