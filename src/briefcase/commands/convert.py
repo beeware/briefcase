@@ -378,8 +378,7 @@ class ConvertCommand(NewCommand):
         )
 
     def input_author(self, override_value: str | None) -> str:
-        """Ask about the author name, using hints from the pyproject.toml file if there
-        are any.
+        """Ask about the author name.
 
         :returns: author name
         """
@@ -388,67 +387,25 @@ class ConvertCommand(NewCommand):
             "This could be your own name, or the name of your company you work for."
         )
 
-        options = [
-            author["name"]
-            for author in self.pep621_data.get("authors", [])
-            if "name" in author
-        ]
-
         default_author = "Jane Developer"
-        if not options or override_value is not None:
-            git_username = self.get_git_config_value("user", "name")
-            if git_username is not None:
-                default_author = git_username
-                intro = (
-                    f"{intro}\n\n"
-                    f"Based on your git configuration,"
-                    f" we believe it could be '{git_username}'."
-                )
-
-            return self.console.text_question(
-                intro=intro,
-                description="Author",
-                default=default_author,
-                override_value=override_value,
-            )
-        elif len(options) > 1:
-            # Add a line with all authors joined: E.g. 'Jane Developer & Joe Developer'
-            # and a line with Other
-            options.append(", ".join(options[:-1]) + f" & {options[-1]}")
-
-        options.append("Other")
-
-        # We want to use text_question if override_value is provided or if the selected
-        # author is "Other". However, since we don't want the selection_question prompt
-        # if an override value is provided, we need to initialise the author variable
-        # here.
-        author = self.console.selection_question(
-            intro=(
+        git_username = self.get_git_config_value("user", "name")
+        if git_username is not None:
+            default_author = git_username
+            intro = (
                 f"{intro}\n\n"
-                "We found these author names in the PEP621 formatted "
-                "'pyproject.toml'. Who do you want to be credited as the author of "
-                "this application?"
-            ),
-            description="Author",
-            options=options,
-            default=options[0],
-            override_value=None,
-        )
-        if author == "Other":
-            author = self.console.text_question(
-                intro=(
-                    "Who do you want to be credited as the author of this application?"
-                ),
-                description="Author",
-                default=default_author,
-                override_value=None,
+                f"Based on your git configuration,"
+                f" we believe it could be '{git_username}'."
             )
 
-        return author
+        return self.console.text_question(
+            intro=intro,
+            description="Author",
+            default=default_author,
+            override_value=override_value,
+        )
 
     def input_email(self, author: str, bundle: str, override_value: str | None) -> str:
-        """Ask about the author email, using hints from the pyproject.toml file if there
-        are any.
+        """Ask about the author email.
 
         :returns: author email
         """
@@ -459,11 +416,6 @@ class ConvertCommand(NewCommand):
         else:
             default = git_email
             default_source = "your git configuration"
-
-        for author_info in self.pep621_data.get("authors", []):
-            if author_info.get("name") == author and author_info.get("email"):
-                default = author_info["email"]
-                default_source = "the selected author name"
 
         intro = (
             "What email address should people use to contact the developers of this "
@@ -481,6 +433,31 @@ class ConvertCommand(NewCommand):
         )
 
         return author_email
+
+    def input_authors(
+        self,
+        bundle: str,
+        project_overrides: dict,
+    ) -> list[dict[str, str]]:
+        """Determine the app's authors, using the PEP 621 authors if there are any.
+
+        :returns: The app's authors.
+        """
+        author_override = project_overrides.pop("author", None)
+        email_override = project_overrides.pop("author_email", None)
+
+        authors = self.pep621_data.get("authors", [])
+        if authors and author_override is None and email_override is None:
+            self.console.divider(title="Authors")
+            self.console.prompt()
+            self.console.prompt(
+                "Using author details from PEP621 formatted pyproject.toml"
+            )
+            return authors
+
+        author = self.input_author(override_value=author_override)
+        author_email = self.input_email(author, bundle, override_value=email_override)
+        return [{"name": author, "email": author_email}]
 
     def get_license_hint(self) -> tuple[str | None, str]:
         """Get hint for project license, either by reading pyproject.toml or the license
@@ -566,10 +543,7 @@ class ConvertCommand(NewCommand):
         )
         url = self.input_url(app_name, project_overrides.pop("url", None))
         bundle = self.input_bundle(url, app_name, project_overrides.pop("bundle", None))
-        author = self.input_author(override_value=project_overrides.pop("author", None))
-        author_email = self.input_email(
-            author, bundle, override_value=project_overrides.pop("author_email", None)
-        )
+        authors = self.input_authors(bundle, project_overrides)
         project_license = self.input_license(
             override_value=project_overrides.pop("license", None)
         )
@@ -586,8 +560,7 @@ class ConvertCommand(NewCommand):
             "source_dir": source_dir,
             "test_source_dir": test_source_dir,
             "description": description,
-            "author": author,
-            "author_email": author_email,
+            "pep621": {"authors": authors},
             "bundle": bundle,
             "url": url,
             "license": project_license,

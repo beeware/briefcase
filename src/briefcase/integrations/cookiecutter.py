@@ -88,8 +88,16 @@ class TOMLEscape(Extension):
             else:
                 return '"' + obj + '"'
 
+        def toml_inline_table(obj):
+            """Renders a dictionary of strings as a TOML inline table."""
+            content = ", ".join(
+                f'{key} = "{escape_toml(value)}"' for key, value in obj.items()
+            )
+            return f"{{{content}}}"
+
         environment.filters["escape_toml"] = escape_toml
         environment.filters["escape_non_ascii"] = escape_non_ascii
+        environment.filters["toml_inline_table"] = toml_inline_table
 
 
 class GradleEscape(Extension):
@@ -165,6 +173,23 @@ class XMLExtension(Extension):
         environment.filters["bool_attr"] = bool_attr
         environment.filters["xml_escape"] = xml_escape
         environment.filters["xml_attr"] = xml_attr
+
+
+class TextExtension(Extension):
+    """Jinja2 extension for generating human readable text."""
+
+    def __init__(self, environment):
+        """Initialize the extension with the given environment."""
+        super().__init__(environment)
+
+        def lexical_join(obj):
+            """Joins a list with commas, and "and" before the final item."""
+            items = list(obj)
+            if len(items) > 1:
+                return f"{', '.join(items[:-1])} and {items[-1]}"
+            return "".join(items)
+
+        environment.filters["lexical_join"] = lexical_join
 
 
 class UUIDExtension(Extension):

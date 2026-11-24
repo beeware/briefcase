@@ -440,8 +440,11 @@ class NewCommand(BaseCommand):
             "test_source_dir": test_source_dir,
             "project_name": project_name,
             "description": description,
-            "author": author,
-            "author_email": author_email,
+            "pep621": {
+                "authors": [
+                    {"name": author, "email": author_email},
+                ]
+            },
             "bundle": bundle,
             "url": url,
             "license": project_license,

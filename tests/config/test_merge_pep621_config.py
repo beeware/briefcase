@@ -153,9 +153,7 @@ def test_empty_authors():
         {"authors": []},
     )
 
-    assert briefcase_config == {
-        "key": "value",
-    }
+    assert briefcase_config == {"key": "value", "authors": []}
 
 
 def test_single_author():
@@ -176,13 +174,12 @@ def test_single_author():
 
     assert briefcase_config == {
         "key": "value",
-        "author": "Jane Developer",
-        "author_email": "jane@example.com",
+        "authors": [{"name": "Jane Developer", "email": "jane@example.com"}],
     }
 
 
 def test_multiple_authors():
-    "If there are multiple authors, the first author is recorded"
+    "If there are multiple authors, all of them are recorded"
     briefcase_config = {"key": "value"}
 
     merge_pep621_config(
@@ -203,8 +200,10 @@ def test_multiple_authors():
 
     assert briefcase_config == {
         "key": "value",
-        "author": "Jane Developer",
-        "author_email": "jane@example.com",
+        "authors": [
+            {"name": "Jane Developer", "email": "jane@example.com"},
+            {"name": "John Assistant", "email": "john@somewhere.com"},
+        ],
     }
 
 
@@ -225,7 +224,7 @@ def test_mising_author_name():
 
     assert briefcase_config == {
         "key": "value",
-        "author_email": "jane@example.com",
+        "authors": [{"email": "jane@example.com"}],
     }
 
 
@@ -246,53 +245,7 @@ def test_missing_author_email():
 
     assert briefcase_config == {
         "key": "value",
-        "author": "Jane Developer",
-    }
-
-
-def test_existing_author_name():
-    "If the author is defined in the global config, the PEP621 value is ignored"
-    briefcase_config = {"key": "value", "author": "Grace Hopper"}
-
-    merge_pep621_config(
-        briefcase_config,
-        {
-            "authors": [
-                {
-                    "name": "Jane Developer",
-                    "email": "jane@example.com",
-                }
-            ]
-        },
-    )
-
-    assert briefcase_config == {
-        "key": "value",
-        "author": "Grace Hopper",
-        "author_email": "jane@example.com",
-    }
-
-
-def test_existing_author_email():
-    "If the author email is missing, the name is still recorded"
-    briefcase_config = {"key": "value", "author_email": "grace@hopper.org"}
-
-    merge_pep621_config(
-        briefcase_config,
-        {
-            "authors": [
-                {
-                    "name": "Jane Developer",
-                    "email": "jane@example.com",
-                }
-            ]
-        },
-    )
-
-    assert briefcase_config == {
-        "key": "value",
-        "author": "Jane Developer",
-        "author_email": "grace@hopper.org",
+        "authors": [{"name": "Jane Developer"}],
     }
 
 
@@ -400,4 +353,29 @@ def test_test_dependencies_with_requires():
     assert briefcase_config == {
         "key": "value",
         "test_requires": ["dep1", "dep2", "first", "second"],
+    }
+
+
+def test_existing_authors():
+    "If authors is defined in the global config, the PEP621 value is ignored"
+    briefcase_config = {
+        "key": "value",
+        "authors": [{"name": "Grace Hopper", "email": "grace@hopper.org"}],
+    }
+
+    merge_pep621_config(
+        briefcase_config,
+        {
+            "authors": [
+                {
+                    "name": "Jane Developer",
+                    "email": "jane@example.com",
+                }
+            ]
+        },
+    )
+
+    assert briefcase_config == {
+        "key": "value",
+        "authors": [{"name": "Grace Hopper", "email": "grace@hopper.org"}],
     }
