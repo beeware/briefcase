@@ -452,6 +452,49 @@ def test_pkg_package_extra_requirements(
 
 
 @pytest.mark.skipif(sys.platform == "win32", reason="Can't build PKGs on Windows")
+def test_pkg_package_multiple_authors(
+    package_command,
+    first_app_pkg,
+    mock_gpg,
+    tmp_path,
+):
+    """Every author is listed as a maintainer, but PACKAGER names only the first."""
+    bundle_path = tmp_path / "base_path/build/first-app/somevendor/surprising"
+
+    first_app_pkg.authors = [
+        {"name": "Megacorp", "email": "maintainer@example.com"},
+        {"name": "Grace Hopper", "email": "grace@hopper.org"},
+    ]
+
+    # Package the app
+    package_command.package_app(first_app_pkg)
+
+    # Each author gets a `# Maintainer:` line; PACKAGER takes only the first
+    with (bundle_path / "pkgbuild/PKGBUILD").open(encoding="utf-8") as f:
+        assert f.read() == dedent(
+            """\
+            # Maintainer: Megacorp <maintainer@example.com>
+            # Maintainer: Grace Hopper <grace@hopper.org>
+            export PACKAGER="Megacorp <maintainer@example.com>"
+            pkgname=first-app
+            pkgver=0.0.1
+            pkgrel=1
+            pkgdesc="Description for the app"
+            arch=('wonky')
+            url="https://example.com/first-app"
+            license=('Unknown')
+            depends=('glibc>=2.99' 'python3')
+            changelog=CHANGELOG
+            source=("$pkgname-$pkgver.tar.gz")
+            md5sums=('SKIP')
+            options=('!strip')
+            package() {
+                cp -r "$srcdir/$pkgname-$pkgver/usr/" "$pkgdir"/usr/
+            }"""
+        )
+
+
+@pytest.mark.skipif(sys.platform == "win32", reason="Can't build PKGs on Windows")
 def test_pkg_package_failure(package_command, first_app_pkg, mock_gpg, tmp_path):
     """If a packaging doesn't succeed, an error is raised."""
     bundle_path = tmp_path / "base_path/build/first-app/somevendor/surprising"

@@ -118,7 +118,7 @@ Recreating the app layout may also help resolve this issue:
                         self.binary_path(app).relative_to(self.bundle_path(app)),
                         "--set-version-string",
                         "CompanyName",
-                        app.author,
+                        (app.authors or [{}])[0].get("name", ""),
                         # "FileDescription" is the label that appears as a grouping
                         # in the Task Manager when the application runs.
                         "--set-version-string",
