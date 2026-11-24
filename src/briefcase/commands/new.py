@@ -416,8 +416,6 @@ class NewCommand(BaseCommand):
             override_value=project_overrides.pop("author_email", None),
         )
 
-        authors = [{"name": author, "email": author_email}]
-
         url = self.console.text_question(
             intro=(
                 "What is the website URL for this application?\n"
@@ -442,7 +440,11 @@ class NewCommand(BaseCommand):
             "test_source_dir": test_source_dir,
             "project_name": project_name,
             "description": description,
-            "pep621": {"authors": authors},
+            "pep621": {
+                "authors": [
+                    {"name": author, "email": author_email},
+                ]
+            },
             "bundle": bundle,
             "url": url,
             "license": project_license,
