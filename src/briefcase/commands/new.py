@@ -9,6 +9,7 @@ from importlib import metadata
 from briefcase.bootstraps import BaseGuiBootstrap
 from briefcase.config import (
     APP_NAME_SPEC,
+    derive_class_name,
     get_module_name,
     is_valid_app_name,
     is_valid_bundle_identifier,
@@ -147,7 +148,8 @@ class NewCommand(BaseCommand):
         :returns: True the formal name is valid.
         :raises: ValueError if the name is not a valid formal name.
         """
-        if not make_class_name(candidate):  # Check whether a class name may be derived
+        # Check whether a class name may be derived
+        if not derive_class_name(candidate):
             raise ValueError(
                 self.console.textwrap(
                     f"{candidate!r} is not a valid formal name.\n"
