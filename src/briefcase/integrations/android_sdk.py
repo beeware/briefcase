@@ -10,7 +10,7 @@ import time
 from datetime import datetime
 from pathlib import Path
 
-from briefcase.config import PEP508_NAME_RE
+from briefcase.config import PEP508_NAME_RE, FinalizedAppConfig
 from briefcase.console import Console
 from briefcase.exceptions import (
     BriefcaseCommandError,
@@ -24,20 +24,61 @@ from briefcase.integrations.java import JDK
 from briefcase.integrations.subprocess import SubprocessArgT
 
 DEVICE_NOT_FOUND = re.compile(r"^error: device '[^']*' not found")
+ANDROID_MIN_OS_VERSION = 24
 
 
 def create_avd_validator(emulators):
     def _validate_avd_name(avd):
         if not PEP508_NAME_RE.match(avd):
-            raise ValueError(
-                "An emulator name may only contain "
-                "letters, numbers, hyphens and underscores."
-            )
+            raise ValueError("This emulator name is not a valid Python package name.")
         elif avd in emulators:
             raise ValueError(f"An emulator named '{avd}' already exists.")
         return True
 
     return _validate_avd_name
+
+
+def parse_system_image(package: str):
+    """Parse a system image package identifier into its components.
+
+    :param package: e.g. "system-images;android-31;default;x86_64"
+    :returns: A tuple of (api_level, image_type, abi) or None if invalid.
+    """
+    parts = package.split(";")
+    if len(parts) != 4 or parts[0] != "system-images":
+        return None
+    return parts[1], parts[2], parts[3]
+
+
+def default_avd_name(system_image):
+    return parse_system_image(system_image)[0].replace("android", "beePhone")
+
+
+def api_level_sort_key(api_level: str) -> tuple[int, ...]:
+    """Sort key for API level strings, e.g. "android-34.1" -> (34, 1).
+
+    :raises ValueError: if the string is not "android-" followed by a dot-separated
+        sequence of at least one integer.
+    """
+    prefix = "android-"
+    if not api_level.startswith("android-"):
+        raise ValueError(api_level)
+    parts = api_level.removeprefix(prefix).split(".")
+
+    try:
+        return tuple(int(part) for part in parts)
+    except ValueError as e:
+        raise ValueError(api_level) from e
+
+
+def min_api_level(app: FinalizedAppConfig) -> int:
+    """The minimum API level to use for the app, as an int.
+
+    `min_os_version` may be configured as a string or an int, so it's
+    coerced to int here to avoid a TypeError when compared against
+    numeric API levels.
+    """
+    return int(getattr(app, "min_os_version", ANDROID_MIN_OS_VERSION))
 
 
 class AndroidDeviceNotAuthorized(BriefcaseCommandError):
@@ -62,10 +103,17 @@ class AndroidSDK(ManagedTool):
     name = "android_sdk"
     full_name = "Android SDK"
 
-    # Latest version for Command-Line Tools download as of May 2025
-    # **Be sure the gradle.rst docs stay in sync with version updates here**
-    SDK_MANAGER_DOWNLOAD_VER = "13114758"
-    SDK_MANAGER_VER = "19.0"
+    # The latest URLs for the command-line tools can be found at
+    # https://developer.android.com/studio#command-line-tools-only. Hashes are also
+    # listed there, and should be copied into cmdline_tools_hash. Older versions are
+    # listed in https://dl.google.com/android/repository/repository2-2.xml.
+    SDK_MANAGER_DOWNLOAD_VER = "15641748"
+
+    # The user-visible version number is in source.properties in the ZIP. 21 is the last
+    # version before they started transitioning to the `android` command, which adds
+    # complications both for downloading (macOS has separate URLs for x86_64 and arm64)
+    # and running (package listings use a different format).
+    SDK_MANAGER_VER = "21.0"
 
     def __init__(self, tools: ToolCache, root_path: Path):
         super().__init__(tools=tools)
@@ -117,9 +165,9 @@ class AndroidSDK(ManagedTool):
         """The expected sha256 hash of the command-line tools download for the current
         machine."""
         hash = {
-            "mac": "5673201e6f3869f418eeed3b5cb6c4be7401502bd0aae1b12a29d164d647a54e",
-            "linux": "7ec965280a073311c339e571cd5de778b9975026cfcbe79f2b1cdcb1e15317ee",
-            "win": "98b565cb657b012dae6794cefc0f66ae1efb4690c699b78a614b4a6a3505b003",
+            "mac": "a2253766e128f6d4ff594d23857b67f52028a7e8773b2634dcc3d3e60d13b290",
+            "linux": "a66d5ef0238fc0162e9c1446602ce0dd41702d4dd7a94d2ce42d12b7f80baf7e",
+            "win": "f911b4f03fbee117e2d22edb5f51a5efeae4e8c8aa78bb6bd3de4862ae299da6",
         }[self._cmdline_tools_platform_name()]
         return f"sha256:{hash}"
 
@@ -259,18 +307,31 @@ class AndroidSDK(ManagedTool):
         return self.device_skins.get(self.DEFAULT_DEVICE_TYPE, None)
 
     @property
-    def DEFAULT_ANDROID_SDK_LEVEL(self) -> int:
-        return 31
+    def DEFAULT_API_LEVEL(self) -> str:
+        """An API level whose default image type is known to work well."""
+        return "android-31"
+
+    @property
+    def DEFAULT_IMAGE_TYPES(self) -> list[str]:
+        """Default system image types, highest priority first. Every API level we offer
+        should have at least one of these types.
+        """
+        return [
+            # Available on all API levels except for some of the newest ones.
+            "default",
+            # Comes with some closed-source Google apps.
+            "google_apis",
+            # Same as google_apis, but uses 16 KB pages. Not all packages are compatible
+            # with this yet, but it's the only option on some of the newest API levels.
+            "google_apis_ps16k",
+        ]
 
     @property
     def DEFAULT_SYSTEM_IMAGE(self) -> str:
-        sdk_level = self.DEFAULT_ANDROID_SDK_LEVEL
-        return f"system-images;android-{sdk_level};default;{self.emulator_abi}"
-
-    @property
-    def DEFAULT_AVD(self) -> str:
-        sdk_level = self.DEFAULT_ANDROID_SDK_LEVEL
-        return f"beePhone-{sdk_level}"
+        return (
+            f"system-images;{self.DEFAULT_API_LEVEL}"
+            f";{self.DEFAULT_IMAGE_TYPES[0]};{self.emulator_abi}"
+        )
 
     @classmethod
     def sdk_path_from_env(cls, tools: ToolCache) -> tuple[str | None, str | None]:
@@ -788,6 +849,42 @@ connection.
         except KeyError:
             self.tools.console.debug(f"Device {avd!r} doesn't define a skin.")
 
+    def list_available_system_images(self, min_api_level: int) -> set[str]:
+        """Returns a set of system image package identifiers available for the current
+        architecture and minimum Android version.
+
+        e.g., `{"system-images;android-31;default;x86_64"}`
+
+        :param min_api_level: The minimum Android API level to include.
+        """
+
+        try:
+            output = self.tools.subprocess.check_output(
+                [self.sdkmanager_path, "--list"],
+                env=self.env,
+            )
+        except subprocess.CalledProcessError as e:
+            raise BriefcaseCommandError(
+                "Unable to invoke the Android SDK manager"
+            ) from e
+
+        images = []
+        for line in output.splitlines():
+            package = line.split("|")[0].strip()
+            parsed = parse_system_image(package)
+            if parsed is None:
+                continue
+            api_level, _, abi = parsed
+            if abi != self.emulator_abi:
+                continue
+            try:
+                if api_level_sort_key(api_level)[0] < min_api_level:
+                    continue
+            except ValueError:
+                continue
+            images.append(package)
+        return set(images)
+
     def list_installed_system_images(self) -> set[str]:
         """Returns a set of installed system image package identifiers.
 
@@ -1065,21 +1162,22 @@ connection.
                 device_index[f"@{avd}"] = name
 
         if device_or_avd == "auto":
-            default_avd = f"@{self.DEFAULT_AVD}"
+            avd_name = default_avd_name(self.DEFAULT_SYSTEM_IMAGE)
+            default_avd = f"@{avd_name}"
             try:
                 name = device_index[default_avd]
             except KeyError:
                 # The default AVD doesn't exist; create it.
                 self._create_emulator(
-                    avd=self.DEFAULT_AVD,
+                    avd=avd_name,
                     device_type=self.DEFAULT_DEVICE_TYPE,
                     skin=self.DEFAULT_DEVICE_SKIN,
                     system_image=self.DEFAULT_SYSTEM_IMAGE,
                 )
                 name = f"{default_avd} (emulator)"
 
-            device = running_avds.get(self.DEFAULT_AVD)
-            return device, name, self.DEFAULT_AVD
+            device = running_avds.get(avd_name)
+            return device, name, avd_name
 
         elif device_or_avd:
             # If a device or AVD has been provided, check it against the available
@@ -1181,34 +1279,73 @@ In future, you can specify this device by running:
 
         return device, name, avd
 
-    def create_emulator(self) -> str:
+    def create_emulator(self, app: FinalizedAppConfig) -> str:
         """Create a new Android emulator.
 
+        :param app: The config object for the app.
         :returns: The AVD of the newly created emulator.
         """
-        # Get the list of existing emulators
-        emulators = set(self.emulators())
 
-        default_avd = self.DEFAULT_AVD
-        i = 1
-        # Make sure the default name is unique
-        while default_avd in emulators:
-            i += 1
-            default_avd = f"{self.DEFAULT_AVD}-{i}"
+        with self.tools.console.wait_bar(
+            "Listing available system images...", transient=True
+        ):
+            available_images = self.list_available_system_images(
+                min_api_level=min_api_level(app)
+            )
+        if not available_images:
+            raise BriefcaseCommandError(
+                "\n".join(
+                    Console.dedent_and_wrap(
+                        f"""
+                        No Android system images are available for your architecture
+                        ({self.emulator_abi}).
 
-        # Prompt for a device avd until a valid one is provided.
-        avd = self.tools.console.text_question(
-            intro=f"""\
-You need to select a name for your new emulator. This is an identifier that
-can be used to start the emulator in future. It should follow the same naming
-conventions as a Python package (i.e., it may only contain letters, numbers,
-hyphens and underscores). If you don't provide a name, Briefcase will use the
-a default name '{default_avd}'.
-""",
-            description="Emulator Name",
-            default=default_avd,
-            validator=create_avd_validator(emulators),
+                        This may be caused by min_os_version being set higher than any
+                        available system image. Check the min_os_version setting in
+                        your pyproject.toml and re-run `briefcase run android`.
+                        """
+                    )
+                )
+            )
+
+        # Parse available images once for use in both selection questions.
+        parsed_images = [parse_system_image(img) for img in available_images]
+
+        # Ask the user to select an API level.
+        api_levels = sorted(
+            {api_level for api_level, _, _ in parsed_images},
+            key=api_level_sort_key,
         )
+        api_level = self.tools.console.selection_question(
+            intro="Select the API level for the emulator:",
+            description="API level",
+            options=api_levels,
+            default=(
+                self.DEFAULT_API_LEVEL
+                if self.DEFAULT_API_LEVEL in api_levels
+                else api_levels[0]
+            ),
+        )
+
+        # Ask the user to select system image type for the chosen API level.
+        image_types = sorted(
+            image_type for level, image_type, _ in parsed_images if level == api_level
+        )
+        default_image_type = None
+        for t in self.DEFAULT_IMAGE_TYPES:
+            if t in image_types:
+                default_image_type = t
+                break
+
+        image_type = self.tools.console.selection_question(
+            intro="Select the system image type:",
+            description="Image type",
+            options=image_types,
+            default=default_image_type,
+        )
+
+        system_image = f"system-images;{api_level};{image_type};{self.emulator_abi}"
+        emulators = set(self.emulators())
 
         device_type = self.tools.console.selection_question(
             intro="What type of device would you like to emulate?",
@@ -1218,8 +1355,27 @@ a default name '{default_avd}'.
         )
         skin = self.device_skins.get(device_type)
 
-        # TODO: Provide a list of options for system images.
-        system_image = self.DEFAULT_SYSTEM_IMAGE
+        default_avd = default_avd_base = default_avd_name(system_image)
+        i = 1
+        # Make sure the default name is unique
+        while default_avd in emulators:
+            i += 1
+            default_avd = f"{default_avd_base}-{i}"
+
+        # Prompt for a device avd until a valid one is provided.
+        avd = self.tools.console.text_question(
+            intro=(
+                "You need to select a name for your new emulator. This is an "
+                "identifier that can be used to start the emulator in future. It "
+                "should follow the same naming conventions as a Python package (e.g. "
+                "it may only contain letters, numbers, dots, hyphens, and "
+                "underscores). If you don't provide a name, Briefcase will use the "
+                f"default name '{default_avd}'."
+            ),
+            description="Emulator Name",
+            default=default_avd,
+            validator=create_avd_validator(emulators),
+        )
 
         self._create_emulator(
             avd=avd,
