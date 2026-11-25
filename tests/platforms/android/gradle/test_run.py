@@ -348,7 +348,9 @@ def test_prepare_target_created_emulator(run_command, first_app_config):
 
     run_command.prepare_target(first_app_config, device_or_avd=None)
 
-    run_command.tools.android_sdk.create_emulator.assert_called_once_with()
+    run_command.tools.android_sdk.create_emulator.assert_called_once_with(
+        first_app_config
+    )
     # The AVD is pre-verified through the creation process.
     run_command.tools.android_sdk.verify_avd.assert_not_called()
 
