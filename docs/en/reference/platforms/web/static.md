@@ -1,6 +1,6 @@
 # Static Web
 
-<table class="host-platform-support-table">
+<table class="host-platform-support-table" markdown="1">
 <colgroup>
 <col style="width: 11%" />
 <col style="width: 10%" />
@@ -14,9 +14,9 @@
 <col style="width: 7%" />
 <col style="width: 10%" />
 </colgroup>
-<thead>
-<tr>
-<th colspan="11"><a href="../../../../reference/platforms">Host Platform Support</a></th>
+<thead markdown="1">
+<tr markdown="1">
+<th colspan="11" markdown="span">[Host Platform Support](../index.md)</th>
 </tr>
 <tr>
 <th colspan="2">macOS</th>
