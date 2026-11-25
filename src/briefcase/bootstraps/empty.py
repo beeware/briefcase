@@ -32,7 +32,6 @@ test_requires = [
 
     def pyproject_table_macOS(self):
         return """\
-universal_build = true
 requires = [
     # Add your macOS-specific app requirements here
 ]

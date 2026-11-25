@@ -227,6 +227,9 @@ class RunCommand(RunAppMixin, BaseCommand):
             "-a",
             "--app",
             dest="appname",
+            nargs="?",
+            default=None,
+            const="",
             help="The app to run",
         )
 
@@ -304,6 +307,16 @@ class RunCommand(RunAppMixin, BaseCommand):
 
         return args
 
+    def prepare_target(self, app: FinalizedAppConfig, **options):
+        """Prepare the target that the app will run on.
+
+        This is invoked before determining whether the app needs to be built, so that
+        any selection that affects the build (such as the target device, which
+        determines the binary that is required) can be made.
+
+        :param app: The application to start
+        """
+
     @abstractmethod
     def run_app(
         self,
@@ -336,7 +349,11 @@ class RunCommand(RunAppMixin, BaseCommand):
     ) -> dict | None:
         # Which app should we run? If there's only one defined
         # in pyproject.toml, then we can use it as a default;
-        # otherwise look for a -a/--app option.
+        # otherwise look for a -a/--app option, then the project's
+        # configured default app. An empty `appname` means `-a` was given
+        # with no value, which forces the selection menu even if a
+        # default app is configured.
+        default_app_name = self.global_config.default_app
         if len(self.apps) == 1:
             app = next(iter(self.apps.values()))
         elif appname:
@@ -346,8 +363,11 @@ class RunCommand(RunAppMixin, BaseCommand):
                 raise BriefcaseCommandError(
                     f"Project doesn't define an application named '{appname}'"
                 ) from e
+        elif appname is None and default_app_name in self.apps:
+            app = self.apps[default_app_name]
         else:
-            # Multiple apps, and no explicit --app was provided.
+            # Multiple apps, and no explicit --app was provided, and no
+            # configured default app applies.
             # If --no-input was passed, do not prompt - raise error.
             if not self.console.input_enabled:
                 raise BriefcaseCommandError(
@@ -360,9 +380,6 @@ class RunCommand(RunAppMixin, BaseCommand):
                 app_name: app_config.formal_name
                 for app_name, app_config in self.apps.items()
             }
-
-            # Default app is the first listed in the config file
-            default_app_name = next(iter(self.apps.keys()))
 
             # Display interactive menu to select the app
             selected_app_name = self.console.selection_question(
@@ -388,6 +405,8 @@ class RunCommand(RunAppMixin, BaseCommand):
             debugger_port=debugger_port,
         )
         app = finalized[app.app_name]
+
+        self.prepare_target(app, **options)
 
         template_file = self.bundle_path(app)
         exec_file = self.binary_executable_path(app)

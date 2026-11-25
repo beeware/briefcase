@@ -510,7 +510,7 @@ def test_non_unique_uninstall_options():
     with pytest.raises(
         BriefcaseConfigError,
         match=(
-            r"Uininstall option names must be unique. "
+            r"Uninstall option names must be unique. "
             r"The name 'first' is already used as an install option."
         ),
     ):

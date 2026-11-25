@@ -78,7 +78,7 @@ def test_conda_too_old(mock_tools):
 
     with pytest.raises(
         BriefcaseCommandError,
-        match=r"Briefcase requires Conda 26\.5 \(or newer\)\; you have 21\.2\.3",
+        match=r"Briefcase requires Conda 26\.10 \(or newer\)\; you have 21\.2\.3",
     ):
         assert mock_tools.virtual_environment["conda"] == CondaVirtualEnvironment
 
@@ -117,11 +117,7 @@ def test_create(mock_tools, venv, base_path, recreate, verbose):
                 base_path / ".briefcase/first-app/conda-myenv",
                 "--yes",
             ]
-            + ([] if verbose else ["--quiet"])
-            + [
-                f"python={PYTHON_VERSION}",
-                "pip",
-            ],
+            + ([] if verbose else ["--quiet"]),
             check=True,
         ),
         call(
@@ -134,9 +130,40 @@ def test_create(mock_tools, venv, base_path, recreate, verbose):
             + ([] if verbose else ["--quiet"])
             + [
                 "--set",
-                "solver",
-                "rattler",
+                "plugins.conda_pypi_pip_warning",
+                "false",
             ],
+            check=True,
+        ),
+        call(
+            [
+                venv.conda_exe,
+                "config",
+                "--prefix",
+                base_path / ".briefcase/first-app/conda-myenv",
+            ]
+            + ([] if verbose else ["--quiet"])
+            + [
+                "--append",
+                "channels",
+                "conda-pypi",
+            ],
+            check=True,
+        ),
+        call(
+            [
+                venv.conda_exe,
+                "install",
+                "--prefix",
+                base_path / ".briefcase/first-app/conda-myenv",
+                "--yes",
+            ]
+            + ([] if verbose else ["--quiet"])
+            + [
+                f"python={PYTHON_VERSION}",
+                "pip",
+            ]
+            + ([f"libpython={PYTHON_VERSION}"] if sys.version_info >= (3, 15) else []),
             check=True,
         ),
     ]
@@ -179,8 +206,6 @@ def test_recreate(venv, mock_tools, base_path):
                 "--prefix",
                 base_path / ".briefcase/first-app/conda-myenv",
                 "--yes",
-                f"python={PYTHON_VERSION}",
-                "pip",
             ],
             check=True,
         ),
@@ -191,9 +216,34 @@ def test_recreate(venv, mock_tools, base_path):
                 "--prefix",
                 base_path / ".briefcase/first-app/conda-myenv",
                 "--set",
-                "solver",
-                "rattler",
+                "plugins.conda_pypi_pip_warning",
+                "false",
             ],
+            check=True,
+        ),
+        call(
+            [
+                venv.conda_exe,
+                "config",
+                "--prefix",
+                base_path / ".briefcase/first-app/conda-myenv",
+                "--append",
+                "channels",
+                "conda-pypi",
+            ],
+            check=True,
+        ),
+        call(
+            [
+                venv.conda_exe,
+                "install",
+                "--prefix",
+                base_path / ".briefcase/first-app/conda-myenv",
+                "--yes",
+                f"python={PYTHON_VERSION}",
+                "pip",
+            ]
+            + ([f"libpython={PYTHON_VERSION}"] if sys.version_info >= (3, 15) else []),
             check=True,
         ),
     ]
@@ -218,15 +268,13 @@ def test_conda_create_failure(venv, mock_tools, base_path):
             "--prefix",
             base_path / ".briefcase/first-app/conda-myenv",
             "--yes",
-            f"python={PYTHON_VERSION}",
-            "pip",
         ],
         check=True,
     )
 
 
-def test_config_rattler_failure(venv, mock_tools, base_path):
-    """If the rattler config can't be applied, BriefcaseCommandError is raised."""
+def test_config_disable_pypi_warning_failure(venv, mock_tools, base_path):
+    """If the warning about the PyPI channel can't be disabled, an error is raised."""
     mock_tools.subprocess.run = MagicMock(
         side_effect=[
             0,
@@ -236,7 +284,7 @@ def test_config_rattler_failure(venv, mock_tools, base_path):
 
     with pytest.raises(
         BriefcaseCommandError,
-        match=r"Unable to set solver for Conda environment at ",
+        match=r"Unable to disable conda-pypi warning in Conda environment at ",
     ):
         venv.prepare()
 
@@ -248,8 +296,6 @@ def test_config_rattler_failure(venv, mock_tools, base_path):
                 "--prefix",
                 base_path / ".briefcase/first-app/conda-myenv",
                 "--yes",
-                f"python={PYTHON_VERSION}",
-                "pip",
             ],
             check=True,
         ),
@@ -260,9 +306,131 @@ def test_config_rattler_failure(venv, mock_tools, base_path):
                 "--prefix",
                 base_path / ".briefcase/first-app/conda-myenv",
                 "--set",
-                "solver",
-                "rattler",
+                "plugins.conda_pypi_pip_warning",
+                "false",
             ],
+            check=True,
+        ),
+    ]
+
+
+def test_config_enable_conda_pypi_failure(venv, mock_tools, base_path):
+    """If the conda-pypi config can't be applied, an error is raised."""
+    mock_tools.subprocess.run = MagicMock(
+        side_effect=[
+            0,
+            0,
+            subprocess.CalledProcessError(returncode=1, cmd="conda"),
+        ]
+    )
+
+    with pytest.raises(
+        BriefcaseCommandError,
+        match=r"Unable to enable conda-pypi channel in Conda environment at ",
+    ):
+        venv.prepare()
+
+    assert mock_tools.subprocess.run.mock_calls == [
+        call(
+            [
+                venv.conda_exe,
+                "create",
+                "--prefix",
+                base_path / ".briefcase/first-app/conda-myenv",
+                "--yes",
+            ],
+            check=True,
+        ),
+        call(
+            [
+                venv.conda_exe,
+                "config",
+                "--prefix",
+                base_path / ".briefcase/first-app/conda-myenv",
+                "--set",
+                "plugins.conda_pypi_pip_warning",
+                "false",
+            ],
+            check=True,
+        ),
+        call(
+            [
+                venv.conda_exe,
+                "config",
+                "--prefix",
+                base_path / ".briefcase/first-app/conda-myenv",
+                "--append",
+                "channels",
+                "conda-pypi",
+            ],
+            check=True,
+        ),
+    ]
+
+
+def test_config_install_core_packages(venv, mock_tools, base_path):
+    """If core packages can't be installed, an error is raised."""
+    mock_tools.subprocess.run = MagicMock(
+        side_effect=[
+            0,
+            0,
+            0,
+            subprocess.CalledProcessError(returncode=1, cmd="conda"),
+        ]
+    )
+
+    with pytest.raises(
+        BriefcaseCommandError,
+        match=r"Unable to install core packages into Conda environment at ",
+    ):
+        venv.prepare()
+
+    assert mock_tools.subprocess.run.mock_calls == [
+        call(
+            [
+                venv.conda_exe,
+                "create",
+                "--prefix",
+                base_path / ".briefcase/first-app/conda-myenv",
+                "--yes",
+            ],
+            check=True,
+        ),
+        call(
+            [
+                venv.conda_exe,
+                "config",
+                "--prefix",
+                base_path / ".briefcase/first-app/conda-myenv",
+                "--set",
+                "plugins.conda_pypi_pip_warning",
+                "false",
+            ],
+            check=True,
+        ),
+        call(
+            [
+                venv.conda_exe,
+                "config",
+                "--prefix",
+                base_path / ".briefcase/first-app/conda-myenv",
+                "--append",
+                "channels",
+                "conda-pypi",
+            ],
+            check=True,
+        ),
+        call(
+            [
+                venv.conda_exe,
+                "install",
+                "--prefix",
+                base_path / ".briefcase/first-app/conda-myenv",
+                "--yes",
+                f"python={PYTHON_VERSION}",
+                "pip",
+            ]
+            + ([f"libpython={PYTHON_VERSION}"] if sys.version_info >= (3, 15) else []),
             check=True,
         ),
     ]

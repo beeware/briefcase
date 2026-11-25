@@ -4,6 +4,7 @@ import pytest
 
 from briefcase.commands import DevCommand
 from briefcase.commands.base import full_options
+from briefcase.config import GlobalConfig
 from briefcase.exceptions import BriefcaseCommandError, RequirementsInstallError
 from briefcase.integrations.virtual_environment import VirtualEnvironment
 
@@ -24,6 +25,14 @@ class DummyDevCommand(DevCommand):
 
         self.actions = []
         self.env = {"a": 1, "b": 2, "c": 3}
+        # In real use, __main__ parses the config before the command runs,
+        # so global_config is always a GlobalConfig; default_app is None
+        # unless the project declares one.
+        self.global_config = GlobalConfig(
+            project_name="Tester",
+            version="0.0.1",
+            bundle="org.beeware",
+        )
 
         # Mock the virtual environment manager
         self.tools.virtual_environment = mock.MagicMock()
@@ -228,6 +237,94 @@ def test_no_args_two_apps_non_interactive(dev_command, first_app, second_app):
 
     # Finalization will not occur
     assert dev_command.actions == []
+
+
+def test_no_args_two_apps_default_app(dev_command, first_app, second_app):
+    """If a default app is configured, dev starts it without prompting."""
+    # Add two apps
+    dev_command.apps = {
+        "first": first_app,
+        "second": second_app,
+    }
+    dev_command.global_config.default_app = "second"
+
+    # Simulate that the venv already exists (installed app)
+    dev_command.venvs["second"] = True
+
+    # Configure no command line options
+    options, _ = dev_command.parse_options([])
+
+    # Run the dev command
+    dev_command(**options)
+
+    # A representation of the venv was generated
+    second_venv = dev_command.venvs["second"]
+    second_venv.prepare.assert_called_once_with(recreate=False)
+
+    # The right sequence of things will be done, for the default app.
+    assert dev_command.actions == [
+        # Host OS is verified
+        ("verify-host",),
+        # Tools are verified
+        ("verify-tools",),
+        # App template is verified
+        ("verify-app-template", "second"),
+        # App tools are verified for app
+        ("verify-app-tools", "second"),
+        # Virtual environment was generated
+        ("virtual-environment", "venv", "second", second_venv),
+        # Run the second app devly
+        (
+            "run_dev",
+            "second",
+            False,
+            second_venv,
+            [],
+            dev_command.env,
+        ),
+    ]
+
+
+def test_app_flag_no_value_shows_menu(
+    dev_command,
+    first_app,
+    second_app,
+    monkeypatch,
+):
+    """`-a` with no value shows the menu, even with a default app configured."""
+    # Add two apps
+    dev_command.apps = {
+        "first": first_app,
+        "second": second_app,
+    }
+    dev_command.global_config.default_app = "second"
+
+    # Interactive mode
+    dev_command.console.input_enabled = True
+
+    # Capture the menu's default, and fake the user selecting "second"
+    seen_kwargs = {}
+
+    def fake_selection_question(**kwargs):
+        seen_kwargs.update(kwargs)
+        return "second"
+
+    monkeypatch.setattr(
+        dev_command.console,
+        "selection_question",
+        fake_selection_question,
+    )
+
+    # `-a` with no value parses to an empty app name.
+    options, _ = dev_command.parse_options(["-a"])
+    assert options["appname"] == ""
+
+    # This should follow the menu path and run without error.
+    dev_command(**options)
+
+    # The menu defaults to the configured default app.
+    assert seen_kwargs["default"] == "second"
+    assert dev_command.actions[-1][1] == "second"
 
 
 def test_with_arg_one_app(dev_command, first_app):

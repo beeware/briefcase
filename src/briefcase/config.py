@@ -123,6 +123,11 @@ def validate_url(candidate):
     :returns: True. If there are any validation problems, raises ValueError with a
         diagnostic message.
     """
+    # The candidate has to be a string. Convert any non-string into an empty string
+    # which will then trigger "bad URL" behavior
+    if not isinstance(candidate, str):
+        candidate = ""
+
     result = urlparse(candidate)
     if not all([result.scheme, result.netloc]):
         raise ValueError("Not a valid URL!")
@@ -423,9 +428,9 @@ class GlobalConfig(BaseConfig):
         license=None,
         license_files=None,
         url=None,
-        author=None,
-        author_email=None,
+        authors=None,
         requires_python=None,
+        default_app=None,
         **kwargs,
     ):
         super().__init__(**kwargs)
@@ -433,11 +438,11 @@ class GlobalConfig(BaseConfig):
         self.version = version
         self.bundle = bundle
         self.url = url
-        self.author = author
-        self.author_email = author_email
+        self.authors = authors
         self.license = license
         self.license_files = [] if license_files is None else license_files
         self.requires_python = requires_python
+        self.default_app = default_app
 
         # Version number is compliant with PEP440 (and related updates):
         try:
@@ -474,8 +479,7 @@ class AppConfig(BaseConfig):
     sources: list[str] | None
     formal_name: str
     url: str | None
-    author: str | None
-    author_email: str | None
+    authors: list[dict[str, str]] | None
     requires: list[str] | None
     icon: str | None
     document_types: dict
@@ -610,8 +614,7 @@ class DraftAppConfig(AppConfig):
         sources: list[str] | None = None,
         formal_name: str | None = None,
         url: str | None = None,
-        author: str | None = None,
-        author_email: str | None = None,
+        authors: list[dict[str, str]] | None = None,
         requires: list[str] | None = None,
         icon: str | None = None,
         document_type: dict | None = None,
@@ -643,8 +646,7 @@ class DraftAppConfig(AppConfig):
         self.sources = sources
         self.formal_name = app_name if formal_name is None else formal_name
         self.url = url
-        self.author = author
-        self.author_email = author_email
+        self.authors = authors
         self.requires = requires
         self.icon = icon
         self.document_types = {} if document_type is None else document_type
@@ -702,7 +704,7 @@ class DraftAppConfig(AppConfig):
         )
         self.uninstall_options = validate_install_options_config(
             uninstall_option,
-            "uininstall",
+            "uninstall",
             install=self.install_options,
         )
 
@@ -1325,18 +1327,7 @@ def merge_pep621_config(global_config, pep621_config):
     maybe_update("license-files", "license-files")
     maybe_update("url", "urls", "Homepage")
     maybe_update("version", "version")
-
-    # Use the details of the first author as the Briefcase author.
-    if "author" not in global_config:
-        try:
-            global_config["author"] = pep621_config["authors"][0]["name"]
-        except (KeyError, IndexError):
-            pass
-    if "author_email" not in global_config:
-        try:
-            global_config["author_email"] = pep621_config["authors"][0]["email"]
-        except (KeyError, IndexError):
-            pass
+    maybe_update("authors", "authors")
 
     # Briefcase requires is cumulative over PEP621 dependencies
     try:
@@ -1376,6 +1367,49 @@ def warn_invalid_legacy_project_name(global_config, console):
                 Update `project_name` to a valid PEP 621 project name.
             """,
         )
+
+
+def handle_deprecated_author_config(global_config, console):
+    """Warn about, and coerce, the deprecated `author`/`author_email` settings."""
+    if not {"author", "author_email"} & global_config.keys():
+        # No deprecated keys in the configuration.
+        return
+
+    author = global_config.pop("author", None)
+    author_email = global_config.pop("author_email", None)
+
+    if "authors" in global_config and (author or author_email):
+        raise BriefcaseConfigError(
+            "The configuration defines both `authors` and the deprecated "
+            "`author`/`author_email` settings. Remove the deprecated settings "
+            "and use `authors` alone."
+        )
+
+    # Coerce the historical settings into the PEP 621 `authors` representation.
+    entry = {}
+    if author:
+        entry["name"] = author
+    if author_email:
+        entry["email"] = author_email
+    global_config["authors"] = [entry]
+
+    inline_table = ", ".join(f'{key} = "{value}"' for key, value in entry.items())
+
+    console.warning_banner(
+        "Deprecated author configuration",
+        f"""
+            The `author` and `author_email` settings have been deprecated in favour of
+            a PEP 621 formatted `authors` setting.
+
+            Update your configuration to use `authors`:
+
+                authors = [
+                    {{{inline_table}}},
+                ]
+
+            See https://briefcase.beeware.org/en/latest/reference/configuration/#authors
+        """,
+    )
 
 
 def parse_config(config_file: Path, platform, output_format, console):
@@ -1419,6 +1453,10 @@ def parse_config(config_file: Path, platform, output_format, console):
         global_config = pyproject["tool"]["briefcase"]
     except KeyError as e:
         raise BriefcaseConfigError("No tool.briefcase section in pyproject.toml") from e
+
+    # Must run before the PEP 621 merge, so the coerced `authors` value takes
+    # precedence over any `[project]` definition.
+    handle_deprecated_author_config(global_config, console)
 
     # Merge the PEP621 configuration (if it exists)
     try:
@@ -1531,5 +1569,12 @@ def parse_config(config_file: Path, platform, output_format, console):
         # Construct a configuration object, and add it to the list
         # of configurations that are being handled.
         app_configs[app_name] = config
+
+    # A declared default app must name an app defined in this project.
+    default_app = global_config.get("default_app")
+    if default_app is not None and default_app not in app_configs:
+        raise BriefcaseConfigError(
+            f"Default app {default_app!r} is not defined in pyproject.toml"
+        )
 
     return global_config, app_configs

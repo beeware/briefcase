@@ -97,13 +97,19 @@ Examples of valid version strings:
 
 ### Optional values
 
-#### `author`
+#### `authors`
 
-The person or organization responsible for the project.
+A list containing the names and/or contact email addresses of people who originally created the project, in [PEP 621 format](https://packaging.python.org/en/latest/guides/writing-pyproject-toml/#authors-maintainers) for authors.
 
-#### `author_email`
+```toml
+authors = [
+    {name = "Jane Developer", email = "jane@example.com"},
+]
+```
 
-The contact email address for the person or organization responsible for the project.
+#### `default_app`
+
+The app that `briefcase run` and `briefcase dev` start when no `-a`/`--app` option is given and the project defines more than one app. It must name an app defined in the project; naming an undefined app is a configuration error. When no default app is configured, the app selection menu is shown, and passing `-a` with no value still shows that menu, with the configured default app selected.
 
 #### `env_manager`
 
@@ -521,7 +527,7 @@ The following `[project]` metadata keys will be used by Briefcase if they are av
 - `name` is normalized and maps to the Briefcase [`project_name`][] setting.
 - `version` maps to the same key in Briefcase.
 - `license` and `license-files` map to the same key in Briefcase. Legacy formats for these keys will be [coerced into PEP 639 format][license-definitions].
-- `authors` The `email` and `name` keys of the first value in the `authors` setting map to [`author`][] and [`author_email`][].
+- `authors` maps to the same key in Briefcase.
 - `dependencies` maps to the Briefcase [`requires`][] setting. This is a cumulative setting; any packages defined in the [`requires`][] setting at the `[tool.briefcase]` level will be appended to the packages defined with `dependencies` at the `[project]` level.
 - `description` maps to the same key in Briefcase.
 - `test` in an `[project.optional-dependencies]` section maps to [`test_requires`][]., As with `dependencies`/[`requires`][], this is a cumulative setting.

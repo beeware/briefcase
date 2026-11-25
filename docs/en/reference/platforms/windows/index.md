@@ -344,3 +344,7 @@ The MSI installer format can be thought of as managing a database - the MSI file
 If you write files into the application folder, or you use a post-install or pre-uninstall script that modifies files in the application folder, you must ensure that everything that is installed by the MSI can be removed by the MSI on uninstallation. If the uninstallation process cannot remove files or directories that were originally added by the installer - either because the files have been removed, or because a folder isn't empty - then registry entries tied to that installer will remain in the registry after completion of the installation.
 
 For example, consider an installer that creates a `data` folder in the app, containing 2 files `a.dat` and `b.dat`. The MSI installer has a post-installation script that deletes `b.dat`, and adds `c.dat`. When the uninstallation process is executed, registry entries for `data/b.dat` and `data` will remain in the registry. A well-behaved app should *not* delete content that the MSI app installed; and it should not leave content in locations that would prevent the MSI from removing content that the MSI installed.
+
+### Interpreting authors as product owners
+
+An app can have more than one author. However, when [`use_full_install_path`][] is enabled (as it is by default), a Windows app is installed in folder matching the company that produced the app. Briefcase will use the name of the first author listed in the app's [`authors`][] setting as the company name.

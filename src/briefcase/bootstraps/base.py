@@ -16,8 +16,7 @@ class AppContext(TypedDict):
     test_source_dir: str
     project_name: str
     description: str
-    author: str
-    author_email: str
+    pep621: dict[str, list[dict[str, str]]]
     bundle: str
     url: str
     license: str

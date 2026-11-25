@@ -154,6 +154,59 @@ def test_multiple_minimal_apps(tmp_path):
     console.warning_banner.assert_not_called()
 
 
+def test_default_app(tmp_path):
+    """A project can declare a default app."""
+    config_file = create_file(
+        tmp_path / "pyproject.toml",
+        """
+        [tool.briefcase]
+        default_app = "second"
+
+        [tool.briefcase.app.first]
+        license="MIT"
+
+        [tool.briefcase.app.second]
+        license="BSD-3-Clause"
+        """,
+    )
+
+    global_options, apps = parse_config(
+        config_file,
+        platform="macOS",
+        output_format="Xcode",
+        console=Mock(),
+    )
+
+    assert global_options["default_app"] == "second"
+    assert apps["first"]["default_app"] == "second"
+    assert apps["second"]["default_app"] == "second"
+
+
+def test_default_app_undefined(tmp_path):
+    """A default app that isn't defined in the project is an error."""
+    config_file = create_file(
+        tmp_path / "pyproject.toml",
+        """
+        [tool.briefcase]
+        default_app = "third"
+
+        [tool.briefcase.app.first]
+        license="MIT"
+        """,
+    )
+
+    with pytest.raises(
+        BriefcaseConfigError,
+        match="Default app 'third' is not defined",
+    ):
+        parse_config(
+            config_file,
+            platform="macOS",
+            output_format="Xcode",
+            console=Mock(),
+        )
+
+
 def test_platform_override(tmp_path):
     """An app can define platform settings that override base settings."""
     config_file = create_file(
@@ -740,8 +793,7 @@ def test_pep_621_merge(tmp_path):
         "version": "1.2.3",
         "license": "MIT",
         "license_files": ["LICENSE"],
-        "author": "Kim Park",
-        "author_email": "kim@example.com",
+        "authors": [{"name": "Kim Park", "email": "kim@example.com"}],
         "url": "https://example.com/awesome",
         "description": "awesome project",
         "requires": ["numpy", "toga-cocoa~=0.3.1", "std-nslog~=1.0.3"],
@@ -1634,8 +1686,10 @@ def test_pep621_dynamic(monkeypatch, tmp_path):
     awesome = apps["awesome"]
     assert awesome == {
         "app_name": "awesome",
-        "author": "Kim Park",
-        "author_email": "kim@example.com",
+        "authors": [
+            {"name": "Kim Park", "email": "kim@example.com"},
+            {"name": "John Doe", "email": "john@example.org"},
+        ],
         "bundle": "com.example",
         "description": "The application is very awesome",
         "formal_name": "Awesome Application",
@@ -1732,3 +1786,110 @@ def test_pep621_backend_error(monkeypatch, tmp_path):
             output_format="app",
             console=Console(),
         )
+
+
+def test_deprecated_author_config(tmp_path):
+    """Using the deprecated author settings raises a warning."""
+    config_file = create_file(
+        tmp_path / "pyproject.toml",
+        """
+        [tool.briefcase]
+        project_name = "awesome-app"
+        bundle = "com.example"
+        version = "1.2.3"
+        license = "MIT"
+        author = "Jane Developer"
+
+        [tool.briefcase.app.awesome]
+        """,
+    )
+
+    console = Mock()
+    parse_config(
+        config_file,
+        platform="macOS",
+        output_format="app",
+        console=console,
+    )
+
+    console.warning_banner.assert_called_once_with(
+        "Deprecated author configuration",
+        PartialMatchString("deprecated in favour of"),
+    )
+
+
+def test_deprecated_author_email_config(tmp_path):
+    """The deprecated author_email setting is coerced on its own."""
+    config_file = create_file(
+        tmp_path / "pyproject.toml",
+        """
+        [tool.briefcase]
+        project_name = "awesome-app"
+        bundle = "com.example"
+        version = "1.2.3"
+        license = "MIT"
+        author_email = "jane@example.com"
+
+        [tool.briefcase.app.awesome]
+        """,
+    )
+
+    console = Mock()
+    global_config, _ = parse_config(
+        config_file, platform="macOS", output_format="app", console=console
+    )
+
+    assert global_config["authors"] == [{"email": "jane@example.com"}]
+    assert "author_email" not in global_config
+    console.warning_banner.assert_called_once_with(
+        "Deprecated author configuration",
+        PartialMatchString('{email = "jane@example.com"},'),
+    )
+
+
+def test_deprecated_author_with_explicit_authors(tmp_path):
+    """Defining both authors and a deprecated author setting is an error."""
+    config_file = create_file(
+        tmp_path / "pyproject.toml",
+        """
+        [tool.briefcase]
+        project_name = "awesome-app"
+        bundle = "com.example"
+        version = "1.2.3"
+        license = "MIT"
+        author = "Grace Hopper"
+        authors = [{name = "Jane Developer", email = "jane@example.com"}]
+
+        [tool.briefcase.app.awesome]
+        """,
+    )
+
+    with pytest.raises(
+        BriefcaseConfigError,
+        match=r"The configuration defines both `authors` and the deprecated",
+    ):
+        parse_config(config_file, platform="macOS", output_format="app", console=Mock())
+
+
+def test_deprecated_author_email_with_explicit_authors(tmp_path):
+    """Defining both authors and a deprecated author_email setting is an error."""
+    config_file = create_file(
+        tmp_path / "pyproject.toml",
+        """
+        [tool.briefcase]
+        project_name = "awesome-app"
+        bundle = "com.example"
+        version = "1.2.3"
+        license = "MIT"
+        author_email = "grace@hopper.org"
+        authors = [{name = "Jane Developer", email = "jane@example.com"}]
+
+        [tool.briefcase.app.awesome]
+        """,
+    )
+
+    with pytest.raises(
+        BriefcaseConfigError,
+        match=r"The configuration defines both `authors` and the deprecated",
+    ):
+        parse_config(config_file, platform="macOS", output_format="app", console=Mock())

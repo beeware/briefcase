@@ -280,8 +280,7 @@ def myapp():
         description="This is a simple app",
         sources=["src/my_app"],
         url="https://example.com",
-        author="First Last",
-        author_email="first@example.com",
+        authors=[{"name": "First Last", "email": "first@example.com"}],
         license={"file": "LICENSE"},
     )
 

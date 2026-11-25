@@ -5,6 +5,7 @@ import re
 import subprocess
 import tarfile
 from collections.abc import Collection
+from email.utils import formataddr
 from pathlib import Path
 from typing import cast
 
@@ -88,7 +89,7 @@ class LinuxSystemMixin(LinuxMixin):
         return self.project_path(app)
 
     def rpm_tag(self, app):
-        if app.target_vendor == "fedora":
+        if app.target_vendor in {"fedora", "nobara"}:
             return f"fc{app.target_codename}"
         else:
             return f"el{app.target_codename}"
@@ -1033,6 +1034,19 @@ class LinuxSystemDevCommand(LinuxSystemMixin, DevCommand):
         super().install_dev_requirements(app, venv, **options)
 
 
+def all_maintainers(app):
+    """All authors of an app, formatted as RFC 822 addresses."""
+    return [
+        formataddr((entry.get("name", ""), entry.get("email", "")))
+        for entry in app.authors or []
+    ]
+
+
+def primary_maintainer(app):
+    """The primary author of an app, formatted as an RFC 822 address."""
+    return next(iter(all_maintainers(app)), "")
+
+
 def debian_multiline_description(description):
     """Generate a Debian multiline description string.
 
@@ -1367,7 +1381,7 @@ class LinuxSystemPackageCommand(
                             f"Package: {app.bundle_name}",
                             f"Version: {app.version}",
                             f"Architecture: {self.deb_abi(app)}",
-                            f"Maintainer: {app.author} <{app.author_email}>",
+                            f"Maintainer: {primary_maintainer(app)}",
                             f"Homepage: {app.url}",
                             f"Description: {app.description}",
                             f" {debian_multiline_description(app.long_description)}",
@@ -1650,8 +1664,8 @@ no extension).
                 f.write(
                     "\n".join(
                         [
-                            f"# Maintainer: {app.author} <{app.author_email}>",
-                            f'export PACKAGER="{app.author} <{app.author_email}>"',
+                            *(f"# Maintainer: {m}" for m in all_maintainers(app)),
+                            f'export PACKAGER="{primary_maintainer(app)}"',
                             f"pkgname={app.app_name}",
                             f"pkgver={app.version}",
                             f"pkgrel={getattr(app, 'revision', 1)}",

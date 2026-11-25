@@ -15,7 +15,7 @@ Briefcase converts Python projects into standalone native applications for macOS
 - **License**: BSD-3-Clause
 - **Entry point**: `briefcase` via `src/briefcase/__main__.py:main()`
 - **Test framework**: pytest (100% coverage required, no exceptions)
-- **Linting**: ruff (format + check), codespell, docformatter
+- **Linting**: ruff (format + check), codespell
 - **Docs**: MkDocs
 
 ## Development Environment Setup
@@ -263,7 +263,7 @@ When writing or editing any `.md` file, do not insert newlines mid-sentence or m
 - **Class naming**: `{Platform}{Format}{Action}Command` (e.g., `macOSAppBuildCommand`)
 - **Mixin naming**: `{Platform}{Feature}Mixin` (e.g., `macOSSigningMixin`)
 - **Platform casing**: Preserve original (macOS, iOS, not macos)
-- **Docstrings**: Google/Sphinx style with `:param:` / `:returns:` / `:raises:` — formatted by docformatter, using Markdown formatting
+- **Docstrings**: Google/Sphinx style with `:param:` / `:returns:` / `:raises:` — using Markdown formatting
 - **Imports**: `from __future__ import annotations` used widely for PEP 604 unions
 - **Paths**: Always use `pathlib.Path` objects, never raw strings
 - **Function call formatting**: When a function call with more than one argument cannot fit on a single line, place each argument on its own line with a trailing comma on the last argument — do **not** use the "multiple arguments on one wrapped line" style that ruff also permits. Prefer:
