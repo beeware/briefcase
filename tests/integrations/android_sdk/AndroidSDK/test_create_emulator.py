@@ -120,6 +120,29 @@ def test_default_name(mock_tools, android_sdk, tmp_path):
     avd = android_sdk.create_emulator(app)
 
     # The expected device AVD was created.
+    assert avd == "pixel_7-31"
+
+
+def test_default_name_skinless(mock_tools, android_sdk, tmp_path):
+    """A new skinless emulator can be created with the default name."""
+    # This test doesn't validate most of the test process;
+    # it only checks that the emulator is created with the default name.
+
+    # User only controls the device type (14 - small phone)
+    # default name, system image and image type will be used
+    mock_tools.console.values = ["", "", "14", ""]
+
+    # Mock the internal emulator creation method
+    android_sdk._create_emulator = MagicMock()
+
+    # Create a mock app
+    app = MagicMock()
+    del app.min_os_version  # ensure getattr fallback is used
+
+    # Create the emulator
+    avd = android_sdk.create_emulator(app)
+
+    # The expected device AVD was created.
     assert avd == "beePhone-31"
 
 
@@ -131,11 +154,11 @@ def test_default_name_with_collisions(mock_tools, android_sdk, tmp_path):
     # Create some existing emulators that will collide with the default name.
     android_sdk.emulators = MagicMock(
         return_value=[
-            "beePhone-31-2",
+            "pixel_7-31-2",
             "runningEmulator",
-            "beePhone-35",
-            "beePhone-31",
-            "beePhone",
+            "pixel_7-35",
+            "pixel_7-31",
+            "pixel_7",
         ]
     )
     # Default emulator name, default system image and default image type selection.
@@ -152,7 +175,7 @@ def test_default_name_with_collisions(mock_tools, android_sdk, tmp_path):
     avd = android_sdk.create_emulator(app)
 
     # The expected device AVD was created.
-    assert avd == "beePhone-31-3"
+    assert avd == "pixel_7-31-3"
 
 
 @pytest.fixture
@@ -323,11 +346,11 @@ def test_system_image_selection(mock_tools, android_sdk, tmp_path):
     avd = android_sdk.create_emulator(app)
 
     # The expected device AVD was created.
-    assert avd == "beePhone-34"
+    assert avd == "pixel_7-34"
 
     # The call was made to create the emulator
     android_sdk._create_emulator.assert_called_once_with(
-        avd="beePhone-34",
+        avd="pixel_7-34",
         device_type="pixel_7",
         skin="pixel_7",
         system_image="system-images;android-34;google_apis;x86_64",
@@ -396,11 +419,11 @@ def test_custom_device_type(mock_tools, android_sdk, tmp_path):
     avd = android_sdk.create_emulator(app)
 
     # The expected device AVD was created.
-    assert avd == "beePhone-31"
+    assert avd == "pixel_9_pro_xl-31"
 
     # The call was made to create the emulator
     android_sdk._create_emulator.assert_called_once_with(
-        avd="beePhone-31",
+        avd="pixel_9_pro_xl-31",
         device_type="pixel_9_pro_xl",
         skin="pixel_9_pro_xl",
         system_image="system-images;android-31;default;x86_64",

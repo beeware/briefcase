@@ -50,8 +50,14 @@ def parse_system_image(package: str):
     return parts[1], parts[2], parts[3]
 
 
-def default_avd_name(system_image):
-    return parse_system_image(system_image)[0].replace("android", "beePhone")
+def default_avd_name(skin: str | None, system_image: str):
+    """Construct an AVD name for a device based on the skin and system image.
+
+    The skin will generally match the device type, so it will be a useful base
+    name. If the skin is None, "beePhone" is used as the name.
+    """
+    device_name = skin or "beePhone"
+    return parse_system_image(system_image)[0].replace("android", device_name)
 
 
 def api_level_sort_key(api_level: str) -> tuple[int, ...]:
@@ -1162,7 +1168,10 @@ connection.
                 device_index[f"@{avd}"] = name
 
         if device_or_avd == "auto":
-            avd_name = default_avd_name(self.DEFAULT_SYSTEM_IMAGE)
+            avd_name = default_avd_name(
+                self.DEFAULT_DEVICE_SKIN,
+                self.DEFAULT_SYSTEM_IMAGE,
+            )
             default_avd = f"@{avd_name}"
             try:
                 name = device_index[default_avd]
@@ -1355,7 +1364,7 @@ In future, you can specify this device by running:
         )
         skin = self.device_skins.get(device_type)
 
-        default_avd = default_avd_base = default_avd_name(system_image)
+        default_avd = default_avd_base = default_avd_name(skin, system_image)
         i = 1
         # Make sure the default name is unique
         while default_avd in emulators:

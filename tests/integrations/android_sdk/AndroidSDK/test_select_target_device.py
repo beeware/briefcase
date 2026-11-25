@@ -154,7 +154,7 @@ def test_auto_non_existent(mock_tools, android_sdk):
 
     # Emulator was created
     android_sdk._create_emulator.assert_called_once_with(
-        avd="beePhone-31",
+        avd="pixel_7-31",
         device_type=android_sdk.DEFAULT_DEVICE_TYPE,
         skin=android_sdk.DEFAULT_DEVICE_SKIN,
         system_image=android_sdk.DEFAULT_SYSTEM_IMAGE,
@@ -162,8 +162,8 @@ def test_auto_non_existent(mock_tools, android_sdk):
 
     # Emulator was created, so it is not running; so no device ID
     assert device is None
-    assert name == "@beePhone-31 (emulator)"
-    assert avd == "beePhone-31"
+    assert name == "@pixel_7-31 (emulator)"
+    assert avd == "pixel_7-31"
 
     # No input was requested
     assert mock_tools.console.prompts == []
@@ -173,12 +173,12 @@ def test_auto_existent(mock_tools, android_sdk):
     """If the user selects the auto device, and it exists, the device is returned."""
     android_sdk._create_emulator = MagicMock()
 
-    # Add a known beePhone-31 emulator
+    # Add a known pixel_7-31 emulator
     android_sdk.emulators = MagicMock(
         return_value=[
             "runningEmulator",
             "idleEmulator",
-            "beePhone-31",
+            "pixel_7-31",
         ]
     )
 
@@ -190,8 +190,8 @@ def test_auto_existent(mock_tools, android_sdk):
 
     # Emulator is not running, so no device ID
     assert device is None
-    assert name == "@beePhone-31 (emulator)"
-    assert avd == "beePhone-31"
+    assert name == "@pixel_7-31 (emulator)"
+    assert avd == "pixel_7-31"
 
     # No input was requested
     assert mock_tools.console.prompts == []
@@ -202,19 +202,19 @@ def test_auto_running(mock_tools, android_sdk):
     returned."""
     android_sdk._create_emulator = MagicMock()
 
-    # Add a known beePhone-31 emulator that is running
+    # Add a known pixel_7-31 emulator that is running
     android_sdk.emulators = MagicMock(
         return_value=[
             "runningEmulator",
             "idleEmulator",
-            "beePhone-31",
+            "pixel_7-31",
         ]
     )
 
     def mock_adb(device_id):
         adb = MagicMock(spec_set=ADB)
         if device_id == "emulator-5554":
-            adb.avd_name.return_value = "beePhone-31"
+            adb.avd_name.return_value = "pixel_7-31"
         else:
             adb.avd_name.return_value = None
         return adb
@@ -229,8 +229,8 @@ def test_auto_running(mock_tools, android_sdk):
 
     # Emulator is running, so there is a device ID
     assert device == "emulator-5554"
-    assert name == "@beePhone-31 (running emulator)"
-    assert avd == "beePhone-31"
+    assert name == "@pixel_7-31 (running emulator)"
+    assert avd == "pixel_7-31"
 
     # No input was requested
     assert mock_tools.console.prompts == []
