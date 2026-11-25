@@ -330,10 +330,10 @@ def test_create_failure(mock_tools, android_sdk):
 @pytest.mark.parametrize(
     ("api_level_selection", "device_type_selection", "device_type", "avd_name"),
     [
-        ("1", "", "pixel_7", "pixel_7-31"),  # Default device type
-        ("1", "8", "pixel_8_pro", "pixel_8_pro-31"),  # Explicit Pixel 8 Pro device type
-        ("1", "14", "small_phone", "beePhone-31"),  # Explicit "small phone" device type
-        ("2", "", "pixel_7", "pixel_7-34.5"),  # Default device type, API with a dot
+        pytest.param("1", "", "pixel_7", "pixel_7-31", id="default-device"),
+        pytest.param("1", "8", "pixel_8_pro", "pixel_8_pro-31", id="pixel-8-pro"),
+        pytest.param("1", "16", "small_phone", "beePhone-31", id="small-phone"),
+        pytest.param("2", "", "pixel_7", "pixel_7-34.5", id="api-with-dot"),
     ],
 )
 def test_default_name(

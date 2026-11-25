@@ -128,9 +128,9 @@ def test_default_name_skinless(mock_tools, android_sdk, tmp_path):
     # This test doesn't validate most of the test process;
     # it only checks that the emulator is created with the default name.
 
-    # User only controls the device type (14 - small phone)
+    # User only controls the device type (16 - small phone)
     # default name, system image and image type will be used
-    mock_tools.console.values = ["", "", "14", ""]
+    mock_tools.console.values = ["", "", "16", ""]
 
     # Mock the internal emulator creation method
     android_sdk._create_emulator = MagicMock()
@@ -405,7 +405,7 @@ def test_custom_device_type(mock_tools, android_sdk, tmp_path):
     mock_tools.console.values = [
         "",  # Default API level
         "",  # Default image type
-        "12",  # Option 12: Pixel 9 Pro XL.
+        "13",  # Option 13: Pixel 9 Pro XL.
         "",  # Accept default name
     ]
 
