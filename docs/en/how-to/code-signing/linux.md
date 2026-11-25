@@ -14,6 +14,8 @@ $ gpg --full-generate-key
 
 You will be prompted to select a key type, key size and expiry date, and to provide a name and email address that will identify the key. If possible, use an ECC key based on Curve 25519 (an `ed25519` signing key), which is the default in recent GnuPG versions and produces smaller, faster signatures. If you need to support older tools that don't understand ECC keys, generate an RSA key of at least 4096 bits instead. The email address should be an address you control, as users will use it (along with your public key) to identify that the package really came from you.
 
+If you plan to sign packages built with Docker, create a key that does not require a passphrase: when GnuPG prompts you to enter a passphrase, leave the field blank and confirm. When a signing key is exported to a Docker container, GnuPG cannot prompt for the passphrase, so a key with a passphrase will fail the signing step. See [Docker builds](#docker-builds) for details.
+
 ## Obtain the identity of your key
 
 Briefcase uses the *fingerprint* of your key to identify the signing identity. To see the fingerprints of all the secret keys on your system, run:
@@ -64,4 +66,8 @@ As with other platforms, `--adhoc-sign` is useful during development and testing
 
 ## Docker builds
 
-Signing is not currently supported when building with Docker (i.e., when the `--target` option is used). When packaging with Docker, you must opt out of signing — either by selecting "Don't sign" when prompted, or by providing the `--adhoc-sign` option. Selecting a signing identity when building with Docker will cause an error.
+Linux system packages can be signed when building with Docker (i.e., when the `--target` option is used), using the same GPG signing identity as native builds.
+
+When signing a package built with Docker, Briefcase exports the selected secret key from the host machine's GPG keyring, and imports it into the build container so that the signing step can run inside the container. The exported key is removed immediately after signing, and is never stored in the Docker image.
+
+One caveat applies when building with Docker: because the signing step runs inside a headless container, GnuPG is not able to prompt for a passphrase. If your signing key requires a passphrase, the signing step will fail. To sign packages built with Docker, use a key (or sub-key) that does not require a passphrase, or build the package without the `--target` option and sign it natively.

@@ -179,12 +179,12 @@ def test_package_app_unknown_format_signs(package_command, first_app, mock_gpg):
     package_command.sign_package.assert_not_called()
 
 
-def test_signs_raises_in_docker(
+def test_package_app_signs_in_docker(
     package_command,
     first_app,
     mock_gpg,
 ):
-    """Signing is not supported when building with Docker."""
+    """If an identity is available, a Docker build is signed with it."""
     first_app.packaging_format = "deb"
     mock_gpg.identities.return_value = {
         JANE: "Jane Doe <jane@example.com>",
@@ -196,23 +196,19 @@ def test_signs_raises_in_docker(
     # Accept the default selection (the single available identity)
     package_command.console.values = [""]
 
-    with pytest.raises(
-        BriefcaseCommandError,
-        match=r"Signing system packages is not supported when using Docker",
-    ):
-        package_command.package_app(first_app)
+    package_command.package_app(first_app)
 
-    package_command._package_deb.assert_not_called()
-    package_command._verify_signing_tool.assert_not_called()
-    package_command.sign_package.assert_not_called()
+    package_command._package_deb.assert_called_once_with(first_app)
+    package_command._verify_signing_tool.assert_called_once_with(first_app)
+    package_command.sign_package.assert_called_once_with(first_app, identity=JANE)
 
 
-def test_explicit_identity_raises_in_docker(
+def test_package_app_explicit_identity_in_docker(
     package_command,
     first_app,
     mock_gpg,
 ):
-    """An explicit identity is rejected when building with Docker."""
+    """An explicit identity is used to sign a Docker build."""
     first_app.packaging_format = "deb"
     mock_gpg.identities.return_value = {
         JANE: "Jane Doe <jane@example.com>",
@@ -223,15 +219,11 @@ def test_explicit_identity_raises_in_docker(
     package_command.sign_package = mock.MagicMock()
     package_command.target_image = "debian:bookworm"
 
-    with pytest.raises(
-        BriefcaseCommandError,
-        match=r"Signing system packages is not supported when using Docker",
-    ):
-        package_command.package_app(first_app, identity="jane@example.com")
+    package_command.package_app(first_app, identity="jane@example.com")
 
-    package_command._package_deb.assert_not_called()
-    package_command._verify_signing_tool.assert_not_called()
-    package_command.sign_package.assert_not_called()
+    package_command._package_deb.assert_called_once_with(first_app)
+    package_command._verify_signing_tool.assert_called_once_with(first_app)
+    package_command.sign_package.assert_called_once_with(first_app, identity=JANE)
 
 
 def test_package_app_dont_sign_in_docker(package_command, first_app, mock_gpg):
