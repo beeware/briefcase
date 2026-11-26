@@ -1,4 +1,5 @@
 import os
+import shutil
 import subprocess
 import uuid
 from unittest import mock
@@ -28,6 +29,14 @@ def package_command(dummy_console, tmp_path):
 @pytest.fixture
 def first_app_zip(first_app_with_binaries, tmp_path):
     first_app_with_binaries.packaging_format = "zip"
+
+    dist_app_path = tmp_path / "base_path/dist/First App.app"
+    dist_app_path.parent.mkdir(parents=True, exist_ok=True)
+    shutil.copytree(
+        tmp_path / "base_path/build/first-app/macos/app/First App.app",
+        dist_app_path,
+        symlinks=True,
+    )
 
     return first_app_with_binaries
 
@@ -64,16 +73,8 @@ def test_notarize_app(
     sleep_zero,
 ):
     """An app can be notarized."""
-    app_path = (
-        tmp_path
-        / "base_path"
-        / "build"
-        / "first-app"
-        / "macos"
-        / "app"
-        / "First App.app"
-    )
-    archive_path = tmp_path / "base_path/build/first-app/macos/app/First App.app.zip"
+    app_path = tmp_path / "base_path" / "dist" / "First App.app"
+    archive_path = tmp_path / "base_path/dist/First App.app.zip"
 
     # Mock the creation of the ditto archive
     package_command.ditto_archive = MagicMock()
@@ -539,16 +540,8 @@ def test_credential_storage_failure_app(
 ):
     """When submitting an app, if credentials haven't been stored, and storage fails, an
     error is raised."""
-    app_path = (
-        tmp_path
-        / "base_path"
-        / "build"
-        / "first-app"
-        / "macos"
-        / "app"
-        / "First App.app"
-    )
-    archive_path = tmp_path / "base_path/build/first-app/macos/app/First App.app.zip"
+    app_path = tmp_path / "base_path" / "dist" / "First App.app"
+    archive_path = tmp_path / "base_path/dist/First App.app.zip"
 
     # Mock the creation of the ditto archive
     package_command.ditto_archive = MagicMock()
@@ -693,16 +686,8 @@ def test_credential_storage_disabled_input_app(
 ):
     """When packaging an app, if credentials haven't been stored, and input is disabled,
     an error is raised."""
-    app_path = (
-        tmp_path
-        / "base_path"
-        / "build"
-        / "first-app"
-        / "macos"
-        / "app"
-        / "First App.app"
-    )
-    archive_path = tmp_path / "base_path/build/first-app/macos/app/First App.app.zip"
+    app_path = tmp_path / "base_path" / "dist" / "First App.app"
+    archive_path = tmp_path / "base_path/dist/First App.app.zip"
 
     # Mock the creation of the ditto archive
     package_command.ditto_archive = MagicMock()
@@ -921,16 +906,8 @@ def test_app_submit_notarization_failure_with_credentials(
 ):
     """If the notarization process for an app fails for a reason other than credentials,
     an error is raised."""
-    app_path = (
-        tmp_path
-        / "base_path"
-        / "build"
-        / "first-app"
-        / "macos"
-        / "app"
-        / "First App.app"
-    )
-    archive_path = tmp_path / "base_path/build/first-app/macos/app/First App.app.zip"
+    app_path = tmp_path / "base_path" / "dist" / "First App.app"
+    archive_path = tmp_path / "base_path/dist/First App.app.zip"
 
     # Mock the creation of the ditto archive
     package_command.ditto_archive = MagicMock()
@@ -947,10 +924,7 @@ def test_app_submit_notarization_failure_with_credentials(
     # The notarization call will fail with an error
     with pytest.raises(
         BriefcaseCommandError,
-        match=(
-            r"Unable to submit build[/\\]first-app[/\\]"
-            r"macos[/\\]app[/\\]First App.app for notarization."
-        ),
+        match=r"Unable to submit dist[/\\]First App.app for notarization.",
     ):
         package_command.notarize(first_app_zip, identity=sekrit_identity)
 
@@ -1326,7 +1300,7 @@ def test_notarize_app_no_wait(
     tmp_path,
 ):
     """With --no-wait, an app is submitted but notarization is not finalized."""
-    archive_path = tmp_path / "base_path/build/first-app/macos/app/First App.app.zip"
+    archive_path = tmp_path / "base_path/dist/First App.app.zip"
 
     # Mock the creation of the ditto archive
     package_command.ditto_archive = MagicMock()

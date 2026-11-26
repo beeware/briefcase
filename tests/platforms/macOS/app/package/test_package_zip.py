@@ -5,6 +5,7 @@ def test_package_zip(
     package_command,
     first_app_with_binaries,
     sekrit_identity,
+    tmp_path,
 ):
     """A macOS App can be packaged as a zip."""
     # Mock the creation of the ditto archive
@@ -18,6 +19,9 @@ def test_package_zip(
 
     # Package the app in zip (not DMG) format
     package_command.package_app(first_app_with_binaries)
+
+    # The app bundle has been copied to dist/ before notarization
+    assert (tmp_path / "base_path/dist/First App.app").exists()
 
     # A request has been made to sign the app
     package_command.sign_app.assert_called_once_with(
@@ -95,6 +99,7 @@ def test_external_app(
     package_command,
     external_first_app,
     sekrit_identity,
+    tmp_path,
 ):
     """An external macOS App can be packaged as a zip."""
     # Mock the creation of the ditto archive
@@ -108,6 +113,9 @@ def test_external_app(
 
     # Package the app in zip (not DMG) format
     package_command.package_app(external_first_app)
+
+    # The app bundle has been copied to dist/ before notarization
+    assert (tmp_path / "base_path/dist/First App.app").exists()
 
     # A request has been made to sign the app
     package_command.sign_app.assert_called_once_with(
