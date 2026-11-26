@@ -76,7 +76,7 @@ def test_create_emulator(
         f"path={avd_config_path.parent}\n",
     )
     with avd_config_path.open("w", encoding="utf-8") as f:
-        f.write("hw.device.name=pixel_7\n")
+        f.write("hw.device.name=small_phone\n")
 
     # Create the emulator
     android_sdk._create_emulator(
@@ -133,86 +133,6 @@ def test_create_emulator(
         ("Linux", "aarch64", "arm64-v8a"),
     ],
 )
-def test_create_emulator_with_defaults(
-    mock_tools,
-    android_sdk,
-    tmp_path,
-    host_os,
-    host_arch,
-    emulator_abi,
-):
-    """A new emulator can be created using default properties."""
-    # This test validates everything going well on first run.
-    # This means the skin will be downloaded and unpacked.
-
-    # Mock the hardware and operating system to specific values
-    mock_tools.host_os = host_os
-    mock_tools.host_arch = host_arch
-
-    # Mock system image and skin verification
-    android_sdk.verify_system_image = MagicMock()
-    android_sdk.verify_emulator_skin = MagicMock()
-
-    # Mock the initial output of an AVD config file.
-    avd_config_path = tmp_path / "home/.android/avd/new-emulator.avd/config.ini"
-    avd_config_path.parent.mkdir(parents=True)
-    create_file(
-        avd_config_path.parent.with_suffix(".ini"),
-        f"path={avd_config_path.parent}\n",
-    )
-    with avd_config_path.open("w", encoding="utf-8") as f:
-        f.write("hw.device.name=pixel_7\n")
-
-    # Create the emulator using defaults
-    android_sdk._create_emulator(avd="new-emulator")
-
-    # The system image was verified
-    android_sdk.verify_system_image.assert_called_once_with(
-        f"system-images;android-31;default;{emulator_abi}"
-    )
-
-    # The emulator skin was verified
-    android_sdk.verify_emulator_skin.assert_called_once_with("pixel_7")
-
-    # avdmanager was invoked
-    mock_tools.subprocess.check_output.assert_called_once_with(
-        [
-            android_sdk.avdmanager_path,
-            "--verbose",
-            "create",
-            "avd",
-            "--name",
-            "new-emulator",
-            "--abi",
-            emulator_abi,
-            "--package",
-            f"system-images;android-31;default;{emulator_abi}",
-            "--device",
-            "pixel_7",
-        ],
-        env={
-            **android_sdk.env,
-            "XDG_CONFIG_HOME": None,
-        },
-    )
-
-    # Emulator configuration file has been appended.
-    with avd_config_path.open(encoding="utf-8") as f:
-        config = f.read().split("\n")
-    assert "hw.keyboard=yes" in config
-    assert "skin.name=pixel_7" in config
-
-
-@pytest.mark.parametrize(
-    ("host_os", "host_arch", "emulator_abi"),
-    [
-        ("Darwin", "x86_64", "x86_64"),
-        ("Darwin", "arm64", "arm64-v8a"),
-        ("Windows", "AMD64", "x86_64"),
-        ("Linux", "x86_64", "x86_64"),
-        ("Linux", "aarch64", "arm64-v8a"),
-    ],
-)
 def test_create_emulator_with_defaults_no_skin(
     mock_tools,
     android_sdk,
@@ -223,7 +143,6 @@ def test_create_emulator_with_defaults_no_skin(
 ):
     """A new emulator can be created using default properties."""
     # This test validates everything going well on first run.
-    # This means the skin will be downloaded and unpacked.
 
     # Mock the hardware and operating system to specific values
     mock_tools.host_os = host_os
@@ -241,10 +160,10 @@ def test_create_emulator_with_defaults_no_skin(
         f"path={avd_config_path.parent}\n",
     )
     with avd_config_path.open("w", encoding="utf-8") as f:
-        f.write("hw.device.name=pixel_7\n")
+        f.write("hw.device.name=small_phone\n")
 
     # Create the emulator using default device, but no skin.
-    android_sdk._create_emulator(avd="new-emulator", device_type="pixel_7")
+    android_sdk._create_emulator(avd="new-emulator", device_type="small_phone")
 
     # The system image was verified
     android_sdk.verify_system_image.assert_called_once_with(
@@ -268,7 +187,7 @@ def test_create_emulator_with_defaults_no_skin(
             "--package",
             f"system-images;android-31;default;{emulator_abi}",
             "--device",
-            "pixel_7",
+            "small_phone",
         ],
         env={
             **android_sdk.env,
@@ -301,8 +220,8 @@ def test_create_failure(mock_tools, android_sdk):
     # The system image was verified
     android_sdk.verify_system_image.assert_called_once_with(ANY)
 
-    # The emulator skin was verified
-    android_sdk.verify_emulator_skin.assert_called_once_with("pixel_7")
+    # Default device has no skin to verify
+    android_sdk.verify_emulator_skin.assert_not_called()
 
     # avdmanager was invoked
     mock_tools.subprocess.check_output.assert_called_once_with(
@@ -318,7 +237,7 @@ def test_create_failure(mock_tools, android_sdk):
             "--package",
             "system-images;android-31;default;x86_64",
             "--device",
-            "pixel_7",
+            "small_phone",
         ],
         env={
             **android_sdk.env,
@@ -330,10 +249,10 @@ def test_create_failure(mock_tools, android_sdk):
 @pytest.mark.parametrize(
     ("api_level_selection", "device_type_selection", "device_type", "avd_name"),
     [
-        pytest.param("1", "", "pixel_7", "pixel_7-31", id="default-device"),
+        pytest.param("1", "", "small_phone", "beePhone-31", id="default-device"),
         pytest.param("1", "8", "pixel_8_pro", "pixel_8_pro-31", id="pixel-8-pro"),
-        pytest.param("1", "16", "small_phone", "beePhone-31", id="small-phone"),
-        pytest.param("2", "", "pixel_7", "pixel_7-34.5", id="api-with-dot"),
+        pytest.param("1", "21", "medium_phone", "beePhoneXL-31", id="medium-phone"),
+        pytest.param("2", "", "small_phone", "beePhone-34.5", id="api-with-dot"),
     ],
 )
 def test_default_name(
@@ -382,25 +301,25 @@ def test_default_name_with_collisions(mock_tools, android_sdk, tmp_path):
     # Create some existing emulators that will collide with the default name.
     android_sdk.emulators = MagicMock(
         return_value=[
-            "pixel_7-31-2",
+            "beePhone-31-2",
             "runningEmulator",
-            "pixel_7-35",
-            "pixel_7-31",
-            "pixel_7",
+            "beePhone-35",
+            "beePhone-31",
+            "beePhone",
         ]
     )
     # User provides no input; default name will be used
     mock_tools.console.values = ["", "", "", ""]
 
     # Mock the initial output of an AVD config file.
-    avd_config_path = tmp_path / "home/.android/avd/pixel_7-31-3.avd/config.ini"
+    avd_config_path = tmp_path / "home/.android/avd/beePhone-31-3.avd/config.ini"
     avd_config_path.parent.mkdir(parents=True)
     create_file(
         avd_config_path.parent.with_suffix(".ini"),
         f"path={avd_config_path.parent}\n",
     )
     with avd_config_path.open("w", encoding="utf-8") as f:
-        f.write("hw.device.name=pixel_7\n")
+        f.write("hw.device.name=small_phone\n")
 
     # Create a mock app
     app = MagicMock()
@@ -410,4 +329,4 @@ def test_default_name_with_collisions(mock_tools, android_sdk, tmp_path):
     avd = android_sdk.create_emulator(app)
 
     # The expected device AVD was created.
-    assert avd == "pixel_7-31-3"
+    assert avd == "beePhone-31-3"

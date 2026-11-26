@@ -185,17 +185,22 @@ def test_default_system_image(
     )
 
 
-def test_default_skin(monkeypatch, android_sdk):
-    """The default skin is enabled under non-CI configurations."""
+@pytest.mark.parametrize(
+    ("device_type", "skin"),
+    [
+        ("pixel_7", "pixel_7"),
+        ("pixel_10_pro_fold", "pixel_10_pro_fold"),
+        ("small_phone", None),
+        ("medium_phone", None),
+        ("medium_tablet", None),
+    ],
+)
+def test_device_skin(monkeypatch, android_sdk, device_type, skin):
+    """The skin name for each known device type can be returned."""
+    # Temporarily clear any CI marker
     monkeypatch.delenv("CI", raising=False)
+    assert android_sdk.device_skin(device_type) == skin
 
-    assert android_sdk.DEFAULT_DEVICE_SKIN == "pixel_7"
-
-
-def test_default_skin_ci(monkeypatch, android_sdk):
-    """The default skin is disabled under CI configurations."""
-    # Ensure the test environment has no CI markers
-    # Explicitly set the test marker
+    # Under CI conditions, the skin is *always* None.
     monkeypatch.setenv("CI", "1")
-
-    assert android_sdk.DEFAULT_DEVICE_SKIN is None
+    assert android_sdk.device_skin(device_type) is None
