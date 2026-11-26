@@ -155,8 +155,8 @@ def test_auto_non_existent(mock_tools, android_sdk):
     # Emulator was created
     android_sdk._create_emulator.assert_called_once_with(
         avd="beePhone-31",
-        device_type="pixel",
-        skin=android_sdk.DEFAULT_DEVICE_SKIN,
+        device_type=android_sdk.DEFAULT_DEVICE_TYPE,
+        skin=None,
         system_image=android_sdk.DEFAULT_SYSTEM_IMAGE,
     )
 

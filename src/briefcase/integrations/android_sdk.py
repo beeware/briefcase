@@ -38,7 +38,7 @@ def create_avd_validator(emulators):
     return _validate_avd_name
 
 
-def parse_system_image(package: str):
+def parse_system_image(package: str) -> tuple[str, str, str]:
     """Parse a system image package identifier into its components.
 
     :param package: e.g. "system-images;android-31;default;x86_64"
@@ -50,8 +50,19 @@ def parse_system_image(package: str):
     return parts[1], parts[2], parts[3]
 
 
-def default_avd_name(system_image):
-    return parse_system_image(system_image)[0].replace("android", "beePhone")
+def default_avd_name(device_type: str, system_image: str) -> str:
+    """Construct an AVD name for a device based on the device type and system image.
+
+    The skin will generally match the device type, so it will be a useful base
+    name. If the skin is None, a derivative of "beePhone" is used as the name.
+    """
+    device_name = {
+        "small_phone": "beePhone",
+        "medium_phone": "beePhoneXL",
+        "medium_tablet": "beePad",
+    }.get(device_type, device_type)
+
+    return parse_system_image(system_image)[0].replace("android", device_name)
 
 
 def api_level_sort_key(api_level: str) -> tuple[int, ...]:
@@ -252,15 +263,58 @@ class AndroidSDK(ManagedTool):
             ) from None
 
     @property
-    def DEFAULT_DEVICE_TYPE(self) -> str:
-        return "pixel"
+    def device_types(self) -> dict[str, str]:
+        "A mapping of known device types to a human descriptor"
+        return {
+            "pixel_6": "Pixel 6",
+            "pixel_6_pro": "Pixel 6 pro",
+            "pixel_6a": "Pixel 6a",
+            "pixel_7": "Pixel 7",
+            "pixel_7_pro": "Pixel 7 Pro",
+            "pixel_7a": "Pixel 7a",
+            "pixel_8": "Pixel 8",
+            "pixel_8_pro": "Pixel 8 Pro",
+            "pixel_8a": "Pixel 8a",
+            "pixel_9": "Pixel 9",
+            "pixel_9_pro": "Pixel 9 Pro",
+            "pixel_9_pro_fold": "Pixel 9 Pro Fold",
+            "pixel_9_pro_xl": "Pixel 9 Pro XL",
+            "pixel_10": "Pixel 10",
+            "pixel_10_pro": "Pixel 10 Pro",
+            "pixel_10_pro_fold": "Pixel 10 Pro Fold",
+            "pixel_10_pro_xl": "Pixel 10 Pro XL",
+            "pixel_fold": "Pixel Fold",
+            "pixel_tablet": "Pixel Tablet",
+            "small_phone": "Generic small phone",
+            "medium_phone": "Generic medium phone",
+            "medium_tablet": "Generic medium tablet",
+        }
 
-    @property
-    def DEFAULT_DEVICE_SKIN(self) -> str:
-        # Skins are entirely cosmetic. In a CI environment, default to no skin.
+    def device_skin(self, device_type: str) -> str | None:
+        """Return the skin for the given device type.
+
+        Skins are mostly cosmetic; as long the skin DPI matches the device DPI,
+        the behavior of the emulator is unchanged whether a skin is used or not.
+        This method returns a compatible skin for the given device type.
+
+        For most devices, the skin name is the same as the device type. The
+        "small_phone", "medium_phone" and "medium_tablet" are test devices that
+        don't have any API level restrictions, and don't have skins.
+
+        Downloading the skin under CI conditions can trigger download rate
+        limits, so if a CI environment is detected, we disable the use of skins.
+        """
         if "CI" in os.environ:
             return None
-        return "pixel_7_pro"
+
+        if device_type in {"small_phone", "medium_phone", "medium_tablet"}:
+            return None
+
+        return device_type
+
+    @property
+    def DEFAULT_DEVICE_TYPE(self) -> str:
+        return "small_phone"
 
     @property
     def DEFAULT_API_LEVEL(self) -> str:
@@ -1040,7 +1094,7 @@ connection.
             device id (a hex string), an emulator id (`emulator-5554`), or an
             emulator AVD name (`@robotfriend`), a JSON payload describing the
             properties of an emulator that will be created (e.g.,
-            `'{"avd":"beePhone","device_type":"pixel","skin":"pixel_3a","system_image":"system-images;android-31;default;arm64-v8a"}'`)
+            `'{"avd":"beePhone","device_type":"pixel_7","skin":"pixel_7","system_image":"system-images;android-31;default;arm64-v8a"}'`)
             or `auto` to select an appropriate device automatically (creating
             one if necessary). If `None`, the user will be asked to select a
             device from the list available.
@@ -1118,7 +1172,10 @@ connection.
                 device_index[f"@{avd}"] = name
 
         if device_or_avd == "auto":
-            avd_name = default_avd_name(self.DEFAULT_SYSTEM_IMAGE)
+            avd_name = default_avd_name(
+                self.DEFAULT_DEVICE_TYPE,
+                self.DEFAULT_SYSTEM_IMAGE,
+            )
             default_avd = f"@{avd_name}"
             try:
                 name = device_index[default_avd]
@@ -1127,7 +1184,7 @@ connection.
                 self._create_emulator(
                     avd=avd_name,
                     device_type=self.DEFAULT_DEVICE_TYPE,
-                    skin=self.DEFAULT_DEVICE_SKIN,
+                    skin=self.device_skin(self.DEFAULT_DEVICE_TYPE),
                     system_image=self.DEFAULT_SYSTEM_IMAGE,
                 )
                 name = f"{default_avd} (emulator)"
@@ -1241,9 +1298,6 @@ In future, you can specify this device by running:
         :param app: The config object for the app.
         :returns: The AVD of the newly created emulator.
         """
-        # TODO: Provide a list of options for device types with matching skins
-        device_type = self.DEFAULT_DEVICE_TYPE
-        skin = self.DEFAULT_DEVICE_SKIN
 
         with self.tools.console.wait_bar(
             "Listing available system images...", transient=True
@@ -1306,7 +1360,15 @@ In future, you can specify this device by running:
         system_image = f"system-images;{api_level};{image_type};{self.emulator_abi}"
         emulators = set(self.emulators())
 
-        default_avd = default_avd_base = default_avd_name(system_image)
+        device_type = self.tools.console.selection_question(
+            intro="What type of device would you like to emulate?",
+            description="Device Type",
+            options=self.device_types,
+            default=self.DEFAULT_DEVICE_TYPE,
+        )
+        skin = self.device_skin(device_type)
+
+        default_avd = default_avd_base = default_avd_name(device_type, system_image)
         i = 1
         # Make sure the default name is unique
         while default_avd in emulators:
@@ -1361,13 +1423,14 @@ In future, you can specify this device by running:
 
         :param avd: The AVD for the new emulator
         :param device_type: The device type for the new emulator (e.g., "pixel")
-        :param skin: The skin for the new emulator to use (e.g., "pixel_3a")
+        :param skin: The skin for the new emulator to use (e.g., "pixel_3a").
+            `None` indicates a skinless emulator.
         :param system_image: The system image to use on the new emulator. (e.g.,
             "system-images;android-31;default;arm64-v8a")
         """
         if device_type is None:
             device_type = self.DEFAULT_DEVICE_TYPE
-            skin = self.DEFAULT_DEVICE_SKIN
+            skin = self.device_skin(device_type)
         if system_image is None:
             system_image = self.DEFAULT_SYSTEM_IMAGE
 
