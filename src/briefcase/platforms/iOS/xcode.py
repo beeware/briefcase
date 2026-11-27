@@ -175,6 +175,57 @@ class iOSXcodePassiveMixin(iOSMixin):
             )
         )
 
+    def permissions_context(
+        self,
+        app: FinalizedAppConfig,
+        x_permissions: dict[str, str],
+    ):
+        """Additional template context for permissions.
+
+        :param app: The config object for the app
+        :param x_permissions: The dictionary of known cross-platform permission
+            definitions.
+        :returns: The template context describing permissions for the app.
+        """
+        # The collection of info.plist entries
+        info = {}
+
+        if x_permissions["bluetooth"]:
+            info["NSBluetoothAlwaysUsageDescription"] = x_permissions["bluetooth"]
+        if x_permissions["camera"]:
+            info["NSCameraUsageDescription"] = x_permissions["camera"]
+        if x_permissions["microphone"]:
+            info["NSMicrophoneUsageDescription"] = x_permissions["microphone"]
+
+        if x_permissions["fine_location"]:
+            info["NSLocationWhenInUseUsageDescription"] = x_permissions["fine_location"]
+            info["NSLocationDefaultAccuracyReduced"] = False
+        elif x_permissions["coarse_location"]:
+            info["NSLocationWhenInUseUsageDescription"] = x_permissions[
+                "coarse_location"
+            ]
+            info["NSLocationDefaultAccuracyReduced"] = True
+
+        if x_permissions["background_location"]:
+            if "NSLocationWhenInUseUsageDescription" not in info:
+                info["NSLocationWhenInUseUsageDescription"] = x_permissions[
+                    "background_location"
+                ]
+            info["NSLocationAlwaysAndWhenInUseUsageDescription"] = x_permissions[
+                "background_location"
+            ]
+            info["UIBackgroundModes"] = ["processing", "location"]
+
+        if x_permissions["photo_library"]:
+            info["NSPhotoLibraryAddUsageDescription"] = x_permissions["photo_library"]
+
+        # Override any info.plist entries with the platform specific definitions
+        info.update(getattr(app, "info", {}))
+
+        return {
+            "info": info,
+        }
+
 
 class iOSXcodeMixin(iOSXcodePassiveMixin):
     def __init__(self, *args, **kwargs):
@@ -610,57 +661,6 @@ class iOSXcodeCreateCommand(iOSXcodePassiveMixin, CreateCommand):
                 f"{self.python_version_tag}.{micro}/"
                 f"python-{self.python_version_tag}.{support_revision}-iOS-XCframework.tar.gz"
             )
-
-    def permissions_context(
-        self,
-        app: FinalizedAppConfig,
-        x_permissions: dict[str, str],
-    ):
-        """Additional template context for permissions.
-
-        :param app: The config object for the app
-        :param x_permissions: The dictionary of known cross-platform permission
-            definitions.
-        :returns: The template context describing permissions for the app.
-        """
-        # The collection of info.plist entries
-        info = {}
-
-        if x_permissions["bluetooth"]:
-            info["NSBluetoothAlwaysUsageDescription"] = x_permissions["bluetooth"]
-        if x_permissions["camera"]:
-            info["NSCameraUsageDescription"] = x_permissions["camera"]
-        if x_permissions["microphone"]:
-            info["NSMicrophoneUsageDescription"] = x_permissions["microphone"]
-
-        if x_permissions["fine_location"]:
-            info["NSLocationWhenInUseUsageDescription"] = x_permissions["fine_location"]
-            info["NSLocationDefaultAccuracyReduced"] = False
-        elif x_permissions["coarse_location"]:
-            info["NSLocationWhenInUseUsageDescription"] = x_permissions[
-                "coarse_location"
-            ]
-            info["NSLocationDefaultAccuracyReduced"] = True
-
-        if x_permissions["background_location"]:
-            if "NSLocationWhenInUseUsageDescription" not in info:
-                info["NSLocationWhenInUseUsageDescription"] = x_permissions[
-                    "background_location"
-                ]
-            info["NSLocationAlwaysAndWhenInUseUsageDescription"] = x_permissions[
-                "background_location"
-            ]
-            info["UIBackgroundModes"] = ["processing", "location"]
-
-        if x_permissions["photo_library"]:
-            info["NSPhotoLibraryAddUsageDescription"] = x_permissions["photo_library"]
-
-        # Override any info.plist entries with the platform specific definitions
-        info.update(getattr(app, "info", {}))
-
-        return {
-            "info": info,
-        }
 
     def create_app_environment(
         self,

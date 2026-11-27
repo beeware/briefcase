@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import io
+import json
 import os
 import plistlib
 import tarfile
@@ -75,6 +76,24 @@ def create_file(filepath, content, mode="w", chmod=None):
         os.chmod(filepath, chmod)
 
     return filepath
+
+
+def create_json_file(jsonpath, content):
+    """A test utility to create a JSON file with known content.
+
+    Ensures that the directory for the file exists, and writes a JSON file with
+    specific content.
+
+    :param jsonpath: The path for the JSON file to create.
+    :param content: A dictionary of content that the JSON library can use to
+        create the file.
+    :returns: The path to the file that was created.
+    """
+    jsonpath.parent.mkdir(parents=True, exist_ok=True)
+    with jsonpath.open("w", encoding="utf-8") as f:
+        json.dump(content, f)
+
+    return jsonpath
 
 
 def create_toml_file(tomlpath, content):

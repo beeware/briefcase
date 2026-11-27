@@ -95,6 +95,7 @@ class macOSMixin(_MixinBase):
     supported_env_managers: Collection[EnvManagerT] = {"venv", "uv", "conda"}
     # 0.3.20 introduced a framework-based support package.
     platform_target_version: str | None = "0.3.20"
+    hidden_app_properties: Collection[str] = {"permission", "entitlement"}
 
     def bundle_package_path(self, app) -> Path:
         return self.binary_path(app)
@@ -202,10 +203,75 @@ Delete the {bundle_path} folder, move your project to location
 that is not synchronized with iCloud, and re-run `briefcase {self.command}`.""")
             raise BriefcaseCommandError("\n".join(msg))
 
+    def permissions_context(
+        self,
+        app: FinalizedAppConfig,
+        cross_platform: dict[str, str],
+    ):
+        """Additional template context for permissions.
+
+        :param app: The config object for the app
+        :param cross_platform: The dictionary of known cross-platform permission
+            definitions.
+        :returns: The template context describing permissions for the app.
+        """
+        # The info.plist entries for the app
+        info = {}
+
+        # Default entitlements for all macOS apps
+        entitlements = {
+            "com.apple.security.cs.allow-unsigned-executable-memory": True,
+            "com.apple.security.cs.disable-library-validation": True,
+        }
+
+        if cross_platform["bluetooth"]:
+            entitlements["com.apple.security.device.bluetooth"] = True
+            info["NSBluetoothAlwaysUsageDescription"] = cross_platform["bluetooth"]
+        if cross_platform["camera"]:
+            entitlements["com.apple.security.device.camera"] = True
+            info["NSCameraUsageDescription"] = cross_platform["camera"]
+        if cross_platform["microphone"]:
+            entitlements["com.apple.security.device.microphone"] = True
+            info["NSMicrophoneUsageDescription"] = cross_platform["microphone"]
+
+        if cross_platform["background_location"]:
+            info["NSLocationUsageDescription"] = cross_platform["background_location"]
+            entitlements["com.apple.security.personal-information.location"] = True
+        elif cross_platform["fine_location"]:
+            info["NSLocationUsageDescription"] = cross_platform["fine_location"]
+            entitlements["com.apple.security.personal-information.location"] = True
+        elif cross_platform["coarse_location"]:
+            info["NSLocationUsageDescription"] = cross_platform["coarse_location"]
+            entitlements["com.apple.security.personal-information.location"] = True
+
+        if cross_platform["photo_library"]:
+            info["NSPhotoLibraryUsageDescription"] = cross_platform["photo_library"]
+            entitlements["com.apple.security.personal-information.photo_library"] = True
+
+        # Override any info and entitlement definitions
+        # with the platform-specific definitions
+        info.update(getattr(app, "info", {}))
+        entitlements.update(getattr(app, "entitlement", {}))
+
+        return {
+            "info": info,
+            "entitlements": entitlements,
+        }
+
+    def output_format_template_context(self, app: FinalizedAppConfig):
+        """Additional template context required by the output format.
+
+        :param app: The config object for the app
+        """
+        # If the environment manager provides Python, it will be in `libPython3.X`
+        # format, rather than Python.XCframework format.
+        venv_class = self.tools.virtual_environment[app.env_manager]
+        return {
+            "use_framework": not venv_class.provides_python,
+        }
+
 
 class macOSCreateMixin(AppPackagesMergeMixin):
-    hidden_app_properties: Collection[str] = {"permission", "entitlement"}
-
     def generate_app_template(self, app: FinalizedAppConfig):
         """Create an application bundle.
 
@@ -229,18 +295,6 @@ class macOSCreateMixin(AppPackagesMergeMixin):
         # that a new folder has been created; however, if this occurs, it will be
         # picked up on the next run of any Briefcase command).
         self.verify_not_on_icloud(app, cleanup=True)
-
-    def output_format_template_context(self, app: FinalizedAppConfig):
-        """Additional template context required by the output format.
-
-        :param app: The config object for the app
-        """
-        # If the environment manager provides Python, it will be in `libPython3.X`
-        # format, rather than Python.XCframework format.
-        venv_class = self.tools.virtual_environment[app.env_manager]
-        return {
-            "use_framework": not venv_class.provides_python,
-        }
 
     def stub_binary_filename(
         self,
@@ -444,61 +498,6 @@ in the macOS configuration section of your pyproject.toml.
             # Since we're not building a universal binary, we can strip any universal
             # libraries down to just the host architecture.
             self.thin_app_packages(app_packages_path, arch=self.tools.host_arch)
-
-    def permissions_context(
-        self,
-        app: FinalizedAppConfig,
-        cross_platform: dict[str, str],
-    ):
-        """Additional template context for permissions.
-
-        :param app: The config object for the app
-        :param cross_platform: The dictionary of known cross-platform permission
-            definitions.
-        :returns: The template context describing permissions for the app.
-        """
-        # The info.plist entries for the app
-        info = {}
-
-        # Default entitlements for all macOS apps
-        entitlements = {
-            "com.apple.security.cs.allow-unsigned-executable-memory": True,
-            "com.apple.security.cs.disable-library-validation": True,
-        }
-
-        if cross_platform["bluetooth"]:
-            entitlements["com.apple.security.device.bluetooth"] = True
-            info["NSBluetoothAlwaysUsageDescription"] = cross_platform["bluetooth"]
-        if cross_platform["camera"]:
-            entitlements["com.apple.security.device.camera"] = True
-            info["NSCameraUsageDescription"] = cross_platform["camera"]
-        if cross_platform["microphone"]:
-            entitlements["com.apple.security.device.microphone"] = True
-            info["NSMicrophoneUsageDescription"] = cross_platform["microphone"]
-
-        if cross_platform["background_location"]:
-            info["NSLocationUsageDescription"] = cross_platform["background_location"]
-            entitlements["com.apple.security.personal-information.location"] = True
-        elif cross_platform["fine_location"]:
-            info["NSLocationUsageDescription"] = cross_platform["fine_location"]
-            entitlements["com.apple.security.personal-information.location"] = True
-        elif cross_platform["coarse_location"]:
-            info["NSLocationUsageDescription"] = cross_platform["coarse_location"]
-            entitlements["com.apple.security.personal-information.location"] = True
-
-        if cross_platform["photo_library"]:
-            info["NSPhotoLibraryUsageDescription"] = cross_platform["photo_library"]
-            entitlements["com.apple.security.personal-information.photo_library"] = True
-
-        # Override any info and entitlement definitions
-        # with the platform-specific definitions
-        info.update(getattr(app, "info", {}))
-        entitlements.update(getattr(app, "entitlement", {}))
-
-        return {
-            "info": info,
-            "entitlements": entitlements,
-        }
 
 
 class macOSRunMixin(_MixinBase):

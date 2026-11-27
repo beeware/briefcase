@@ -358,6 +358,7 @@ def test_create_app_before_start(run_command, first_app_config):
             False,
             False,
             {
+                "recreate": False,
                 "update": False,
                 "update_requirements": False,
                 "update_resources": False,
@@ -413,6 +414,7 @@ def test_build_app_before_start(run_command, first_app_unbuilt):
             False,
             False,
             {
+                "recreate": False,
                 "update": False,
                 "update_requirements": False,
                 "update_resources": False,
@@ -468,6 +470,7 @@ def test_update_app(run_command, first_app):
             False,
             False,
             {
+                "recreate": False,
                 "update": True,
                 "update_requirements": False,
                 "update_resources": False,
@@ -523,6 +526,7 @@ def test_update_app_requirements(run_command, first_app):
             False,
             False,
             {
+                "recreate": False,
                 "update": False,
                 "update_requirements": True,
                 "update_resources": False,
@@ -578,6 +582,7 @@ def test_update_app_resources(run_command, first_app):
             False,
             False,
             {
+                "recreate": False,
                 "update": False,
                 "update_requirements": False,
                 "update_resources": True,
@@ -633,6 +638,7 @@ def test_update_app_support(run_command, first_app):
             False,
             False,
             {
+                "recreate": False,
                 "update": False,
                 "update_requirements": False,
                 "update_resources": False,
@@ -688,6 +694,7 @@ def test_update_app_stub(run_command, first_app):
             False,
             False,
             {
+                "recreate": False,
                 "update": False,
                 "update_requirements": False,
                 "update_resources": False,
@@ -744,6 +751,7 @@ def test_update_unbuilt_app(run_command, first_app_unbuilt):
             False,
             False,
             {
+                "recreate": False,
                 "update": True,
                 "update_requirements": False,
                 "update_resources": False,
@@ -800,6 +808,7 @@ def test_update_non_existent(run_command, first_app_config):
             False,
             False,
             {
+                "recreate": False,
                 "update": True,
                 "update_requirements": False,
                 "update_resources": False,
@@ -855,6 +864,7 @@ def test_test_mode_existing_app(run_command, first_app):
             True,
             False,
             {
+                "recreate": False,
                 "update": False,
                 "update_requirements": False,
                 "update_resources": False,
@@ -910,6 +920,7 @@ def test_test_mode_existing_app_with_passthrough(run_command, first_app):
             True,
             False,
             {
+                "recreate": False,
                 "update": False,
                 "update_requirements": False,
                 "update_resources": False,
@@ -1003,6 +1014,7 @@ def test_test_mode_existing_app_update_requirements(run_command, first_app):
             True,
             False,
             {
+                "recreate": False,
                 "update": False,
                 "update_requirements": True,
                 "update_resources": False,
@@ -1058,6 +1070,7 @@ def test_test_mode_existing_app_update_resources(run_command, first_app):
             True,
             False,
             {
+                "recreate": False,
                 "update": False,
                 "update_requirements": False,
                 "update_resources": True,
@@ -1113,6 +1126,7 @@ def test_test_mode_update_existing_app(run_command, first_app):
             True,
             False,
             {
+                "recreate": False,
                 "update": True,
                 "update_requirements": False,
                 "update_resources": False,
@@ -1168,6 +1182,7 @@ def test_test_mode_non_existent(run_command, first_app_config):
             True,
             False,
             {
+                "recreate": False,
                 "update": False,
                 "update_requirements": False,
                 "update_resources": False,
@@ -1225,6 +1240,7 @@ def test_debug(run_command, first_app_config):
             False,
             True,
             {
+                "recreate": False,
                 "update": False,
                 "update_requirements": False,
                 "update_resources": False,
@@ -1272,3 +1288,61 @@ def test_run_external_app(run_command, first_app):
         match=r"'first' is declared as an external app",
     ):
         run_command(**options)
+
+
+def test_recreate(run_command, first_app):
+    """If a recreate is required, it is triggered."""
+    # Add a single app
+    run_command.apps = {
+        "first": first_app,
+    }
+    # Mark the first app as needing an update by modifying it's template context
+    run_command._briefcase_toml[first_app]["context"]["version"] = "1.2.3"
+
+    # Configure no command line options
+    options, _ = run_command.parse_options([])
+
+    # Run the run command
+    run_command(**options)
+
+    # The right sequence of things will be done
+    assert run_command.actions == [
+        # Host OS is verified
+        ("verify-host",),
+        # Tools are verified
+        ("verify-tools",),
+        # App config has been finalized
+        ("finalize-app-config", "first"),
+        # App context has changed; force a rebuild
+        (
+            "build",
+            "first",
+            False,
+            False,
+            {
+                "recreate": True,
+                "update": False,
+                "update_requirements": False,
+                "update_resources": False,
+                "update_support": False,
+                "update_stub": False,
+                "no_update": False,
+            },
+        ),
+        # App template is verified
+        ("verify-app-template", "first"),
+        # App tools are verified
+        ("verify-app-tools", "first"),
+        # Run the first app
+        (
+            "run",
+            "first",
+            False,
+            False,
+            (None, None),
+            {
+                "passthrough": [],
+                "build_state": "first",
+            },
+        ),
+    ]

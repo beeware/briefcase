@@ -436,21 +436,13 @@ def test_create_before_package(package_command, first_app_config, tmp_path):
         ("verify-tools",),
         # App config has been finalized
         ("finalize-app-config", "first"),
-        # Create and then build the first app
-        (
-            "create",
-            "first",
-            {
-                "adhoc_sign": False,
-                "identity": None,
-            },
-        ),
+        # Build the first app (which will cause a create)
         (
             "build",
             "first",
             {
+                "recreate": False,
                 "adhoc_sign": False,
-                "create_state": "first",
                 "identity": None,
             },
         ),
@@ -465,7 +457,6 @@ def test_create_before_package(package_command, first_app_config, tmp_path):
             {
                 "adhoc_sign": False,
                 "identity": None,
-                "create_state": "first",
                 "build_state": "first",
             },
         ),
@@ -684,6 +675,7 @@ def test_build_before_package(package_command, first_app_unbuilt, tmp_path):
             "build",
             "first",
             {
+                "recreate": False,
                 "adhoc_sign": False,
                 "identity": None,
             },
@@ -980,6 +972,7 @@ def test_package_external_app(package_command, first_app, tmp_path):
         (
             "create",
             "first",
+            True,
             {
                 "adhoc_sign": False,
                 "identity": None,
@@ -1042,6 +1035,7 @@ def test_create_before_package_external_app(
         (
             "create",
             "first",
+            True,
             {
                 "adhoc_sign": False,
                 "identity": None,
@@ -1065,6 +1059,56 @@ def test_create_before_package_external_app(
 
     # Packaging format has been annotated on the first app, not the second.
     assert package_command.apps["first"].packaging_format == "pkg"
+
+    # The dist folder has been created.
+    assert (tmp_path / "base_path/dist").exists()
+
+
+def test_rebuild(package_command, first_app, second_app, tmp_path):
+    """If an app has been updated and needs to be recreated, that is triggered."""
+    # Add two apps
+    package_command.apps = {
+        "first": first_app,
+        "second": second_app,
+    }
+    # Mark the first app as needing an update by modifying it's template context
+    package_command._briefcase_toml[first_app]["context"]["version"] = "1.2.3"
+
+    # Configure no command line arguments
+    options, _ = package_command.parse_options([])
+
+    # Run the build command on a specific app
+    package_command(first_app, **options)
+
+    # The right sequence of things will be done
+    assert package_command.actions == [
+        # Host OS is verified
+        ("verify-host",),
+        # Tools are verified
+        ("verify-tools",),
+        # App config has been finalized
+        ("finalize-app-config", "first"),
+        # App requires a rebuild (with recreate)
+        ("build", "first", {"recreate": True, "adhoc_sign": False, "identity": None}),
+        # App template is verified
+        ("verify-app-template", "first"),
+        # App tools are verified for app
+        ("verify-app-tools", "first"),
+        # Package the first app
+        (
+            "package",
+            "first",
+            {
+                "adhoc_sign": False,
+                "identity": None,
+                "build_state": "first",
+            },
+        ),
+    ]
+
+    # Packaging format has been annotated on the first app, not the second.
+    assert package_command.apps["first"].packaging_format == "pkg"
+    assert not hasattr(second_app, "packaging_format")
 
     # The dist folder has been created.
     assert (tmp_path / "base_path/dist").exists()

@@ -5,7 +5,6 @@ import sys
 from unittest import mock
 
 import pytest
-import tomli_w
 
 from briefcase.console import LogLevel
 from briefcase.exceptions import (
@@ -17,13 +16,30 @@ from briefcase.integrations.docker import Docker, DockerAppContext
 from briefcase.integrations.linuxdeploy import LinuxDeploy, LinuxDeployBase
 from briefcase.platforms.linux.appimage import LinuxAppImageBuildCommand
 
-from ....utils import create_file
+from ....utils import create_file, create_toml_file
 
 
 @pytest.fixture
 def first_app(first_app_config, tmp_path):
     """A fixture for the first app, rolled out on disk."""
     # Make it look like the template has been generated
+
+    # Create the briefcase.toml file
+    create_toml_file(
+        tmp_path / "base_path/build/first-app/linux/appimage/briefcase.toml",
+        {
+            "briefcase": {
+                "target_version": "0.3.20",
+            },
+            "paths": {
+                "app_path": "First App.AppDir/usr/app",
+                "app_packages_path": "First App.AppDir/usr/app_packages",
+                "support_path": "First App.AppDir/usr",
+            },
+            "context": {"version": "0.0.1"},
+        },
+    )
+
     app_dir = tmp_path / "base_path/build/first-app/linux/appimage/First App.AppDir"
     (app_dir / "usr/app/support").mkdir(parents=True, exist_ok=True)
     (app_dir / "usr/app_packages/firstlib").mkdir(parents=True, exist_ok=True)
@@ -550,18 +566,6 @@ def test_build_appimage_with_support_package_update(
 
     # Mock the generated app template
     (build_command.bundle_path(first_app) / "src").mkdir(parents=True)
-
-    # Populate a briefcase.toml that mirrors a real Windows app
-    with (build_command.bundle_path(first_app) / "briefcase.toml").open("wb") as f:
-        index = {
-            "briefcase": {"target_version": "0.3.20"},
-            "paths": {
-                "app_path": "First App.AppDir/usr/app",
-                "app_package_path": "First App.AppDir/usr/app_packages",
-                "support_path": "First App.AppDir/usr",
-            },
-        }
-        tomli_w.dump(index, f)
 
     # Build the app with a support package update
     build_command(first_app, update_support=True)

@@ -127,14 +127,19 @@ class PackageCommand(BaseCommand):
             # and other metadata. We *always* generate the template to ensure that
             # packaging metadata is up-to-date. If the app has been packaged before,
             # it will be necessary to confirm deletion of the old folder.
-            state = self.create_command(app, **options)
+            state = self.create_command(app, recreate=True, **options)
         else:
-            template_file = self.bundle_path(app)
-            binary_file = self.binary_path(app)
+            needs_create = not self.bundle_path(app).exists()
+            if not needs_create:
+                # Template exists; check if we need to re-create
+                recreate = self.app_context_changed(app)
+            else:
+                recreate = False
 
-            if not template_file.exists():
-                state = self.create_command(app, **options)
-                state = self.build_command(app, **full_options(state, options))
+            needs_build = not self.binary_path(app).exists()
+
+            if needs_create or recreate or needs_build:
+                state = self.build_command(app, recreate=recreate, **options)
             elif update:
                 # If we're updating for packaging, update everything.
                 # This ensures everything in the packaged artefact is up to date,
@@ -147,8 +152,6 @@ class PackageCommand(BaseCommand):
                     **options,
                 )
                 state = self.build_command(app, **full_options(state, options))
-            elif not binary_file.exists():
-                state = self.build_command(app, **options)
             else:
                 state = None
 

@@ -1,23 +1,17 @@
 import os
 import platform
-import subprocess
+import tomllib
 from datetime import date
-from unittest import mock
+from pathlib import Path
 
 import pytest
-from cookiecutter import exceptions as cookiecutter_exceptions
-from git import exc as git_exceptions
 
 import briefcase
 from briefcase.exceptions import (
-    BriefcaseCommandError,
-    BriefcaseConfigError,
     CorruptContentError,
-    InvalidTemplateBranch,
-    NetworkFailure,
 )
 
-from ..conftest import TEMPLATE_COMMIT_HEXSHA
+from ...utils import create_json_file, create_toml_file
 
 
 @pytest.fixture
@@ -79,214 +73,39 @@ def full_context():
     }
 
 
-@pytest.mark.parametrize(
-    ("briefcase_version", "expected_branch"),
-    [
-        ("37.42.1", "v37.42.1"),
-        ("37.42.2.dev0+gad61a29.d20220919", "v37.42.2"),
-        ("37.42.3.dev73+gad61a29.d20220919", "v37.42.3"),
-        ("37.42.4a1", "v37.42.4"),
-        ("37.42.5b2", "v37.42.5"),
-        ("37.42.6rc3", "v37.42.6"),
-        ("37.42.7.post1", "v37.42.7"),
-    ],
-)
-def test_default_template(
-    monkeypatch,
-    create_command,
-    myapp,
-    full_context,
-    briefcase_version,
-    expected_branch,
-    tmp_path,
-):
-    """Absent of other information, the briefcase version (without suffixes) is used as
-    the template branch."""
-    # Set the Briefcase version
-    monkeypatch.setattr(briefcase, "__version__", briefcase_version)
-    full_context["briefcase_version"] = briefcase_version
-    full_context["template_branch"] = expected_branch
+def mock_cookiecutter(variables=None):
+    def _mock_cookiecutter(template_path, output_dir, extra_context, **kwargs):
+        template_variables = variables or {}
+        create_json_file(Path(template_path) / "cookiecutter.json", template_variables)
+        create_toml_file(
+            Path(output_dir) / extra_context["output_format"] / "briefcase.toml",
+            {"briefcase": {}},
+        )
 
-    # There won't be a cookiecutter cache, so there won't be a cache path (yet).
-
-    # Generate the template.
-    create_command.generate_app_template(myapp)
-    # Cookiecutter was invoked with the expected template name and context.
-    create_command.tools.cookiecutter.assert_called_once_with(
-        str(create_command.data_path / "templates/briefcase-Tester-Dummy-template"),
-        no_input=True,
-        checkout=expected_branch,
-        output_dir=str(tmp_path / "base_path/build/my-app/tester"),
-        extra_context=full_context,
-        default_config={"replay_dir": str(tmp_path / "data/templates/.replay")},
-    )
+    return _mock_cookiecutter
 
 
-@pytest.mark.parametrize(
-    ("briefcase_version", "template_branch"),
-    [
-        ("37.42.7.dev0+gad61a29.d20220919", "v37.42.7"),
-        ("37.42.7.dev73+gad61a29.d20220919", "v37.42.7"),
-    ],
-)
-def test_default_template_dev(
-    monkeypatch,
-    create_command,
-    myapp,
-    full_context,
-    briefcase_version,
-    template_branch,
-    tmp_path,
-):
-    """In a dev version, template will fall back to the 'main' branch if a versioned
-    template doesn't exist."""
-    # Set the Briefcase version
-    monkeypatch.setattr(briefcase, "__version__", briefcase_version)
-    full_context["briefcase_version"] = briefcase_version
-    full_context["template_branch"] = template_branch
-
-    full_context2 = full_context.copy()
-    full_context2["template_branch"] = "main"
-
-    # There won't be a cookiecutter cache, so there won't be a cache path (yet).
-
-    # There will be two calls to cookiecutter; one on the versioned branch,
-    # and one on the `main` branch. The first call will fail because the
-    # template doesn't exist yet; the second will succeed.
-    create_command.tools.cookiecutter.side_effect = [
-        cookiecutter_exceptions.RepositoryCloneFailed,
-        None,
-    ]
-
-    # Generate the template.
-    create_command.generate_app_template(myapp)
-
-    # Cookiecutter was invoked with the expected template name and context.
-    assert create_command.tools.cookiecutter.mock_calls == [
-        mock.call(
-            str(create_command.data_path / "templates/briefcase-Tester-Dummy-template"),
-            no_input=True,
-            checkout="v37.42.7",
-            output_dir=os.fsdecode(tmp_path / "base_path/build/my-app/tester"),
-            extra_context=full_context,
-            default_config={"replay_dir": str(tmp_path / "data/templates/.replay")},
-        ),
-        mock.call(
-            str(create_command.data_path / "templates/briefcase-Tester-Dummy-template"),
-            no_input=True,
-            checkout="main",
-            output_dir=os.fsdecode(tmp_path / "base_path/build/my-app/tester"),
-            extra_context=full_context2,
-            default_config={"replay_dir": str(tmp_path / "data/templates/.replay")},
-        ),
-    ]
-
-
-@pytest.mark.parametrize(
-    "briefcase_version",
-    ["37.42.7.dev0+gad61a29.d20220919", "37.42.7.dev73+gad61a29.d20220919"],
-)
-def test_default_template_dev_explicit_branch(
-    monkeypatch,
-    create_command,
-    myapp,
-    full_context,
-    briefcase_version,
-    tmp_path,
-):
-    """In a dev version, if an explicit branch is provided, it is used."""
-    # Set the Briefcase version
-    monkeypatch.setattr(briefcase, "__version__", briefcase_version)
-    full_context["briefcase_version"] = briefcase_version
-
-    # Set an explicit branch
-    branch = "some_branch"
-    myapp.template_branch = branch
-    full_context["template_branch"] = branch
-
-    # There won't be a cookiecutter cache, so there won't be
-    # a cache path (yet).
-    create_command.tools.git.Repo.side_effect = git_exceptions.NoSuchPathError
-
-    # Generate the template.
-    create_command.generate_app_template(myapp)
-
-    # Cookiecutter was invoked (once) with the expected template name and context.
-    assert create_command.tools.cookiecutter.mock_calls == [
-        mock.call(
-            str(create_command.data_path / "templates/briefcase-Tester-Dummy-template"),
-            no_input=True,
-            checkout=branch,
-            output_dir=os.fsdecode(tmp_path / "base_path/build/my-app/tester"),
-            extra_context=full_context,
-            default_config={"replay_dir": str(tmp_path / "data/templates/.replay")},
-        ),
-    ]
-
-
-@pytest.mark.parametrize(
-    "briefcase_version",
-    ["37.42.7.dev0+gad61a29.d20220919", "37.42.7.dev73+gad61a29.d20220919"],
-)
-def test_default_template_dev_explicit_invalid_branch(
-    monkeypatch,
-    create_command,
-    myapp,
-    full_context,
-    briefcase_version,
-    tmp_path,
-):
-    """In a dev version, if an explicit (but invalid) branch is provided, the fallback
-    to the 'main' branch will not occur."""
-    # Set the Briefcase version to a dev version
-    monkeypatch.setattr(briefcase, "__version__", briefcase_version)
-    full_context["briefcase_version"] = briefcase_version
-
-    # Set an explicit branch
-    branch = "some_branch"
-    myapp.template_branch = branch
-    full_context["template_branch"] = branch
-
-    # There won't be a cookiecutter cache, so there won't be
-    # a cache path (yet).
-    create_command.tools.git.Repo.side_effect = git_exceptions.NoSuchPathError
-
-    # There will be only 1 call to cookiecutter; the one on the versioned branch.
-    create_command.tools.cookiecutter.side_effect = (
-        cookiecutter_exceptions.RepositoryCloneFailed
-    )
-
-    # Generate the template.
-    with pytest.raises(InvalidTemplateBranch):
-        create_command.generate_app_template(myapp)
-
-    # Cookiecutter was invoked (once) with the expected template name and context.
-    assert create_command.tools.cookiecutter.mock_calls == [
-        mock.call(
-            str(create_command.data_path / "templates/briefcase-Tester-Dummy-template"),
-            no_input=True,
-            checkout=branch,
-            output_dir=os.fsdecode(tmp_path / "base_path/build/my-app/tester"),
-            extra_context=full_context,
-            default_config={"replay_dir": str(tmp_path / "data/templates/.replay")},
-        ),
-    ]
-
-
-def test_explicit_branch(monkeypatch, create_command, myapp, full_context, tmp_path):
-    """User can choose which branch to take the template from."""
+def test_generate_app(monkeypatch, create_command, myapp, full_context, tmp_path):
+    """An app can be generated."""
     # Set the Briefcase version
     monkeypatch.setattr(briefcase, "__version__", "37.42.7")
     full_context["briefcase_version"] = "37.42.7"
 
+    # Mock the contents of the cookiecutter template index
+    create_command.tools.cookiecutter.side_effect = mock_cookiecutter(
+        {
+            "version": "1.2.3",
+            "app_name": myapp.app_name,
+            "formal_name": myapp.formal_name,
+            # Include a "private" cookiecutter variable.
+            "_extensions": ["first", "second"],
+        }
+    )
+
     # Set an explicit branch
     branch = "some_branch"
     myapp.template_branch = branch
     full_context["template_branch"] = branch
-
-    # There won't be a cookiecutter cache, so there won't be
-    # a cache path (yet).
-    create_command.tools.git.Repo.side_effect = git_exceptions.NoSuchPathError
 
     # Generate the template.
     create_command.generate_app_template(myapp)
@@ -301,6 +120,21 @@ def test_explicit_branch(monkeypatch, create_command, myapp, full_context, tmp_p
         default_config={"replay_dir": str(tmp_path / "data/templates/.replay")},
     )
 
+    # The briefcase.toml for the app contains a `context` section that has
+    # the intersection of the app's context and
+    briefcase_toml = tomllib.loads(
+        (tmp_path / "base_path/build/my-app/tester/dummy/briefcase.toml").read_text(
+            "utf-8"
+        )
+    )
+    assert briefcase_toml["briefcase"]["python_version"] == platform.python_version()
+    assert briefcase_toml["briefcase"]["briefcase_version"] == briefcase.__version__
+    assert briefcase_toml["context"] == {
+        "version": "1.2.3",
+        "app_name": "my-app",
+        "formal_name": "My App",
+    }
+
 
 def test_platform_exists(monkeypatch, create_command, myapp, full_context, tmp_path):
     """If the platform directory already exists, it's ok."""
@@ -309,9 +143,8 @@ def test_platform_exists(monkeypatch, create_command, myapp, full_context, tmp_p
     full_context["briefcase_version"] = "37.42.7"
     full_context["template_branch"] = "v37.42.7"
 
-    # There won't be a cookiecutter cache, so there won't be
-    # a cache path (yet).
-    create_command.tools.git.Repo.side_effect = git_exceptions.NoSuchPathError
+    # Mock the contents of the cookiecutter template index
+    create_command.tools.cookiecutter.side_effect = mock_cookiecutter()
 
     # Create the build directory
     create_command.build_path(myapp).mkdir(parents=True)
@@ -335,13 +168,15 @@ def test_explicit_app_template_hash(
     create_command,
     myapp,
     full_context,
-    tmp_path,
 ):
     """An explicit app.template_hash overrides the class's default, and is used even
     when the default template and branch are otherwise in effect."""
     monkeypatch.setattr(briefcase, "__version__", "37.42.7")
     full_context["briefcase_version"] = "37.42.7"
     full_context["template_branch"] = "v37.42.7"
+
+    # Mock the contents of the cookiecutter template index
+    create_command.tools.cookiecutter.side_effect = mock_cookiecutter()
 
     # Point the app's template_hash at a *different* hash
     myapp.template_hash = "sha1:0000000000000000000000000000000000000000"
@@ -364,6 +199,9 @@ def test_custom_template_with_no_hash_does_not_use_class_default(
     full_context["briefcase_version"] = "37.42.7"
     full_context["template_branch"] = "v37.42.7"
 
+    # Mock the contents of the cookiecutter template index
+    create_command.tools.cookiecutter.side_effect = mock_cookiecutter()
+
     template = "https://example.com/magic/special-template.git"
     myapp.template = template
     full_context["template_source"] = template
@@ -381,347 +219,6 @@ def test_custom_template_with_no_hash_does_not_use_class_default(
     )
 
 
-def test_explicit_repo_template(
-    monkeypatch,
-    create_command,
-    myapp,
-    full_context,
-    tmp_path,
-):
-    """If a template is specified in the app config, it is used."""
-    # Set the Briefcase version
-    monkeypatch.setattr(briefcase, "__version__", "37.42.7")
-    full_context["briefcase_version"] = "37.42.7"
-    full_context["template_branch"] = "v37.42.7"
-
-    template = "https://example.com/magic/special-template.git"
-    myapp.template = template
-    full_context["template_source"] = template
-
-    # There won't be a cookiecutter cache, so there won't be a repo path (yet).
-
-    # Generate the template.
-    create_command.generate_app_template(myapp)
-
-    # Cookiecutter was invoked with the expected template name and context.
-    create_command.tools.cookiecutter.assert_called_once_with(
-        str(create_command.data_path / "templates/special-template"),
-        no_input=True,
-        checkout="v37.42.7",
-        output_dir=os.fsdecode(tmp_path / "base_path/build/my-app/tester"),
-        extra_context=full_context,
-        default_config={"replay_dir": str(tmp_path / "data/templates/.replay")},
-    )
-
-
-def test_explicit_repo_template_and_branch(
-    monkeypatch,
-    create_command,
-    myapp,
-    full_context,
-    tmp_path,
-):
-    """If a template and branch is specified in the app config, it is used."""
-    # Set the Briefcase version
-    monkeypatch.setattr(briefcase, "__version__", "37.42.7")
-    full_context["briefcase_version"] = "37.42.7"
-
-    # Set an explicit template and branch
-    template = "https://example.com/magic/special-template.git"
-    myapp.template = template
-    full_context["template_source"] = template
-
-    branch = "some_branch"
-    myapp.template_branch = branch
-    full_context["template_branch"] = branch
-
-    # There won't be a cookiecutter cache, so there won't be a repo path (yet).
-
-    # Generate the template.
-    create_command.generate_app_template(myapp)
-
-    # Cookiecutter was invoked with the expected template name and context.
-    create_command.tools.cookiecutter.assert_called_once_with(
-        str(create_command.data_path / "templates/special-template"),
-        no_input=True,
-        checkout=branch,
-        output_dir=os.fsdecode(tmp_path / "base_path/build/my-app/tester"),
-        extra_context=full_context,
-        default_config={"replay_dir": str(tmp_path / "data/templates/.replay")},
-    )
-
-
-def test_explicit_local_template(
-    monkeypatch,
-    create_command,
-    myapp,
-    full_context,
-    tmp_path,
-):
-    """If a local template path is specified in the app config, it is used."""
-    # Set the Briefcase version
-    monkeypatch.setattr(briefcase, "__version__", "37.42.7")
-    full_context["briefcase_version"] = "37.42.7"
-    full_context["template_branch"] = "v37.42.7"
-
-    template = "/path/to/special-template"
-    myapp.template = template
-    full_context["template_source"] = template
-
-    # Generate the template.
-    create_command.generate_app_template(myapp)
-
-    # Cookiecutter was invoked with the expected template name and context.
-    create_command.tools.cookiecutter.assert_called_once_with(
-        "/path/to/special-template",
-        no_input=True,
-        checkout="v37.42.7",
-        output_dir=os.fsdecode(tmp_path / "base_path/build/my-app/tester"),
-        extra_context=full_context,
-        default_config={"replay_dir": str(tmp_path / "data/templates/.replay")},
-    )
-
-    # The template is a local directory, so there won't be any calls on git.
-    assert create_command.tools.git.Repo.call_count == 0
-
-
-def test_explicit_local_template_and_branch(
-    monkeypatch,
-    create_command,
-    myapp,
-    full_context,
-    tmp_path,
-):
-    """If a local template path and branch is specified in the app config, it is
-    used."""
-    # Set the Briefcase version
-    monkeypatch.setattr(briefcase, "__version__", "37.42.7")
-    full_context["briefcase_version"] = "37.42.7"
-
-    template = "/path/to/special-template"
-    myapp.template = template
-    full_context["template_source"] = template
-
-    branch = "some_branch"
-    myapp.template_branch = branch
-    full_context["template_branch"] = branch
-
-    # Generate the template.
-    create_command.generate_app_template(myapp)
-
-    # Cookiecutter was invoked with the expected template name and context.
-    create_command.tools.cookiecutter.assert_called_once_with(
-        "/path/to/special-template",
-        no_input=True,
-        checkout=branch,
-        output_dir=os.fsdecode(tmp_path / "base_path/build/my-app/tester"),
-        extra_context=full_context,
-        default_config={"replay_dir": str(tmp_path / "data/templates/.replay")},
-    )
-
-    # The template is a local directory, so there won't be any calls on git.
-    assert create_command.tools.git.Repo.call_count == 0
-
-
-def test_offline_repo_template(
-    monkeypatch,
-    create_command,
-    myapp,
-    full_context,
-    tmp_path,
-):
-    """If the user is offline the first time a repo template is requested, an error is
-    raised."""
-    # Set the Briefcase version
-    monkeypatch.setattr(briefcase, "__version__", "37.42.7")
-    full_context["briefcase_version"] = "37.42.7"
-    full_context["template_branch"] = "v37.42.7"
-
-    # There won't be a cookiecutter cache, so there won't be a repo path (yet).
-
-    # Calling cookiecutter on a repository while offline causes a CalledProcessError
-    create_command.tools.cookiecutter.side_effect = subprocess.CalledProcessError(
-        cmd=[
-            "git",
-            "clone",
-            str(create_command.data_path / "templates/briefcase-Tester-Dummy-template"),
-        ],
-        returncode=128,
-    )
-
-    # Generating the template under these conditions raises an error
-    with pytest.raises(NetworkFailure):
-        create_command.generate_app_template(myapp)
-
-    # Cookiecutter was invoked with the expected template name and context.
-    create_command.tools.cookiecutter.assert_called_once_with(
-        str(create_command.data_path / "templates/briefcase-Tester-Dummy-template"),
-        no_input=True,
-        checkout="v37.42.7",
-        output_dir=os.fsdecode(tmp_path / "base_path/build/my-app/tester"),
-        extra_context=full_context,
-        default_config={"replay_dir": str(tmp_path / "data/templates/.replay")},
-    )
-
-
-def test_invalid_repo_template(
-    monkeypatch,
-    create_command,
-    myapp,
-    full_context,
-    tmp_path,
-):
-    """If the provided template URL isn't valid, an error is raised."""
-    # Set the Briefcase version
-    monkeypatch.setattr(briefcase, "__version__", "37.42.7")
-    full_context["briefcase_version"] = "37.42.7"
-    full_context["template_branch"] = "v37.42.7"
-
-    template = "https://example.com/somewhere/not-a-repo.git"
-    myapp.template = template
-    full_context["template_source"] = template
-
-    # Prime git to respond to a bad URL.
-    create_command.tools.git.Repo.clone_from.side_effect = (
-        git_exceptions.GitCommandError("git", 128)
-    )
-
-    # Generating the template under there conditions raises an error
-    with pytest.raises(BriefcaseCommandError, match=r"..."):
-        create_command.generate_app_template(myapp)
-
-    # No attempt is made to create a template.
-    create_command.tools.cookiecutter.assert_not_called()
-
-
-def test_cached_template(monkeypatch, create_command, myapp, full_context, tmp_path):
-    """If a template has already been used, the cached version will be used."""
-    # Set up a pre-cached template directory
-    (create_command.data_path / "templates/briefcase-Tester-Dummy-template").mkdir(
-        parents=True
-    )
-
-    # Set the Briefcase version
-    monkeypatch.setattr(briefcase, "__version__", "37.42.7")
-    full_context["briefcase_version"] = "37.42.7"
-    full_context["template_branch"] = "v37.42.7"
-
-    mock_repo = mock.MagicMock()
-    mock_remote = mock.MagicMock()
-    mock_remote_head = mock.MagicMock()
-    mock_remote_head.commit.hexsha = TEMPLATE_COMMIT_HEXSHA
-
-    # Git returns a Repo, that repo can return a remote, and it has
-    # heads that can be accessed.
-    create_command.tools.git.Repo.return_value = mock_repo
-    mock_repo.remote.return_value = mock_remote
-    mock_remote.refs.__getitem__.return_value = mock_remote_head
-
-    # Generate the template.
-    create_command.generate_app_template(myapp)
-
-    # The origin of the repo was fetched
-    mock_repo.remote.assert_called_once_with(name="origin")
-    mock_remote.fetch.assert_called_once_with()
-
-    # The remote head was checked out.
-    mock_remote_head.checkout.assert_called_once_with()
-
-    # Cookiecutter was invoked with the path to the *cached* template name
-    create_command.tools.cookiecutter.assert_called_once_with(
-        str(create_command.data_path / "templates/briefcase-Tester-Dummy-template"),
-        no_input=True,
-        checkout="v37.42.7",
-        output_dir=os.fsdecode(tmp_path / "base_path/build/my-app/tester"),
-        extra_context=full_context,
-        default_config={"replay_dir": str(tmp_path / "data/templates/.replay")},
-    )
-
-
-def test_cached_template_offline(
-    monkeypatch,
-    create_command,
-    myapp,
-    full_context,
-    capsys,
-    tmp_path,
-):
-    """If the user is offline, a cached template won't be updated, but will still
-    work."""
-    # Set up a pre-cached template directory
-    (create_command.data_path / "templates/briefcase-Tester-Dummy-template").mkdir(
-        parents=True
-    )
-
-    # Set the Briefcase version
-    monkeypatch.setattr(briefcase, "__version__", "37.42.7")
-    full_context["briefcase_version"] = "37.42.7"
-    full_context["template_branch"] = "v37.42.7"
-
-    mock_repo = mock.MagicMock()
-    mock_remote = mock.MagicMock()
-    mock_remote_head = mock.MagicMock()
-    mock_remote_head.commit.hexsha = TEMPLATE_COMMIT_HEXSHA
-
-    # Git returns a Repo, that repo can return a remote, and it has
-    # heads that can be accessed. However, calling fetch on the remote
-    # will cause a git error (error code 128).
-    create_command.tools.git.Repo.return_value = mock_repo
-    mock_repo.remote.return_value = mock_remote
-    mock_remote.refs.__getitem__.return_value = mock_remote_head
-    mock_remote.fetch.side_effect = git_exceptions.GitCommandError("git", 128)
-
-    # Generate the template.
-    create_command.generate_app_template(myapp)
-
-    # An attempt to fetch the repo origin was made
-    mock_repo.remote.assert_called_once_with(name="origin")
-    mock_remote.fetch.assert_called_once_with()
-
-    # A warning was raised to the user about the fetch problem
-    output = capsys.readouterr().out
-    assert "WARNING: Unable to update template" in output
-
-    # The remote head was checked out.
-    mock_remote_head.checkout.assert_called_once_with()
-
-    # Cookiecutter was invoked with the path to the *cached* template name
-    create_command.tools.cookiecutter.assert_called_once_with(
-        str(create_command.data_path / "templates/briefcase-Tester-Dummy-template"),
-        no_input=True,
-        checkout="v37.42.7",
-        output_dir=str(tmp_path / "base_path/build/my-app/tester"),
-        extra_context=full_context,
-        default_config={"replay_dir": str(tmp_path / "data/templates/.replay")},
-    )
-
-
-def test_cached_missing_branch_template(monkeypatch, create_command, myapp):
-    """If the cached repo doesn't have a branch for this Briefcase version, an error is
-    raised."""
-    # Set up a pre-cached template directory
-    (create_command.data_path / "templates/briefcase-Tester-Dummy-template").mkdir(
-        parents=True
-    )
-
-    # Set the Briefcase version
-    monkeypatch.setattr(briefcase, "__version__", "37.42.7")
-
-    mock_repo = mock.MagicMock()
-    mock_remote = mock.MagicMock()
-
-    # Git returns a Repo, that repo can return a remote. However, it doesn't
-    # have a head corresponding to the requested Python version, so it
-    # raises an IndexError
-    create_command.tools.git.Repo.return_value = mock_repo
-    mock_repo.remote.return_value = mock_remote
-    mock_remote.refs.__getitem__.side_effect = IndexError
-
-    # Generating the template under there conditions raises an error
-    with pytest.raises(InvalidTemplateBranch):
-        create_command.generate_app_template(myapp)
-
-
 def test_x_permissions(
     monkeypatch,
     create_command,
@@ -733,6 +230,9 @@ def test_x_permissions(
     monkeypatch.setattr(briefcase, "__version__", "37.42.7")
     full_context["briefcase_version"] = "37.42.7"
     full_context["template_branch"] = "v37.42.7"
+
+    # Mock the contents of the cookiecutter template index
+    create_command.tools.cookiecutter.side_effect = mock_cookiecutter()
 
     # Define some permissions and requests. The original "permission" and "request"
     # definitions will be hidden from the final template context.
@@ -774,10 +274,6 @@ def test_x_permissions(
         "tasty.beverage": True,
     }
 
-    # There won't be a cookiecutter cache, so there won't be
-    # a cache path (yet).
-    create_command.tools.git.Repo.side_effect = git_exceptions.NoSuchPathError
-
     # Generate the template.
     create_command.generate_app_template(myapp)
 
@@ -790,26 +286,3 @@ def test_x_permissions(
         extra_context=full_context,
         default_config={"replay_dir": str(tmp_path / "data/templates/.replay")},
     )
-
-
-def test_cookiecutter_undefined_variable_in_template(
-    myapp,
-    create_command,
-):
-    """If the cookiecutter template has an undefined variable, a breifcase configuration
-    error is raised."""
-
-    cookiecutter_exception_message = "undefined document type"
-    create_command.tools.cookiecutter.side_effect = (
-        cookiecutter_exceptions.UndefinedVariableInTemplate(
-            cookiecutter_exception_message, "error", "context"
-        )
-    )
-
-    with pytest.raises(
-        BriefcaseConfigError,
-        match=f"Briefcase configuration error: {cookiecutter_exception_message}",
-    ):
-        # Generating the template with an undefined cookiecutter variable generates
-        # an error
-        create_command.generate_app_template(myapp)

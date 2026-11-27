@@ -13,7 +13,7 @@ import tomllib
 from abc import ABC, abstractmethod
 from argparse import RawDescriptionHelpFormatter
 from collections.abc import Collection, Iterable
-from datetime import datetime
+from datetime import date, datetime
 from pathlib import Path
 from typing import Any
 
@@ -128,6 +128,34 @@ def parse_config_overrides(config_overrides: list[str] | None) -> dict[str, Any]
     return overrides
 
 
+def toml_safe(original):
+    """Convert data into a form that is safe for TOML export.
+
+    Python primitive values are all returned as-is, except for
+    `None`, which is converted into the sentinel string`"<::NONE::>"`.
+    This isn't valid for actual use, but it is sufficiently unique
+    for the purposes of comparison.
+
+    Non-primitive values are all converted to strings.
+
+    The method is recursive so that list/tuple/dictionary types are
+    fully converted.
+
+    :param original: The original data
+    :returns: a TOML-safe version of the original
+    """
+    if isinstance(original, dict):
+        return {key: toml_safe(value) for key, value in original.items()}
+    elif isinstance(original, (tuple, list)):
+        return [toml_safe(value) for value in original]
+    elif isinstance(original, (str, int, float, bool)):
+        return original
+    elif original is None:
+        return "<::NONE::>"
+    else:
+        return str(original)
+
+
 class BaseCommand(ABC):
     cmd_line = "briefcase {command} {platform} {output_format}"
     supported_host_os: Collection[str] = {"Darwin", "Linux", "Windows"}
@@ -147,6 +175,8 @@ class BaseCommand(ABC):
     # compatibility with that version epoch. An epoch begins when a breaking change is
     # introduced for a platform such that older versions of a template are incompatible
     platform_target_version: str | None = None
+    # app properties that won't be exposed to the context
+    hidden_app_properties: Collection[str] = {"permission"}
 
     def __init__(
         self,
@@ -1218,7 +1248,7 @@ Did you run Briefcase in a project directory that contains {filename.name!r}?"""
         template: str,
         branch: str | None = "main",
         template_hash: str | None = None,
-    ):
+    ) -> Path:
         """Ensure that we have a current checkout of a template path.
 
         If the path is a local path, use the path as is.
@@ -1360,7 +1390,7 @@ Did you run Briefcase in a project directory that contains {filename.name!r}?"""
             # If this isn't a repository URL, treat it as a local directory
             cached_template = template
 
-        return cached_template
+        return Path(cached_template)
 
     def _generate_template(
         self,
@@ -1369,7 +1399,7 @@ Did you run Briefcase in a project directory that contains {filename.name!r}?"""
         output_path,
         extra_context,
         template_hash: str | None = None,
-    ):
+    ) -> Path:
         """Ensure the named template is up-to-date for the given branch, and roll out
         that template.
 
@@ -1379,6 +1409,7 @@ Did you run Briefcase in a project directory that contains {filename.name!r}?"""
         :param extra_context: Extra context to pass to the cookiecutter template
         :param template_hash: The expected commit hash of the template's resolved
             branch head, or `None`/`"unverified:<reason>"`.
+        :returns: The path to the cached copy of the template
         """
         # Make sure we have an updated cookiecutter template,
         # checked out to the right branch
@@ -1417,6 +1448,8 @@ Did you run Briefcase in a project directory that contains {filename.name!r}?"""
         except cookiecutter_exceptions.UndefinedVariableInTemplate as e:
             raise BriefcaseConfigError(f"{e.message}: {e.error}") from e
 
+        return cached_template
+
     def generate_template(
         self,
         template: str | None,
@@ -1424,7 +1457,19 @@ Did you run Briefcase in a project directory that contains {filename.name!r}?"""
         output_path: str | Path,
         extra_context: dict[str, str],
         template_hash: str | None = None,
-    ) -> None:
+    ) -> Path:
+        """Determine the branch to use for a template, and roll out
+        that template.
+
+        :param template: The template URL or path to generate
+        :param branch: The branch of the template to use
+        :param output_path: The filesystem path where the template will be
+            generated.
+        :param extra_context: Extra context to pass to the cookiecutter template
+        :param template_hash: The expected commit hash of the template's
+            resolved branch head, or `None`/`"unverified:<reason>"`.
+        :returns: The path to the cached copy of the template
+        """
         # If a branch wasn't supplied through the --template-branch argument,
         # use the branch derived from the Briefcase version
         briefcase_version = Version(briefcase.__version__)
@@ -1450,7 +1495,7 @@ Did you run Briefcase in a project directory that contains {filename.name!r}?"""
                 f"Using app template: {template}, branch {template_branch}"
             )
             # Unroll the new app template
-            self._generate_template(
+            cached_template = self._generate_template(
                 template=template,
                 branch=template_branch,
                 output_path=output_path,
@@ -1470,13 +1515,16 @@ Did you run Briefcase in a project directory that contains {filename.name!r}?"""
             )
 
             extra_context["template_branch"] = "main"
-            self._generate_template(
+            cached_template = self._generate_template(
                 template=template,
                 branch="main",
                 output_path=output_path,
                 extra_context=extra_context,
                 template_hash=None,
             )
+
+        # Return the path to the template cache that was used
+        return cached_template
 
     def get_git_config_value(self, section: str, option: str) -> str | None:
         """Get the requested git config value, if available.
@@ -1497,3 +1545,129 @@ Did you run Briefcase in a project directory that contains {filename.name!r}?"""
                 return git_config.get_value(section, option)
 
         return None
+
+    def _x_permissions(self, app: FinalizedAppConfig):
+        """Extract the known cross-platform permission definitions from the app's
+        permissions definitions.
+
+        After calling this method, the `permissions` declaration for the app will
+        only contain keys that are *not* cross-platform keys.
+
+        :param app: The config object for the app
+        :returns: A dictionary of known cross-platform permission definitions.
+        """
+        return {
+            key: app.permission.pop(key, None)
+            for key in [
+                "bluetooth",
+                "camera",
+                "microphone",
+                "coarse_location",
+                "fine_location",
+                "background_location",
+                "photo_library",
+            ]
+        }
+
+    def permissions_context(
+        self,
+        app: FinalizedAppConfig,
+        x_permissions: dict[str, str],
+    ):
+        """Additional template context for permissions.
+
+        :param app: The config object for the app
+        :param x_permissions: The dictionary of known cross-platform permission
+            definitions.
+        :returns: The template context describing permissions for the app.
+        """
+        return {}
+
+    def output_format_template_context(self, app: FinalizedAppConfig):
+        """Additional template context required by the output format.
+
+        :param app: The config object for the app
+        """
+        return {}
+
+    def full_app_context(self, app: FinalizedAppConfig) -> dict[str:Any]:
+        """Build the full application context.
+
+        :returns: The template context used to generate the app.
+        """
+        # Construct a template context from the app configuration,
+        # excluding any hidden properties.
+        app_context = {
+            key: value
+            for key, value in app.__dict__.items()
+            if key not in self.hidden_app_properties
+        }
+
+        # Remove the context items that describe the template
+        app_context.pop("template")
+        app_context.pop("template_branch")
+        app_context.pop("template_hash")
+
+        # Augment with some extra fields.
+        app_context.update(
+            {
+                # Ensure the output format is in the case we expect
+                "format": self.output_format.lower(),
+                # Ensure the version number is in string form
+                "version": str(app.version),
+                # Properties of the generating environment
+                # The full Python version string, including minor and dev/a/b/c suffixes
+                # (e.g., 3.11.0rc2)
+                "python_version": platform.python_version(),
+                # The host architecture
+                "host_arch": self.tools.host_arch,
+                "is_32bit_python": self.tools.is_32bit_python,
+                # Transformations of explicit properties into useful forms
+                "class_name": app.class_name,
+                "module_name": app.module_name,
+                "package_name": app.package_name,
+                "bundle_identifier": app.bundle_identifier,
+                # Properties that are a function of the execution
+                "year": date.today().strftime("%Y"),
+                "month": date.today().strftime("%B"),
+            }
+        )
+
+        # Add in any extra template context to support permissions
+        app_context.update(self.permissions_context(app, self._x_permissions(app)))
+
+        # Add in any extra template context required by the output format.
+        app_context.update(self.output_format_template_context(app))
+
+        return app_context
+
+    def app_context_changed(self, app: FinalizedAppConfig) -> bool:
+        """Have any template-sensitive app properties changed?
+
+        :returns: True if there have been any changes to app properties that
+            would require a re-generation of the app template.
+        """
+        changed = False
+        template_context = self.briefcase_toml(app).get("context", None)
+        if template_context is not None:
+            # Convert to the same TOML-safe form that is used for output.
+            current_context = toml_safe(self.full_app_context(app))
+            for key, template_value in template_context.items():
+                try:
+                    current_value = current_context[key]
+                    if current_value != template_value:
+                        self.console.warning(
+                            f"Value for {key!r} has changed "
+                            f"(was: {template_value!r}; now {current_value!r})"
+                        )
+                        changed = True
+                    else:
+                        self.console.debug(f"Value for {key!r} has not changed")
+                except KeyError:
+                    self.console.warning(f"App no longer has a value for {key!r}")
+                    changed = True
+        else:
+            self.console.warning("App did not preserve template context on generation")
+            changed = True
+
+        return changed

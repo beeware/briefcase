@@ -87,6 +87,7 @@ class GradleMixin(_MixinBase):
     output_format = "gradle"
     platform = "android"
     platform_target_version = "0.3.27"
+    hidden_app_properties: Collection[str] = {"permission", "feature"}
 
     @property
     def packaging_formats(self):
@@ -165,81 +166,6 @@ class GradleMixin(_MixinBase):
         AndroidSDK.verify(tools=self.tools)
         if not self.is_clone:
             self.console.add_log_file_extra(self.tools.android_sdk.list_packages)
-
-
-class GradleCreateCommand(GradleMixin, CreateCommand):
-    description = "Create and populate an Android Gradle project."
-    app_template_hash = "sha1:0a2b6eb5562b6d435c6ae60351fd5339895c844c"
-    hidden_app_properties: Collection[str] = {"permission", "feature"}
-
-    def cleanup_app_content(self, app: FinalizedAppConfig):
-        # Chaquopy manages bytecode in its build environment. Removing those files
-        # invalidates Gradle's up-to-date checks and reinstalls app requirements.
-        super().cleanup_app_content(app, remove_pyc=False)
-
-    def support_package_filename(self, support_revision):
-        """The query arguments to use in a support package query request."""
-        return (
-            f"Python-{self.python_version_tag}-Android-support.b{support_revision}.zip"
-        )
-
-    def output_format_template_context(self, app: FinalizedAppConfig):
-        """Additional template context required by the output format.
-
-        :param app: The config object for the app
-        """
-        # Android requires an integer "version code". If a version code
-        # isn't explicitly provided, generate one from the version number.
-        # The build number will also be appended, if provided.
-        try:
-            version_code = app.version_code
-        except AttributeError:
-            v = ([*app.version.release, 0, 0])[:3]  # version triple
-            build = int(getattr(app, "build", "0"))
-            version_code = f"{v[0]:d}{v[1]:02d}{v[2]:02d}{build:02d}".lstrip("0")
-
-        # The default runtime libraries included in an app. The default value is the
-        # list that was hard-coded in the Briefcase 0.3.16 Android template, prior to
-        # the introduction of customizable system requirements for Android.
-        try:
-            dependencies = app.build_gradle_dependencies
-        except AttributeError:
-            self.tools.console.warning_banner(
-                "App does not define build_gradle_dependencies",
-                """
-                    The Android configuration for this app does not contain a
-                    `build_gradle_dependencies` definition. Briefcase will use a
-                    default value of:
-
-                        build_gradle_dependencies = [
-                            "androidx.appcompat:appcompat:1.0.2",
-                            "androidx.constraintlayout:constraintlayout:1.1.3",
-                            "androidx.swiperefreshlayout:swiperefreshlayout:1.1.0",
-                        ]
-
-                    You should add this definition to the Android configuration
-                    of your project's pyproject.toml file. See:
-
-                        https://briefcase.readthedocs.io/en/stable/reference/platforms/android/gradle.html#build-gradle-dependencies
-
-                    for more information.
-                """,
-            )
-            dependencies = [
-                "androidx.appcompat:appcompat:1.0.2",
-                "androidx.constraintlayout:constraintlayout:1.1.3",
-                "androidx.swiperefreshlayout:swiperefreshlayout:1.1.0",
-            ]
-
-        min_os_version = min_api_level(app)
-
-        return {
-            "version_code": version_code,
-            "safe_formal_name": safe_formal_name(app.formal_name),
-            "build_gradle_dependencies": {"implementation": dependencies},
-            "ndk": {"abi_filters": getattr(app, "android_abis", None)},
-            "min_os_version": min_os_version,
-        }
 
     def permissions_context(
         self,
@@ -326,6 +252,81 @@ class GradleCreateCommand(GradleMixin, CreateCommand):
             "permissions": permissions,
             "features": features,
         }
+
+    def output_format_template_context(self, app: FinalizedAppConfig):
+        """Additional template context required by the output format.
+
+        :param app: The config object for the app
+        """
+        # Android requires an integer "version code". If a version code
+        # isn't explicitly provided, generate one from the version number.
+        # The build number will also be appended, if provided.
+        try:
+            version_code = app.version_code
+        except AttributeError:
+            v = ([*app.version.release, 0, 0])[:3]  # version triple
+            build = int(getattr(app, "build", "0"))
+            version_code = f"{v[0]:d}{v[1]:02d}{v[2]:02d}{build:02d}".lstrip("0")
+
+        # The default runtime libraries included in an app. The default value is the
+        # list that was hard-coded in the Briefcase 0.3.16 Android template, prior to
+        # the introduction of customizable system requirements for Android.
+        try:
+            dependencies = app.build_gradle_dependencies
+        except AttributeError:
+            self.tools.console.warning_banner(
+                "App does not define build_gradle_dependencies",
+                """
+                    The Android configuration for this app does not contain a
+                    `build_gradle_dependencies` definition. Briefcase will use a
+                    default value of:
+
+                        build_gradle_dependencies = [
+                            "androidx.appcompat:appcompat:1.0.2",
+                            "androidx.constraintlayout:constraintlayout:1.1.3",
+                            "androidx.swiperefreshlayout:swiperefreshlayout:1.1.0",
+                        ]
+
+                    You should add this definition to the Android configuration
+                    of your project's pyproject.toml file. See:
+
+                        https://briefcase.readthedocs.io/en/stable/reference/platforms/android/gradle.html#build-gradle-dependencies
+
+                    for more information.
+                """,
+            )
+            dependencies = [
+                "androidx.appcompat:appcompat:1.0.2",
+                "androidx.constraintlayout:constraintlayout:1.1.3",
+                "androidx.swiperefreshlayout:swiperefreshlayout:1.1.0",
+            ]
+
+        min_os_version = min_api_level(app)
+
+        return {
+            "version_code": version_code,
+            "safe_formal_name": safe_formal_name(app.formal_name),
+            "build_gradle_dependencies": {"implementation": dependencies},
+            "ndk": {"abi_filters": getattr(app, "android_abis", None)},
+            "min_os_version": min_os_version,
+        }
+
+
+class GradleCreateCommand(GradleMixin, CreateCommand):
+    description = "Create and populate an Android Gradle project."
+    app_template_hash = "sha1:0a2b6eb5562b6d435c6ae60351fd5339895c844c"
+    hidden_app_properties: Collection[str] = {"permission", "feature"}
+
+    def cleanup_app_content(self, app: FinalizedAppConfig):
+        # Chaquopy manages bytecode in its build environment. Removing those files
+        # invalidates Gradle's up-to-date checks and reinstalls app requirements.
+        super().cleanup_app_content(app, remove_pyc=False)
+
+    def support_package_filename(self, support_revision):
+        """The query arguments to use in a support package query request."""
+        return (
+            f"Python-{self.python_version_tag}-Android-support.b{support_revision}.zip"
+        )
 
 
 class GradleUpdateCommand(GradleCreateCommand, UpdateCommand):

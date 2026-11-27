@@ -15,6 +15,7 @@ from briefcase.platforms.macOS.app import macOSAppCreateCommand
 from ....utils import (
     create_file,
     create_installed_package,
+    create_json_file,
     create_plist_file,
     mock_tgz_download,
 )
@@ -28,7 +29,13 @@ def create_command(dummy_console, mock_other_venv, tmp_path, first_app_templated
         data_path=tmp_path / "briefcase",
     )
 
-    command.generate_template = mock.MagicMock()
+    template_path = tmp_path / ".cookiecutters/template"
+
+    def _mock_generate_template(*args, **kwargs):
+        create_json_file(template_path / "cookiecutter.json", {})
+        return template_path
+
+    command.generate_template = mock.MagicMock(side_effect=_mock_generate_template)
     command.verify_not_on_icloud = mock.MagicMock()
     command.create_app_environment = mock.MagicMock(return_value=mock_other_venv)
     command.tools.sys = mock.MagicMock(spec_set=sys)

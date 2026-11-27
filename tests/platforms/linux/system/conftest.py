@@ -6,7 +6,7 @@ from briefcase.config import DraftAppConfig
 from briefcase.integrations.gnupg import GnuPG
 from briefcase.platforms.linux.system import LinuxSystemCreateCommand
 
-from ....utils import create_file
+from ....utils import create_file, create_toml_file
 
 
 @pytest.fixture
@@ -36,6 +36,18 @@ def first_app(first_app_config, tmp_path):
 
     # Targeted Python version
     first_app_config.python_version_tag = "3"
+
+    # Create the briefcase.toml file
+    create_toml_file(
+        tmp_path / "base_path/build/first-app/somevendor/surprising/briefcase.toml",
+        {
+            "paths": {
+                "app_path": "first-app-0.0.1/usr/lib/first-app/app",
+                "app_packages_path": "first-app-0.0.1/usr/lib/first-app/app_packages",
+            },
+            "context": {"version": "0.0.1"},
+        },
+    )
 
     # Some project-level files.
     create_file(tmp_path / "base_path/CHANGELOG", "First App Changelog")

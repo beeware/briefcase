@@ -467,6 +467,41 @@ Unable to build {app.app_name} due to missing system dependencies. Run:
 to install the missing dependencies, and re-run Briefcase.
 """)
 
+    def output_format_template_context(self, app: FinalizedAppConfig):
+        app = cast(LinuxSystemAppConfig, app)
+        context = super().output_format_template_context(app)
+
+        # Linux system templates use the target codename, rather than
+        # the format "system" as the leaf of the bundle path
+        context["format"] = app.target_codename
+
+        # The base template context includes the host Python version;
+        # override that with an app-specific Python version, allowing
+        # for the app to be built with the system Python.
+        context["python_version"] = app.python_version_tag
+
+        # Add the docker base image
+        context["docker_base_image"] = app.target_image
+
+        # Add the vendor base
+        context["vendor_base"] = app.target_vendor_base
+
+        # Use the non-root user if Docker is not mapping usernames. Also use a non-root
+        # user if we're on macOS; user mapping doesn't alter Docker operation, but some
+        # packaging tools (e.g., Arch's makepkg) don't like running as root. If we're
+        # not using Docker, this will fall back to the template default, which should be
+        # enabling the root user. This might cause problems later, but it's part of a
+        # much bigger "does the project need to be updated in light of configuration
+        # changes" problem.
+        try:
+            context["use_non_root_user"] = (
+                self.tools.host_os == "Darwin" or not self.tools.docker.is_user_mapped
+            )
+        except AttributeError:
+            pass  # ignore if not using Docker
+
+        return context
+
 
 class LinuxSystemDockerMixin(LinuxSystemMixin):
     # Add options to allow the use of Docker.
@@ -778,41 +813,6 @@ class LinuxSystemCreateCommand(
 ):
     description = "Create and populate a Linux system project."
     app_template_hash = "sha1:577416d8df8d91a1a8866dd45e0ec945dcce662c"
-
-    def output_format_template_context(self, app: FinalizedAppConfig):
-        app = cast(LinuxSystemAppConfig, app)
-        context = super().output_format_template_context(app)
-
-        # Linux system templates use the target codename, rather than
-        # the format "system" as the leaf of the bundle path
-        context["format"] = app.target_codename
-
-        # The base template context includes the host Python version;
-        # override that with an app-specific Python version, allowing
-        # for the app to be built with the system Python.
-        context["python_version"] = app.python_version_tag
-
-        # Add the docker base image
-        context["docker_base_image"] = app.target_image
-
-        # Add the vendor base
-        context["vendor_base"] = app.target_vendor_base
-
-        # Use the non-root user if Docker is not mapping usernames. Also use a non-root
-        # user if we're on macOS; user mapping doesn't alter Docker operation, but some
-        # packaging tools (e.g., Arch's makepkg) don't like running as root. If we're
-        # not using Docker, this will fall back to the template default, which should be
-        # enabling the root user. This might cause problems later, but it's part of a
-        # much bigger "does the project need to be updated in light of configuration
-        # changes" problem.
-        try:
-            context["use_non_root_user"] = (
-                self.tools.host_os == "Darwin" or not self.tools.docker.is_user_mapped
-            )
-        except AttributeError:
-            pass  # ignore if not using Docker
-
-        return context
 
 
 class LinuxSystemUpdateCommand(LinuxSystemCreateCommand, UpdateCommand):

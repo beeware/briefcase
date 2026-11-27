@@ -23,6 +23,7 @@ class LinuxFlatpakMixin(LinuxMixin):
     supported_host_os: Collection[str] = {"Linux"}
     supported_host_os_reason = "Flatpaks can only be built on Linux."
     platform_target_version = "0.3.20"
+    hidden_app_properties: Collection[str] = {"permission", "finish_arg"}
 
     def binary_path(self, app):
         # Flatpak doesn't really produce an identifiable "binary" as part of its
@@ -112,22 +113,6 @@ Your application configuration must provide a value for `flatpak_base_version`
 if `flatpak_base` is defined.
 """) from e
 
-
-class LinuxFlatpakCreateCommand(LinuxFlatpakMixin, CreateCommand):
-    description = "Create and populate a Linux Flatpak."
-    app_template_hash = "sha1:6f2aa391587f9b2acff5ad3fd835911fc0330595"
-    hidden_app_properties: Collection[str] = {"permission", "finish_arg"}
-
-    def output_format_template_context(self, app: FinalizedAppConfig):
-        """Add flatpak runtime/SDK details to the app template."""
-        return {
-            "flatpak_runtime": self.flatpak_runtime(app),
-            "flatpak_runtime_version": self.flatpak_runtime_version(app),
-            "flatpak_sdk": self.flatpak_sdk(app),
-            "flatpak_base": self.flatpak_base(app),
-            "flatpak_base_version": self.flatpak_base_version(app),
-        }
-
     def permissions_context(
         self,
         app: FinalizedAppConfig,
@@ -165,6 +150,21 @@ class LinuxFlatpakCreateCommand(LinuxFlatpakMixin, CreateCommand):
         return {
             "finish_args": finish_args,
         }
+
+    def output_format_template_context(self, app: FinalizedAppConfig):
+        """Add flatpak runtime/SDK details to the app template."""
+        return {
+            "flatpak_runtime": self.flatpak_runtime(app),
+            "flatpak_runtime_version": self.flatpak_runtime_version(app),
+            "flatpak_sdk": self.flatpak_sdk(app),
+            "flatpak_base": self.flatpak_base(app),
+            "flatpak_base_version": self.flatpak_base_version(app),
+        }
+
+
+class LinuxFlatpakCreateCommand(LinuxFlatpakMixin, CreateCommand):
+    description = "Create and populate a Linux Flatpak."
+    app_template_hash = "sha1:6f2aa391587f9b2acff5ad3fd835911fc0330595"
 
 
 class LinuxFlatpakUpdateCommand(LinuxFlatpakCreateCommand, UpdateCommand):

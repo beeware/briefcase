@@ -6,7 +6,6 @@ from pathlib import Path
 from unittest import mock
 
 import pytest
-import tomli_w
 
 import briefcase.platforms.windows.app
 from briefcase.exceptions import BriefcaseCommandError
@@ -15,7 +14,7 @@ from briefcase.integrations.subprocess import Subprocess
 from briefcase.integrations.windows_sdk import WindowsSDK
 from briefcase.platforms.windows.app import WindowsAppBuildCommand
 
-from ....utils import create_file
+from ....utils import create_file, create_toml_file
 
 
 @pytest.fixture
@@ -373,10 +372,9 @@ def test_build_app_with_support_package_update(
     )
 
     # Populate a briefcase.toml that mirrors a real Windows app
-    with (build_command.bundle_path(first_app_templated) / "briefcase.toml").open(
-        "wb"
-    ) as f:
-        index = {
+    create_toml_file(
+        build_command.bundle_path(first_app_templated) / "briefcase.toml",
+        {
             "briefcase": {
                 "target_version": "0.3.24",
             },
@@ -385,8 +383,9 @@ def test_build_app_with_support_package_update(
                 "app_package_path": "src/app_packages",
                 "support_path": "src",
             },
-        }
-        tomli_w.dump(index, f)
+            "context": {"version": "0.0.1"},
+        },
+    )
 
     # Build the app with a support package update
     build_command(first_app_templated, update_support=True)
