@@ -269,13 +269,16 @@ class CreateCommand(BaseCommand):
         # template. Exclude variables that are known to be non-sensitive (i.e.,
         # we know those values can be updated by a build).
         sensitive_variables = {
-            k: v for k, v in app_context.items() if k in template_variables
+            k: v
+            for k, v in app_context.items()
+            if k in template_variables and v is not None
         }
         briefcase_toml_path = self.bundle_path(app) / "briefcase.toml"
         with briefcase_toml_path.open("rb") as f:
             briefcase_toml = tomllib.load(f)
 
         # Preserve the Python and Briefcase version, plus the sensitive variables
+        briefcase_toml.setdefault("briefcase", {})
         briefcase_toml["briefcase"]["python_version"] = (
             self.tools.platform.python_version()
         )

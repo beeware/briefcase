@@ -117,6 +117,44 @@ class LinuxAppImagePassiveMixin(LinuxMixin):
         )
         return super().finalize_app_config(app, **kwargs)
 
+    def output_format_template_context(self, app: FinalizedAppConfig):
+        context = super().output_format_template_context(app)
+
+        try:
+            manylinux_arch = {
+                "x86_64": "x86_64",
+                "i386": "i686",
+                "aarch64": "aarch64",
+            }[LinuxDeploy.arch(self.tools)]
+        except KeyError:
+            manylinux_arch = LinuxDeploy.arch(self.tools)
+            self.console.warning(
+                f"There is no manylinux base image for {manylinux_arch}"
+            )
+
+        # Add the manylinux tag to the template context.
+        try:
+            tag = getattr(app, "manylinux_image_tag", "latest")
+            context["manylinux_image"] = f"{app.manylinux}_{manylinux_arch}:{tag}"
+            if app.manylinux in {"manylinux1", "manylinux2010", "manylinux2014"}:
+                context["vendor_base"] = "centos"
+            elif app.manylinux == "manylinux_2_24":
+                context["vendor_base"] = "debian"
+            elif app.manylinux.startswith("manylinux_2_"):
+                context["vendor_base"] = "almalinux"
+            else:
+                raise BriefcaseConfigError(f"Unknown manylinux tag {app.manylinux!r}")
+        except AttributeError:
+            pass
+
+        # Use the non-root user if Docker is not mapping usernames
+        try:
+            context["use_non_root_user"] = not self.tools.docker.is_user_mapped
+        except AttributeError:
+            pass  # ignore if not using Docker
+
+        return context
+
 
 class LinuxAppImageMostlyPassiveMixin(LinuxAppImagePassiveMixin):
     # The Mostly Passive mixin verifies that Docker exists and can be run, but
@@ -176,44 +214,6 @@ class LinuxAppImageCreateCommand(
 ):
     description = "Create and populate a Linux AppImage."
     app_template_hash = "sha1:cf28c1004b0b08f0370e08c72b97435d94fd63e8"
-
-    def output_format_template_context(self, app: FinalizedAppConfig):
-        context = super().output_format_template_context(app)
-
-        try:
-            manylinux_arch = {
-                "x86_64": "x86_64",
-                "i386": "i686",
-                "aarch64": "aarch64",
-            }[LinuxDeploy.arch(self.tools)]
-        except KeyError:
-            manylinux_arch = LinuxDeploy.arch(self.tools)
-            self.console.warning(
-                f"There is no manylinux base image for {manylinux_arch}"
-            )
-
-        # Add the manylinux tag to the template context.
-        try:
-            tag = getattr(app, "manylinux_image_tag", "latest")
-            context["manylinux_image"] = f"{app.manylinux}_{manylinux_arch}:{tag}"
-            if app.manylinux in {"manylinux1", "manylinux2010", "manylinux2014"}:
-                context["vendor_base"] = "centos"
-            elif app.manylinux == "manylinux_2_24":
-                context["vendor_base"] = "debian"
-            elif app.manylinux.startswith("manylinux_2_"):
-                context["vendor_base"] = "almalinux"
-            else:
-                raise BriefcaseConfigError(f"Unknown manylinux tag {app.manylinux!r}")
-        except AttributeError:
-            pass
-
-        # Use the non-root user if Docker is not mapping usernames
-        try:
-            context["use_non_root_user"] = not self.tools.docker.is_user_mapped
-        except AttributeError:
-            pass  # ignore if not using Docker
-
-        return context
 
     def _cleanup_app_support_package(self, support_path):
         # On Windows, the support path is co-mingled with app content.

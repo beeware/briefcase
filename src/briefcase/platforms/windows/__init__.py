@@ -168,53 +168,6 @@ Install a 64bit version of Python and run Briefcase again.
         except KeyError:
             return None
 
-
-class WindowsCreateCommand(CreateCommand):
-    def stub_binary_filename(
-        self,
-        support_revision: str,
-        app: FinalizedAppConfig,
-    ) -> str:
-        """The filename for the stub binary."""
-        stub_type = "Console" if app.console_app else "GUI"
-        return (
-            f"{stub_type}-Stub-{self.python_version_tag}-{self.tools.host_arch.lower()}"
-            f"-b{support_revision}.zip"
-        )
-
-    def support_package_filename(self, support_revision):
-        arch = self.tools.host_arch.lower()
-        return (
-            f"python-{self.python_version_tag}.{support_revision}-embeddable-{arch}.zip"
-        )
-
-    def support_package_url(self, support_revision):
-        micro = re.match(r"\d+", str(support_revision)).group(0)
-        return (
-            "https://www.python.org/ftp/python/"
-            f"{self.python_version_tag}.{micro}/"
-            f"{self.support_package_filename(support_revision)}"
-        )
-
-    def extras_path(self, app: FinalizedAppConfig) -> Path:
-        """Obtain the path for extra installer content.
-
-        Extra installer content is content that needs to be inserted into the installer,
-        in addition to material in the packaging path. It is primarily used to add
-        installer scripts when packaging an externally managed app.
-
-        :param app: The config object for the app
-        :return: The full path where install scripts should be installed.
-        """
-        try:
-            extras_path = self.path_index(app, "extras_path")
-        except KeyError:
-            # For backwards compatibility - if the template doesn't define an extras
-            # path, default to `extras`.
-            extras_path = "extras"
-
-        return self.bundle_path(app) / extras_path
-
     def output_format_template_context(self, app: FinalizedAppConfig):
         """Additional template context required by the output format.
 
@@ -283,6 +236,53 @@ class WindowsCreateCommand(CreateCommand):
             "installer_images": installer_images,
             "completion_dialog": completion_dialog,
         }
+
+
+class WindowsCreateCommand(CreateCommand):
+    def stub_binary_filename(
+        self,
+        support_revision: str,
+        app: FinalizedAppConfig,
+    ) -> str:
+        """The filename for the stub binary."""
+        stub_type = "Console" if app.console_app else "GUI"
+        return (
+            f"{stub_type}-Stub-{self.python_version_tag}-{self.tools.host_arch.lower()}"
+            f"-b{support_revision}.zip"
+        )
+
+    def support_package_filename(self, support_revision):
+        arch = self.tools.host_arch.lower()
+        return (
+            f"python-{self.python_version_tag}.{support_revision}-embeddable-{arch}.zip"
+        )
+
+    def support_package_url(self, support_revision):
+        micro = re.match(r"\d+", str(support_revision)).group(0)
+        return (
+            "https://www.python.org/ftp/python/"
+            f"{self.python_version_tag}.{micro}/"
+            f"{self.support_package_filename(support_revision)}"
+        )
+
+    def extras_path(self, app: FinalizedAppConfig) -> Path:
+        """Obtain the path for extra installer content.
+
+        Extra installer content is content that needs to be inserted into the installer,
+        in addition to material in the packaging path. It is primarily used to add
+        installer scripts when packaging an externally managed app.
+
+        :param app: The config object for the app
+        :return: The full path where install scripts should be installed.
+        """
+        try:
+            extras_path = self.path_index(app, "extras_path")
+        except KeyError:
+            # For backwards compatibility - if the template doesn't define an extras
+            # path, default to `extras`.
+            extras_path = "extras"
+
+        return self.bundle_path(app) / extras_path
 
     def _cleanup_app_support_package(self, support_path):
         # On Windows, the support path is co-mingled with app content.
