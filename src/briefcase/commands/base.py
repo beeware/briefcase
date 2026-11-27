@@ -128,6 +128,34 @@ def parse_config_overrides(config_overrides: list[str] | None) -> dict[str, Any]
     return overrides
 
 
+def toml_safe(original):
+    """Convert data into a form that is safe for TOML export.
+
+    Python primitive values are all returned as-is, except for
+    `None`, which is converted into the sentinel string`"<::NONE::>"`.
+    This isn't valid for actual use, but it is sufficiently unique
+    for the purposes of comparison.
+
+    Non-primitive values are all converted to strings.
+
+    The method is recursive so that list/tuple/dictionary types are
+    fully converted.
+
+    :param original: The original data
+    :returns: a TOML-safe version of the original
+    """
+    if isinstance(original, dict):
+        return {key: toml_safe(value) for key, value in original.items()}
+    elif isinstance(original, (tuple, list)):
+        return [toml_safe(value) for value in original]
+    elif isinstance(original, (str, int, float, bool)):
+        return original
+    elif original is None:
+        return "<::NONE::>"
+    else:
+        return str(original)
+
+
 class BaseCommand(ABC):
     cmd_line = "briefcase {command} {platform} {output_format}"
     supported_host_os: Collection[str] = {"Darwin", "Linux", "Windows"}
@@ -1622,7 +1650,8 @@ Did you run Briefcase in a project directory that contains {filename.name!r}?"""
         changed = False
         template_context = self.briefcase_toml(app).get("context", None)
         if template_context is not None:
-            current_context = self.full_app_context(app)
+            # Convert to the same TOML-safe form that is used for output.
+            current_context = toml_safe(self.full_app_context(app))
             for key, template_value in template_context.items():
                 try:
                     current_value = current_context[key]

@@ -129,16 +129,17 @@ class PackageCommand(BaseCommand):
             # it will be necessary to confirm deletion of the old folder.
             state = self.create_command(app, recreate=True, **options)
         else:
-            if self.bundle_path(app).exists():
+            needs_create = not self.bundle_path(app).exists()
+            if not needs_create:
                 # Template exists; check if we need to re-create
-                needs_create = self.app_context_changed(app)
+                recreate = self.app_context_changed(app)
             else:
-                needs_create = False
+                recreate = False
 
             needs_build = not self.binary_path(app).exists()
 
-            if needs_create or needs_build:
-                state = self.build_command(app, recreate=needs_create, **options)
+            if needs_create or recreate or needs_build:
+                state = self.build_command(app, recreate=recreate, **options)
             elif update:
                 # If we're updating for packaging, update everything.
                 # This ensures everything in the packaged artefact is up to date,

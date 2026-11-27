@@ -1,3 +1,5 @@
+from pathlib import Path
+
 import briefcase
 
 from ...utils import create_toml_file
@@ -118,3 +120,44 @@ def test_no_template_context(base_command, my_app, capsys):
 
     stdout = capsys.readouterr().out
     assert "App did not preserve template context on generation" in stdout
+
+
+def test_toml_safety(base_command, my_app, capsys):
+    """TOML-unsafe values can round trip."""
+
+    create_toml_file(
+        base_command.bundle_path(my_app) / "briefcase.toml",
+        {
+            "briefcase": {
+                "python_version": base_command.tools.platform.python_version(),
+                "briefcase_version": briefcase.__version__,
+            },
+            "context": {
+                "version": "1.2.3",
+                "app_name": "my-app",
+                "formal_name": "My App",
+                "is_none": "<::NONE::>",
+                "list_value": ["<::NONE::>", 2, 3],
+                "dict_value": {
+                    "value1": ["<::NONE::>", 5, 6],
+                    "value2": "<::NONE::>",
+                    "value3": "/path/to/deep_file.txt",
+                },
+                "path_value": "/path/to/file.txt",
+            },
+        },
+    )
+
+    # Add in some complex values to the current context
+    my_app.is_none = None
+    my_app.list_value = [None, 2, 3]
+    my_app.dict_value = {
+        "value1": [None, 5, 6],
+        "value2": None,
+        "value3": Path("/path/to/deep_file.txt"),
+    }
+    my_app.path_value = Path("/path/to/file.txt")
+
+    assert not base_command.app_context_changed(my_app)
+
+    assert capsys.readouterr().out == ""

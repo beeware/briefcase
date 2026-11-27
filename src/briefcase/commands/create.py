@@ -28,7 +28,7 @@ from briefcase.integrations.git import Git
 from briefcase.integrations.subprocess import NativeAppContext
 from briefcase.integrations.virtual_environment import VirtualEnvironment
 
-from .base import BaseCommand, full_options
+from .base import BaseCommand, full_options, toml_safe
 
 
 def cookiecutter_cache_path(template):
@@ -269,9 +269,7 @@ class CreateCommand(BaseCommand):
         # template. Exclude variables that are known to be non-sensitive (i.e.,
         # we know those values can be updated by a build).
         sensitive_variables = {
-            k: v
-            for k, v in app_context.items()
-            if k in template_variables and v is not None
+            k: v for k, v in app_context.items() if k in template_variables
         }
         briefcase_toml_path = self.bundle_path(app) / "briefcase.toml"
         with briefcase_toml_path.open("rb") as f:
@@ -283,7 +281,7 @@ class CreateCommand(BaseCommand):
             self.tools.platform.python_version()
         )
         briefcase_toml["briefcase"]["briefcase_version"] = briefcase.__version__
-        briefcase_toml["context"] = sensitive_variables
+        briefcase_toml["context"] = toml_safe(sensitive_variables)
         with briefcase_toml_path.open("wb") as f:
             tomli_w.dump(briefcase_toml, f)
 
