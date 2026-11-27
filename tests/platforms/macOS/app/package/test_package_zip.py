@@ -141,3 +141,25 @@ def test_external_app(
     # The notarization process will create the final artefact;
     # since we're mocking notarize, we rely on the notarization tests
     # to verify that the final distribution artefact was created.
+
+
+
+def test_package_zip_replaces_existing_dist_app(
+    package_command,
+    first_app_with_binaries,
+    sekrit_identity,
+    tmp_path,
+):
+    """Any pre-existing .app bundle in dist/ is replaced before notarization."""
+    stale_file = tmp_path / "base_path/dist/First App.app/stale.txt"
+    stale_file.parent.mkdir(parents=True, exist_ok=True)
+    stale_file.write_text("stale", encoding="utf-8")
+
+    package_command.ditto_archive = MagicMock()
+    first_app_with_binaries.packaging_format = "zip"
+    package_command.select_identity.return_value = sekrit_identity
+
+    package_command.package_app(first_app_with_binaries)
+
+    assert (tmp_path / "base_path/dist/First App.app").exists()
+    assert not stale_file.exists()
