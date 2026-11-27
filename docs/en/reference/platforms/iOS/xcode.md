@@ -135,7 +135,7 @@ Any Boolean or string value can be used for an `Info.plist` value.
 
 The minimum iOS version that the app will support. This controls the value of `IPHONEOS_DEPLOYMENT_TARGET` used when building the app.
 
-The default version when unspecified is currently `15.0`. This affects the versions of Xcode and its included iOS SDK that will be supported, which are listed at Apple Developer's [Xcode SDKs and system requirements](https://developer.apple.com/xcode/system-requirements/) page.
+The default version when unspecified is currently `17.0`. This affects the versions of Xcode and its included iOS SDK that will be supported, which are listed at Apple Developer's [Xcode SDKs and system requirements](https://developer.apple.com/xcode/system-requirements/) page.
 
 
 ## Permissions
