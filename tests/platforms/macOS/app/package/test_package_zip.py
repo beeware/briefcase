@@ -143,7 +143,6 @@ def test_external_app(
     # to verify that the final distribution artefact was created.
 
 
-
 def test_package_zip_replaces_existing_dist_app(
     package_command,
     first_app_with_binaries,
