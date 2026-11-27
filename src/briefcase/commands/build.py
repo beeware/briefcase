@@ -51,6 +51,8 @@ class BuildCommand(BaseCommand):
         command.
 
         :param app: The application to build
+        :param recreate: Should the application be re-created before building? If None,
+            the context used to build the app will be checked for changes.
         :param update: Should the application be updated before building?
         :param update_requirements: Should the application requirements be updated
             before building?
@@ -69,10 +71,14 @@ class BuildCommand(BaseCommand):
         # Check for any changes in template variables that might require
         # re-creating the app. The value might be set by the run or package
         # command requiring a build.
-        if recreate is None:
-            recreate = options.pop("recreate")
+        needs_create = not self.bundle_path(app).exists()
+        if not needs_create:
+            if recreate is None:
+                recreate = self.app_context_changed(app)
+        else:
+            recreate = False
 
-        if not self.bundle_path(app).exists() or recreate:
+        if needs_create or recreate:
             state = self.create_command(app, recreate=recreate, **options)
         elif (
             update  # An explicit update has been requested

@@ -54,10 +54,6 @@ class DummyPackageCommand(PackageCommand):
 
         self.actions = []
 
-    def briefcase_toml(self, app):
-        # default any app to an empty `briefcase.toml`
-        return self._briefcase_toml.get(app, {})
-
     def binary_path(self, app):
         return self.bundle_path(app) / f"{app.app_name}.bin"
 
@@ -92,9 +88,10 @@ class DummyPackageCommand(PackageCommand):
     # These commands override the default behavior, simply tracking that
     # they were invoked, rather than instantiating a Create/Update/Build command.
     # This is for testing purposes.
-    def create_command(self, app, **kwargs):
-        self.actions.append(("create", app.app_name, kwargs.copy()))
+    def create_command(self, app, recreate, **kwargs):
+        self.actions.append(("create", app.app_name, recreate, kwargs.copy()))
         # Remove arguments consumed by the underlying call to create_app()
+        kwargs.pop("recreate", None)
         return full_options({"create_state": app.app_name}, kwargs)
 
     def update_command(self, app, **kwargs):
@@ -109,6 +106,7 @@ class DummyPackageCommand(PackageCommand):
     def build_command(self, app, **kwargs):
         self.actions.append(("build", app.app_name, kwargs.copy()))
         # Remove arguments consumed by the underlying call to build_app()
+        kwargs.pop("recreate", None)
         kwargs.pop("update", None)
         kwargs.pop("update_requirements", None)
         kwargs.pop("update_resources", None)
@@ -126,15 +124,13 @@ def package_command(dummy_console, tmp_path):
 
 
 @pytest.fixture
-def first_app_config():
-    return DraftAppConfig(
-        app_name="first",
-        bundle="com.example",
-        version="0.0.1",
-        description="The first simple app",
-        sources=["src/first"],
-        license={"file": "LICENSE"},
-    )
+def first_app_config(package_command, first_app_config):
+    package_command._briefcase_toml[first_app_config] = {
+        "context": {
+            "version": "0.0.1",
+        }
+    }
+    return first_app_config
 
 
 @pytest.fixture
@@ -162,8 +158,8 @@ def first_app(first_app_unbuilt, tmp_path):
 
 
 @pytest.fixture
-def second_app_config():
-    return DraftAppConfig(
+def second_app_config(package_command):
+    config = DraftAppConfig(
         app_name="second",
         bundle="com.example",
         version="0.0.2",
@@ -171,6 +167,12 @@ def second_app_config():
         sources=["src/second"],
         license={"file": "LICENSE"},
     )
+    package_command._briefcase_toml[config] = {
+        "context": {
+            "version": "0.0.2",
+        }
+    }
+    return config
 
 
 @pytest.fixture

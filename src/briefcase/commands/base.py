@@ -1621,7 +1621,7 @@ Did you run Briefcase in a project directory that contains {filename.name!r}?"""
         """
         changed = False
         template_context = self.briefcase_toml(app).get("context", None)
-        if template_context:
+        if template_context is not None:
             current_context = self.full_app_context(app)
             for key, template_value in template_context.items():
                 try:

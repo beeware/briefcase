@@ -9,7 +9,7 @@ from briefcase.integrations.android_sdk import AndroidSDK
 from briefcase.integrations.subprocess import Subprocess
 from briefcase.platforms.android.gradle import GradlePackageCommand
 
-from ....utils import create_file
+from ....utils import create_file, create_toml_file
 
 
 @pytest.fixture
@@ -37,7 +37,7 @@ def package_command(dummy_console, tmp_path, first_app_config, monkeypatch):
 @pytest.fixture
 def first_app_generated(first_app_config, tmp_path):
     # Create the briefcase.toml file
-    create_file(
+    create_toml_file(
         tmp_path
         / "base_path"
         / "build"
@@ -45,13 +45,15 @@ def first_app_generated(first_app_config, tmp_path):
         / "android"
         / "gradle"
         / "briefcase.toml",
-        """
-[paths]
-app_packages_path="app_packages"
-support_path="support"
-metadata_resource_path="res/briefcase.xml"
-extract_packages_path = "app/extract-packages.txt"
-""",
+        {
+            "paths": {
+                "app_packages_path": "app_packages",
+                "support_path": "support",
+                "metadata_resource_path": "res/briefcase.xml",
+                "extract_packages_path": "app/extract-packages.txt",
+            },
+            "context": {"version": "0.0.1"},
+        },
     )
 
     create_file(

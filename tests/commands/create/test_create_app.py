@@ -77,6 +77,54 @@ def test_create_existing_app_overwrite(tracking_create_command, tmp_path):
     assert (bundle_path / "new").exists()
 
 
+def test_create_existing_app_recreate(tracking_create_command, tmp_path):
+    """An existing app can be recreated if requested."""
+    # Answer yes when asked
+    tracking_create_command.console.values = ["y"]
+
+    # Generate an app in the location.
+    base_path = tmp_path / "base_path"
+    bundle_path = base_path / "build/first/tester/dummy"
+    bundle_path.mkdir(parents=True)
+    with (bundle_path / "original").open("w", encoding="utf-8") as f:
+        f.write("original template!")
+
+    tracking_create_command.create_app(
+        tracking_create_command.apps["first"],
+        recreate=True,
+    )
+
+    # Input was required by the user
+    assert tracking_create_command.console.prompts == [
+        (
+            "The configuration of first has changed in a way that "
+            "requires re-generating the app template.\n"
+            "\n"
+            f"All content in {bundle_path.relative_to(base_path)} "
+            "will be deleted; continue [y/N]? "
+        ),
+    ]
+
+    # The right sequence of things will be done
+    assert tracking_create_command.actions == [
+        ("generate", "first"),
+        ("verify-app-template", "first"),
+        ("verify-app-tools", "first"),
+        ("support", "first"),
+        ("create-app-env", "first", "Tester", "gothic", "default", True),
+        ("code", "first", False),
+        ("requirements", "Tester-gothic", "first", False, False),
+        ("resources", "first"),
+        ("cleanup", "first"),
+    ]
+
+    # Original content has been deleted
+    assert not (bundle_path / "original").exists()
+
+    # New app content has been created
+    assert (bundle_path / "new").exists()
+
+
 def test_create_existing_app_no_overwrite(tracking_create_command, tmp_path):
     """If you say no, the existing app won't be overwritten."""
     # Answer no when asked

@@ -96,7 +96,7 @@ def test_non_existent(build_command, first_app_config, second_app):
         ("finalize-app-config", "first"),
         ("finalize-app-config", "second"),
         # First App doesn't exist, so it will be created, then built
-        ("create", "first", False, False, {}),
+        ("create", "first", False, False, False, {}),
         # App template is verified for first app
         ("verify-app-template", "first"),
         # App tools are verified for first app
@@ -530,7 +530,7 @@ def test_update_non_existent(build_command, first_app_config, second_app):
         ("finalize-app-config", "first"),
         ("finalize-app-config", "second"),
         # First App doesn't exist, so it will be created, then built
-        ("create", "first", False, False, {}),
+        ("create", "first", False, False, False, {}),
         # App template is verified for first app
         ("verify-app-template", "first"),
         # App tools are verified for first app
@@ -1256,7 +1256,7 @@ def test_test_app_non_existent(build_command, first_app_config, second_app):
         ("finalize-app-config", "first"),
         ("finalize-app-config", "second"),
         # First App doesn't exist, so it will be created, then built
-        ("create", "first", True, False, {}),
+        ("create", "first", False, True, False, {}),
         # App template is verified for first app
         ("verify-app-template", "first"),
         # App tools are verified for first app
@@ -1515,3 +1515,38 @@ def test_build_external_app(build_command, first_app, second_app):
         match=r"'first' is declared as an external app",
     ):
         build_command(**options)
+
+
+def test_recreate_required(build_command, first_app, second_app):
+    """If a specific app is requested, build it."""
+    # Add two apps
+    build_command.apps = {
+        "first": first_app,
+        "second": second_app,
+    }
+    # Mark the first app as needing an update by modifying it's template context
+    build_command._briefcase_toml[first_app]["context"]["version"] = "1.2.3"
+
+    # Configure no command line options
+    options, _ = build_command.parse_options([])
+
+    # Run the build command
+    build_command(first_app, **options)
+
+    # The right sequence of things will be done
+    assert build_command.actions == [
+        # Host OS is verified
+        ("verify-host",),
+        # Tools are verified
+        ("verify-tools",),
+        # App config has been finalized
+        ("finalize-app-config", "first"),
+        # First App exists, but it needs re-creation
+        ("create", "first", True, False, False, {}),
+        # App template is verified
+        ("verify-app-template", "first"),
+        # App tools are verified for app
+        ("verify-app-tools", "first"),
+        # Build the first app; no state
+        ("build", "first", False, False, {"create_state": "first"}),
+    ]

@@ -303,7 +303,12 @@ def test_unsupported_template_version(run_command, first_app_generated):
     run_command.verify_app = mock.MagicMock(wraps=run_command.verify_app)
 
     run_command._briefcase_toml.update(
-        {first_app_generated: {"briefcase": {"target_version": "0.3.16"}}}
+        {
+            first_app_generated: {
+                "briefcase": {"target_version": "0.3.16"},
+                "context": {"version": "0.0.1"},
+            }
+        }
     )
 
     with pytest.raises(

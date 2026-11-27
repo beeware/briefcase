@@ -6,7 +6,7 @@ from briefcase.commands.base import BaseCommand
 from briefcase.integrations.subprocess import Subprocess
 from briefcase.integrations.virtual_environment import VirtualEnvironment
 from briefcase.platforms.macOS.app import macOSAppMixin, macOSCreateMixin
-from tests.utils import create_file, create_plist_file
+from tests.utils import create_file, create_plist_file, create_toml_file
 
 
 class DummyInstallCommand(macOSAppMixin, macOSCreateMixin, BaseCommand):
@@ -35,19 +35,22 @@ def first_app_templated(first_app_config, tmp_path):
     app_path = tmp_path / "base_path/build/first-app/macos/app/First App.app"
 
     # Create the briefcase.toml file
-    create_file(
+    runtime_framework = "Python.xcframework/macos-arm64_x86_64/Python.framework"
+    create_toml_file(
         tmp_path / "base_path/build/first-app/macos/app/briefcase.toml",
-        """
-[briefcase]
-target_version = "0.3.20"
-
-[paths]
-app_packages_path="First App.app/Contents/Resources/app_packages"
-support_path="First App.app/Contents/Frameworks"
-runtime_path="Python.xcframework/macos-arm64_x86_64/Python.framework"
-info_plist_path="First App.app/Contents/Info.plist"
-entitlements_path="Entitlements.plist"
-""",
+        {
+            "briefcase": {
+                "target_version": "0.3.20",
+            },
+            "paths": {
+                "app_packages_path": "First App.app/Contents/Resources/app_packages",
+                "support_path": "First App.app/Contents/Frameworks",
+                "runtime_path": runtime_framework,
+                "info_plist_path": "First App.app/Contents/Info.plist",
+                "entitlements_path": "Entitlements.plist",
+            },
+            "context": {"version": "0.0.1"},
+        },
     )
 
     # Create the plist file for the app
