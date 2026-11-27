@@ -1,5 +1,6 @@
 import re
 import shutil
+from pathlib import Path
 from unittest import mock
 
 import pytest
@@ -28,7 +29,7 @@ def test_non_url(base_command, mock_git):
         template_hash=MATCHING_HASH,
     )
 
-    assert cached_template == "/path/to/template"
+    assert cached_template == Path("/path/to/template")
     # No git actions are performed, and the hash is never checked.
     assert base_command.tools.git.Repo.call_count == 0
     base_command.tools.file.check_hash.assert_not_called()

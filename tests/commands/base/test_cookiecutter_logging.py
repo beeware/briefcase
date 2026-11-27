@@ -1,4 +1,5 @@
 import logging
+from unittest import mock
 
 import pytest
 
@@ -8,10 +9,12 @@ cookiecutter_logger = logging.getLogger("cookiecutter")
 
 
 @pytest.fixture
-def base_command(base_command):
+def base_command(base_command, tmp_path):
     # Mock actual templating commands as no-ops
-    base_command.update_cookiecutter_cache = lambda *a, **kw: None
-    base_command.tools.cookiecutter = lambda *a, **kw: None
+    base_command.update_cookiecutter_cache = mock.MagicMock(
+        return_value=tmp_path / "template"
+    )
+    base_command.tools.cookiecutter = mock.MagicMock()
     return base_command
 
 

@@ -10,11 +10,17 @@ from briefcase.commands import ConvertCommand
 
 @pytest.fixture
 def convert_command(dummy_console, tmp_path):
-    return ConvertCommand(
+    command = ConvertCommand(
         console=dummy_console,
         base_path=tmp_path / "project",
         data_path=tmp_path / "data",
     )
+
+    template_path = tmp_path / ".cookiecutters/briefcase-template"
+    command.update_cookiecutter_cache = mock.MagicMock(return_value=template_path)
+    command.tools.cookiecutter = mock.MagicMock(spec_set=cookiecutter)
+
+    return command
 
 
 def test_convert_app_unused_project_overrides(
@@ -36,10 +42,6 @@ def test_convert_app_unused_project_overrides(
     convert_command.build_gui_context = mock.MagicMock(
         return_value={"gui_framework": "None"}
     )
-    convert_command.update_cookiecutter_cache = mock.MagicMock(
-        return_value="~/.cookiecutters/briefcase-template"
-    )
-    convert_command.tools.cookiecutter = mock.MagicMock(spec_set=cookiecutter)
     convert_command.migrate_necessary_files = mock.MagicMock()
 
     # Create the new app, using the default template.
@@ -61,7 +63,7 @@ def test_convert_app_unused_project_overrides(
     )
     # Cookiecutter is invoked
     convert_command.tools.cookiecutter.assert_called_once_with(
-        "~/.cookiecutters/briefcase-template",
+        str(tmp_path / ".cookiecutters/briefcase-template"),
         no_input=True,
         output_dir=os.fsdecode(tmp_path / "working"),
         checkout="v37.42.7",
@@ -113,10 +115,6 @@ def test_convert_app_with_template(
     convert_command.build_gui_context = mock.MagicMock(
         return_value={"gui_framework": "None"}
     )
-    convert_command.update_cookiecutter_cache = mock.MagicMock(
-        return_value="https://example.com/other.git"
-    )
-    convert_command.tools.cookiecutter = mock.MagicMock(spec_set=cookiecutter)
     convert_command.migrate_necessary_files = mock.MagicMock()
 
     convert_command.convert_app(
@@ -151,10 +149,6 @@ def test_convert_app_with_template_and_hash(
     convert_command.build_gui_context = mock.MagicMock(
         return_value={"gui_framework": "None"}
     )
-    convert_command.update_cookiecutter_cache = mock.MagicMock(
-        return_value="https://example.com/other.git"
-    )
-    convert_command.tools.cookiecutter = mock.MagicMock(spec_set=cookiecutter)
     convert_command.migrate_necessary_files = mock.MagicMock()
 
     convert_command.convert_app(
@@ -191,10 +185,6 @@ def test_convert_app_with_branch(
     convert_command.build_gui_context = mock.MagicMock(
         return_value={"gui_framework": "None"}
     )
-    convert_command.update_cookiecutter_cache = mock.MagicMock(
-        return_value="~/.cookiecutters/briefcase-template"
-    )
-    convert_command.tools.cookiecutter = mock.MagicMock(spec_set=cookiecutter)
     convert_command.migrate_necessary_files = mock.MagicMock()
 
     convert_command.convert_app(
@@ -229,10 +219,6 @@ def test_convert_app_with_branch_and_hash(
     convert_command.build_gui_context = mock.MagicMock(
         return_value={"gui_framework": "None"}
     )
-    convert_command.update_cookiecutter_cache = mock.MagicMock(
-        return_value="~/.cookiecutters/briefcase-template"
-    )
-    convert_command.tools.cookiecutter = mock.MagicMock(spec_set=cookiecutter)
     convert_command.migrate_necessary_files = mock.MagicMock()
 
     convert_command.convert_app(
@@ -268,10 +254,6 @@ def test_convert_app_with_all_template_details(
     convert_command.build_gui_context = mock.MagicMock(
         return_value={"gui_framework": "None"}
     )
-    convert_command.update_cookiecutter_cache = mock.MagicMock(
-        return_value="~/.cookiecutters/briefcase-template"
-    )
-    convert_command.tools.cookiecutter = mock.MagicMock(spec_set=cookiecutter)
     convert_command.migrate_necessary_files = mock.MagicMock()
 
     convert_command.convert_app(
