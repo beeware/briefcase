@@ -125,5 +125,5 @@ def my_app():
         version="1.2.3",
         description="This is a simple app",
         sources=["src/my_app"],
-        license={"file": "LICENSE"},
+        license_files=["LICENSE"],
     )

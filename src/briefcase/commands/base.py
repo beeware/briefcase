@@ -1612,3 +1612,33 @@ Did you run Briefcase in a project directory that contains {filename.name!r}?"""
         app_context.update(self.output_format_template_context(app))
 
         return app_context
+
+    def app_context_changed(self, app: FinalizedAppConfig) -> bool:
+        """Have any template-sensitive app properties changes?
+
+        :returns: True if there have been any changes to app properties that
+            would require a re-generation of the app template.
+        """
+        changed = False
+        template_context = self.briefcase_toml(app).get("context", None)
+        if template_context:
+            current_context = self.full_app_context(app)
+            for key, template_value in template_context.items():
+                try:
+                    current_value = current_context[key]
+                    if current_value != template_value:
+                        self.console.warning(
+                            f"Value for {key!r} has changed "
+                            f"(was: {template_value!r}; now {current_value!r})"
+                        )
+                        changed = True
+                    else:
+                        self.console.debug(f"Value for {key!r} has not changed")
+                except KeyError:
+                    self.console.warning(f"App no longer has a value for {key!r}")
+                    changed = True
+        else:
+            self.console.warning("App did not preserve template context on generation")
+            changed = True
+
+        return changed

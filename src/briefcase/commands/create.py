@@ -2,11 +2,15 @@ from __future__ import annotations
 
 import argparse
 import hashlib
+import json
 import os
 import shutil
+import tomllib
 from datetime import datetime
 from pathlib import Path
 from typing import Literal
+
+import tomli_w
 
 import briefcase
 from briefcase.config import AppConfig, EnvManagerT, FinalizedAppConfig
@@ -243,13 +247,42 @@ class CreateCommand(BaseCommand):
         else:
             template_hash = None
 
-        self.generate_template(
+        cached_template = self.generate_template(
             template=app.template or self.app_template_url,
             branch=app.template_branch,
             output_path=output_path,
             extra_context=app_context,
             template_hash=template_hash,
         )
+
+        # Read the cookiecutter.json file for the template, and preserve the
+        # list of context variables that were used. Exclude any variables
+        # starting with '_' - those are cookiecutter private values.
+        cookiecutter_json = cached_template / "cookiecutter.json"
+        template_variables = {
+            k
+            for k in json.loads(cookiecutter_json.read_text("utf-8"))
+            if not k.startswith("_")
+        }
+
+        # Record the value of any context variables that were used by the
+        # template. Exclude variables that are known to be non-sensitive (i.e.,
+        # we know those values can be updated by a build).
+        sensitive_variables = {
+            k: v for k, v in app_context.items() if k in template_variables
+        }
+        briefcase_toml_path = self.bundle_path(app) / "briefcase.toml"
+        with briefcase_toml_path.open("rb") as f:
+            briefcase_toml = tomllib.load(f)
+
+        # Preserve the Python and Briefcase version, plus the sensitive variables
+        briefcase_toml["briefcase"]["python_version"] = (
+            self.tools.platform.python_version()
+        )
+        briefcase_toml["briefcase"]["briefcase_version"] = briefcase.__version__
+        briefcase_toml["context"] = sensitive_variables
+        with briefcase_toml_path.open("wb") as f:
+            tomli_w.dump(briefcase_toml, f)
 
     def create_app_environment(
         self,
