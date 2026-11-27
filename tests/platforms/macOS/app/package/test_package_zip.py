@@ -5,6 +5,7 @@ def test_package_zip(
     package_command,
     first_app_with_binaries,
     sekrit_identity,
+    tmp_path,
 ):
     """A macOS App can be packaged as a zip."""
     # Mock the creation of the ditto archive
@@ -18,6 +19,9 @@ def test_package_zip(
 
     # Package the app in zip (not DMG) format
     package_command.package_app(first_app_with_binaries)
+
+    # The app bundle has been copied to dist/ before notarization
+    assert (tmp_path / "base_path/dist/First App.app").exists()
 
     # A request has been made to sign the app
     package_command.sign_app.assert_called_once_with(
@@ -95,6 +99,7 @@ def test_external_app(
     package_command,
     external_first_app,
     sekrit_identity,
+    tmp_path,
 ):
     """An external macOS App can be packaged as a zip."""
     # Mock the creation of the ditto archive
@@ -108,6 +113,9 @@ def test_external_app(
 
     # Package the app in zip (not DMG) format
     package_command.package_app(external_first_app)
+
+    # The app bundle has been copied to dist/ before notarization
+    assert (tmp_path / "base_path/dist/First App.app").exists()
 
     # A request has been made to sign the app
     package_command.sign_app.assert_called_once_with(
@@ -133,3 +141,24 @@ def test_external_app(
     # The notarization process will create the final artefact;
     # since we're mocking notarize, we rely on the notarization tests
     # to verify that the final distribution artefact was created.
+
+
+def test_package_zip_replaces_existing_dist_app(
+    package_command,
+    first_app_with_binaries,
+    sekrit_identity,
+    tmp_path,
+):
+    """Any pre-existing .app bundle in dist/ is replaced before notarization."""
+    stale_file = tmp_path / "base_path/dist/First App.app/stale.txt"
+    stale_file.parent.mkdir(parents=True, exist_ok=True)
+    stale_file.write_text("stale", encoding="utf-8")
+
+    package_command.ditto_archive = MagicMock()
+    first_app_with_binaries.packaging_format = "zip"
+    package_command.select_identity.return_value = sekrit_identity
+
+    package_command.package_app(first_app_with_binaries)
+
+    assert (tmp_path / "base_path/dist/First App.app").exists()
+    assert not stale_file.exists()

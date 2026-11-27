@@ -21,6 +21,13 @@ def test_resume_notarize_app(
     sleep_zero,
 ):
     """Notarization of an app bundle can be resumed."""
+    # Copy the app bundle into dist, as done during initial zip packaging.
+    shutil.copytree(
+        tmp_path / "base_path/build/first-app/macos/app/First App.app",
+        tmp_path / "base_path/dist/First App.app",
+        symlinks=True,
+    )
+
     # Select a codesigning identity
     package_command.select_identity.return_value = sekrit_identity
 
@@ -133,7 +140,7 @@ def test_resume_notarize_app(
             "xcrun",
             "stapler",
             "staple",
-            tmp_path / "base_path/build/first-app/macos/app/First App.app",
+            tmp_path / "base_path/dist/First App.app",
         ],
         check=True,
     )
@@ -141,7 +148,7 @@ def test_resume_notarize_app(
     # As this is a .zip distribution, there's a finalization step to create the actual
     # distribution artefact with ditto.
     package_command.ditto_archive.assert_called_once_with(
-        tmp_path / "base_path/build/first-app/macos/app/First App.app",
+        tmp_path / "base_path/dist/First App.app",
         tmp_path / "base_path/dist/First App-0.0.1.app.zip",
     )
 
@@ -438,6 +445,9 @@ def test_resume_notarize_pkg(
     [
         pytest.param("zip", "First App.app.zip", None, False, False, id="app"),
         pytest.param(
+            "zip", "First App.app.zip", None, False, True, id="app-build-deleted"
+        ),
+        pytest.param(
             "dmg", "First App-0.0.1.dmg", "First App-0.0.1.dmg", False, False, id="dmg"
         ),
         pytest.param(
@@ -477,6 +487,14 @@ def test_resume_notarize_from_marker(
     """An interrupted notarization can be auto-resumed from its marker file."""
     # Set the packaging format, so the marker path can be determined.
     first_app_with_binaries.packaging_format = packaging_format
+
+    # For zip packaging, the .app bundle is copied into dist/ before notarization.
+    if packaging_format == "zip":
+        shutil.copytree(
+            tmp_path / "base_path/build/first-app/macos/app/First App.app",
+            tmp_path / "base_path/dist/First App.app",
+            symlinks=True,
+        )
 
     # Simulate a partially cleaned workspace by deleting the entire build directory.
     if delete_build:
@@ -627,7 +645,7 @@ def test_resume_notarize_from_marker(
 
     # Notarization is complete; stapling occurs on the notarization artefact.
     if packaging_format == "zip":
-        staple_path = tmp_path / "base_path/build/first-app/macos/app/First App.app"
+        staple_path = tmp_path / "base_path/dist/First App.app"
     else:
         staple_path = tmp_path / "base_path/dist" / dist_artefact
     package_command.tools.subprocess.run.assert_called_once_with(
@@ -644,7 +662,7 @@ def test_resume_notarize_from_marker(
     # formats already have their distribution artefact.
     if packaging_format == "zip":
         package_command.ditto_archive.assert_called_once_with(
-            tmp_path / "base_path/build/first-app/macos/app/First App.app",
+            tmp_path / "base_path/dist/First App.app",
             tmp_path / "base_path/dist/First App-0.0.1.app.zip",
         )
     else:
@@ -763,6 +781,12 @@ def test_resume_notarize_from_marker_rejected(
 ):
     """If an auto-resumed notarization (read from the marker) is rejected, an error is
     raised and the marker is retained."""
+    if packaging_format == "zip":
+        shutil.copytree(
+            tmp_path / "base_path/build/first-app/macos/app/First App.app",
+            tmp_path / "base_path/dist/First App.app",
+            symlinks=True,
+        )
     # Set the packaging format, so the marker path can be determined.
     first_app_with_binaries.packaging_format = packaging_format
 
@@ -1034,6 +1058,13 @@ def test_resume_notarize_app_dist_artefact_exists(
 ):
     """A *distribution* artefact of an app bundle will be cleaned up as part of resuming
     notarization."""
+    # Copy the app bundle into dist, as done during initial zip packaging.
+    shutil.copytree(
+        tmp_path / "base_path/build/first-app/macos/app/First App.app",
+        tmp_path / "base_path/dist/First App.app",
+        symlinks=True,
+    )
+
     # Create a pre-existing distribution artefact
     create_file(
         tmp_path / "base_path/dist/First App-0.0.1.app.zip",
@@ -1152,7 +1183,7 @@ def test_resume_notarize_app_dist_artefact_exists(
             "xcrun",
             "stapler",
             "staple",
-            tmp_path / "base_path/build/first-app/macos/app/First App.app",
+            tmp_path / "base_path/dist/First App.app",
         ],
         check=True,
     )
@@ -1161,7 +1192,7 @@ def test_resume_notarize_app_dist_artefact_exists(
     # distribution artefact with ditto. The pre-existing artefact is preserved until
     # ditto overwrites it.
     package_command.ditto_archive.assert_called_once_with(
-        tmp_path / "base_path/build/first-app/macos/app/First App.app",
+        tmp_path / "base_path/dist/First App.app",
         tmp_path / "base_path/dist/First App-0.0.1.app.zip",
     )
 
@@ -1334,6 +1365,12 @@ def test_filename_mismatch(
     """If the filename on a notarization submission doesn't match the current artefact,
     an error is raised."""
     # Create a pre-existing distribution artefact
+    if dist_filename.endswith(".app.zip"):
+        shutil.copytree(
+            tmp_path / "base_path/build/first-app/macos/app/First App.app",
+            tmp_path / "base_path/dist/First App.app",
+            symlinks=True,
+        )
     create_file(
         tmp_path / "base_path/dist" / dist_filename,
         "distribution file",
@@ -1610,6 +1647,11 @@ def test_resume_no_wait_incomplete(
     sleep_zero,
 ):
     """Resuming with --no-wait errors if notarization is still pending."""
+    shutil.copytree(
+        tmp_path / "base_path/build/first-app/macos/app/First App.app",
+        tmp_path / "base_path/dist/First App.app",
+        symlinks=True,
+    )
     package_command.select_identity.return_value = sekrit_identity
     package_command.ditto_archive = mock.MagicMock()
 
@@ -1658,6 +1700,11 @@ def test_resume_no_wait_single_attempt(
     sleep_zero,
 ):
     """Resuming with --no-wait checks notarization status exactly once."""
+    shutil.copytree(
+        tmp_path / "base_path/build/first-app/macos/app/First App.app",
+        tmp_path / "base_path/dist/First App.app",
+        symlinks=True,
+    )
     package_command.select_identity.return_value = sekrit_identity
     package_command.ditto_archive = mock.MagicMock()
 
@@ -1696,7 +1743,7 @@ def test_resume_no_wait_single_attempt(
             "xcrun",
             "stapler",
             "staple",
-            tmp_path / "base_path/build/first-app/macos/app/First App.app",
+            tmp_path / "base_path/dist/First App.app",
         ],
         check=True,
     )

@@ -942,10 +942,10 @@ class macOSPackageMixin(macOSSigningMixin):
     def notarization_path(self, app: FinalizedAppConfig) -> Path:
         """The file that is submitted for notarization."""
         if app.packaging_format == "zip":
-            # Notarization for bare .app's is applied to the binary, not the
-            # distribution artefact, with the distribution artefact being
+            # Notarization for bare .app's is applied to the app bundle copied
+            # into the dist folder, with the distribution artefact being
             # created after notarization has completed.
-            return self.package_path(app)
+            return self.dist_path / self.package_path(app).name
         else:
             return self.distribution_path(app)
 
@@ -1736,12 +1736,24 @@ password:
     ):
         """Package an .app bundle in a zip file.
 
-        If we're notarizing, this doesn't actually create the distribution artefact.
-        Notarization on a zip package is performed on the bare app, so we can't complete
-        packaging until notarization has completed. We call ``finalize_package_zip()``
-        as part of completing zip notarization.
+        If we're notarizing, this copies the .app bundle into the dist folder
+        and submits it for notarization, without creating the distribution zip
+        artefact yet. Notarization on a zip package is performed on the bare app,
+        so we can't complete packaging until notarization has completed. We call
+        ``finalize_package_zip()`` as part of completing zip notarization.
         """
         if notarize_app:
+            dist_app_path = self.notarization_path(app)
+            with self.console.wait_bar("Copying app into dist folder..."):
+                dist_app_path.parent.mkdir(parents=True, exist_ok=True)
+                if dist_app_path.exists():
+                    self.tools.shutil.rmtree(dist_app_path)
+                self.tools.shutil.copytree(
+                    self.package_path(app),
+                    dist_app_path,
+                    # Ensure that symlinks are preserved in the duplication.
+                    symlinks=True,
+                )
             self.console.info(
                 f"Notarizing app using team ID {identity.team_id}...",
                 prefix=app.app_name,
@@ -1752,11 +1764,14 @@ password:
 
     def finalize_package_zip(self, app: FinalizedAppConfig):
         """Finalize the zip packaging process."""
+        app_path = self.notarization_path(app)
+        if not app_path.exists():
+            app_path = self.package_path(app)
         # Build the final archive for distribution
         with self.console.wait_bar(
-            f"Building final distribution archive for {self.package_path(app).name}..."
+            f"Building final distribution archive for {app_path.name}..."
         ):
-            self.ditto_archive(self.package_path(app), self.distribution_path(app))
+            self.ditto_archive(app_path, self.distribution_path(app))
 
     def build_pkg_scripts(self, app: FinalizedAppConfig, installer_path: Path) -> Path:
         """Assemble the scripts directory passed to `pkgbuild --scripts`.
