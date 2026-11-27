@@ -408,10 +408,15 @@ class RunCommand(RunAppMixin, BaseCommand):
 
         self.prepare_target(app, **options)
 
+        # Check for any changes in template variables that might require
+        # re-creating the app.
+        recreate = self.app_context_changed(app)
+
         template_file = self.bundle_path(app)
         exec_file = self.binary_executable_path(app)
         if (
             (not template_file.exists())  # App hasn't been created
+            or recreate  # A recreate is required
             or update  # An explicit update has been requested
             or update_requirements  # An explicit requirements update has been requested
             or update_resources  # An explicit resource update has been requested
@@ -422,6 +427,7 @@ class RunCommand(RunAppMixin, BaseCommand):
         ):
             state = self.build_command(
                 app,
+                recreate=recreate,
                 update=update,
                 update_requirements=update_requirements,
                 update_resources=update_resources,

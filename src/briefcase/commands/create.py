@@ -912,7 +912,7 @@ class CreateCommand(BaseCommand):
                         self.console.verbose(f"Removing {relative_path}")
                         path.unlink()
 
-    def create_app(self, app: FinalizedAppConfig, **options):
+    def create_app(self, app: FinalizedAppConfig, recreate=False, **options):
         """Create an application bundle.
 
         :param app: The config object for the app
@@ -923,11 +923,19 @@ class CreateCommand(BaseCommand):
         bundle_path = self.bundle_path(app)
         if bundle_path.exists():
             self.console.info()
-            confirm = self.console.input_boolean(
-                f"The directory {self.bundle_path(app).relative_to(self.base_path)} "
-                "already exists; overwrite",
-                default=False,
-            )
+            if recreate:
+                confirm_msg = (
+                    f"The configuration of {app.formal_name} has changed in "
+                    "a way that requires re-generating the app template.\n\n"
+                    f"All content in {bundle_path.relative_to(self.base_path)} "
+                    "will be deleted; continue"
+                )
+            else:
+                confirm_msg = (
+                    f"The directory {bundle_path.relative_to(self.base_path)} "
+                    "already exists; overwrite"
+                )
+            confirm = self.console.input_boolean(confirm_msg, default=False)
             if not confirm:
                 self.console.error(
                     f"Aborting creation of app {app.app_name!r}; "
@@ -1030,6 +1038,7 @@ class CreateCommand(BaseCommand):
         self,
         app: AppConfig | None = None,
         app_name: str | None = None,
+        recreate: bool = False,
         **options,
     ) -> dict | None:
         apps_to_create = self.resolve_apps(app=app, app_name=app_name)
@@ -1042,6 +1051,7 @@ class CreateCommand(BaseCommand):
         for _, app_obj in sorted(finalized_apps.items()):
             state = self.create_app(
                 app_obj,
+                recreate=recreate,
                 **full_options(state, options),
             )
 

@@ -37,6 +37,7 @@ class BuildCommand(BaseCommand):
     def _build_app(
         self,
         app: FinalizedAppConfig,
+        recreate: bool | None,
         update: bool,
         update_requirements: bool,
         update_resources: bool,
@@ -65,8 +66,14 @@ class BuildCommand(BaseCommand):
                 "(apps defining 'external_package_path') cannot be built."
             )
 
-        if not self.bundle_path(app).exists():
-            state = self.create_command(app, **options)
+        # Check for any changes in template variables that might require
+        # re-creating the app. The value might be set by the run or package
+        # command requiring a build.
+        if recreate is None:
+            recreate = options.pop("recreate")
+
+        if not self.bundle_path(app).exists() or recreate:
+            state = self.create_command(app, recreate=recreate, **options)
         elif (
             update  # An explicit update has been requested
             or update_requirements  # An explicit requirements update has been requested
@@ -103,6 +110,7 @@ class BuildCommand(BaseCommand):
         self,
         app: AppConfig | None = None,
         app_name: str | None = None,
+        recreate: bool | None = None,
         update: bool = False,
         update_requirements: bool = False,
         update_resources: bool = False,
@@ -152,6 +160,7 @@ class BuildCommand(BaseCommand):
         for _, app_obj in sorted(finalized_apps.items()):
             state = self._build_app(
                 app_obj,
+                recreate=recreate,
                 update=update,
                 update_requirements=update_requirements,
                 update_resources=update_resources,
