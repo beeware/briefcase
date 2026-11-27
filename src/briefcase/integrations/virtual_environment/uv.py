@@ -99,7 +99,7 @@ Ensure that you have installed `uv`, and that it is on your path.
             return args
         head = os.fspath(args[0])
         if os.path.normcase(head) == os.path.normcase(sys.executable):
-            return ["uv", "run", "python", *args[1:]]
+            return ["uv", "run", "--active", "python", *args[1:]]
         return list(args)
 
     def build_env(

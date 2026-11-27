@@ -35,7 +35,7 @@ def test_rewrite_args_empty(venv, empty_args):
 def test_rewrite_args_replaces_system_python(venv, args, expected_suffix):
     """The head argument is replaced when it equals sys.executable."""
     result = venv.rewrite_args(args)
-    assert result == ["uv", "run", "python", *expected_suffix]
+    assert result == ["uv", "run", "--active", "python", *expected_suffix]
 
 
 @pytest.mark.parametrize(
@@ -57,4 +57,4 @@ def test_rewrite_args_no_replacement(venv, args):
 def test_rewrite_args_case_insensitive(venv):
     """On Windows, `rewrite_args` is case-insensitive."""
     result = venv.rewrite_args([sys.executable.lower(), "-V"])
-    assert result == ["uv", "run", "python", "-V"]
+    assert result == ["uv", "run", "--active", "python", "-V"]
