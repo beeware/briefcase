@@ -141,9 +141,9 @@ def test_toml_safety(base_command, my_app, capsys):
                 "dict_value": {
                     "value1": ["<::NONE::>", 5, 6],
                     "value2": "<::NONE::>",
-                    "value3": "/path/to/deep_file.txt",
+                    "value3": str(Path("/path/to/deep_file.txt")),
                 },
-                "path_value": "/path/to/file.txt",
+                "path_value": str(Path("/path/to/file.txt")),
             },
         },
     )

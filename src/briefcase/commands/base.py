@@ -1642,7 +1642,7 @@ Did you run Briefcase in a project directory that contains {filename.name!r}?"""
         return app_context
 
     def app_context_changed(self, app: FinalizedAppConfig) -> bool:
-        """Have any template-sensitive app properties changes?
+        """Have any template-sensitive app properties changed?
 
         :returns: True if there have been any changes to app properties that
             would require a re-generation of the app template.

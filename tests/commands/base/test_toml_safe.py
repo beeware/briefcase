@@ -21,12 +21,14 @@ from briefcase.commands.base import toml_safe
         pytest.param({"a": 1, "b": 2}, {"a": 1, "b": 2}, id="dict"),
         # Non-primitive
         pytest.param(
-            Path("/path/to/file.txt"), "/path/to/file.txt", id="non-primitive"
+            Path("/path/to/file.txt"),
+            str(Path("/path/to/file.txt")),
+            id="non-primitive",
         ),
         # Nested collections
         pytest.param(
             [1, 2, (3, 4, [None, Path("/path/to/file.txt")])],
-            [1, 2, [3, 4, ["<::NONE::>", "/path/to/file.txt"]]],
+            [1, 2, [3, 4, ["<::NONE::>", str(Path("/path/to/file.txt"))]]],
             id="nested-list",
         ),
         pytest.param(
