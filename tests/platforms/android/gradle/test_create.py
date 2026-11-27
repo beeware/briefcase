@@ -158,7 +158,7 @@ def test_build_gradle_dependencies(
 @pytest.mark.parametrize(
     ("input", "abi_filters"),
     [
-        (None, None),
+        (None, []),
         ([], []),
         (["arm64-v8a"], ["arm64-v8a"]),
         (["arm64-v8a", "x86_64"], ["arm64-v8a", "x86_64"]),

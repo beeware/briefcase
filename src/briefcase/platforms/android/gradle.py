@@ -307,7 +307,7 @@ class GradleMixin(_MixinBase):
             "version_code": version_code,
             "safe_formal_name": safe_formal_name(app.formal_name),
             "build_gradle_dependencies": {"implementation": dependencies},
-            "ndk": {"abi_filters": getattr(app, "android_abis", None)},
+            "ndk": {"abi_filters": getattr(app, "android_abis", [])},
             "min_os_version": min_os_version,
         }
 
